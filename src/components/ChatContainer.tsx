@@ -14,8 +14,18 @@ interface Message {
   imageUrl?: string;
 }
 
+// Type spécial pour le contexte RAG
+interface RagContextMessage {
+  id: string;
+  passages: { id: number; titre: string; contenu: string }[];
+  isRagContext: true;
+  timestamp: Date;
+}
+
+type ChatMessage = Message | RagContextMessage;
+
 interface ChatContainerProps {
-  messages: Message[];
+  messages: ChatMessage[];
   isLoading: boolean;
 }
 
@@ -147,37 +157,58 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
                   </div>
                 </div>
               )}
-              {messages.map((message, index) => (
-                <div key={message.id} className="animate-fadeIn">
-                  <MessageBubble
-                    message={message.text}
-                    isUser={message.isUser}
-                    timestamp={message.timestamp}
-                    isLatest={index === messages.length - 1}
-                    imageUrl={message.imageUrl}
-                  />
+              {messages.map((message, index) => {
+                if ((message as any).isRagContext) {
+                  const rag = message as RagContextMessage;
+                  return (
+                    <div key={rag.id} className="animate-fadeIn">
+                      <div className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-400 dark:border-yellow-500 rounded-xl p-3 mb-2">
+                        <div className="font-semibold text-yellow-800 dark:text-yellow-200 mb-1 text-xs">Passages retrouvés dans la base documentaire :</div>
+                        <ul className="list-disc pl-4 space-y-1">
+                          {rag.passages.map((p, i) => (
+                            <li key={p.id}>
+                              <span className="font-bold text-yellow-900 dark:text-yellow-100 text-xs">{p.titre} :</span> <span className="text-xs text-yellow-900 dark:text-yellow-100">{p.contenu}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  );
+                } else {
+                  const msg = message as Message;
+                  return (
+                    <div key={msg.id} className="animate-fadeIn">
+                      <MessageBubble
+                        message={msg.text}
+                        isUser={msg.isUser}
+                        timestamp={msg.timestamp}
+                        isLatest={index === messages.length - 1}
+                        imageUrl={msg.imageUrl}
+                      />
+                    </div>
+                  );
+                }
+              })}
+              {isLoading && (
+                <div className="flex justify-start animate-fadeIn">
+                  <TypingIndicator />
                 </div>
-              ))}
+              )}
+              <div ref={messagesEndRef} />
             </>
           )}
-          {isLoading && (
-            <div className="flex justify-start animate-fadeIn">
-              <TypingIndicator />
-            </div>
+          {/* Bouton de scroll */}
+          {showScrollButton && (
+            <Button
+              onClick={scrollToBottom}
+              size="icon"
+              className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 animate-fadeIn hover:scale-110 group"
+            >
+              <ArrowDown className="h-4 w-4 group-hover:animate-bounce" />
+            </Button>
           )}
-          <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
-      {/* Bouton de scroll */}
-      {showScrollButton && (
-        <Button
-          onClick={scrollToBottom}
-          size="icon"
-          className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 animate-fadeIn hover:scale-110 group"
-        >
-          <ArrowDown className="h-4 w-4 group-hover:animate-bounce" />
-        </Button>
-      )}
     </div>
   );
 }

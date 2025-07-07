@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { TTSSettingsModal } from '@/components/TTSSettingsModal';
 import { Header } from '@/components/Header';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { searchDocuments } from '@/services/ragSearch';
 
 interface Message {
   id: string;
@@ -23,6 +24,14 @@ interface Discussion {
   title: string;
   messages: Message[];
 }
+
+// Ajout d'un type spécial pour les messages contextuels RAG
+type RagContextMessage = {
+  id: string;
+  passages: { id: number; titre: string; contenu: string }[];
+  isRagContext: true;
+  timestamp: Date;
+};
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -181,28 +190,51 @@ function App() {
     }
   };
 
+  const addRagContextMessage = (passages: { id: number; titre: string; contenu: string }[]) => {
+    const ragMsg: RagContextMessage = {
+      id: 'rag-' + Date.now(),
+      passages,
+      isRagContext: true,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, ragMsg as any]);
+  };
+
   const handleSendMessage = async (userMessage: string, imageFile?: File) => {
     if (!isOnline) {
       toast.error('Pas de connexion Internet. Vérifie ta connexion réseau.');
       return;
     }
-
+    // Étape RAG : recherche documentaire
+    const passages = searchDocuments(userMessage, 3);
+    if (passages.length > 0) {
+      addRagContextMessage(passages);
+    }
     // Ajoute le message utilisateur localement
     const newMessage = addMessage(userMessage, true, imageFile);
     setIsLoading(true);
-
     try {
       // On prépare l'historique complet (y compris le message utilisateur tout juste ajouté)
       const fullHistory = [...messages, newMessage];
+      // On construit le contexte documentaire pour le prompt
+      let ragContext = '';
+      if (passages.length > 0) {
+        ragContext = 'Contexte documentaire :\n';
+        passages.forEach((p, idx) => {
+          ragContext += `- [${p.titre}] ${p.contenu}\n`;
+        });
+        ragContext += '\n';
+      }
       // Utilise le prompt système dynamique selon la personnalité
       const systemPrompt = getSystemPrompt(selectedPersonality);
+      // On fusionne le contexte documentaire avec le prompt système
+      const prompt = `${systemPrompt}\n${ragContext}Question utilisateur : ${userMessage}`;
       const response = await sendMessageToGemini(
         fullHistory.map(m => ({ text: m.text, isUser: m.isUser })),
         imageFile ? [imageFile] : undefined,
-        systemPrompt
+        prompt
       );
       addMessage(response, false);
-      // Utilise le callback onEnd pour relancer la reco vocale auto
       speak(response, {
         onEnd: () => {
           if (modeVocalAuto && !muted) {
