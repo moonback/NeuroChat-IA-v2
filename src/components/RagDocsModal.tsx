@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Trash2, UploadCloud, Eye, Pencil, Check, X as XIcon } from 'lucide-react';
+import { X, Trash2, UploadCloud, Eye, Pencil, Check, X as XIcon, FileText, FileSpreadsheet, FileCode2, FileType2, File } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+// @ts-ignore
+import * as pdfjsLib from 'pdfjs-dist/build/pdf';
+import mammoth from 'mammoth';
+import Papa from 'papaparse';
 
 interface RagDocsModalProps {
   open: boolean;
@@ -17,6 +21,29 @@ interface RagDoc {
   titre: string;
   contenu: string;
   origine: 'dossier' | 'utilisateur';
+  extension?: string;
+}
+
+function getExtension(filename: string) {
+  return filename.split('.').pop()?.toLowerCase() || '';
+}
+
+function getIcon(ext: string) {
+  switch (ext) {
+    case 'txt':
+    case 'md':
+      return <FileText className="w-4 h-4 text-blue-500" />;
+    case 'pdf':
+      return <FileType2 className="w-4 h-4 text-red-500" />;
+    case 'docx':
+      return <FileType2 className="w-4 h-4 text-indigo-500" />;
+    case 'csv':
+      return <FileSpreadsheet className="w-4 h-4 text-green-500" />;
+    case 'html':
+      return <FileCode2 className="w-4 h-4 text-orange-500" />;
+    default:
+      return <File className="w-4 h-4 text-slate-400" />;
+  }
 }
 
 export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
@@ -34,11 +61,13 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
       const modules = import.meta.glob('../data/rag_docs/*.{txt,md}', { as: 'raw', eager: true });
       const dossierDocs: RagDoc[] = Object.entries(modules).map(([path, contenu], idx) => {
         const titre = path.split('/').pop()?.replace(/\.[^/.]+$/, '') || `Document ${idx + 1}`;
+        const extension = getExtension(path);
         return {
           id: 'dossier-' + idx,
           titre,
           contenu: contenu as string,
           origine: 'dossier',
+          extension,
         };
       });
       // Docs utilisateur
@@ -54,21 +83,86 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
     if (open) loadDocs();
   }, [open]);
 
+  // Extraction de texte selon le type de fichier
+  async function extractTextFromFile(file: File): Promise<string> {
+    const ext = getExtension(file.name);
+    if (ext === 'txt' || ext === 'md') {
+      return await file.text();
+    }
+    if (ext === 'pdf') {
+      try {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.mjs';
+        const arrayBuffer = await file.arrayBuffer();
+        // @ts-ignore
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let text = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          text += content.items.map((item: any) => item.str).join(' ') + '\n';
+        }
+        return text;
+      } catch (e) {
+        throw new Error('Erreur lors de l\'extraction du PDF.');
+      }
+    }
+    if (ext === 'docx') {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        return result.value;
+      } catch (e) {
+        throw new Error('Erreur lors de l\'extraction du DOCX.');
+      }
+    }
+    if (ext === 'csv') {
+      try {
+        const text = await file.text();
+        const parsed = Papa.parse(text);
+        return parsed.data.map((row: any) => row.join(' ')).join('\n');
+      } catch (e) {
+        throw new Error('Erreur lors de l\'extraction du CSV.');
+      }
+    }
+    if (ext === 'html') {
+      try {
+        const text = await file.text();
+        const doc = new DOMParser().parseFromString(text, 'text/html');
+        return doc.body.innerText || '';
+      } catch (e) {
+        throw new Error('Erreur lors de l\'extraction du HTML.');
+      }
+    }
+    throw new Error('Type de fichier non supporté.');
+  }
+
   // Ajouter un document utilisateur
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.name.endsWith('.txt') && !file.name.endsWith('.md')) {
-      toast.error('Seuls les fichiers .txt et .md sont acceptés.');
+    const ext = getExtension(file.name);
+    if (!['txt','md','pdf','docx','csv','html'].includes(ext)) {
+      toast.error('Type de fichier non supporté.');
       return;
     }
-    const text = await file.text();
+    let text = '';
+    try {
+      text = await extractTextFromFile(file);
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de l\'extraction du texte.');
+      return;
+    }
+    if (!text.trim()) {
+      toast.error('Aucun texte extrait du fichier.');
+      return;
+    }
     const titre = file.name.replace(/\.[^/.]+$/, '');
     const newDoc: RagDoc = {
       id: 'user-' + Date.now(),
       titre,
       contenu: text,
       origine: 'utilisateur',
+      extension: ext,
     };
     // Sauvegarder dans le localStorage
     const userRaw = localStorage.getItem(LS_KEY);
@@ -141,7 +235,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
         <div className="mb-4 flex items-center gap-2">
           <input
             type="file"
-            accept=".txt,.md"
+            accept=".txt,.md,.pdf,.docx,.csv,.html"
             style={{ display: 'none' }}
             ref={fileInputRef}
             onChange={handleFileChange}
@@ -153,7 +247,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
           >
             <UploadCloud className="w-4 h-4" /> Ajouter un document
           </Button>
-          <span className="text-xs text-muted-foreground">(txt, md)</span>
+          <span className="text-xs text-muted-foreground">(txt, md, pdf, docx, csv, html)</span>
         </div>
         <input
           type="text"
@@ -169,7 +263,8 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
             {filteredDocs.map(doc => {
               return (
                 <li key={doc.id} className="border rounded-lg p-3 bg-slate-50 dark:bg-slate-800 flex items-center gap-2">
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 flex gap-2 items-center">
+                    {getIcon(doc.extension || '')}
                     {editingId === doc.id ? (
                       <div className="flex items-center gap-1">
                         <input
@@ -193,7 +288,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
                       </div>
                     )}
                     <div className="text-xs text-muted-foreground truncate">{doc.contenu.slice(0, 80)}...</div>
-                    <div className="text-[10px] text-slate-400 mt-1">Origine : {doc.origine === 'dossier' ? 'Dossier rag_docs' : "Ajouté par l'utilisateur"}</div>
+                    <div className="text-[10px] text-slate-400 ml-1">.{doc.extension}</div>
                   </div>
                   <Button
                     variant="ghost"
