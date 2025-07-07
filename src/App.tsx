@@ -394,19 +394,19 @@ function App() {
                 }`}></div>
               </div>
             </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
-                Voice Chat
-              </h1>
-              <p className="text-sm sm:text-base text-muted-foreground flex items-center gap-2">
-                <span>Des conversations IA, à ta façon</span>
-                <div className="flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent m-0 p-0">
+                  NeuroChat
+                </h1>
+                <span className={`flex items-center ml-2`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-red-400'}`}></span>
+                  <span className={`ml-1 text-xs font-medium ${isOnline ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
                     {isOnline ? 'En ligne' : 'Hors ligne'}
                   </span>
-                </div>
-              </p>
+                </span>
+              </div>
+              <span className="text-xs sm:text-sm text-muted-foreground mt-1">Conversations IA, à votre image</span>
             </div>
           </div>
           

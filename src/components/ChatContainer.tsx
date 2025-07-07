@@ -81,7 +81,7 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
               </div>
               <div className="max-w-xl mx-auto">
                 <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 dark:from-slate-200 dark:via-slate-300 dark:to-slate-400 bg-clip-text text-transparent">
-                  Bienvenue sur Voice Chat
+                  Bienvenue sur NeuroChat
                 </h3>
                 <p className="text-muted-foreground max-w-md mx-auto text-xs sm:text-sm leading-relaxed mb-4">
                   Découvre le futur de la conversation avec l'IA : reconnaissance vocale avancée, langage naturel et réponses intelligentes propulsées par Google Gemini Pro.

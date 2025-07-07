@@ -1,4 +1,4 @@
-# Gemini Voice Chat
+# Gemini NeuroChat
 
 A modern React application that enables voice and text conversations with Google's Gemini Pro AI. Features real-time speech recognition, text-to-speech synthesis, and a beautiful conversational interface.
 
