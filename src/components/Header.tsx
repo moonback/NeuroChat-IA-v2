@@ -1,4 +1,4 @@
-import { MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Square } from 'lucide-react';
+import { MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Square, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,8 @@ interface HeaderProps {
   selectedPersonality: string;
   onChangePersonality: (value: string) => void;
   stop: () => void;
+  modeVocalAuto: boolean;
+  setModeVocalAuto: (v: boolean) => void;
 }
 
 export function Header({
@@ -26,6 +28,8 @@ export function Header({
   selectedPersonality,
   onChangePersonality,
   stop,
+  modeVocalAuto,
+  setModeVocalAuto,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
 
@@ -90,6 +94,16 @@ export function Header({
           ) : (
             <Volume2 className="w-5 h-5 text-green-500" />
           )}
+        </Button>
+        {/* Bouton mode vocal automatique */}
+        <Button
+          variant={modeVocalAuto ? 'secondary' : 'ghost'}
+          size="icon"
+          onClick={() => setModeVocalAuto(!modeVocalAuto)}
+          className={modeVocalAuto ? 'bg-blue-500 text-white hover:bg-blue-600' : 'hover:bg-blue-100 dark:hover:bg-blue-900'}
+          title={modeVocalAuto ? 'Désactiver le mode vocal automatique' : 'Activer le mode vocal automatique'}
+        >
+          <Mic className={modeVocalAuto ? 'text-white' : 'text-blue-500'} />
         </Button>
         {/* Réglages TTS */}
         <Button

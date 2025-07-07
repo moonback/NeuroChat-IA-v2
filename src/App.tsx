@@ -9,6 +9,7 @@ import { Mic, MessageCircle, Zap, Shield, Globe, History, X, Settings2, Volume2,
 import { toast } from 'sonner';
 import { TTSSettingsModal } from '@/components/TTSSettingsModal';
 import { Header } from '@/components/Header';
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 
 interface Message {
   id: string;
@@ -57,6 +58,8 @@ function App() {
   const [selectedDiscussions, setSelectedDiscussions] = useState<number[]>([]);
   // Ajout du state pour la personnalité IA
   const [selectedPersonality, setSelectedPersonality] = useState('formel');
+  // Ajout du state pour le mode vocal automatique
+  const [modeVocalAuto, setModeVocalAuto] = useState(false);
 
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
@@ -199,7 +202,15 @@ function App() {
         systemPrompt
       );
       addMessage(response, false);
-      speak(response);
+      // Utilise le callback onEnd pour relancer la reco vocale auto
+      speak(response, {
+        onEnd: () => {
+          if (modeVocalAuto && !muted) {
+            playBip();
+            startAuto();
+          }
+        }
+      });
       toast.success('Réponse reçue !', { duration: 2000 });
     } catch (error) {
       const errorMessage = error instanceof Error 
@@ -315,6 +326,63 @@ function App() {
     }
   };
 
+  // Hook reconnaissance vocale (mode vocal auto)
+  const {
+    listening: listeningAuto,
+    transcript: transcriptAuto,
+    error: errorAuto,
+    start: startAuto,
+    stop: stopAuto,
+    reset: resetAuto,
+    isSupported: isSupportedAuto,
+  } = useSpeechRecognition({
+    interimResults: true,
+    lang: 'fr-FR',
+    continuous: false,
+    onResult: (finalText) => {
+      // Rien ici, on attend la fin
+    },
+    onEnd: (finalText) => {
+      if (modeVocalAuto && finalText && finalText.trim().length > 0) {
+        handleSendMessage(finalText.trim());
+        resetAuto();
+      }
+    },
+  });
+
+  // Fonction utilitaire pour jouer un bip sonore
+  function playBip() {
+    const audio = new Audio('/bip.wav');
+    audio.volume = 0.5;
+    audio.play();
+  }
+
+  // Effet : démarrer/arrêter la reco vocale auto selon le mode
+  useEffect(() => {
+    if (modeVocalAuto) {
+      if (!listeningAuto && isSupportedAuto) {
+        playBip();
+        startAuto();
+      }
+    } else {
+      if (listeningAuto) {
+        stopAuto();
+        resetAuto();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modeVocalAuto]);
+
+  // Si l'utilisateur mute ou stop la voix, désactive le mode vocal auto
+  useEffect(() => {
+    if (modeVocalAuto && muted) {
+      setModeVocalAuto(false);
+      stopAuto();
+      resetAuto();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [muted]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Menu historique des discussions */}
@@ -334,6 +402,8 @@ function App() {
               selectedPersonality={selectedPersonality}
               onChangePersonality={setSelectedPersonality}
               stop={stop}
+              modeVocalAuto={modeVocalAuto}
+              setModeVocalAuto={setModeVocalAuto}
             />
             {/* Sélection groupée */}
             {historyList.length > 0 && (
@@ -429,6 +499,8 @@ function App() {
           selectedPersonality={selectedPersonality}
           onChangePersonality={setSelectedPersonality}
           stop={stop}
+          modeVocalAuto={modeVocalAuto}
+          setModeVocalAuto={setModeVocalAuto}
         />
 
         {/* Enhanced Chat Interface */}
@@ -479,6 +551,12 @@ function App() {
         importSettings={importSettings}
         deleteSettings={deleteSettings}
       />
+
+      {modeVocalAuto && (
+        <div className="fixed top-2 right-2 z-50 bg-blue-600 text-white px-4 py-2 rounded-xl shadow-lg animate-pulse">
+          Mode vocal automatique activé
+        </div>
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ export interface SpeechSynthesisOptions {
   volume?: number;
   lang?: string;
   voiceURI?: string;
+  onEnd?: () => void;
 }
 
 const LS_KEY = 'tts_settings';
@@ -111,6 +112,10 @@ export function useSpeechSynthesis() {
       utterance.voice = selectedVoice;
     }
     utteranceRef.current = utterance;
+    // Ajout du callback onEnd
+    if (typeof options.onEnd === 'function') {
+      utterance.onend = options.onEnd;
+    }
     window.speechSynthesis.speak(utterance);
   }, [muted, rate, pitch, volume, voiceURI, voices, detectLang]);
 
