@@ -397,7 +397,7 @@ function App() {
         </Card>
 
         {/* Enhanced Footer */}
-        <div className="text-center mt-4 sm:mt-6 space-y-2">
+        {/* <div className="text-center mt-4 sm:mt-6 space-y-2">
           <div className="text-xs text-muted-foreground/80 flex items-center justify-center gap-2">
             <span>Propulsé par Google Gemini Pro</span>
             <span>•</span>
@@ -417,7 +417,7 @@ function App() {
               Multilingue
             </span>
           </div>
-        </div>
+        </div> */}
       </div>
 
       <TTSSettingsModal
