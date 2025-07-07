@@ -15,13 +15,20 @@ interface Message {
   timestamp: Date;
 }
 
+interface Discussion {
+  title: string;
+  messages: Message[];
+}
+
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const { speak } = useSpeechSynthesis();
   const [showHistory, setShowHistory] = useState(false);
-  const [historyList, setHistoryList] = useState<Message[][]>([]);
+  const [historyList, setHistoryList] = useState<Discussion[]>([]);
+  const [editingTitleIdx, setEditingTitleIdx] = useState<number | null>(null);
+  const [editingTitleValue, setEditingTitleValue] = useState('');
 
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
@@ -33,7 +40,6 @@ function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Conversion des dates
         setMessages(parsed.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) })));
       } catch {
         setMessages([]);
@@ -46,18 +52,37 @@ function App() {
     localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify(messages));
   }, [messages]);
 
-  // Sauvegarder une discussion dans l'historique
+  // Sauvegarder une discussion dans l'historique (sans doublons consécutifs)
   const saveDiscussionToHistory = (discussion: Message[]) => {
     if (!discussion.length) return;
     const historyRaw = localStorage.getItem(LOCALSTORAGE_KEY);
-    let history: Message[][] = [];
+    let history: Discussion[] = [];
     if (historyRaw) {
       try {
-        history = JSON.parse(historyRaw);
+        const parsed = JSON.parse(historyRaw);
+        // Migration si ancien format (Message[][])
+        if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
+          history = parsed.map((msgs: Message[], idx: number) => ({
+            title: `Discussion ${idx + 1}`,
+            messages: msgs,
+          }));
+        } else {
+          history = parsed;
+        }
       } catch {}
     }
-    history.push(discussion);
-    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(history));
+    // Vérifier si la dernière discussion est identique
+    const isSame = (a: Message[], b: Message[]) => {
+      if (a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) {
+        if (a[i].text !== b[i].text || a[i].isUser !== b[i].isUser) return false;
+      }
+      return true;
+    };
+    if (history.length === 0 || !isSame(history[history.length - 1].messages, discussion)) {
+      history.push({ title: `Discussion ${history.length + 1}`, messages: discussion });
+      localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(history));
+    }
   };
 
   // Nouvelle discussion
@@ -68,6 +93,20 @@ function App() {
     setMessages([]);
     localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify([]));
   };
+
+  // Sauvegarde automatique à la fermeture/rafraîchissement de la page
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (messages.length > 0) {
+        saveDiscussionToHistory(messages);
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages]);
 
   // Monitor online status
   useEffect(() => {
@@ -106,19 +145,12 @@ function App() {
     try {
       const response = await sendMessageToGemini(userMessage);
       addMessage(response, false);
-      
-      // Auto-speak the response
       speak(response);
-      
-      // Success feedback
-      toast.success('Response received!', {
-        duration: 2000,
-      });
+      toast.success('Response received!', { duration: 2000 });
     } catch (error) {
       const errorMessage = error instanceof Error 
         ? error.message 
         : 'Failed to get response from Gemini. Please try again.';
-      
       addMessage(`Sorry, I encountered an error: ${errorMessage}`, false);
       toast.error(errorMessage, {
         action: {
@@ -137,8 +169,20 @@ function App() {
     if (historyRaw) {
       try {
         const parsed = JSON.parse(historyRaw);
-        // Conversion des dates
-        setHistoryList(parsed.map((conv: any[]) => conv.map(msg => ({ ...msg, timestamp: new Date(msg.timestamp) }))));
+        // Migration si ancien format (Message[][])
+        let discussions: Discussion[];
+        if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
+          discussions = parsed.map((msgs: Message[], idx: number) => ({
+            title: `Discussion ${idx + 1}`,
+            messages: msgs.map(msg => ({ ...msg, timestamp: new Date(msg.timestamp) })),
+          }));
+        } else {
+          discussions = parsed.map((d: any) => ({
+            title: d.title || 'Discussion',
+            messages: d.messages.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) })),
+          }));
+        }
+        setHistoryList(discussions);
       } catch {
         setHistoryList([]);
       }
@@ -155,10 +199,43 @@ function App() {
   const handleCloseHistory = () => setShowHistory(false);
 
   // Recharger une discussion
-  const handleLoadDiscussion = (discussion: Message[]) => {
-    setMessages(discussion);
-    localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify(discussion));
+  const handleLoadDiscussion = (discussion: Discussion) => {
+    setMessages(discussion.messages);
+    localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify(discussion.messages));
     setShowHistory(false);
+  };
+
+  // Supprimer une discussion
+  const handleDeleteDiscussion = (idx: number) => {
+    const newHistory = [...historyList];
+    newHistory.splice(idx, 1);
+    setHistoryList(newHistory);
+    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newHistory));
+  };
+
+  // Renommer une discussion
+  const handleStartEditTitle = (idx: number, currentTitle: string) => {
+    setEditingTitleIdx(idx);
+    setEditingTitleValue(currentTitle);
+  };
+  const handleEditTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditingTitleValue(e.target.value);
+  };
+  const handleEditTitleSave = (idx: number) => {
+    const newHistory = [...historyList];
+    newHistory[idx] = { ...newHistory[idx], title: editingTitleValue || `Discussion ${idx + 1}` };
+    setHistoryList(newHistory);
+    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newHistory));
+    setEditingTitleIdx(null);
+    setEditingTitleValue('');
+  };
+  const handleEditTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, idx: number) => {
+    if (e.key === 'Enter') {
+      handleEditTitleSave(idx);
+    } else if (e.key === 'Escape') {
+      setEditingTitleIdx(null);
+      setEditingTitleValue('');
+    }
   };
 
   return (
@@ -174,13 +251,42 @@ function App() {
             ) : (
               <ul className="space-y-4">
                 {historyList.map((discussion, idx) => (
-                  <li key={idx} className="border rounded-lg p-3 bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition cursor-pointer" onClick={() => handleLoadDiscussion(discussion)}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <History className="w-4 h-4 text-blue-500" />
-                      <span className="font-semibold">Discussion {idx + 1}</span>
-                      <span className="ml-auto text-xs text-muted-foreground">{discussion[0]?.timestamp ? new Date(discussion[0].timestamp).toLocaleString() : ''}</span>
+                  <li key={idx} className="border rounded-lg p-3 bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition group flex items-center gap-2">
+                    <div className="flex-1 min-w-0" onClick={() => handleLoadDiscussion(discussion)} style={{ cursor: 'pointer' }}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <History className="w-4 h-4 text-blue-500" />
+                        {editingTitleIdx === idx ? (
+                          <input
+                            type="text"
+                            value={editingTitleValue}
+                            onChange={handleEditTitleChange}
+                            onBlur={() => handleEditTitleSave(idx)}
+                            onKeyDown={e => handleEditTitleKeyDown(e, idx)}
+                            autoFocus
+                            className="text-base font-semibold bg-transparent border-b border-blue-400 focus:outline-none px-1 w-40"
+                          />
+                        ) : (
+                          <span className="font-semibold truncate" title={discussion.title}>{discussion.title || `Discussion ${idx + 1}`}</span>
+                        )}
+                        <span className="ml-auto text-xs text-muted-foreground">{discussion.messages[0]?.timestamp ? new Date(discussion.messages[0].timestamp).toLocaleString() : ''}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground line-clamp-2">{discussion.messages.map(m => m.text).join(' ').slice(0, 80)}...</div>
                     </div>
-                    <div className="text-xs text-muted-foreground line-clamp-2">{discussion.map(m => m.text).join(' ').slice(0, 80)}...</div>
+                    {/* Boutons actions */}
+                    <button
+                      className="ml-2 p-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900"
+                      title="Renommer"
+                      onClick={() => handleStartEditTitle(idx, discussion.title)}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 13h3l8-8a2.828 2.828 0 00-4-4l-8 8v3zm0 0v3h3" /></svg>
+                    </button>
+                    <button
+                      className="ml-1 p-1 rounded hover:bg-red-100 dark:hover:bg-red-900"
+                      title="Supprimer"
+                      onClick={() => handleDeleteDiscussion(idx)}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                   </li>
                 ))}
               </ul>
