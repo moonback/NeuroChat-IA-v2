@@ -45,7 +45,7 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false }: 
       )}>
         {/* Avatar */}
         <div className={cn(
-          "flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 select-none items-center justify-center rounded-2xl shadow-xl transition-all duration-200 group-hover:scale-105",
+          "flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 select-none items-center justify-center rounded-2xl shadow-xl transition-all duration-200",
           isUser 
             ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white" 
             : "bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 text-white"
