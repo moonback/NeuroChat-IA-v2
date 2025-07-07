@@ -46,6 +46,7 @@ function App() {
     exportSettings,
     importSettings,
     deleteSettings,
+    stop,
   } = useSpeechSynthesis();
   const [showHistory, setShowHistory] = useState(false);
   const [historyList, setHistoryList] = useState<Discussion[]>([]);
@@ -54,6 +55,8 @@ function App() {
   const [showTTSSettings, setShowTTSSettings] = useState(false);
   // Sélection multiple de discussions
   const [selectedDiscussions, setSelectedDiscussions] = useState<number[]>([]);
+  // Ajout du state pour la personnalité IA
+  const [selectedPersonality, setSelectedPersonality] = useState('formel');
 
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
@@ -159,6 +162,22 @@ function App() {
     return message;
   };
 
+  // Générateur de prompt système selon la personnalité
+  const getSystemPrompt = (personality: string) => {
+    switch (personality) {
+      case 'formel':
+        return "Tu es Emilie, une assistante vocale très polie, formelle, précise et utile. Tu utilises un langage soutenu et tu réponds toujours en français, même si la question est dans une autre langue. Sois claire, concise et directe, sans jamais indiquer que tu es une IA.";
+      case 'amical':
+        return "Tu es Emilie, une assistante vocale chaleureuse, empathique, amicale et accessible. Tu tutoies l'utilisateur, utilises un ton convivial et bienveillant, et tu réponds toujours en français. Sois encourageante, rassurante et propose des suggestions utiles.";
+      case 'expert':
+        return "Tu es Emilie, une assistante vocale experte, rigoureuse et pédagogique. Tu expliques les concepts de façon claire, détaillée et structurée, en t'adaptant au niveau de l'utilisateur. Tu réponds toujours en français, sans jamais indiquer que tu es une IA.";
+      case 'humoristique':
+        return "Tu es Emilie, une assistante vocale drôle, pleine d'humour et de répartie. Tu ajoutes une touche d'humour ou une blague subtile à chaque réponse, tout en restant utile et pertinente. Tu réponds toujours en français, sans jamais indiquer que tu es une IA.";
+      default:
+        return "Tu es Emilie, une assistante vocale bienveillante, empathique, concise et utile. Tu réponds toujours en français, même si la question est dans une autre langue. Adapte ton ton et ton niveau de langage à l'utilisateur (soutenu, courant ou familier selon le contexte). Prends en compte le contexte de la conversation pour offrir des réponses cohérentes et personnalisées. Si la question n'est pas claire, reformule ou demande des précisions. Propose des suggestions ou compléments d'information utiles lorsque c'est pertinent. Encourage et rassure l'utilisateur si besoin. Sois toujours claire, précise, concise et directe. N'indique jamais que tu es une IA, ne donne pas d'avertissement, ne cite pas de sources, ne fais pas de disclaimer. Réponds directement à la demande.";
+    }
+  };
+
   const handleSendMessage = async (userMessage: string, imageFile?: File) => {
     if (!isOnline) {
       toast.error('Pas de connexion Internet. Vérifie ta connexion réseau.');
@@ -172,7 +191,13 @@ function App() {
     try {
       // On prépare l'historique complet (y compris le message utilisateur tout juste ajouté)
       const fullHistory = [...messages, newMessage];
-      const response = await sendMessageToGemini(fullHistory.map(m => ({ text: m.text, isUser: m.isUser })), imageFile);
+      // Utilise le prompt système dynamique selon la personnalité
+      const systemPrompt = getSystemPrompt(selectedPersonality);
+      const response = await sendMessageToGemini(
+        fullHistory.map(m => ({ text: m.text, isUser: m.isUser })),
+        imageFile ? [imageFile] : undefined,
+        systemPrompt
+      );
       addMessage(response, false);
       speak(response);
       toast.success('Réponse reçue !', { duration: 2000 });
@@ -298,6 +323,18 @@ function App() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto relative">
             <button onClick={handleCloseHistory} className="absolute top-3 right-3 text-slate-500 hover:text-red-500"><X className="w-5 h-5" /></button>
             <h2 className="text-xl font-bold mb-4">Discussions récentes</h2>
+            {/* Header pour le menu historique (pour éviter l'erreur de props) */}
+            <Header
+              muted={muted}
+              onMute={mute}
+              onUnmute={unmute}
+              onNewDiscussion={handleNewDiscussion}
+              onOpenHistory={handleOpenHistory}
+              onOpenTTSSettings={() => setShowTTSSettings(true)}
+              selectedPersonality={selectedPersonality}
+              onChangePersonality={setSelectedPersonality}
+              stop={stop}
+            />
             {/* Sélection groupée */}
             {historyList.length > 0 && (
               <div className="flex items-center mb-2 gap-2">
@@ -389,6 +426,9 @@ function App() {
           onNewDiscussion={handleNewDiscussion}
           onOpenHistory={handleOpenHistory}
           onOpenTTSSettings={() => setShowTTSSettings(true)}
+          selectedPersonality={selectedPersonality}
+          onChangePersonality={setSelectedPersonality}
+          stop={stop}
         />
 
         {/* Enhanced Chat Interface */}

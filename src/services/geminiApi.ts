@@ -15,32 +15,35 @@ const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-
 
 export async function sendMessageToGemini(
   messages: { text: string; isUser: boolean }[],
-  imageFile?: File
+  files?: File[],
+  systemPrompt?: string
 ): Promise<string> {
   if (!API_KEY) {
     throw new Error('Clé API Gemini introuvable. Merci d\'ajouter VITE_GEMINI_API_KEY dans ton fichier .env.local.');
   }
 
-  const systemMessage = { role: 'user', text: SYSTEM_PROMPT };
+  const systemMessage = { role: 'user', text: systemPrompt || SYSTEM_PROMPT };
   const formattedMessages = [systemMessage, ...messages.map(msg => ({
     role: msg.isUser ? 'user' : 'model',
     text: msg.text
   }))];
 
   let contents: any[] = [];
-  if (imageFile) {
-    const base64Image = await fileToBase64(imageFile);
-    contents.push({
-      parts: [
-        {
-          inline_data: {
-            mime_type: imageFile.type,
-            data: base64Image.split(',')[1],
+  if (files && files.length > 0) {
+    for (const file of files) {
+      const base64Image = await fileToBase64(file);
+      contents.push({
+        parts: [
+          {
+            inline_data: {
+              mime_type: file.type,
+              data: base64Image.split(',')[1],
+            }
           }
-        }
-      ],
-      role: 'user'
-    });
+        ],
+        role: 'user'
+      });
+    }
   }
   contents = [
     ...contents,
