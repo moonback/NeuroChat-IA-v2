@@ -31,10 +31,15 @@ export async function sendMessageToGemini(
   if (imageFile) {
     const base64Image = await fileToBase64(imageFile);
     contents.push({
-      inlineData: {
-        mimeType: imageFile.type,
-        data: base64Image.split(',')[1],
-      }
+      parts: [
+        {
+          inline_data: {
+            mime_type: imageFile.type,
+            data: base64Image.split(',')[1],
+          }
+        }
+      ],
+      role: 'user'
     });
   }
   contents = [

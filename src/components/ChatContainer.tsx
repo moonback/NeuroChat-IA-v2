@@ -11,6 +11,7 @@ interface Message {
   text: string;
   isUser: boolean;
   timestamp: Date;
+  imageUrl?: string;
 }
 
 interface ChatContainerProps {
@@ -166,6 +167,7 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
                     isUser={message.isUser}
                     timestamp={message.timestamp}
                     isLatest={index === messages.length - 1}
+                    imageUrl={message.imageUrl}
                   />
                 </div>
               ))}

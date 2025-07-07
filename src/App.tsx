@@ -15,6 +15,7 @@ interface Message {
   text: string;
   isUser: boolean;
   timestamp: Date;
+  imageUrl?: string;
 }
 
 interface Discussion {
@@ -146,12 +147,13 @@ function App() {
     };
   }, []);
 
-  const addMessage = (text: string, isUser: boolean): Message => {
+  const addMessage = (text: string, isUser: boolean, imageFile?: File): Message => {
     const message: Message = {
       id: Date.now().toString(),
       text,
       isUser,
       timestamp: new Date(),
+      imageUrl: imageFile ? URL.createObjectURL(imageFile) : undefined,
     };
     setMessages(prev => [...prev, message]);
     return message;
@@ -164,7 +166,7 @@ function App() {
     }
 
     // Ajoute le message utilisateur localement
-    const newMessage = addMessage(userMessage, true);
+    const newMessage = addMessage(userMessage, true, imageFile);
     setIsLoading(true);
 
     try {
