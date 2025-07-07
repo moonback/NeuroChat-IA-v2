@@ -11,6 +11,7 @@ interface HeaderProps {
   onNewDiscussion: () => void;
   onOpenHistory: () => void;
   onOpenTTSSettings: () => void;
+  onOpenRagDocs: () => void;
   selectedPersonality: string;
   onChangePersonality: (value: string) => void;
   stop: () => void;
@@ -25,6 +26,7 @@ export function Header({
   onNewDiscussion,
   onOpenHistory,
   onOpenTTSSettings,
+  onOpenRagDocs,
   selectedPersonality,
   onChangePersonality,
   stop,
@@ -114,6 +116,16 @@ export function Header({
           title="Réglages synthèse vocale"
         >
           <Settings2 className="w-5 h-5 text-blue-500" />
+        </Button>
+        {/* Gestion des documents RAG */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onOpenRagDocs}
+          className="hover:bg-green-100 dark:hover:bg-green-900 group"
+          title="Gérer les documents RAG"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
         </Button>
         {/* Sélecteur de personnalité IA */}
         <select

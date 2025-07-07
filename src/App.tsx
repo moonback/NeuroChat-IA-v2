@@ -11,6 +11,7 @@ import { TTSSettingsModal } from '@/components/TTSSettingsModal';
 import { Header } from '@/components/Header';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { searchDocuments } from '@/services/ragSearch';
+import { RagDocsModal } from '@/components/RagDocsModal';
 
 interface Message {
   id: string;
@@ -69,6 +70,8 @@ function App() {
   const [selectedPersonality, setSelectedPersonality] = useState('formel');
   // Ajout du state pour le mode vocal automatique
   const [modeVocalAuto, setModeVocalAuto] = useState(false);
+  // Ajout du state pour la modale de gestion des documents RAG
+  const [showRagDocs, setShowRagDocs] = useState(false);
 
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
@@ -433,6 +436,7 @@ function App() {
               onNewDiscussion={handleNewDiscussion}
               onOpenHistory={handleOpenHistory}
               onOpenTTSSettings={() => setShowTTSSettings(true)}
+              onOpenRagDocs={() => setShowRagDocs(true)}
               selectedPersonality={selectedPersonality}
               onChangePersonality={setSelectedPersonality}
               stop={stop}
@@ -530,6 +534,7 @@ function App() {
           onNewDiscussion={handleNewDiscussion}
           onOpenHistory={handleOpenHistory}
           onOpenTTSSettings={() => setShowTTSSettings(true)}
+          onOpenRagDocs={() => setShowRagDocs(true)}
           selectedPersonality={selectedPersonality}
           onChangePersonality={setSelectedPersonality}
           stop={stop}
@@ -591,6 +596,9 @@ function App() {
           Mode vocal automatique activé
         </div>
       )}
+
+      {/* Modale de gestion des documents RAG */}
+      <RagDocsModal open={showRagDocs} onClose={() => setShowRagDocs(false)} />
     </div>
   );
 }
