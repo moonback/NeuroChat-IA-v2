@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Send, Loader2, Paperclip, Smile } from 'lucide-react';
+import { Send, Loader2, Paperclip, Smile, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -16,16 +16,35 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  
-  const {
-    isListening,
-    startListening,
-    stopListening,
-    transcript,
-    isSupported
-  } = useSpeechRecognition();
 
-  // Auto-focus input when not on mobile
+  // Reconnaissance vocale
+  const {
+    listening,
+    transcript,
+    error: speechError,
+    start,
+    stop,
+    reset,
+    isSupported,
+  } = useSpeechRecognition({
+    interimResults: true,
+    lang: 'fr-FR',
+    continuous: false,
+    onResult: (finalText) => {
+      setInputValue(finalText);
+    },
+    onEnd: (finalText) => {
+      // Envoi automatique à la fin de la dictée
+      if (finalText && finalText.trim().length > 0) {
+        onSendMessage(finalText.trim(), selectedImage || undefined);
+        setInputValue('');
+        setSelectedImage(null);
+        reset();
+      }
+    },
+  });
+
+  // Auto-focus input quand pas sur mobile
   useEffect(() => {
     if (!('ontouchstart' in window)) {
       inputRef.current?.focus();
@@ -39,10 +58,12 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
   };
 
   const handleSend = () => {
-    if (!inputValue.trim() && !selectedImage) return;
-    onSendMessage(inputValue, selectedImage || undefined);
+    const valueToSend = listening && transcript ? transcript : inputValue;
+    if (!valueToSend.trim() && !selectedImage) return;
+    onSendMessage(valueToSend, selectedImage || undefined);
     setInputValue('');
     setSelectedImage(null);
+    reset();
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -52,17 +73,20 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
     }
   };
 
-  const toggleListening = () => {
-    if (isListening) {
-      stopListening();
+  // Affichage prioritaire de la voix si écoute en cours
+  const displayValue = listening ? transcript : inputValue;
+  const hasContent = displayValue.trim().length > 0 || !!selectedImage;
+
+  // Gestion du micro (start/stop)
+  const handleMicClick = () => {
+    if (!isSupported) return;
+    if (listening) {
+      stop();
     } else {
-      startListening();
-      inputRef.current?.focus();
+      reset();
+      start();
     }
   };
-
-  const displayValue = inputValue || transcript;
-  const hasContent = displayValue.trim().length > 0;
 
   return (
     <div className="p-2 sm:p-3 bg-gradient-to-r from-white/60 to-slate-50/60 dark:from-slate-900/60 dark:to-slate-800/60 backdrop-blur-xl border-t border-white/20 dark:border-slate-700/20">
@@ -101,22 +125,22 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
       {/* Input container */}
       <div className="flex items-end gap-2 sm:gap-3">
         {/* Bouton upload image */}
-      <input
-        type="file"
-        accept="image/*"
-        style={{ display: 'none' }}
-        ref={fileInputRef}
-        onChange={handleFileChange}
-      />
-      <button
-        type="button"
-        onClick={() => fileInputRef.current?.click()}
-        className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-600 dark:text-blue-200"
-        title="Envoyer une image"
-        disabled={isLoading}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 002.828 2.828L18 9.828M7 7h.01M7 7a5 5 0 017.071 7.071l-6.586 6.586a2 2 0 01-2.828-2.828L15.172 7z" /></svg>
-      </button>
+        <input
+          type="file"
+          accept="image/*"
+          style={{ display: 'none' }}
+          ref={fileInputRef}
+          onChange={handleFileChange}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-600 dark:text-blue-200"
+          title="Envoyer une image"
+          disabled={isLoading}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 002.828 2.828L18 9.828M7 7h.01M7 7a5 5 0 017.071 7.071l-6.586 6.586a2 2 0 01-2.828-2.828L15.172 7z" /></svg>
+        </button>
         {/* Main input area */}
         <div className="flex-1 relative">
           <div className={cn(
@@ -124,7 +148,6 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
             isFocused 
               ? "border-blue-400 dark:border-blue-500 shadow-md shadow-blue-200/50 dark:shadow-blue-800/50" 
               : "border-slate-200 dark:border-slate-700",
-            isListening && "border-red-400 dark:border-red-500 shadow-md shadow-red-200/50 dark:shadow-red-800/50",
             "bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm"
           )}>
             <Input
@@ -134,51 +157,52 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
               onKeyPress={handleKeyPress}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              placeholder={isListening ? "J'écoute... Parle maintenant" : "Écris ton message ou utilise la voix..."}
-              disabled={isLoading}
+              placeholder={listening ? "Parle, je t'écoute..." : "Écris ton message..."}
+              disabled={isLoading || listening}
               className={cn(
                 "border-0 bg-transparent h-8 sm:h-9 text-xs sm:text-sm rounded-xl sm:rounded-2xl",
-                "pr-14 sm:pr-16 pl-2 sm:pl-3 py-2 sm:py-2.5",
+                "pr-20 sm:pr-24 pl-2 sm:pl-3 py-2 sm:py-2.5",
                 "focus-visible:ring-0 focus-visible:ring-offset-0",
                 "placeholder:text-muted-foreground/60"
               )}
             />
-            {/* Voice button */}
-            {isSupported && (
-              <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  onClick={toggleListening}
-                  disabled={isLoading}
-                  className={cn(
-                    "h-6 w-6 sm:h-7 sm:w-7 rounded-lg transition-all duration-200",
-                    isListening 
-                      ? "bg-red-500 hover:bg-red-600 text-white shadow-md animate-pulse" 
-                      : "bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-muted-foreground"
-                  )}
-                >
-                  {isListening ? (
-                    <MicOff className="h-3 w-3" />
-                  ) : (
-                    <Mic className="h-3 w-3" />
-                  )}
-                </Button>
-                {/* Emoji button */}
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-muted-foreground transition-all duration-200"
-                >
-                  <Smile className="h-3 w-3" />
-                </Button>
-              </div>
-            )}
+            {/* Bouton micro */}
+            <div className="absolute right-10 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              <Button
+                type="button"
+                size="icon"
+                variant={listening ? "default" : "ghost"}
+                className={cn(
+                  "h-7 w-7 rounded-lg transition-all duration-200",
+                  listening
+                    ? "bg-red-500 text-white animate-pulse shadow-lg hover:bg-red-600"
+                    : "bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-muted-foreground"
+                )}
+                onClick={handleMicClick}
+                title={listening ? "Arrêter la dictée vocale" : !isSupported ? "Reconnaissance vocale non supportée" : "Activer la dictée vocale"}
+                disabled={isLoading || !isSupported}
+              >
+                {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+            </div>
+            {/* Emoji button */}
+            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-muted-foreground transition-all duration-200"
+              >
+                <Smile className="h-3 w-3" />
+              </Button>
+            </div>
           </div>
+          {/* Erreur reconnaissance vocale */}
+          {speechError && (
+            <div className="text-xs text-red-500 mt-1 animate-fadeIn">{speechError}</div>
+          )}
           {/* Character count */}
-          {hasContent && (
+          {displayValue && (
             <div className="absolute -bottom-4 right-0 text-[10px] text-muted-foreground/60">
               {displayValue.length} caractères
             </div>
@@ -204,39 +228,6 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
           )}
         </Button>
       </div>
-      {/* Voice status indicator */}
-      {isListening && (
-        <div className="flex items-center justify-center mt-2 gap-1 text-xs text-red-600 dark:text-red-400">
-          <div className="flex space-x-0.5">
-            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce"></div>
-          </div>
-          <span className="font-medium">Enregistrement... Clique sur le micro pour arrêter</span>
-        </div>
-      )}
-      {/* Quick suggestions */}
-      {/* {!hasContent && !isListening && (
-        <div className="flex flex-wrap gap-1 mt-2">
-          {[
-            "Raconte-moi une blague",
-            "Quel temps fait-il ?",
-            "Aide-moi à écrire un mail",
-            "Explique-moi la physique quantique"
-          ].map((suggestion) => (
-            <Button
-              key={suggestion}
-              variant="ghost"
-              size="sm"
-              onClick={() => setInputValue(suggestion)}
-              className="text-[11px] bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm hover:bg-white/80 dark:hover:bg-slate-800/80 border border-white/20 dark:border-slate-700/20 rounded-full"
-            >
-              {suggestion}
-            </Button>
-          ))}
-        </div>
-      )} */}
-      
     </div>
   );
 }
