@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
-import { Loader2, Sparkles, ArrowDown, Trash2, Square } from 'lucide-react';
+import { Loader2, Sparkles, ArrowDown, Trash2, Square, MessageCircle, Mic, Zap, Brain, Clock } from 'lucide-react';
 import { TypingIndicator } from './TypingIndicator';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 
@@ -51,99 +51,123 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
   };
 
   return (
-    <div className="flex-1 h-full relative">
+    <div className="flex-1 h-full relative bg-gradient-to-br from-slate-50/50 via-white to-blue-50/30 dark:from-slate-900/50 dark:via-slate-900 dark:to-slate-800/30">
       <ScrollArea 
-        className="flex-1 h-full overflow-y-auto p-4 sm:p-6" 
+        className="flex-1 h-full overflow-y-auto p-2 sm:p-3" 
         ref={scrollAreaRef}
         onScrollCapture={handleScroll}
       >
-        <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-2 sm:space-y-3">
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full min-h-[400px] sm:min-h-[500px] text-center px-4">
-              <div className="relative mb-8">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl">
-                  <Sparkles className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
+            <div className="flex flex-col items-center justify-center h-full min-h-[250px] sm:min-h-[300px] text-center px-2">
+              {/* Hero section améliorée */}
+              <div className="relative mb-4 group">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:rotate-2">
+                  <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full border-3 border-white dark:border-slate-900 flex items-center justify-center shadow-lg">
-                  <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+                {/* Indicateur de statut animé */}
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center shadow-lg animate-pulse">
+                  <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
                 </div>
-                {/* Floating particles */}
-                <div className="absolute -top-4 -left-4 w-3 h-3 bg-blue-400 rounded-full animate-bounce [animation-delay:0.5s] opacity-60"></div>
-                <div className="absolute -bottom-4 -right-4 w-2 h-2 bg-purple-400 rounded-full animate-bounce [animation-delay:1s] opacity-60"></div>
-                <div className="absolute top-1/2 -left-6 w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:1.5s] opacity-60"></div>
+                {/* Particules flottantes */}
+                <div className="absolute -top-3 -left-3 w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.5s] opacity-70 shadow-lg"></div>
+                <div className="absolute -bottom-3 -right-3 w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:1s] opacity-70 shadow-md"></div>
+                <div className="absolute top-1/2 -left-4 w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:1.5s] opacity-70 shadow-md"></div>
+                <div className="absolute -top-2 right-3 w-1 h-1 bg-pink-400 rounded-full animate-bounce [animation-delay:2s] opacity-60 shadow-sm"></div>
+                {/* Cercles de pulsation */}
+                <div className="absolute inset-0 rounded-full border border-blue-300 animate-ping opacity-30"></div>
+                <div className="absolute inset-0 rounded-full border border-purple-300 animate-ping opacity-20 [animation-delay:1s]"></div>
               </div>
-              
-              <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 dark:from-slate-200 dark:via-slate-300 dark:to-slate-400 bg-clip-text text-transparent">
-                Bienvenue sur Voice Chat
-              </h3>
-              
-              <p className="text-muted-foreground max-w-lg text-sm sm:text-base leading-relaxed mb-8">
-                Découvre le futur de la conversation avec l'IA : reconnaissance vocale avancée, langage naturel et réponses intelligentes propulsées par Google Gemini Pro.
-              </p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl">
-                <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 rounded-2xl border border-blue-200/50 dark:border-blue-700/30">
-                  <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center mb-3 mx-auto">
-                    <Sparkles className="w-5 h-5 text-white" />
+              <div className="max-w-xl mx-auto">
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 dark:from-slate-200 dark:via-slate-300 dark:to-slate-400 bg-clip-text text-transparent">
+                  Bienvenue sur NeuroChat
+                </h3>
+                <p className="text-muted-foreground max-w-md mx-auto text-xs sm:text-sm leading-relaxed mb-4">
+                  Découvre le futur de la conversation avec l'IA : reconnaissance vocale avancée, langage naturel et réponses intelligentes propulsées par Google Gemini Pro.
+                </p>
+                {/* Cartes de fonctionnalités */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 w-full max-w-xl mb-4">
+                  <div className="group p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 rounded-xl border border-blue-200/50 dark:border-blue-700/30 hover:shadow-lg transition-all duration-300 hover:scale-105">
+                    <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mb-2 mx-auto group-hover:scale-105 transition-transform duration-300">
+                      <Brain className="w-4 h-4 text-white" />
+                    </div>
+                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1 text-xs">IA avancée</h4>
+                    <p className="text-[10px] text-blue-700 dark:text-blue-300">Compréhension contextuelle et réponses naturelles</p>
                   </div>
-                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">IA avancée</h4>
-                  <p className="text-xs text-blue-700 dark:text-blue-300">Compréhension contextuelle et réponses naturelles</p>
-                </div>
-                
-                <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/20 rounded-2xl border border-green-200/50 dark:border-green-700/30">
-                  <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center mb-3 mx-auto">
-                    <Sparkles className="w-5 h-5 text-white" />
+                  <div className="group p-3 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/20 rounded-xl border border-emerald-200/50 dark:border-emerald-700/30 hover:shadow-lg transition-all duration-300 hover:scale-105">
+                    <div className="w-7 h-7 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center mb-2 mx-auto group-hover:scale-105 transition-transform duration-300">
+                      <Mic className="w-4 h-4 text-white" />
+                    </div>
+                    <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-1 text-xs">Prêt pour la voix</h4>
+                    <p className="text-[10px] text-emerald-700 dark:text-emerald-300">Parle naturellement et écoute les réponses</p>
                   </div>
-                  <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2">Prêt pour la voix</h4>
-                  <p className="text-xs text-green-700 dark:text-green-300">Parle naturellement et écoute les réponses</p>
-                </div>
-                
-                <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/20 rounded-2xl border border-purple-200/50 dark:border-purple-700/30">
-                  <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center mb-3 mx-auto">
-                    <Sparkles className="w-5 h-5 text-white" />
+                  <div className="group p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/20 rounded-xl border border-purple-200/50 dark:border-purple-700/30 hover:shadow-lg transition-all duration-300 hover:scale-105 sm:col-span-2 lg:col-span-1">
+                    <div className="w-7 h-7 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mb-2 mx-auto group-hover:scale-105 transition-transform duration-300">
+                      <Zap className="w-4 h-4 text-white" />
+                    </div>
+                    <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-1 text-xs">Temps réel</h4>
+                    <p className="text-[10px] text-purple-700 dark:text-purple-300">Réponses instantanées et fluides</p>
                   </div>
-                  <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">Temps réel</h4>
-                  <p className="text-xs text-purple-700 dark:text-purple-300">Réponses instantanées et fluides</p>
                 </div>
-              </div>
-              
-              <div className="mt-8 text-xs text-muted-foreground/70">
-                Commence par écrire un message ou clique sur le micro pour parler
+                {/* Call to action */}
+                <div className="p-3 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-700/50 rounded-xl border border-slate-200/50 dark:border-slate-600/50 backdrop-blur-sm">
+                  <div className="flex items-center justify-center gap-1 mb-1">
+                    <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse" />
+                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                      Prêt à commencer ?
+                    </span>
+                    <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse [animation-delay:0.5s]" />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground/80">
+                    Écris un message ou clique sur le micro pour parler
+                  </p>
+                </div>
               </div>
             </div>
           ) : (
             <>
-              {/* Chat header with message count */}
+              {/* En-tête du chat */}
               {messages.length > 0 && (
-                <div className="flex items-center justify-between pb-4 border-b border-slate-200/50 dark:border-slate-700/50 mb-6">
-                  <div className="text-sm text-muted-foreground">
-                    {messages.length} message{messages.length !== 1 ? 's' : ''}
-                  </div>
+                <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-200/50 dark:border-slate-700/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-md p-2 mx-1">
                   <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded flex items-center justify-center">
+                      <MessageCircle className="w-3 h-3 text-white" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        {messages.length} message{messages.length !== 1 ? 's' : ''}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <Clock className="w-2 h-2" />
+                        Conversation active
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={stop}
                       disabled={muted}
-                      className="text-muted-foreground hover:text-red-500 transition-colors"
+                      className="text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-200 rounded-md text-xs px-2 py-1"
                       title="Arrêter la voix"
                     >
-                      <Square className="w-4 h-4 mr-2" />
+                      <Square className="w-3 h-3 mr-1" />
                       Stop
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={clearChat}
-                      className="text-muted-foreground hover:text-red-500 transition-colors"
+                      className="text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-200 rounded-md text-xs px-2 py-1"
                     >
-                      <Trash2 className="w-4 h-4 mr-2" />
+                      <Trash2 className="w-3 h-3 mr-1" />
                       Effacer
                     </Button>
                   </div>
                 </div>
               )}
-              
               {messages.map((message, index) => (
                 <div key={message.id} className="animate-fadeIn">
                   <MessageBubble
@@ -156,25 +180,22 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
               ))}
             </>
           )}
-          
           {isLoading && (
             <div className="flex justify-start animate-fadeIn">
               <TypingIndicator />
             </div>
           )}
-          
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
-      
-      {/* Scroll to bottom button */}
+      {/* Bouton de scroll */}
       {showScrollButton && (
         <Button
           onClick={scrollToBottom}
           size="icon"
-          className="absolute bottom-4 right-4 h-10 w-10 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-lg transition-all duration-200 animate-fadeIn"
+          className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 animate-fadeIn hover:scale-110 group"
         >
-          <ArrowDown className="h-4 w-4" />
+          <ArrowDown className="h-4 w-4 group-hover:animate-bounce" />
         </Button>
       )}
     </div>

@@ -56,13 +56,27 @@ export function useSpeechSynthesis() {
     function updateVoices() {
       const allVoices = window.speechSynthesis.getVoices();
       setVoices(allVoices);
+      // Sélectionner la voix Google française par défaut si aucune voix n'est déjà sélectionnée
+      if (!voiceURI && allVoices.length > 0) {
+        // Cherche une voix Google française
+        const googleFr = allVoices.find(v => v.lang === 'fr-FR' && v.name.toLowerCase().includes('google'));
+        if (googleFr) {
+          setVoiceURI(googleFr.voiceURI);
+        } else {
+          // Sinon, prend la première voix française disponible
+          const fr = allVoices.find(v => v.lang === 'fr-FR');
+          if (fr) {
+            setVoiceURI(fr.voiceURI);
+          }
+        }
+      }
     }
     updateVoices();
     window.speechSynthesis.onvoiceschanged = updateVoices;
     return () => {
       window.speechSynthesis.onvoiceschanged = null;
     };
-  }, []);
+  }, [voiceURI]);
 
   // Détecter la langue courante selon le texte (fr-FR ou en-US)
   const detectLang = useCallback((text: string): 'fr-FR' | 'en-US' => {

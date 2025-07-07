@@ -8,6 +8,7 @@ import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { Mic, MessageCircle, Zap, Shield, Globe, History, X, Settings2, Volume2, VolumeX } from 'lucide-react';
 import { toast } from 'sonner';
 import { TTSSettingsModal } from '@/components/TTSSettingsModal';
+import { Header } from '@/components/Header';
 
 interface Message {
   id: string;
@@ -378,78 +379,15 @@ function App() {
       )}
 
       <div className="w-full max-w-12xl h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] flex flex-col relative z-10">
-        {/* Enhanced Header */}
-        <div className="flex items-center justify-between mb-4 sm:mb-6 px-2 sm:px-0">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 text-white shadow-xl">
-                <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7" />
-              </div>
-              {/* Online status indicator */}
-              <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 ${
-                isOnline ? 'bg-green-500' : 'bg-red-500'
-              }`}>
-                <div className={`w-full h-full rounded-full ${
-                  isOnline ? 'bg-green-400 animate-pulse' : 'bg-red-400'
-                }`}></div>
-              </div>
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
-                Voice Chat
-              </h1>
-              <p className="text-sm sm:text-base text-muted-foreground flex items-center gap-2">
-                <span>Des conversations IA, à ta façon</span>
-                <div className="flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-green-600 dark:text-green-400 font-medium">
-                    {isOnline ? 'En ligne' : 'Hors ligne'}
-                  </span>
-                </div>
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            
-            
-            
-            <ThemeToggle />
-            {/* Bouton mute/unmute TTS */}
-            <button
-              onClick={muted ? unmute : mute}
-              className="ml-2 p-2 rounded-full bg-white/60 dark:bg-slate-800/60 hover:bg-white/80 dark:hover:bg-slate-800/80 border border-white/20 dark:border-slate-700/20 transition-all duration-200"
-              title={muted ? 'Activer la synthèse vocale' : 'Désactiver la synthèse vocale'}
-            >
-              {muted ? <VolumeX className="w-5 h-5 text-red-500" /> : <Volume2 className="w-5 h-5 text-green-500" />}
-            </button>
-            {/* Bouton réglages TTS */}
-            <button
-              onClick={() => setShowTTSSettings(true)}
-              className="ml-1 p-2 rounded-full bg-white/60 dark:bg-slate-800/60 hover:bg-white/80 dark:hover:bg-slate-800/80 border border-white/20 dark:border-slate-700/20 transition-all duration-200"
-              title="Réglages synthèse vocale"
-            >
-              <Settings2 className="w-5 h-5 text-blue-500" />
-            </button>
-            {/* BOUTON NOUVELLE DISCUSSION */}
-            <button
-              onClick={handleNewDiscussion}
-              className="ml-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold shadow hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 border-0 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
-              title="Nouvelle discussion"
-            >
-              Nouvelle discussion
-            </button>
-            {/* BOUTON HISTORIQUE */}
-            <button
-              onClick={handleOpenHistory}
-              className="ml-2 px-3 py-2 rounded-xl bg-gradient-to-r from-slate-200 to-slate-400 dark:from-slate-700 dark:to-slate-800 text-slate-700 dark:text-slate-100 font-semibold shadow hover:from-blue-100 hover:to-blue-300 dark:hover:from-blue-900 dark:hover:to-blue-800 transition-all duration-200 border-0 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 flex items-center gap-2"
-              title="Afficher l'historique"
-            >
-              <History className="w-4 h-4" />
-              Historique
-            </button>
-          </div>
-        </div>
+        {/* Header compact performant */}
+        <Header
+          muted={muted}
+          onMute={mute}
+          onUnmute={unmute}
+          onNewDiscussion={handleNewDiscussion}
+          onOpenHistory={handleOpenHistory}
+          onOpenTTSSettings={() => setShowTTSSettings(true)}
+        />
 
         {/* Enhanced Chat Interface */}
         <Card className="flex-1 flex flex-col shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl overflow-hidden ring-1 ring-white/20 dark:ring-slate-700/20">
