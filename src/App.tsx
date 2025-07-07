@@ -92,7 +92,7 @@ function App() {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-400/5 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="w-full max-w-5xl h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] flex flex-col relative z-10">
+      <div className="w-full max-w-12xl h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] flex flex-col relative z-10">
         {/* Enhanced Header */}
         <div className="flex items-center justify-between mb-4 sm:mb-6 px-2 sm:px-0">
           <div className="flex items-center gap-4">
