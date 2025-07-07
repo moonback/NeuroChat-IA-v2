@@ -216,6 +216,8 @@ function App() {
     try {
       // On prépare l'historique complet (y compris le message utilisateur tout juste ajouté)
       const fullHistory = [...messages, newMessage];
+      // On ne garde que les messages qui ont un champ text (donc pas les messages RAG)
+      const filteredHistory = fullHistory.filter(m => typeof m.text === 'string');
       // On construit le contexte documentaire pour le prompt
       let ragContext = '';
       if (passages.length > 0) {
@@ -230,7 +232,7 @@ function App() {
       // On fusionne le contexte documentaire avec le prompt système
       const prompt = `${systemPrompt}\n${ragContext}Question utilisateur : ${userMessage}`;
       const response = await sendMessageToGemini(
-        fullHistory.map(m => ({ text: m.text, isUser: m.isUser })),
+        filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
         imageFile ? [imageFile] : undefined,
         prompt
       );
