@@ -1,4 +1,15 @@
-import documents from '../data/documents.json';
+// Charger tous les fichiers .txt et .md du dossier rag_docs (Vite only)
+const modules = import.meta.glob('../data/rag_docs/*.{txt,md}', { as: 'raw', eager: true });
+
+const documents = Object.entries(modules).map(([path, contenu], idx) => {
+  // Extraire le nom du fichier pour le titre
+  const titre = path.split('/').pop()?.replace(/\.[^/.]+$/, '') || `Document ${idx + 1}`;
+  return {
+    id: idx + 1,
+    titre,
+    contenu: contenu as string,
+  };
+});
 
 let model: any = null;
 let documentEmbeddings: number[][] = [];

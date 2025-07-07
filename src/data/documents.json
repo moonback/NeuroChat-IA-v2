@@ -1,5 +1,0 @@
-[
-  { "id": 1, "titre": "Introduction à l'IA", "contenu": "L'intelligence artificielle (IA) désigne des systèmes capables d'effectuer des tâches normalement réalisées par l'humain. Elle englobe l'apprentissage automatique, le traitement du langage naturel, etc." },
-  { "id": 2, "titre": "Réseaux de neurones", "contenu": "Un réseau de neurones est un modèle informatique inspiré du cerveau humain, utilisé pour reconnaître des motifs et résoudre des problèmes complexes." },
-  { "id": 3, "titre": "Traitement du langage naturel", "contenu": "Le traitement du langage naturel (NLP) permet aux machines de comprendre et de générer du texte ou de la parole humaine." }
-] 
