@@ -150,10 +150,18 @@ export function useSpeechSynthesis() {
     setVoiceURI(DEFAULTS.voiceURI);
   };
 
+  // Ajout de la fonction stop pour annuler la lecture TTS en cours
+  const stop = useCallback(() => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+  }, []);
+
   return {
     speak,
     mute,
     unmute,
+    stop,
     muted,
     rate,
     setRate,

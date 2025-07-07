@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
-import { Loader2, Sparkles, ArrowDown, Trash2 } from 'lucide-react';
+import { Loader2, Sparkles, ArrowDown, Trash2, Square } from 'lucide-react';
 import { TypingIndicator } from './TypingIndicator';
+import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 
 interface Message {
   id: string;
@@ -22,6 +23,7 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(true);
+  const { stop, muted } = useSpeechSynthesis();
 
   useEffect(() => {
     if (isNearBottom) {
@@ -117,15 +119,28 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
                   <div className="text-sm text-muted-foreground">
                     {messages.length} message{messages.length !== 1 ? 's' : ''}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearChat}
-                    className="text-muted-foreground hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Effacer
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={stop}
+                      disabled={muted}
+                      className="text-muted-foreground hover:text-red-500 transition-colors"
+                      title="Arrêter la voix"
+                    >
+                      <Square className="w-4 h-4 mr-2" />
+                      Stop
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearChat}
+                      className="text-muted-foreground hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Effacer
+                    </Button>
+                  </div>
                 </div>
               )}
               
