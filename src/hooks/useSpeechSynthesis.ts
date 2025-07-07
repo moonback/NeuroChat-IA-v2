@@ -16,6 +16,12 @@ const DEFAULTS = {
   voiceURI: '',
 };
 
+// Fonction utilitaire pour filtrer les caractères spéciaux
+function filtrerCaracteresSpeciaux(texte: string): string {
+  // Garde lettres, chiffres, accents, espaces et ponctuation de base
+  return texte.replace(/[^a-zA-Z0-9À-ÿ\s.,!?'-]/g, '');
+}
+
 export function useSpeechSynthesis() {
   const [muted, setMuted] = useState(false);
   const [rate, setRate] = useState(DEFAULTS.rate);
@@ -68,7 +74,9 @@ export function useSpeechSynthesis() {
   const speak = useCallback((text: string, options: SpeechSynthesisOptions = {}) => {
     if (muted || !('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
-    const utterance = new window.SpeechSynthesisUtterance(text);
+    // Nettoyer le texte avant la synthèse
+    const texteNettoye = filtrerCaracteresSpeciaux(text);
+    const utterance = new window.SpeechSynthesisUtterance(texteNettoye);
     utterance.rate = options.rate ?? rate;
     utterance.pitch = options.pitch ?? pitch;
     utterance.volume = options.volume ?? volume;

@@ -49,9 +49,9 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
   };
 
   return (
-    <div className="flex-1 relative">
+    <div className="flex-1 h-full relative">
       <ScrollArea 
-        className="h-full p-4 sm:p-6" 
+        className="flex-1 h-full overflow-y-auto p-4 sm:p-6" 
         ref={scrollAreaRef}
         onScrollCapture={handleScroll}
       >
