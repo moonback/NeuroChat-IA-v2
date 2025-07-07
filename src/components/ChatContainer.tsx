@@ -156,15 +156,6 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
                       <Square className="w-3 h-3 mr-1" />
                       Stop
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearChat}
-                      className="text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-200 rounded-md text-xs px-2 py-1"
-                    >
-                      <Trash2 className="w-3 h-3 mr-1" />
-                      Effacer
-                    </Button>
                   </div>
                 </div>
               )}

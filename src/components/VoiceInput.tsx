@@ -168,7 +168,7 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
         </div>
       )}
       {/* Quick suggestions */}
-      {!hasContent && !isListening && (
+      {/* {!hasContent && !isListening && (
         <div className="flex flex-wrap gap-1 mt-2">
           {[
             "Raconte-moi une blague",
@@ -187,7 +187,7 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
             </Button>
           ))}
         </div>
-      )}
+      )} */}
     </div>
   );
 }
