@@ -206,7 +206,7 @@ function App() {
       return;
     }
     // Étape RAG : recherche documentaire
-    const passages = searchDocuments(userMessage, 3);
+    const passages = await searchDocuments(userMessage, 3);
     if (passages.length > 0) {
       addRagContextMessage(passages);
     }
