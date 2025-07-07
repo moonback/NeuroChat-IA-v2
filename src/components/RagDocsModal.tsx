@@ -99,9 +99,66 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const content = await page.getTextContent();
-          text += content.items.map((item: any) => item.str).join(' ') + '\n';
+          // Regrouper les items par ligne (y)
+          let lastY = null;
+          let line = '';
+          for (const item of content.items as any[]) {
+            if (lastY !== null && Math.abs(item.transform[5] - lastY) > 2) {
+              text += line.trim() + '\n';
+              line = '';
+            }
+            line += item.str + ' ';
+            lastY = item.transform[5];
+          }
+          text += line.trim() + '\n';
         }
-        return text;
+        // Post-traitement : filtrer les lignes inutiles (encore plus strict)
+        let lines = text.split('\n')
+          .map(l => l.trim())
+          .filter(l =>
+            l.length > 4 && // Ignore les lignes très courtes
+            !/^[A-Z]{1,3}\d{0,3}$/.test(l) && // Codes type A10, B2, etc.
+            !/^(\d{1,3}\s*)+$/.test(l) && // Lignes qui ne sont que des chiffres séparés par des espaces
+            !/^([A-Z]{1,3}\s*)+$/.test(l) && // Lignes qui ne sont que des lettres majuscules séparées par des espaces
+            !/^([A-Z]{1,3}\d{0,3}\s*)+$/.test(l) && // Lignes qui ne sont que des codes séparés par des espaces
+            !/^PUSH$/i.test(l) && // PUSH seul
+            /[a-zA-Zà-ÿ]{3,}/.test(l) // Doit contenir au moins un mot de 3 lettres ou plus
+          );
+        // Suppression des caractères spéciaux inutiles
+        lines = lines.map(l =>
+          l
+            .replace(/[•·●◆■□▪▶►–—\-]{2,}/g, ' ') // séquences de puces/tirets
+            .replace(/\s{2,}/g, ' ') // espaces multiples
+            .replace(/[^\x20-\x7Eà-ÿÀ-ŸœŒçÇ€$£¥%°.,;:!?()\[\]{}<>\/@#'"\-\n]/g, '') // caractères non imprimables sauf ponctuation de base
+            .replace(/\.{3,}/g, '.') // séquences de points
+            .trim()
+        );
+        // Suppression de motifs supplémentaires (numéros de page, symboles, valeurs seules)
+        const isTitle = (l: string) => /^[A-ZÀ-Ÿ0-9\s\-]{6,}$/.test(l) && l.length < 60;
+        lines = lines.filter(l =>
+          !/^Page\s*\d+([\/\-]\d+)?$/i.test(l) && // Page 3, Page 3/12, Page 3-12
+          !/^[-–—\s]*\d+[-–—\s]*$/.test(l) && // - 4 -, -- 12 --
+          !/^[.,;:!?()\[\]{}<>\/@#'"\-\s]+$/.test(l) && // lignes de ponctuation/symboles
+          !/^\d+(\s*(L|kg|cm|mm|g|ml|cl|m|W|V|A|°C|°F|%)?)$/.test(l) // valeurs numériques seules ou avec unité
+        );
+        // Mise en forme des titres (saut de ligne avant/après)
+        lines = lines.map(l => isTitle(l) ? `\n${l}\n` : l);
+        // Fusion des lignes courtes avec la suivante (sauf titres)
+        let fused: string[] = [];
+        for (let i = 0; i < lines.length; i++) {
+          let current = lines[i];
+          while (
+            current.length < 40 &&
+            i + 1 < lines.length &&
+            !isTitle(current)
+          ) {
+            current += ' ' + lines[i + 1];
+            i++;
+          }
+          fused.push(current.trim());
+        }
+        // Normalisation des sauts de ligne
+        return fused.join('\n').replace(/\n{3,}/g, '\n\n');
       } catch (e) {
         throw new Error('Erreur lors de l\'extraction du PDF.');
       }
