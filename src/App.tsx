@@ -50,6 +50,8 @@ function App() {
   const [editingTitleIdx, setEditingTitleIdx] = useState<number | null>(null);
   const [editingTitleValue, setEditingTitleValue] = useState('');
   const [showTTSSettings, setShowTTSSettings] = useState(false);
+  // Sélection multiple de discussions
+  const [selectedDiscussions, setSelectedDiscussions] = useState<number[]>([]);
 
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
@@ -268,6 +270,23 @@ function App() {
     toast.success('Réglages réinitialisés.');
   };
 
+  // Supprimer plusieurs discussions sélectionnées
+  const handleDeleteSelected = () => {
+    const newHistory = historyList.filter((_, idx) => !selectedDiscussions.includes(idx));
+    setHistoryList(newHistory);
+    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newHistory));
+    setSelectedDiscussions([]);
+  };
+
+  // Sélectionner/désélectionner tout
+  const handleSelectAll = () => {
+    if (selectedDiscussions.length === historyList.length) {
+      setSelectedDiscussions([]);
+    } else {
+      setSelectedDiscussions(historyList.map((_, idx) => idx));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Menu historique des discussions */}
@@ -276,12 +295,45 @@ function App() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto relative">
             <button onClick={handleCloseHistory} className="absolute top-3 right-3 text-slate-500 hover:text-red-500"><X className="w-5 h-5" /></button>
             <h2 className="text-xl font-bold mb-4">Discussions récentes</h2>
+            {/* Sélection groupée */}
+            {historyList.length > 0 && (
+              <div className="flex items-center mb-2 gap-2">
+                <input
+                  type="checkbox"
+                  checked={selectedDiscussions.length === historyList.length}
+                  onChange={handleSelectAll}
+                  className="accent-blue-500"
+                />
+                <span className="text-sm">Tout sélectionner</span>
+                {selectedDiscussions.length > 0 && (
+                  <button
+                    onClick={handleDeleteSelected}
+                    className="ml-auto px-3 py-1 rounded bg-red-500 text-white font-semibold hover:bg-red-600 text-xs"
+                  >
+                    Supprimer la sélection
+                  </button>
+                )}
+              </div>
+            )}
             {historyList.length === 0 ? (
               <div className="text-muted-foreground text-center">Aucune discussion sauvegardée.</div>
             ) : (
               <ul className="space-y-4">
                 {historyList.map((discussion, idx) => (
                   <li key={idx} className="border rounded-lg p-3 bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition group flex items-center gap-2">
+                    {/* Checkbox de sélection */}
+                    <input
+                      type="checkbox"
+                      checked={selectedDiscussions.includes(idx)}
+                      onChange={() => {
+                        setSelectedDiscussions(selected =>
+                          selected.includes(idx)
+                            ? selected.filter(i => i !== idx)
+                            : [...selected, idx]
+                        );
+                      }}
+                      className="mr-2 accent-blue-500"
+                    />
                     <div className="flex-1 min-w-0" onClick={() => handleLoadDiscussion(discussion)} style={{ cursor: 'pointer' }}>
                       <div className="flex items-center gap-2 mb-1">
                         <History className="w-4 h-4 text-blue-500" />
