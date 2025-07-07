@@ -13,23 +13,45 @@ interface GeminiResponse {
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-export async function sendMessageToGemini(messages: { text: string; isUser: boolean }[]): Promise<string> {
+export async function sendMessageToGemini(
+  messages: { text: string; isUser: boolean }[],
+  files?: File[],
+  systemPrompt?: string
+): Promise<string> {
   if (!API_KEY) {
     throw new Error('Clé API Gemini introuvable. Merci d\'ajouter VITE_GEMINI_API_KEY dans ton fichier .env.local.');
   }
 
-  // Ajout du prompt système en début de conversation
-  const systemMessage = { role: 'user', text: SYSTEM_PROMPT };
+  const systemMessage = { role: 'user', text: systemPrompt || SYSTEM_PROMPT };
   const formattedMessages = [systemMessage, ...messages.map(msg => ({
     role: msg.isUser ? 'user' : 'model',
     text: msg.text
   }))];
 
-  // Gemini attend un tableau de 'contents' avec des 'parts' pour chaque message
-  const contents = formattedMessages.map(msg => ({
-    parts: [{ text: msg.text }],
-    role: msg.role
-  }));
+  let contents: any[] = [];
+  if (files && files.length > 0) {
+    for (const file of files) {
+      const base64Image = await fileToBase64(file);
+      contents.push({
+        parts: [
+          {
+            inline_data: {
+              mime_type: file.type,
+              data: base64Image.split(',')[1],
+            }
+          }
+        ],
+        role: 'user'
+      });
+    }
+  }
+  contents = [
+    ...contents,
+    ...formattedMessages.map(msg => ({
+      parts: [{ text: msg.text }],
+      role: msg.role
+    }))
+  ];
 
   try {
     const response = await fetch(`${API_URL}?key=${API_KEY}`, {
@@ -82,4 +104,14 @@ export async function sendMessageToGemini(messages: { text: string; isUser: bool
     console.error('Gemini API error:', error);
     throw error;
   }
+}
+
+// Utilitaire pour convertir un fichier en base64
+async function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }

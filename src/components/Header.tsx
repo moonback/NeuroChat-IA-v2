@@ -1,7 +1,8 @@
-import { MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle } from 'lucide-react';
+import { MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
+import { Select } from '@/components/ui/select';
 
 interface HeaderProps {
   muted: boolean;
@@ -10,6 +11,9 @@ interface HeaderProps {
   onNewDiscussion: () => void;
   onOpenHistory: () => void;
   onOpenTTSSettings: () => void;
+  selectedPersonality: string;
+  onChangePersonality: (value: string) => void;
+  stop: () => void;
 }
 
 export function Header({
@@ -19,6 +23,9 @@ export function Header({
   onNewDiscussion,
   onOpenHistory,
   onOpenTTSSettings,
+  selectedPersonality,
+  onChangePersonality,
+  stop,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
 
@@ -93,6 +100,30 @@ export function Header({
           title="Réglages synthèse vocale"
         >
           <Settings2 className="w-5 h-5 text-blue-500" />
+        </Button>
+        {/* Sélecteur de personnalité IA */}
+        <select
+          value={selectedPersonality}
+          onChange={e => onChangePersonality(e.target.value)}
+          className="ml-2 px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          title="Personnalité de l'IA"
+        >
+          <option value="formel">Formel</option>
+          <option value="amical">Amical</option>
+          <option value="expert">Expert</option>
+          <option value="humoristique">Humoristique</option>
+        </select>
+        {/* Bouton Stop voix */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={stop}
+          disabled={muted}
+          className="text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-200 rounded-md text-xs px-2 py-1 ml-2"
+          title="Arrêter la voix"
+        >
+          <Square className="w-3 h-3 mr-1" />
+          Stop
         </Button>
       </div>
     </header>

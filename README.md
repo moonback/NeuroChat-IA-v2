@@ -1,6 +1,6 @@
 # 🧠 NeuroChat
 
-Une application React moderne pour discuter avec l'IA Gemini Pro de Google, en texte ou en voix, avec une interface élégante, compacte et responsive.
+Une application React moderne pour discuter avec l'IA Gemini Pro de Google, en texte, en voix **et en images**, avec une interface élégante, compacte et responsive.
 
 ---
 
@@ -9,6 +9,10 @@ Une application React moderne pour discuter avec l'IA Gemini Pro de Google, en t
 - 🎤 **Reconnaissance vocale** (Web Speech API)
 - 🗣️ **Synthèse vocale** (voix Google FR par défaut)
 - 💬 **Chat en temps réel** (interface fluide, bulles, auto-scroll)
+- 🖼️ **Envoi d'images** dans le chat (analyse et réponse IA sur l'image)
+- 🎭 **Personnalité IA personnalisable** (formel, amical, expert, humoristique)
+- 📝 **Renommage des discussions** dans l'historique
+- ✅ **Sélection et suppression groupée** de discussions dans l'historique
 - 🌗 **Thème clair/sombre** (toggle rapide)
 - ⚡ **Actions rapides** : nouvelle discussion, historique, réglages TTS, mute/unmute
 - 📱 **Design responsive** (mobile & desktop)
@@ -45,18 +49,20 @@ Ouvrez [http://localhost:5173](http://localhost:5173) dans votre navigateur.
 
 ## 🖥️ Aperçu de l'interface
 
-- **Header compact** : logo, actions rapides (nouvelle discussion, historique, thème, mute, réglages TTS)
-- **Zone de chat** : messages IA/utilisateur, bulles animées, copier/liker, timestamps
-- **Input** : texte ou voix, suggestions rapides, bouton micro
-- **Modals** : historique, réglages TTS (import/export, test voix, reset)
+- **Header compact** : logo, actions rapides (nouvelle discussion, historique, thème, mute, réglages TTS, personnalité IA)
+- **Zone de chat** : messages IA/utilisateur, bulles animées, copier/liker, timestamps, **affichage d'images envoyées**
+- **Input** : texte, voix, **envoi d'images** (icône trombone), suggestions rapides, bouton micro
+- **Modals** : historique (avec renommage, sélection multiple, suppression groupée), réglages TTS (import/export, test voix, reset)
 
 ---
 
 ## 🎯 Utilisation
 
 - Tapez un message ou utilisez le micro
+- Cliquez sur l'icône trombone pour envoyer une image à l'IA
 - Changez de thème à la volée
-- Accédez à l'historique ou démarrez une nouvelle discussion
+- Choisissez la personnalité de l'IA dans le menu du haut (formel, amical, expert, humoristique)
+- Accédez à l'historique, renommez ou supprimez plusieurs discussions en une fois
 - Réglez la synthèse vocale (voix, vitesse, tonalité, volume)
 - Mute/unmute la voix d'un clic
 
@@ -94,6 +100,7 @@ Ouvrez [http://localhost:5173](http://localhost:5173) dans votre navigateur.
 ```
 src/
 ├── components/      # UI réutilisables (Header, ChatContainer, VoiceInput...)
+│   └── ui/          # Composants UI génériques (boutons, cartes, etc.)
 ├── hooks/           # Hooks React custom (useTheme, useSpeechSynthesis...)
 ├── services/        # Appels API Gemini
 └── App.tsx          # Composant principal

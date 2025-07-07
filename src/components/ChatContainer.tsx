@@ -11,6 +11,7 @@ interface Message {
   text: string;
   isUser: boolean;
   timestamp: Date;
+  imageUrl?: string;
 }
 
 interface ChatContainerProps {
@@ -23,7 +24,6 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(true);
-  const { stop, muted } = useSpeechSynthesis();
 
   useEffect(() => {
     if (isNearBottom) {
@@ -142,20 +142,8 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
                         <Clock className="w-2 h-2" />
                         Conversation active
                       </div>
+                      
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={stop}
-                      disabled={muted}
-                      className="text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-200 rounded-md text-xs px-2 py-1"
-                      title="Arrêter la voix"
-                    >
-                      <Square className="w-3 h-3 mr-1" />
-                      Stop
-                    </Button>
                   </div>
                 </div>
               )}
@@ -166,6 +154,7 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
                     isUser={message.isUser}
                     timestamp={message.timestamp}
                     isLatest={index === messages.length - 1}
+                    imageUrl={message.imageUrl}
                   />
                 </div>
               ))}

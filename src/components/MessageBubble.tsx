@@ -9,9 +9,10 @@ interface MessageBubbleProps {
   isUser: boolean;
   timestamp: Date;
   isLatest?: boolean;
+  imageUrl?: string;
 }
 
-export function MessageBubble({ message, isUser, timestamp, isLatest = false }: MessageBubbleProps) {
+export function MessageBubble({ message, isUser, timestamp, isLatest = false, imageUrl }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
   const [isLiked, setIsLiked] = useState<boolean | null>(null);
   const displayedText = message;
@@ -73,6 +74,15 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false }: 
               : "bg-gradient-to-r from-white to-slate-50 dark:from-slate-800 dark:to-slate-700 text-slate-800 dark:text-slate-200 rounded-bl-md border-white/20 dark:border-slate-600/20",
             isLatest && !isUser && "ring-2 ring-blue-200 dark:ring-blue-800 ring-opacity-50"
           )}>
+            {/* Affichage de l'image envoyée */}
+            {imageUrl && (
+              <img
+                src={imageUrl}
+                alt="Image envoyée"
+                className="max-w-xs max-h-48 rounded-lg mb-2 border"
+                style={{ objectFit: 'contain' }}
+              />
+            )}
             {/* Message text */}
             <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words">
               {displayedText}
