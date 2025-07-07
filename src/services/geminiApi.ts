@@ -9,7 +9,7 @@ interface GeminiResponse {
 }
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 export async function sendMessageToGemini(messages: { text: string; isUser: boolean }[]): Promise<string> {
   if (!API_KEY) {
