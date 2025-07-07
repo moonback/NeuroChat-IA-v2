@@ -350,26 +350,9 @@ function App() {
           </div>
           
           <div className="flex items-center gap-3">
-            {/* Feature badges */}
-            <div className="hidden lg:flex items-center gap-2">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-white/60 dark:bg-slate-800/60 px-3 py-2 rounded-full backdrop-blur-sm border border-white/20 dark:border-slate-700/20">
-                <Mic className="w-3.5 h-3.5 text-green-500" />
-                <span>Voice</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-white/60 dark:bg-slate-800/60 px-3 py-2 rounded-full backdrop-blur-sm border border-white/20 dark:border-slate-700/20">
-                <Zap className="w-3.5 h-3.5 text-yellow-500" />
-                <span>Fast</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-white/60 dark:bg-slate-800/60 px-3 py-2 rounded-full backdrop-blur-sm border border-white/20 dark:border-slate-700/20">
-                <Shield className="w-3.5 h-3.5 text-blue-500" />
-                <span>Secure</span>
-              </div>
-            </div>
             
-            <div className="sm:flex items-center gap-2 text-sm text-muted-foreground bg-white/60 dark:bg-slate-800/60 px-3 py-2 rounded-full backdrop-blur-sm border border-white/20 dark:border-slate-700/20 hidden">
-              <Globe className="w-4 h-4 text-blue-500" />
-              <span>Gemini Pro</span>
-            </div>
+            
+            
             <ThemeToggle />
             {/* Bouton mute/unmute TTS */}
             <button
