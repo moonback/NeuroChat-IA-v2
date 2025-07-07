@@ -1,3 +1,5 @@
+import { SYSTEM_PROMPT } from './geminiSystemPrompt';
+
 interface GeminiResponse {
   candidates: Array<{
     content: {
@@ -13,14 +15,15 @@ const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-
 
 export async function sendMessageToGemini(messages: { text: string; isUser: boolean }[]): Promise<string> {
   if (!API_KEY) {
-    throw new Error('Clé API Gemini introuvable. Merci d’ajouter VITE_GEMINI_API_KEY dans ton fichier .env.local.');
+    throw new Error('Clé API Gemini introuvable. Merci d\'ajouter VITE_GEMINI_API_KEY dans ton fichier .env.local.');
   }
 
-  // Construction du format attendu par Gemini
-  const formattedMessages = messages.map(msg => ({
+  // Ajout du prompt système en début de conversation
+  const systemMessage = { role: 'user', text: SYSTEM_PROMPT };
+  const formattedMessages = [systemMessage, ...messages.map(msg => ({
     role: msg.isUser ? 'user' : 'model',
     text: msg.text
-  }));
+  }))];
 
   // Gemini attend un tableau de 'contents' avec des 'parts' pour chaque message
   const contents = formattedMessages.map(msg => ({
@@ -71,7 +74,7 @@ export async function sendMessageToGemini(messages: { text: string; isUser: bool
     const data: GeminiResponse = await response.json();
     
     if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-      throw new Error('Format de réponse invalide depuis l’API Gemini');
+      throw new Error('Format de réponse invalide depuis l\'API Gemini');
     }
 
     return data.candidates[0].content.parts[0].text;
