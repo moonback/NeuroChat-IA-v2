@@ -112,6 +112,36 @@ export function useSpeechSynthesis() {
     setVoiceURI(DEFAULTS.voiceURI);
   }, []);
 
+  // Ajout des fonctions d'export/import/suppression
+  const exportSettings = () => {
+    const data = { rate, pitch, volume, voiceURI };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    return url;
+  };
+
+  const importSettings = async (file: File): Promise<boolean> => {
+    try {
+      const text = await file.text();
+      const { rate, pitch, volume, voiceURI } = JSON.parse(text);
+      if (typeof rate === 'number') setRate(rate);
+      if (typeof pitch === 'number') setPitch(pitch);
+      if (typeof volume === 'number') setVolume(volume);
+      if (typeof voiceURI === 'string') setVoiceURI(voiceURI);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const deleteSettings = () => {
+    localStorage.removeItem(LS_KEY);
+    setRate(DEFAULTS.rate);
+    setPitch(DEFAULTS.pitch);
+    setVolume(DEFAULTS.volume);
+    setVoiceURI(DEFAULTS.voiceURI);
+  };
+
   return {
     speak,
     mute,
@@ -129,5 +159,8 @@ export function useSpeechSynthesis() {
     lang,
     testVoice,
     resetSettings,
+    exportSettings,
+    importSettings,
+    deleteSettings,
   };
 }

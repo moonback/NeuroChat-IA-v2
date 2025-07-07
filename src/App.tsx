@@ -41,6 +41,9 @@ function App() {
     availableVoices,
     testVoice,
     resetSettings,
+    exportSettings,
+    importSettings,
+    deleteSettings,
   } = useSpeechSynthesis();
   const [showHistory, setShowHistory] = useState(false);
   const [historyList, setHistoryList] = useState<Discussion[]>([]);
@@ -259,6 +262,12 @@ function App() {
     }
   };
 
+  // Ajout d'un toast lors de la réinitialisation
+  const handleResetSettings = () => {
+    resetSettings();
+    toast.success('Réglages réinitialisés.');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Menu historique des discussions */}
@@ -433,7 +442,10 @@ function App() {
         setVoiceURI={setVoiceURI}
         availableVoices={availableVoices}
         testVoice={testVoice}
-        resetSettings={resetSettings}
+        resetSettings={handleResetSettings}
+        exportSettings={exportSettings}
+        importSettings={importSettings}
+        deleteSettings={deleteSettings}
       />
     </div>
   );
