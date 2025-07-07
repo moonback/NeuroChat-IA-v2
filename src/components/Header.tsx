@@ -1,208 +1,100 @@
-import { useEffect, useRef, useState } from 'react';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { MessageBubble } from './MessageBubble';
-import { Loader2, Sparkles, ArrowDown, Trash2, Square, MessageCircle, Mic, Zap, Brain, Clock } from 'lucide-react';
-import { TypingIndicator } from './TypingIndicator';
-import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
+import { useTheme } from '@/hooks/useTheme';
+import { cn } from '@/lib/utils';
 
-interface Message {
-  id: string;
-  text: string;
-  isUser: boolean;
-  timestamp: Date;
+interface HeaderProps {
+  muted: boolean;
+  onMute: () => void;
+  onUnmute: () => void;
+  onNewDiscussion: () => void;
+  onOpenHistory: () => void;
+  onOpenTTSSettings: () => void;
 }
 
-interface ChatContainerProps {
-  messages: Message[];
-  isLoading: boolean;
-}
-
-export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [showScrollButton, setShowScrollButton] = useState(false);
-  const [isNearBottom, setIsNearBottom] = useState(true);
-  const { stop, muted } = useSpeechSynthesis();
-
-  useEffect(() => {
-    if (isNearBottom) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, isLoading, isNearBottom]);
-
-  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
-    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-    const nearBottom = distanceFromBottom < 100;
-    
-    setIsNearBottom(nearBottom);
-    setShowScrollButton(!nearBottom && messages.length > 0);
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const clearChat = () => {
-    // This would need to be implemented in the parent component
-    // For now, we'll just show a toast
-    console.log('Clear chat functionality would be implemented here');
-  };
+export function Header({
+  muted,
+  onMute,
+  onUnmute,
+  onNewDiscussion,
+  onOpenHistory,
+  onOpenTTSSettings,
+}: HeaderProps) {
+  const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="flex-1 h-full relative bg-gradient-to-br from-slate-50/50 via-white to-blue-50/30 dark:from-slate-900/50 dark:via-slate-900 dark:to-slate-800/30">
-      <ScrollArea 
-        className="flex-1 h-full overflow-y-auto p-2 sm:p-3" 
-        ref={scrollAreaRef}
-        onScrollCapture={handleScroll}
-      >
-        <div className="space-y-2 sm:space-y-3">
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full min-h-[200px] sm:min-h-[250px] text-center px-2">
-              {/* Hero section */}
-              <div className="relative mb-3 group">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-xl transition-all duration-500 group-hover:scale-105 group-hover:rotate-2">
-                  <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                </div>
-                {/* Indicateur de statut animé */}
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full border border-white dark:border-slate-900 flex items-center justify-center shadow-lg animate-pulse">
-                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></div>
-                </div>
-                {/* Particules flottantes */}
-                <div className="absolute -top-2 -left-2 w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:0.5s] opacity-70 shadow-lg"></div>
-                <div className="absolute -bottom-2 -right-2 w-1 h-1 bg-purple-400 rounded-full animate-bounce [animation-delay:1s] opacity-70 shadow-md"></div>
-                <div className="absolute top-1/2 -left-3 w-1 h-1 bg-indigo-400 rounded-full animate-bounce [animation-delay:1.5s] opacity-70 shadow-md"></div>
-                <div className="absolute -top-1 right-2 w-0.5 h-0.5 bg-pink-400 rounded-full animate-bounce [animation-delay:2s] opacity-60 shadow-sm"></div>
-                {/* Cercles de pulsation */}
-                <div className="absolute inset-0 rounded-full border border-blue-300 animate-ping opacity-30"></div>
-                <div className="absolute inset-0 rounded-full border border-purple-300 animate-ping opacity-20 [animation-delay:1s]"></div>
-              </div>
-              <div className="max-w-md mx-auto">
-                <h3 className="text-base sm:text-lg lg:text-xl font-bold mb-1 bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 dark:from-slate-200 dark:via-slate-300 dark:to-slate-400 bg-clip-text text-transparent">
-                  Bienvenue sur NeuroChat
-                </h3>
-                <p className="text-muted-foreground max-w-xs mx-auto text-xs sm:text-sm leading-relaxed mb-2">
-                  Découvre le futur de la conversation avec l'IA : reconnaissance vocale avancée, langage naturel et réponses intelligentes propulsées par Google Gemini Pro.
-                </p>
-                {/* Cartes de fonctionnalités */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 w-full max-w-md mb-2">
-                  <div className="group p-2 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 rounded-lg border border-blue-200/50 dark:border-blue-700/30 hover:shadow-md transition-all duration-300 hover:scale-105">
-                    <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-blue-600 rounded flex items-center justify-center mb-1 mx-auto group-hover:scale-105 transition-transform duration-300">
-                      <Brain className="w-3 h-3 text-white" />
-                    </div>
-                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-0.5 text-[11px]">IA avancée</h4>
-                    <p className="text-[9px] text-blue-700 dark:text-blue-300">Compréhension contextuelle et réponses naturelles</p>
-                  </div>
-                  <div className="group p-2 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/20 rounded-lg border border-emerald-200/50 dark:border-emerald-700/30 hover:shadow-md transition-all duration-300 hover:scale-105">
-                    <div className="w-5 h-5 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded flex items-center justify-center mb-1 mx-auto group-hover:scale-105 transition-transform duration-300">
-                      <Mic className="w-3 h-3 text-white" />
-                    </div>
-                    <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-0.5 text-[11px]">Prêt pour la voix</h4>
-                    <p className="text-[9px] text-emerald-700 dark:text-emerald-300">Parle naturellement et écoute les réponses</p>
-                  </div>
-                  <div className="group p-2 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/20 rounded-lg border border-purple-200/50 dark:border-purple-700/30 hover:shadow-md transition-all duration-300 hover:scale-105 sm:col-span-2 lg:col-span-1">
-                    <div className="w-5 h-5 bg-gradient-to-br from-purple-500 to-purple-600 rounded flex items-center justify-center mb-1 mx-auto group-hover:scale-105 transition-transform duration-300">
-                      <Zap className="w-3 h-3 text-white" />
-                    </div>
-                    <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-0.5 text-[11px]">Temps réel</h4>
-                    <p className="text-[9px] text-purple-700 dark:text-purple-300">Réponses instantanées et fluides</p>
-                  </div>
-                </div>
-                {/* Call to action */}
-                <div className="p-2 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-700/50 rounded-lg border border-slate-200/50 dark:border-slate-600/50 backdrop-blur-sm">
-                  <div className="flex items-center justify-center gap-0.5 mb-0.5">
-                    <Sparkles className="w-3 h-3 text-yellow-500 animate-pulse" />
-                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400">
-                      Prêt à commencer ?
-                    </span>
-                    <Sparkles className="w-3 h-3 text-yellow-500 animate-pulse [animation-delay:0.5s]" />
-                  </div>
-                  <p className="text-[9px] text-muted-foreground/80">
-                    Écris un message ou clique sur le micro pour parler
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* En-tête du chat amélioré */}
-              {messages.length > 0 && (
-                <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200/50 dark:border-slate-700/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-lg p-4 mx-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
-                      <MessageCircle className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                        {messages.length} message{messages.length !== 1 ? 's' : ''}
-                      </div>
-                      <div className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        Conversation active
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={stop}
-                      disabled={muted}
-                      className="text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-200 rounded-lg"
-                      title="Arrêter la voix"
-                    >
-                      <Square className="w-4 h-4 mr-2" />
-                      Stop
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearChat}
-                      className="text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-200 rounded-lg"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Effacer
-                    </Button>
-                  </div>
-                </div>
-              )}
-              
-              {messages.map((message, index) => (
-                <div key={message.id} className="animate-fadeIn">
-                  <MessageBubble
-                    message={message.text}
-                    isUser={message.isUser}
-                    timestamp={message.timestamp}
-                    isLatest={index === messages.length - 1}
-                  />
-                </div>
-              ))}
-            </>
-          )}
-          
-          {isLoading && (
-            <div className="flex justify-start animate-fadeIn">
-              <TypingIndicator />
-            </div>
-          )}
-          
-          <div ref={messagesEndRef} />
+    <header className="w-full flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 bg-white/80 dark:bg-slate-900/80 shadow-md rounded-2xl mb-4 gap-2">
+      {/* Logo & nom */}
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 text-white shadow-lg">
+          <MessageCircle className="w-5 h-5" />
         </div>
-      </ScrollArea>
-      
-      {/* Bouton de scroll amélioré */}
-      {showScrollButton && (
+        <div className="flex flex-col min-w-0">
+          <span className="text-lg sm:text-xl font-bold truncate bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">NeuroChat</span>
+          <span className="text-xs text-muted-foreground truncate">Conversations IA, à votre image</span>
+        </div>
+      </div>
+      {/* Actions */}
+      <div className="flex items-center gap-1 sm:gap-2">
+        {/* Nouvelle discussion */}
         <Button
-          onClick={scrollToBottom}
+          variant="ghost"
           size="icon"
-          className="absolute bottom-6 right-6 h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 animate-fadeIn hover:scale-110 group"
+          onClick={onNewDiscussion}
+          className="hover:bg-blue-100 dark:hover:bg-blue-900 group"
+          title="Nouvelle discussion"
         >
-          <ArrowDown className="h-5 w-5 group-hover:animate-bounce" />
+          <PlusCircle className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform" />
         </Button>
-      )}
-    </div>
+        {/* Historique */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onOpenHistory}
+          className="hover:bg-slate-200 dark:hover:bg-blue-900 group"
+          title="Historique"
+        >
+          <History className="w-5 h-5 text-slate-600 dark:text-slate-200 group-hover:text-blue-500" />
+        </Button>
+        {/* Thème */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          className="hover:bg-yellow-100 dark:hover:bg-slate-800 group"
+          title={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+        >
+          {theme === 'dark' ? (
+            <Sun className="w-5 h-5 text-yellow-400 group-hover:rotate-12 transition-transform" />
+          ) : (
+            <Moon className="w-5 h-5 text-slate-600 group-hover:-rotate-12 transition-transform" />
+          )}
+        </Button>
+        {/* Mute/unmute TTS */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={muted ? onUnmute : onMute}
+          className="hover:bg-red-100 dark:hover:bg-red-900 group"
+          title={muted ? 'Activer la synthèse vocale' : 'Désactiver la synthèse vocale'}
+        >
+          {muted ? (
+            <VolumeX className="w-5 h-5 text-red-500" />
+          ) : (
+            <Volume2 className="w-5 h-5 text-green-500" />
+          )}
+        </Button>
+        {/* Réglages TTS */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onOpenTTSSettings}
+          className="hover:bg-blue-100 dark:hover:bg-blue-900 group"
+          title="Réglages synthèse vocale"
+        >
+          <Settings2 className="w-5 h-5 text-blue-500" />
+        </Button>
+      </div>
+    </header>
   );
 }
