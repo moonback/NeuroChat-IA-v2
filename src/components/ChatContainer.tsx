@@ -154,7 +154,9 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
                       <div className="h-2.5 w-2.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                       <div className="h-2.5 w-2.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce"></div>
                     </div>
-                    <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">Gemini réfléchit...</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+                      L’IA est en train d’écrire...
+                    </span>
                   </div>
                 </div>
               </div>
