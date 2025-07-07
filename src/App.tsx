@@ -139,11 +139,14 @@ function App() {
       return;
     }
 
-    addMessage(userMessage, true);
+    // Ajoute le message utilisateur localement
+    const newMessage = addMessage(userMessage, true);
     setIsLoading(true);
 
     try {
-      const response = await sendMessageToGemini(userMessage);
+      // On prépare l'historique complet (y compris le message utilisateur tout juste ajouté)
+      const fullHistory = [...messages, newMessage];
+      const response = await sendMessageToGemini(fullHistory.map(m => ({ text: m.text, isUser: m.isUser })));
       addMessage(response, false);
       speak(response);
       toast.success('Réponse reçue !', { duration: 2000 });

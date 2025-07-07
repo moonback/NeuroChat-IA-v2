@@ -11,10 +11,22 @@ interface GeminiResponse {
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
-export async function sendMessageToGemini(message: string): Promise<string> {
+export async function sendMessageToGemini(messages: { text: string; isUser: boolean }[]): Promise<string> {
   if (!API_KEY) {
     throw new Error('Clé API Gemini introuvable. Merci d’ajouter VITE_GEMINI_API_KEY dans ton fichier .env.local.');
   }
+
+  // Construction du format attendu par Gemini
+  const formattedMessages = messages.map(msg => ({
+    role: msg.isUser ? 'user' : 'model',
+    text: msg.text
+  }));
+
+  // Gemini attend un tableau de 'contents' avec des 'parts' pour chaque message
+  const contents = formattedMessages.map(msg => ({
+    parts: [{ text: msg.text }],
+    role: msg.role
+  }));
 
   try {
     const response = await fetch(`${API_URL}?key=${API_KEY}`, {
@@ -23,15 +35,7 @@ export async function sendMessageToGemini(message: string): Promise<string> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: message
-              }
-            ]
-          }
-        ],
+        contents,
         generationConfig: {
           temperature: 0.7,
           topK: 40,
