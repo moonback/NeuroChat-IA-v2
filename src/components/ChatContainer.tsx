@@ -3,6 +3,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
 import { Loader2, Sparkles, ArrowDown, Trash2 } from 'lucide-react';
+import { TypingIndicator } from './TypingIndicator';
 
 interface Message {
   id: string;
@@ -143,23 +144,7 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
           
           {isLoading && (
             <div className="flex justify-start animate-fadeIn">
-              <div className="flex gap-3 max-w-[85%] sm:max-w-[75%]">
-                <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 select-none items-center justify-center rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl">
-                  <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
-                </div>
-                <div className="rounded-2xl rounded-bl-md bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 px-6 py-4 shadow-xl backdrop-blur-sm border border-white/20 dark:border-slate-600/20">
-                  <div className="flex items-center gap-4">
-                    <div className="flex space-x-1">
-                      <div className="h-2.5 w-2.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                      <div className="h-2.5 w-2.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                      <div className="h-2.5 w-2.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce"></div>
-                    </div>
-                    <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">
-                      L’IA est en train d’écrire...
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <TypingIndicator />
             </div>
           )}
           

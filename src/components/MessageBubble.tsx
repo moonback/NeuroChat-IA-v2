@@ -1,7 +1,7 @@
 import { Bot, User, Copy, ThumbsUp, ThumbsDown, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 interface MessageBubbleProps {
@@ -14,6 +14,22 @@ interface MessageBubbleProps {
 export function MessageBubble({ message, isUser, timestamp, isLatest = false }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
   const [isLiked, setIsLiked] = useState<boolean | null>(null);
+  const [displayedText, setDisplayedText] = useState(isUser ? message : "");
+
+  useEffect(() => {
+    if (!isUser) {
+      setDisplayedText("");
+      let i = 0;
+      const interval = setInterval(() => {
+        setDisplayedText(message.slice(0, i + 1));
+        i++;
+        if (i === message.length) clearInterval(interval);
+      }, 18);
+      return () => clearInterval(interval);
+    } else {
+      setDisplayedText(message);
+    }
+  }, [message, isUser]);
 
   const copyToClipboard = async () => {
     try {
@@ -74,7 +90,10 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false }: 
           )}>
             {/* Message text */}
             <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
-              {message}
+              {displayedText}
+              {!isUser && displayedText.length < message.length && (
+                <span className="blinking-cursor">|</span>
+              )}
             </p>
             
             {/* Timestamp */}
