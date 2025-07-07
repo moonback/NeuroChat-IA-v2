@@ -1,41 +1,133 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 
 export interface SpeechSynthesisOptions {
   rate?: number;
   pitch?: number;
   volume?: number;
   lang?: string;
+  voiceURI?: string;
 }
+
+const LS_KEY = 'tts_settings';
+const DEFAULTS = {
+  rate: 1,
+  pitch: 1,
+  volume: 1,
+  voiceURI: '',
+};
 
 export function useSpeechSynthesis() {
   const [muted, setMuted] = useState(false);
+  const [rate, setRate] = useState(DEFAULTS.rate);
+  const [pitch, setPitch] = useState(DEFAULTS.pitch);
+  const [volume, setVolume] = useState(DEFAULTS.volume);
+  const [voiceURI, setVoiceURI] = useState<string>(DEFAULTS.voiceURI);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [lang, setLang] = useState<'fr-FR' | 'en-US'>('fr-FR');
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
+  // Charger les réglages depuis le localStorage au démarrage
+  useEffect(() => {
+    const saved = localStorage.getItem(LS_KEY);
+    if (saved) {
+      try {
+        const { rate, pitch, volume, voiceURI } = JSON.parse(saved);
+        if (typeof rate === 'number') setRate(rate);
+        if (typeof pitch === 'number') setPitch(pitch);
+        if (typeof volume === 'number') setVolume(volume);
+        if (typeof voiceURI === 'string') setVoiceURI(voiceURI);
+      } catch {}
+    }
+  }, []);
+
+  // Sauvegarder les réglages à chaque changement
+  useEffect(() => {
+    localStorage.setItem(LS_KEY, JSON.stringify({ rate, pitch, volume, voiceURI }));
+  }, [rate, pitch, volume, voiceURI]);
+
+  // Charger les voix disponibles
+  useEffect(() => {
+    function updateVoices() {
+      const allVoices = window.speechSynthesis.getVoices();
+      setVoices(allVoices);
+    }
+    updateVoices();
+    window.speechSynthesis.onvoiceschanged = updateVoices;
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
+
+  // Détecter la langue courante selon le texte (fr-FR ou en-US)
+  const detectLang = useCallback((text: string): 'fr-FR' | 'en-US' => {
+    const isFrench = /[éèêàùçôîûœ]/i.test(text) || /\b(le|la|les|un|une|des|je|tu|il|elle|nous|vous|ils|elles|bonjour|merci|oui|non)\b/i.test(text);
+    return isFrench ? 'fr-FR' : 'en-US';
+  }, []);
+
+  // Mettre à jour la langue courante à chaque speak
   const speak = useCallback((text: string, options: SpeechSynthesisOptions = {}) => {
     if (muted || !('speechSynthesis' in window)) return;
-    // Arrêter la lecture précédente
     window.speechSynthesis.cancel();
     const utterance = new window.SpeechSynthesisUtterance(text);
-    utterance.rate = options.rate ?? 1;
-    utterance.pitch = options.pitch ?? 1;
-    utterance.volume = options.volume ?? 1;
-    // Détection automatique de la langue
-    const isFrench = /[éèêàùçôîûœ]/i.test(text) || /\b(le|la|les|un|une|des|je|tu|il|elle|nous|vous|ils|elles|bonjour|merci|oui|non)\b/i.test(text);
-    utterance.lang = options.lang || (isFrench ? 'fr-FR' : 'en-US');
+    utterance.rate = options.rate ?? rate;
+    utterance.pitch = options.pitch ?? pitch;
+    utterance.volume = options.volume ?? volume;
+    const detectedLang = options.lang || detectLang(text);
+    setLang(detectedLang as 'fr-FR' | 'en-US');
     // Choix de la voix
-    const voices = window.speechSynthesis.getVoices();
-    const preferredVoice = voices.find(voice =>
-      voice.lang === utterance.lang && voice.name.toLowerCase().includes('google')
-    ) || voices.find(voice => voice.lang === utterance.lang);
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
+    let selectedVoice: SpeechSynthesisVoice | undefined = undefined;
+    if (options.voiceURI) {
+      selectedVoice = voices.find(v => v.voiceURI === options.voiceURI);
+    } else if (voiceURI) {
+      selectedVoice = voices.find(v => v.voiceURI === voiceURI);
+    }
+    if (!selectedVoice) {
+      selectedVoice = voices.find(v => v.lang === utterance.lang && v.name.toLowerCase().includes('google'))
+        || voices.find(v => v.lang === utterance.lang);
+    }
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
     }
     utteranceRef.current = utterance;
     window.speechSynthesis.speak(utterance);
-  }, [muted]);
+  }, [muted, rate, pitch, volume, voiceURI, voices, detectLang]);
 
   const mute = useCallback(() => setMuted(true), []);
   const unmute = useCallback(() => setMuted(false), []);
 
-  return { speak, mute, unmute, muted };
+  // Liste des voix pour la langue courante
+  const availableVoices = voices.filter(v => v.lang === lang);
+
+  // Tester la voix sélectionnée
+  const testVoice = useCallback(() => {
+    const sample = lang === 'fr-FR' ? 'Ceci est un test de synthèse vocale.' : 'This is a speech synthesis test.';
+    speak(sample, { voiceURI });
+  }, [lang, speak, voiceURI]);
+
+  // Réinitialiser les réglages
+  const resetSettings = useCallback(() => {
+    setRate(DEFAULTS.rate);
+    setPitch(DEFAULTS.pitch);
+    setVolume(DEFAULTS.volume);
+    setVoiceURI(DEFAULTS.voiceURI);
+  }, []);
+
+  return {
+    speak,
+    mute,
+    unmute,
+    muted,
+    rate,
+    setRate,
+    pitch,
+    setPitch,
+    volume,
+    setVolume,
+    voiceURI,
+    setVoiceURI,
+    availableVoices,
+    lang,
+    testVoice,
+    resetSettings,
+  };
 }

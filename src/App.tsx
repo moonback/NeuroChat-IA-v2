@@ -5,8 +5,9 @@ import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
 import { sendMessageToGemini } from '@/services/geminiApi';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
-import { Mic, MessageCircle, Zap, Shield, Globe, History, X } from 'lucide-react';
+import { Mic, MessageCircle, Zap, Shield, Globe, History, X, Settings2, Volume2, VolumeX } from 'lucide-react';
 import { toast } from 'sonner';
+import { TTSSettingsModal } from '@/components/TTSSettingsModal';
 
 interface Message {
   id: string;
@@ -24,11 +25,28 @@ function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const { speak } = useSpeechSynthesis();
+  const {
+    speak,
+    muted,
+    mute,
+    unmute,
+    rate,
+    setRate,
+    pitch,
+    setPitch,
+    volume,
+    setVolume,
+    voiceURI,
+    setVoiceURI,
+    availableVoices,
+    testVoice,
+    resetSettings,
+  } = useSpeechSynthesis();
   const [showHistory, setShowHistory] = useState(false);
   const [historyList, setHistoryList] = useState<Discussion[]>([]);
   const [editingTitleIdx, setEditingTitleIdx] = useState<number | null>(null);
   const [editingTitleValue, setEditingTitleValue] = useState('');
+  const [showTTSSettings, setShowTTSSettings] = useState(false);
 
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
@@ -353,6 +371,22 @@ function App() {
               <span>Gemini Pro</span>
             </div>
             <ThemeToggle />
+            {/* Bouton mute/unmute TTS */}
+            <button
+              onClick={muted ? unmute : mute}
+              className="ml-2 p-2 rounded-full bg-white/60 dark:bg-slate-800/60 hover:bg-white/80 dark:hover:bg-slate-800/80 border border-white/20 dark:border-slate-700/20 transition-all duration-200"
+              title={muted ? 'Activer la synthèse vocale' : 'Désactiver la synthèse vocale'}
+            >
+              {muted ? <VolumeX className="w-5 h-5 text-red-500" /> : <Volume2 className="w-5 h-5 text-green-500" />}
+            </button>
+            {/* Bouton réglages TTS */}
+            <button
+              onClick={() => setShowTTSSettings(true)}
+              className="ml-1 p-2 rounded-full bg-white/60 dark:bg-slate-800/60 hover:bg-white/80 dark:hover:bg-slate-800/80 border border-white/20 dark:border-slate-700/20 transition-all duration-200"
+              title="Réglages synthèse vocale"
+            >
+              <Settings2 className="w-5 h-5 text-blue-500" />
+            </button>
             {/* BOUTON NOUVELLE DISCUSSION */}
             <button
               onClick={handleNewDiscussion}
@@ -402,6 +436,22 @@ function App() {
           </div>
         </div>
       </div>
+
+      <TTSSettingsModal
+        open={showTTSSettings}
+        onClose={() => setShowTTSSettings(false)}
+        rate={rate}
+        setRate={setRate}
+        pitch={pitch}
+        setPitch={setPitch}
+        volume={volume}
+        setVolume={setVolume}
+        voiceURI={voiceURI}
+        setVoiceURI={setVoiceURI}
+        availableVoices={availableVoices}
+        testVoice={testVoice}
+        resetSettings={resetSettings}
+      />
     </div>
   );
 }
