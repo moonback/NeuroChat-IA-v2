@@ -66,6 +66,38 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
 
   return (
     <div className="p-2 sm:p-3 bg-gradient-to-r from-white/60 to-slate-50/60 dark:from-slate-900/60 dark:to-slate-800/60 backdrop-blur-xl border-t border-white/20 dark:border-slate-700/20">
+      {/* Aperçu compact de l'image sélectionnée au-dessus de la barre d'envoi */}
+      {selectedImage && (
+        <div className="relative flex items-center gap-2 mb-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl max-w-xs shadow-md animate-fadeIn">
+          <div className="relative group">
+            <img
+              src={URL.createObjectURL(selectedImage)}
+              alt="Aperçu"
+              className="max-h-16 max-w-16 rounded-lg border shadow hover:scale-105 transition-transform duration-200"
+              style={{ objectFit: 'cover' }}
+            />
+            <button
+              type="button"
+              onClick={() => setSelectedImage(null)}
+              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow hover:bg-red-600 transition text-xs flex items-center justify-center w-5 h-5"
+              title="Retirer l'image"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span
+              className="text-xs text-blue-700 dark:text-blue-200 truncate max-w-[90px]"
+              title={selectedImage.name}
+            >
+              {selectedImage.name}
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              {(selectedImage.size / 1024).toFixed(1)} Ko
+            </span>
+          </div>
+        </div>
+      )}
       {/* Input container */}
       <div className="flex items-end gap-2 sm:gap-3">
         {/* Bouton upload image */}
@@ -85,10 +117,6 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 002.828 2.828L18 9.828M7 7h.01M7 7a5 5 0 017.071 7.071l-6.586 6.586a2 2 0 01-2.828-2.828L15.172 7z" /></svg>
       </button>
-      {/* Affichage du nom de l'image sélectionnée */}
-      {selectedImage && (
-        <span className="text-xs text-blue-700 dark:text-blue-200 truncate max-w-[100px]">{selectedImage.name}</span>
-      )}
         {/* Main input area */}
         <div className="flex-1 relative">
           <div className={cn(
