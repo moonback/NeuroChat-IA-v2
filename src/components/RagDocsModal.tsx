@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Trash2, UploadCloud } from 'lucide-react';
+import { X, Trash2, UploadCloud, Eye, Pencil, Check, X as XIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface RagDocsModalProps {
   open: boolean;
@@ -20,6 +21,10 @@ interface RagDoc {
 
 export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
   const [docs, setDocs] = useState<RagDoc[]>([]);
+  const [search, setSearch] = useState('');
+  const [previewDoc, setPreviewDoc] = useState<RagDoc | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingValue, setEditingValue] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Charger les docs du dossier (via import.meta.glob)
@@ -54,7 +59,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.name.endsWith('.txt') && !file.name.endsWith('.md')) {
-      alert('Seuls les fichiers .txt et .md sont acceptés.');
+      toast.error('Seuls les fichiers .txt et .md sont acceptés.');
       return;
     }
     const text = await file.text();
@@ -74,6 +79,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
     userDocs.push(newDoc);
     localStorage.setItem(LS_KEY, JSON.stringify(userDocs));
     setDocs(docs => [...docs, newDoc]);
+    toast.success('Document ajouté !');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -88,7 +94,42 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
     userDocs = userDocs.filter(doc => doc.id !== id);
     localStorage.setItem(LS_KEY, JSON.stringify(userDocs));
     setDocs(docs => docs.filter(doc => doc.id !== id));
+    toast.success('Document supprimé.');
   };
+
+  // Renommage
+  const handleStartEdit = (doc: RagDoc) => {
+    setEditingId(doc.id);
+    setEditingValue(doc.titre);
+  };
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditingValue(e.target.value);
+  };
+  const handleEditSave = (doc: RagDoc) => {
+    const trimmed = editingValue.trim();
+    if (!trimmed) return;
+    const userRaw = localStorage.getItem(LS_KEY);
+    let userDocs: RagDoc[] = [];
+    if (userRaw) {
+      try { userDocs = JSON.parse(userRaw); } catch {}
+    }
+    userDocs = userDocs.map(d => d.id === doc.id ? { ...d, titre: trimmed } : d);
+    localStorage.setItem(LS_KEY, JSON.stringify(userDocs));
+    setDocs(docs => docs.map(d => d.id === doc.id ? { ...d, titre: trimmed } : d));
+    setEditingId(null);
+    setEditingValue('');
+    toast.success('Titre modifié.');
+  };
+  const handleEditKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, doc: RagDoc) => {
+    if (e.key === 'Enter') handleEditSave(doc);
+    else if (e.key === 'Escape') { setEditingId(null); setEditingValue(''); }
+  };
+
+  // Filtrage
+  const filteredDocs = docs.filter(doc =>
+    doc.titre.toLowerCase().includes(search.toLowerCase()) ||
+    doc.contenu.toLowerCase().includes(search.toLowerCase())
+  );
 
   if (!open) return null;
 
@@ -114,23 +155,60 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
           </Button>
           <span className="text-xs text-muted-foreground">(txt, md)</span>
         </div>
-        {docs.length === 0 ? (
-          <div className="text-muted-foreground text-center">Aucun document disponible.</div>
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Rechercher un document..."
+          className="w-full mb-3 px-3 py-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+        {filteredDocs.length === 0 ? (
+          <div className="text-muted-foreground text-center">Aucun document trouvé.</div>
         ) : (
           <ul className="space-y-3">
-            {docs.map(doc => {
+            {filteredDocs.map(doc => {
               return (
                 <li key={doc.id} className="border rounded-lg p-3 bg-slate-50 dark:bg-slate-800 flex items-center gap-2">
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-blue-900 dark:text-blue-100 text-sm truncate">{doc.titre}</div>
+                    {editingId === doc.id ? (
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="text"
+                          value={editingValue}
+                          onChange={handleEditChange}
+                          onBlur={() => handleEditSave(doc)}
+                          onKeyDown={e => handleEditKeyDown(e, doc)}
+                          autoFocus
+                          className="text-sm font-semibold bg-transparent border-b border-blue-400 focus:outline-none px-1 w-32"
+                        />
+                        <Button size="icon" variant="ghost" onClick={() => handleEditSave(doc)}><Check className="w-4 h-4 text-green-500" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => { setEditingId(null); setEditingValue(''); }}><XIcon className="w-4 h-4 text-red-500" /></Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <span className="font-semibold text-blue-900 dark:text-blue-100 text-sm truncate">{doc.titre}</span>
+                        {doc.origine === 'utilisateur' && (
+                          <Button size="icon" variant="ghost" onClick={() => handleStartEdit(doc)} title="Renommer"><Pencil className="w-4 h-4 text-blue-400" /></Button>
+                        )}
+                      </div>
+                    )}
                     <div className="text-xs text-muted-foreground truncate">{doc.contenu.slice(0, 80)}...</div>
                     <div className="text-[10px] text-slate-400 mt-1">Origine : {doc.origine === 'dossier' ? 'Dossier rag_docs' : "Ajouté par l'utilisateur"}</div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="ml-1"
+                    title="Aperçu"
+                    onClick={() => setPreviewDoc(doc)}
+                  >
+                    <Eye className="w-4 h-4 text-indigo-500" />
+                  </Button>
                   {doc.origine === 'utilisateur' ? (
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="ml-2"
+                      className="ml-1"
                       title="Supprimer"
                       onClick={() => handleDelete(doc.id)}
                     >
@@ -144,6 +222,17 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
         )}
         <Button onClick={onClose} className="mt-6 w-full">Fermer</Button>
       </div>
+      {/* Modale d'aperçu */}
+      {previewDoc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto relative">
+            <button onClick={() => setPreviewDoc(null)} className="absolute top-3 right-3 text-slate-500 hover:text-red-500"><X className="w-5 h-5" /></button>
+            <h3 className="text-lg font-bold mb-2">{previewDoc.titre}</h3>
+            <pre className="whitespace-pre-wrap text-xs bg-slate-100 dark:bg-slate-800 rounded p-3 max-h-[60vh] overflow-y-auto">{previewDoc.contenu}</pre>
+            <Button onClick={() => setPreviewDoc(null)} className="mt-4 w-full">Fermer l'aperçu</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
