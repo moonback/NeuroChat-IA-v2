@@ -135,7 +135,7 @@ function App() {
 
   const handleSendMessage = async (userMessage: string) => {
     if (!isOnline) {
-      toast.error('No internet connection. Please check your network.');
+      toast.error('Pas de connexion Internet. Vérifie ta connexion réseau.');
       return;
     }
 
@@ -146,15 +146,15 @@ function App() {
       const response = await sendMessageToGemini(userMessage);
       addMessage(response, false);
       speak(response);
-      toast.success('Response received!', { duration: 2000 });
+      toast.success('Réponse reçue !', { duration: 2000 });
     } catch (error) {
       const errorMessage = error instanceof Error 
         ? error.message 
-        : 'Failed to get response from Gemini. Please try again.';
-      addMessage(`Sorry, I encountered an error: ${errorMessage}`, false);
+        : "Impossible d'obtenir une réponse de Gemini. Réessaie.";
+      addMessage(`Désolé, j'ai rencontré une erreur : ${errorMessage}`, false);
       toast.error(errorMessage, {
         action: {
-          label: 'Retry',
+          label: 'Réessayer',
           onClick: () => handleSendMessage(userMessage),
         },
       });
@@ -245,7 +245,7 @@ function App() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto relative">
             <button onClick={handleCloseHistory} className="absolute top-3 right-3 text-slate-500 hover:text-red-500"><X className="w-5 h-5" /></button>
-            <h2 className="text-xl font-bold mb-4">Historique des discussions</h2>
+            <h2 className="text-xl font-bold mb-4">Discussions récentes</h2>
             {historyList.length === 0 ? (
               <div className="text-muted-foreground text-center">Aucune discussion sauvegardée.</div>
             ) : (
@@ -317,11 +317,11 @@ function App() {
                 Gemini Voice Chat
               </h1>
               <p className="text-sm sm:text-base text-muted-foreground flex items-center gap-2">
-                <span>AI-powered conversations</span>
+                <span>Des conversations IA, à ta façon</span>
                 <div className="flex items-center gap-1">
                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
                   <span className="text-xs text-green-600 dark:text-green-400 font-medium">
-                    {isOnline ? 'Online' : 'Offline'}
+                    {isOnline ? 'En ligne' : 'Hors ligne'}
                   </span>
                 </div>
               </p>
@@ -379,22 +379,22 @@ function App() {
         {/* Enhanced Footer */}
         <div className="text-center mt-4 sm:mt-6 space-y-2">
           <div className="text-xs text-muted-foreground/80 flex items-center justify-center gap-2">
-            <span>Powered by Google Gemini Pro</span>
+            <span>Propulsé par Google Gemini Pro</span>
             <span>•</span>
-            <span>Voice recognition & synthesis enabled</span>
+            <span>Reconnaissance et synthèse vocale activées</span>
           </div>
           <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground/60">
             <span className="flex items-center gap-1">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              Real-time responses
+              Réponses instantanées
             </span>
             <span className="flex items-center gap-1">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              End-to-end encryption
+              Chiffrement de bout en bout
             </span>
             <span className="flex items-center gap-1">
               <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-              Multi-language support
+              Multilingue
             </span>
           </div>
         </div>

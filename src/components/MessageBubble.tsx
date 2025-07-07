@@ -18,15 +18,15 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false }: 
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(message);
-      toast.success('Message copied to clipboard!');
+      toast.success('Message copié dans le presse-papier !');
     } catch (err) {
-      toast.error('Failed to copy message');
+      toast.error('Échec de la copie du message');
     }
   };
 
   const handleLike = (liked: boolean) => {
     setIsLiked(liked);
-    toast.success(liked ? 'Thanks for the feedback!' : 'Feedback noted');
+    toast.success(liked ? 'Merci pour ton retour !' : 'Avis pris en compte');
   };
 
   return (
@@ -91,7 +91,7 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false }: 
                 <div className="flex items-center gap-1">
                   <div className="w-1.5 h-1.5 bg-white/60 rounded-full"></div>
                   <div className="w-1.5 h-1.5 bg-white/80 rounded-full"></div>
-                  <span className="text-xs text-white/70 ml-1">Sent</span>
+                  <span className="text-xs text-white/70 ml-1">Envoyé</span>
                 </div>
               )}
             </div>
@@ -110,7 +110,7 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false }: 
                 className="h-8 px-3 text-xs bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm hover:bg-white/80 dark:hover:bg-slate-800/80 border border-white/20 dark:border-slate-700/20"
               >
                 <Copy className="w-3 h-3 mr-1" />
-                Copy
+                Copier
               </Button>
               
               {!isUser && (
@@ -127,7 +127,7 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false }: 
                     )}
                   >
                     <ThumbsUp className="w-3 h-3 mr-1" />
-                    {isLiked === true ? 'Liked' : 'Like'}
+                    {isLiked === true ? 'Aimé' : 'Aimer'}
                   </Button>
                   
                   <Button
@@ -142,7 +142,7 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false }: 
                     )}
                   >
                     <ThumbsDown className="w-3 h-3 mr-1" />
-                    {isLiked === false ? 'Disliked' : 'Dislike'}
+                    {isLiked === false ? 'Pas aimé' : 'Pas fan'}
                   </Button>
                 </>
               )}

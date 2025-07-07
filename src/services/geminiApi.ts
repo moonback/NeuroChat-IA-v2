@@ -13,7 +13,7 @@ const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-
 
 export async function sendMessageToGemini(message: string): Promise<string> {
   if (!API_KEY) {
-    throw new Error('Gemini API key not found. Please add VITE_GEMINI_API_KEY to your .env.local file.');
+    throw new Error('Clé API Gemini introuvable. Merci d’ajouter VITE_GEMINI_API_KEY dans ton fichier .env.local.');
   }
 
   try {
@@ -61,13 +61,13 @@ export async function sendMessageToGemini(message: string): Promise<string> {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(`API request failed: ${response.status} ${response.statusText}. ${errorData.error?.message || ''}`);
+      throw new Error(`Échec de la requête API : ${response.status} ${response.statusText}. ${errorData.error?.message || ''}`);
     }
 
     const data: GeminiResponse = await response.json();
     
     if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-      throw new Error('Invalid response format from Gemini API');
+      throw new Error('Format de réponse invalide depuis l’API Gemini');
     }
 
     return data.candidates[0].content.parts[0].text;

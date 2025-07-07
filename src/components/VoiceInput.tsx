@@ -87,7 +87,7 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
               onKeyPress={handleKeyPress}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              placeholder={isListening ? "Listening... Speak now" : "Type your message or use voice..."}
+              placeholder={isListening ? "J'écoute... Parle maintenant" : "Écris ton message ou utilise la voix..."}
               disabled={isLoading}
               className={cn(
                 "border-0 bg-transparent h-12 sm:h-14 text-sm sm:text-base rounded-2xl sm:rounded-3xl",
@@ -136,7 +136,7 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
           {/* Character count */}
           {hasContent && (
             <div className="absolute -bottom-6 right-0 text-xs text-muted-foreground/60">
-              {displayValue.length} characters
+              {displayValue.length} caractères
             </div>
           )}
         </div>
@@ -170,7 +170,7 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
             <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
             <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce"></div>
           </div>
-          <span className="font-medium">Recording... Tap microphone to stop</span>
+          <span className="font-medium">Enregistrement... Clique sur le micro pour arrêter</span>
         </div>
       )}
       
@@ -178,10 +178,10 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
       {!hasContent && !isListening && (
         <div className="flex flex-wrap gap-2 mt-4">
           {[
-            "Tell me a joke",
-            "What's the weather like?",
-            "Help me write an email",
-            "Explain quantum physics"
+            "Raconte-moi une blague",
+            "Quel temps fait-il ?",
+            "Aide-moi à écrire un mail",
+            "Explique-moi la physique quantique"
           ].map((suggestion) => (
             <Button
               key={suggestion}

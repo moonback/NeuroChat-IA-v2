@@ -71,12 +71,11 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
               </div>
               
               <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 dark:from-slate-200 dark:via-slate-300 dark:to-slate-400 bg-clip-text text-transparent">
-                Welcome to Gemini Voice Chat
+                Bienvenue sur Gemini Voice Chat
               </h3>
               
               <p className="text-muted-foreground max-w-lg text-sm sm:text-base leading-relaxed mb-8">
-                Experience the future of AI conversation with advanced voice recognition, 
-                natural language processing, and intelligent responses powered by Google's Gemini Pro.
+                Découvre le futur de la conversation avec l'IA : reconnaissance vocale avancée, langage naturel et réponses intelligentes propulsées par Google Gemini Pro.
               </p>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl">
@@ -84,29 +83,29 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
                   <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center mb-3 mx-auto">
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
-                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">AI Powered</h4>
-                  <p className="text-xs text-blue-700 dark:text-blue-300">Advanced language understanding with contextual responses</p>
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">IA avancée</h4>
+                  <p className="text-xs text-blue-700 dark:text-blue-300">Compréhension contextuelle et réponses naturelles</p>
                 </div>
                 
                 <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/20 rounded-2xl border border-green-200/50 dark:border-green-700/30">
                   <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center mb-3 mx-auto">
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
-                  <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2">Voice Ready</h4>
-                  <p className="text-xs text-green-700 dark:text-green-300">Speak naturally and hear responses with text-to-speech</p>
+                  <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2">Prêt pour la voix</h4>
+                  <p className="text-xs text-green-700 dark:text-green-300">Parle naturellement et écoute les réponses</p>
                 </div>
                 
                 <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/20 rounded-2xl border border-purple-200/50 dark:border-purple-700/30">
                   <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center mb-3 mx-auto">
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
-                  <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">Real-time</h4>
-                  <p className="text-xs text-purple-700 dark:text-purple-300">Instant responses with seamless conversation flow</p>
+                  <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">Temps réel</h4>
+                  <p className="text-xs text-purple-700 dark:text-purple-300">Réponses instantanées et fluides</p>
                 </div>
               </div>
               
               <div className="mt-8 text-xs text-muted-foreground/70">
-                Start by typing a message or click the microphone to speak
+                Commence par écrire un message ou clique sur le micro pour parler
               </div>
             </div>
           ) : (
@@ -124,7 +123,7 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
                     className="text-muted-foreground hover:text-red-500 transition-colors"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Clear
+                    Effacer
                   </Button>
                 </div>
               )}
@@ -155,7 +154,7 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
                       <div className="h-2.5 w-2.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                       <div className="h-2.5 w-2.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce"></div>
                     </div>
-                    <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">Gemini is thinking...</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">Gemini réfléchit...</span>
                   </div>
                 </div>
               </div>
