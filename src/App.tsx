@@ -5,7 +5,7 @@ import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
 import { sendMessageToGemini } from '@/services/geminiApi';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
-import { Mic, MessageCircle, Zap, Shield, Globe } from 'lucide-react';
+import { Mic, MessageCircle, Zap, Shield, Globe, History, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Message {
@@ -20,6 +20,54 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const { speak } = useSpeechSynthesis();
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyList, setHistoryList] = useState<Message[][]>([]);
+
+  // --- Gestion de l'historique des discussions ---
+  const LOCALSTORAGE_KEY = 'gemini_discussions';
+  const LOCALSTORAGE_CURRENT = 'gemini_current_discussion';
+
+  // Charger la dernière discussion au démarrage
+  useEffect(() => {
+    const saved = localStorage.getItem(LOCALSTORAGE_CURRENT);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Conversion des dates
+        setMessages(parsed.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) })));
+      } catch {
+        setMessages([]);
+      }
+    }
+  }, []);
+
+  // Sauvegarder la discussion courante à chaque changement
+  useEffect(() => {
+    localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify(messages));
+  }, [messages]);
+
+  // Sauvegarder une discussion dans l'historique
+  const saveDiscussionToHistory = (discussion: Message[]) => {
+    if (!discussion.length) return;
+    const historyRaw = localStorage.getItem(LOCALSTORAGE_KEY);
+    let history: Message[][] = [];
+    if (historyRaw) {
+      try {
+        history = JSON.parse(historyRaw);
+      } catch {}
+    }
+    history.push(discussion);
+    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(history));
+  };
+
+  // Nouvelle discussion
+  const handleNewDiscussion = () => {
+    if (messages.length > 0) {
+      saveDiscussionToHistory(messages);
+    }
+    setMessages([]);
+    localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify([]));
+  };
 
   // Monitor online status
   useEffect(() => {
@@ -83,14 +131,63 @@ function App() {
     }
   };
 
+  // Charger l'historique au démarrage ou à l'ouverture du menu
+  const loadHistory = () => {
+    const historyRaw = localStorage.getItem(LOCALSTORAGE_KEY);
+    if (historyRaw) {
+      try {
+        const parsed = JSON.parse(historyRaw);
+        // Conversion des dates
+        setHistoryList(parsed.map((conv: any[]) => conv.map(msg => ({ ...msg, timestamp: new Date(msg.timestamp) }))));
+      } catch {
+        setHistoryList([]);
+      }
+    } else {
+      setHistoryList([]);
+    }
+  };
+
+  // Ouvre le menu historique
+  const handleOpenHistory = () => {
+    loadHistory();
+    setShowHistory(true);
+  };
+  const handleCloseHistory = () => setShowHistory(false);
+
+  // Recharger une discussion
+  const handleLoadDiscussion = (discussion: Message[]) => {
+    setMessages(discussion);
+    localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify(discussion));
+    setShowHistory(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-400/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-400/5 rounded-full blur-3xl"></div>
-      </div>
+      {/* Menu historique des discussions */}
+      {showHistory && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto relative">
+            <button onClick={handleCloseHistory} className="absolute top-3 right-3 text-slate-500 hover:text-red-500"><X className="w-5 h-5" /></button>
+            <h2 className="text-xl font-bold mb-4">Historique des discussions</h2>
+            {historyList.length === 0 ? (
+              <div className="text-muted-foreground text-center">Aucune discussion sauvegardée.</div>
+            ) : (
+              <ul className="space-y-4">
+                {historyList.map((discussion, idx) => (
+                  <li key={idx} className="border rounded-lg p-3 bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition cursor-pointer" onClick={() => handleLoadDiscussion(discussion)}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <History className="w-4 h-4 text-blue-500" />
+                      <span className="font-semibold">Discussion {idx + 1}</span>
+                      <span className="ml-auto text-xs text-muted-foreground">{discussion[0]?.timestamp ? new Date(discussion[0].timestamp).toLocaleString() : ''}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground line-clamp-2">{discussion.map(m => m.text).join(' ').slice(0, 80)}...</div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="w-full max-w-12xl h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] flex flex-col relative z-10">
         {/* Enhanced Header */}
@@ -147,6 +244,23 @@ function App() {
               <span>Gemini Pro</span>
             </div>
             <ThemeToggle />
+            {/* BOUTON NOUVELLE DISCUSSION */}
+            <button
+              onClick={handleNewDiscussion}
+              className="ml-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold shadow hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 border-0 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+              title="Nouvelle discussion"
+            >
+              Nouvelle discussion
+            </button>
+            {/* BOUTON HISTORIQUE */}
+            <button
+              onClick={handleOpenHistory}
+              className="ml-2 px-3 py-2 rounded-xl bg-gradient-to-r from-slate-200 to-slate-400 dark:from-slate-700 dark:to-slate-800 text-slate-700 dark:text-slate-100 font-semibold shadow hover:from-blue-100 hover:to-blue-300 dark:hover:from-blue-900 dark:hover:to-blue-800 transition-all duration-200 border-0 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 flex items-center gap-2"
+              title="Afficher l'historique"
+            >
+              <History className="w-4 h-4" />
+              Historique
+            </button>
           </div>
         </div>
 
