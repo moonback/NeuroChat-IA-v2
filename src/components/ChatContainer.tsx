@@ -71,7 +71,7 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
               </div>
               
               <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 dark:from-slate-200 dark:via-slate-300 dark:to-slate-400 bg-clip-text text-transparent">
-                Bienvenue sur Gemini Voice Chat
+                Bienvenue sur Voice Chat
               </h3>
               
               <p className="text-muted-foreground max-w-lg text-sm sm:text-base leading-relaxed mb-8">

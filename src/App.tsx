@@ -317,7 +317,7 @@ function App() {
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
-                Gemini Voice Chat
+                Voice Chat
               </h1>
               <p className="text-sm sm:text-base text-muted-foreground flex items-center gap-2">
                 <span>Des conversations IA, à ta façon</span>
