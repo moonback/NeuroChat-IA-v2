@@ -157,7 +157,7 @@ function App() {
     return message;
   };
 
-  const handleSendMessage = async (userMessage: string) => {
+  const handleSendMessage = async (userMessage: string, imageFile?: File) => {
     if (!isOnline) {
       toast.error('Pas de connexion Internet. Vérifie ta connexion réseau.');
       return;
@@ -170,7 +170,7 @@ function App() {
     try {
       // On prépare l'historique complet (y compris le message utilisateur tout juste ajouté)
       const fullHistory = [...messages, newMessage];
-      const response = await sendMessageToGemini(fullHistory.map(m => ({ text: m.text, isUser: m.isUser })));
+      const response = await sendMessageToGemini(fullHistory.map(m => ({ text: m.text, isUser: m.isUser })), imageFile);
       addMessage(response, false);
       speak(response);
       toast.success('Réponse reçue !', { duration: 2000 });
@@ -182,7 +182,7 @@ function App() {
       toast.error(errorMessage, {
         action: {
           label: 'Réessayer',
-          onClick: () => handleSendMessage(userMessage),
+          onClick: () => handleSendMessage(userMessage, imageFile),
         },
       });
     } finally {
