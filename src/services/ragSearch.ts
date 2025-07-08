@@ -21,7 +21,6 @@ function getAllDocuments() {
 
 let model: any = null;
 let documentEmbeddings: { [id: string]: number[] } = {};
-let lastDocuments: any[] = [];
 
 // Fonction utilitaire pour la similarité cosinus
 function cosineSimilarity(a: number[], b: number[]): number {
@@ -48,7 +47,6 @@ async function loadModelAndEmbeddings(documents: any[]) {
   Object.keys(documentEmbeddings).forEach(id => {
     if (!docIds.includes(id)) delete documentEmbeddings[id];
   });
-  lastDocuments = documents;
 }
 
 /**

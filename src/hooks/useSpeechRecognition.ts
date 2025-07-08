@@ -61,12 +61,6 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
-  // Détection automatique de la langue (FR/EN)
-  const detectLang = useCallback((text: string): string => {
-    const isFrench = /[éèêàùçôîûœ]/i.test(text) || /\b(le|la|les|un|une|des|je|tu|il|elle|nous|vous|ils|elles|bonjour|merci|oui|non)\b/i.test(text);
-    return isFrench ? 'fr-FR' : 'en-US';
-  }, []);
-
   // Initialisation de l'API
   const getRecognition = useCallback(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
