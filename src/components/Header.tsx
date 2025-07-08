@@ -273,18 +273,20 @@ export function Header({
             variant={ragEnabled ? 'secondary' : 'outline'}
             size="sm"
             onClick={() => setRagEnabled(!ragEnabled)}
-            className={`relative ${ragEnabled ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-white dark:bg-slate-900'}`}
+            className={`relative ${ragEnabled ? 'bg-white text-black hover:bg-white' : 'bg-white dark:bg-slate-900'}`}
             title={ragEnabled ? 'Désactiver la recherche documentaire' : 'Activer la recherche documentaire'}
             aria-label={ragEnabled ? 'Désactiver la recherche documentaire' : 'Activer la recherche documentaire'}
             data-tooltip-id="header-tooltip"
             data-tooltip-content={ragEnabled ? 'Désactiver la recherche documentaire' : 'Activer la recherche documentaire'}
           >
-            {/* Badge désactivé animé */}
-            {!ragEnabled && (
+            {/* Badge animé selon l'état */}
+            {ragEnabled ? (
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse shadow-lg"></span>
+            ) : (
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse shadow-lg"></span>
             )}
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 01-8 0m8 0a4 4 0 00-8 0m8 0V5a4 4 0 00-8 0v2m8 0a4 4 0 01-8 0" /></svg>
-            {ragEnabled ? 'RAG activé' : 'RAG désactivé'}
+            {ragEnabled ? 'RAG' : 'RAG'}
           </Button>
           {/* Sélecteur de personnalité IA (dropdown custom) */}
           <PersonalityDropdown selected={selectedPersonality} onChange={onChangePersonality} />
