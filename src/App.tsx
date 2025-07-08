@@ -523,6 +523,7 @@ function App() {
           stop={stop}
           modeVocalAuto={modeVocalAuto}
           setModeVocalAuto={setModeVocalAuto}
+          hasActiveConversation={messages.length > 0}
         />
 
         {/* Enhanced Chat Interface */}
