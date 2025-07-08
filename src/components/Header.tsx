@@ -125,6 +125,7 @@ export function Header({
   const { theme, toggleTheme } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [showStopButton, setShowStopButton] = useState(true);
 
   // Effet bip mode privé
   useEffect(() => {
@@ -146,6 +147,14 @@ export function Header({
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  useEffect(() => {
+    if (hasActiveConversation && !muted) {
+      setShowStopButton(true);
+    } else {
+      setShowStopButton(false);
+    }
+  }, [hasActiveConversation, muted]);
 
   return (
     <header
@@ -390,11 +399,11 @@ export function Header({
         </div>
 
         {/* Bouton Stop voix */}
-        {hasActiveConversation && (
+        {showStopButton && hasActiveConversation && (
           <Button
             variant="destructive"
             size="sm"
-            onClick={stop}
+            onClick={() => { setShowStopButton(false); stop(); }}
             disabled={muted}
             className="text-xs px-3 py-1 ml-2 rounded-lg flex items-center gap-1 shadow hover:bg-red-600/90 bg-red-500/90 text-white border-0 transition-all duration-200 focus:ring-2 focus:ring-red-400 disabled:opacity-50 disabled:cursor-not-allowed animate-pulse"
             title="Arrêter la voix"
