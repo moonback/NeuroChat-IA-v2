@@ -3,10 +3,8 @@ import { History, X, Search, ChevronDown, ChevronUp, Tag, MessageCircle, Users, 
 import { Button } from '@/components/ui/button';
 import { Discussion } from '@/hooks/useDiscussions';
 
-// Ajout du champ optionnel category
-export interface DiscussionWithCategory extends Discussion {
-  category?: string;
-}
+// Interface sans le champ category
+export interface DiscussionWithCategory extends Discussion {}
 
 interface HistoryModalProps {
   open: boolean;
@@ -14,7 +12,7 @@ interface HistoryModalProps {
   history: DiscussionWithCategory[];
   onLoad: (discussion: DiscussionWithCategory) => void;
   onDelete: (idx: number) => void;
-  onRename: (idx: number, newTitle: string, newCategory: string) => void;
+  onRename: (idx: number, newTitle: string) => void;
 }
 
 // Formatage contextuel de la date
@@ -44,24 +42,15 @@ function EmptyIllustration() {
   );
 }
 
-const CATEGORIES = [
-  { value: 'général', label: 'Général', color: 'bg-blue-200 text-blue-800' },
-  { value: 'technique', label: 'Technique', color: 'bg-green-200 text-green-800' },
-  { value: 'perso', label: 'Perso', color: 'bg-purple-200 text-purple-800' },
-];
-
 export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRename }: HistoryModalProps) {
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState('');
-  const [editingCategory, setEditingCategory] = useState<string>('');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<'date-desc' | 'date-asc' | 'alpha'>('date-desc');
-  const [categoryFilter, setCategoryFilter] = useState<string>('');
 
-  // Recherche + filtrage + tri
+  // Recherche + tri
   const filtered = useMemo(() => {
     let arr = history;
-    if (categoryFilter) arr = arr.filter(d => d.category === categoryFilter);
     if (search.trim()) {
       const s = search.toLowerCase();
       arr = arr.filter(d =>
@@ -85,7 +74,7 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
       arr = [...arr].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
     }
     return arr;
-  }, [history, search, sort, categoryFilter]);
+  }, [history, search, sort]);
 
   if (!open) return null;
 
@@ -127,17 +116,6 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
               <option value="date-asc">Plus anciennes</option>
               <option value="alpha">Alphabétique</option>
             </select>
-            <select
-              value={categoryFilter}
-              onChange={e => setCategoryFilter(e.target.value)}
-              className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              aria-label="Filtrer par catégorie"
-            >
-              <option value="">Toutes catégories</option>
-              {CATEGORIES.map(cat => (
-                <option key={cat.value} value={cat.value}>{cat.label}</option>
-              ))}
-            </select>
           </div>
         </div>
         {/* Liste ou état vide */}
@@ -151,7 +129,6 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
                 const nbQuestions = discussion.messages.filter(m => m.isUser).length;
                 const nbReponses = nbMessages - nbQuestions;
                 const date = discussion.messages[0]?.timestamp ? new Date(discussion.messages[0].timestamp) : null;
-                const category = CATEGORIES.find(c => c.value === discussion.category);
                 return (
                   <li
                     key={idx}
@@ -161,9 +138,6 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
                   >
                     <div className="flex flex-col items-center gap-2 mr-2">
                       <History className="w-6 h-6 text-blue-400 group-hover:scale-110 transition-transform" />
-                      {category && (
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${category.color} mt-1`}><Tag className="inline w-3 h-3 mr-1 -mt-0.5" />{category.label}</span>
-                      )}
                     </div>
                     <div
                       className="flex-1 min-w-0 cursor-pointer"
@@ -183,17 +157,6 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
                               aria-label="Renommer la discussion"
                               onClick={e => e.stopPropagation()}
                             />
-                            <select
-                              value={editingCategory}
-                              onChange={e => setEditingCategory(e.target.value)}
-                              className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                              aria-label="Catégorie"
-                              onClick={e => e.stopPropagation()}
-                            >
-                              {CATEGORIES.map(cat => (
-                                <option key={cat.value} value={cat.value}>{cat.label}</option>
-                              ))}
-                            </select>
                           </>
                         ) : (
                           <span className="font-semibold truncate text-lg" title={discussion.title}>{discussion.title || `Discussion ${idx + 1}`}</span>
@@ -214,7 +177,7 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
                           size="icon"
                           className="ml-2"
                           title="Valider"
-                          onClick={() => { onRename(idx, editingValue, editingCategory); setEditingIdx(null); setEditingValue(''); setEditingCategory(''); }}
+                          onClick={() => { onRename(idx, editingValue); setEditingIdx(null); setEditingValue(''); }}
                           aria-label="Valider"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
@@ -224,7 +187,7 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
                           size="icon"
                           className="ml-1"
                           title="Annuler"
-                          onClick={() => { setEditingIdx(null); setEditingValue(''); setEditingCategory(''); }}
+                          onClick={() => { setEditingIdx(null); setEditingValue(''); }}
                           aria-label="Annuler"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -236,7 +199,7 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
                         size="icon"
                         className="ml-2"
                         title="Renommer"
-                        onClick={() => { setEditingIdx(idx); setEditingValue(discussion.title); setEditingCategory(discussion.category || CATEGORIES[0].value); }}
+                        onClick={() => { setEditingIdx(idx); setEditingValue(discussion.title); }}
                         aria-label="Renommer"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 13h3l8-8a2.828 2.828 0 00-4-4l-8 8v3zm0 0v3h3" /></svg>
