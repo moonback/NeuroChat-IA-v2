@@ -428,21 +428,7 @@ function App() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto relative">
             <button onClick={handleCloseHistory} className="absolute top-3 right-3 text-slate-500 hover:text-red-500"><X className="w-5 h-5" /></button>
             <h2 className="text-xl font-bold mb-4">Discussions récentes</h2>
-            {/* Header pour le menu historique (pour éviter l'erreur de props) */}
-            <Header
-              muted={muted}
-              onMute={mute}
-              onUnmute={unmute}
-              onNewDiscussion={handleNewDiscussion}
-              onOpenHistory={handleOpenHistory}
-              onOpenTTSSettings={() => setShowTTSSettings(true)}
-              onOpenRagDocs={() => setShowRagDocs(true)}
-              selectedPersonality={selectedPersonality}
-              onChangePersonality={setSelectedPersonality}
-              stop={stop}
-              modeVocalAuto={modeVocalAuto}
-              setModeVocalAuto={setModeVocalAuto}
-            />
+            
             {/* Sélection groupée */}
             {historyList.length > 0 && (
               <div className="flex items-center mb-2 gap-2">
