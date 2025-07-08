@@ -69,11 +69,9 @@ function App() {
   } = useSpeechSynthesis();
   const [showHistory, setShowHistory] = useState(false);
   const [historyList, setHistoryList] = useState<DiscussionWithCategory[]>([]);
-  const [editingTitleIdx, setEditingTitleIdx] = useState<number | null>(null);
-  const [editingTitleValue, setEditingTitleValue] = useState('');
+  
   const [showTTSSettings, setShowTTSSettings] = useState(false);
-  // Sélection multiple de discussions
-  const [selectedDiscussions, setSelectedDiscussions] = useState<number[]>([]);
+  
   // Ajout du state pour la personnalité IA
   const [selectedPersonality, setSelectedPersonality] = useState('formel');
   // Ajout du state pour le mode vocal automatique
