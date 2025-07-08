@@ -14,8 +14,18 @@ interface Message {
   imageUrl?: string;
 }
 
+// Type spécial pour le contexte RAG
+interface RagContextMessage {
+  id: string;
+  passages: { id: number; titre: string; contenu: string }[];
+  isRagContext: true;
+  timestamp: Date;
+}
+
+type ChatMessage = Message | RagContextMessage;
+
 interface ChatContainerProps {
-  messages: Message[];
+  messages: ChatMessage[];
   isLoading: boolean;
 }
 
@@ -24,6 +34,8 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(true);
+  // État global pour l'affichage des passages RAG
+  const [showAllPassages, setShowAllPassages] = useState<{ [id: string]: boolean }>({});
 
   useEffect(() => {
     if (isNearBottom) {
@@ -59,7 +71,7 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
       >
         <div className="space-y-2 sm:space-y-3">
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full min-h-[250px] sm:min-h-[300px] text-center px-2">
+            <div className="flex flex-col items-center justify-center h-full min-h-[250px] sm:min-h-[300px] text-center px-2 mb-4" style={{ marginBottom: '15px' }}>
               {/* Hero section améliorée */}
               <div className="relative mb-4 group">
                 <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:rotate-2">
@@ -84,7 +96,7 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
                   Bienvenue sur NeuroChat
                 </h3>
                 <p className="text-muted-foreground max-w-md mx-auto text-xs sm:text-sm leading-relaxed mb-4">
-                  Découvre le futur de la conversation avec l'IA : reconnaissance vocale avancée, langage naturel et réponses intelligentes propulsées par Google Gemini Pro.
+                  Découvre le futur de la conversation avec l'IA : reconnaissance vocale avancée, langage naturel et réponses intelligentes.
                 </p>
                 {/* Cartes de fonctionnalités */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 w-full max-w-xl mb-4">
@@ -147,37 +159,72 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
                   </div>
                 </div>
               )}
-              {messages.map((message, index) => (
-                <div key={message.id} className="animate-fadeIn">
-                  <MessageBubble
-                    message={message.text}
-                    isUser={message.isUser}
-                    timestamp={message.timestamp}
-                    isLatest={index === messages.length - 1}
-                    imageUrl={message.imageUrl}
-                  />
+              {messages.map((message, index) => {
+                if ((message as any).isRagContext) {
+                  const rag = message as RagContextMessage;
+                  const passagesToShow = showAllPassages[rag.id] ? rag.passages : rag.passages.slice(0, 3);
+                  return (
+                    <div key={rag.id} className="animate-fadeIn">
+                      <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-400 dark:border-blue-500 rounded-xl p-2 mb-2">
+                        <div className="font-semibold text-blue-800 dark:text-blue-200 text-xs flex items-center gap-1 mb-1">
+                          <span role="img" aria-label="Livre">📚</span> Passages de la base :
+                        </div>
+                        <ol className="list-decimal pl-3 space-y-1">
+                          {passagesToShow.map((p) => (
+                            <li key={p.id}>
+                              <span className="font-bold text-blue-900 dark:text-blue-100 text-xs">{p.titre} : </span>
+                              <span className="text-xs text-blue-900 dark:text-blue-100 bg-blue-100/60 dark:bg-blue-800/40 rounded px-1">
+                                {p.contenu.length > 150 ? p.contenu.slice(0, 150) + '…' : p.contenu}
+                              </span>
+                            </li>
+                          ))}
+                        </ol>
+                        {rag.passages.length > 3 && (
+                          <button
+                            className="text-xs text-blue-600 hover:underline mt-1"
+                            onClick={() => setShowAllPassages((prev) => ({ ...prev, [rag.id]: !prev[rag.id] }))}
+                          >
+                            {showAllPassages[rag.id] ? 'Réduire' : `Afficher tout (${rag.passages.length})`}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                } else {
+                  const msg = message as Message;
+                  return (
+                    <div key={msg.id} className="animate-fadeIn">
+                      <MessageBubble
+                        message={msg.text}
+                        isUser={msg.isUser}
+                        timestamp={msg.timestamp}
+                        isLatest={index === messages.length - 1}
+                        imageUrl={msg.imageUrl}
+                      />
+                    </div>
+                  );
+                }
+              })}
+              {isLoading && (
+                <div className="flex justify-start animate-fadeIn">
+                  <TypingIndicator />
                 </div>
-              ))}
+              )}
+              <div ref={messagesEndRef} />
             </>
           )}
-          {isLoading && (
-            <div className="flex justify-start animate-fadeIn">
-              <TypingIndicator />
-            </div>
+          {/* Bouton de scroll */}
+          {showScrollButton && (
+            <Button
+              onClick={scrollToBottom}
+              size="icon"
+              className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 animate-fadeIn hover:scale-110 group"
+            >
+              <ArrowDown className="h-4 w-4 group-hover:animate-bounce" />
+            </Button>
           )}
-          <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
-      {/* Bouton de scroll */}
-      {showScrollButton && (
-        <Button
-          onClick={scrollToBottom}
-          size="icon"
-          className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 animate-fadeIn hover:scale-110 group"
-        >
-          <ArrowDown className="h-4 w-4 group-hover:animate-bounce" />
-        </Button>
-      )}
     </div>
   );
 }

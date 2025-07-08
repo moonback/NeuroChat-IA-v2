@@ -10,6 +10,8 @@ import { toast } from 'sonner';
 import { TTSSettingsModal } from '@/components/TTSSettingsModal';
 import { Header } from '@/components/Header';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { searchDocuments } from '@/services/ragSearch';
+import { RagDocsModal } from '@/components/RagDocsModal';
 
 interface Message {
   id: string;
@@ -23,6 +25,14 @@ interface Discussion {
   title: string;
   messages: Message[];
 }
+
+// Ajout d'un type spécial pour les messages contextuels RAG
+type RagContextMessage = {
+  id: string;
+  passages: { id: number; titre: string; contenu: string }[];
+  isRagContext: true;
+  timestamp: Date;
+};
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -60,6 +70,8 @@ function App() {
   const [selectedPersonality, setSelectedPersonality] = useState('formel');
   // Ajout du state pour le mode vocal automatique
   const [modeVocalAuto, setModeVocalAuto] = useState(false);
+  // Ajout du state pour la modale de gestion des documents RAG
+  const [showRagDocs, setShowRagDocs] = useState(false);
 
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
@@ -181,28 +193,53 @@ function App() {
     }
   };
 
+  const addRagContextMessage = (passages: { id: number; titre: string; contenu: string }[]) => {
+    const ragMsg: RagContextMessage = {
+      id: 'rag-' + Date.now(),
+      passages,
+      isRagContext: true,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, ragMsg as any]);
+  };
+
   const handleSendMessage = async (userMessage: string, imageFile?: File) => {
     if (!isOnline) {
       toast.error('Pas de connexion Internet. Vérifie ta connexion réseau.');
       return;
     }
-
+    // Étape RAG : recherche documentaire
+    const passages = await searchDocuments(userMessage, 3);
+    if (passages.length > 0) {
+      addRagContextMessage(passages);
+    }
     // Ajoute le message utilisateur localement
     const newMessage = addMessage(userMessage, true, imageFile);
     setIsLoading(true);
-
     try {
       // On prépare l'historique complet (y compris le message utilisateur tout juste ajouté)
       const fullHistory = [...messages, newMessage];
+      // On ne garde que les messages qui ont un champ text (donc pas les messages RAG)
+      const filteredHistory = fullHistory.filter(m => typeof m.text === 'string');
+      // On construit le contexte documentaire pour le prompt
+      let ragContext = '';
+      if (passages.length > 0) {
+        ragContext = 'Contexte documentaire :\n';
+        passages.forEach((p, idx) => {
+          ragContext += `- [${p.titre}] ${p.contenu}\n`;
+        });
+        ragContext += '\n';
+      }
       // Utilise le prompt système dynamique selon la personnalité
       const systemPrompt = getSystemPrompt(selectedPersonality);
+      // On fusionne le contexte documentaire avec le prompt système
+      const prompt = `${systemPrompt}\n${ragContext}Question utilisateur : ${userMessage}`;
       const response = await sendMessageToGemini(
-        fullHistory.map(m => ({ text: m.text, isUser: m.isUser })),
+        filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
         imageFile ? [imageFile] : undefined,
-        systemPrompt
+        prompt
       );
       addMessage(response, false);
-      // Utilise le callback onEnd pour relancer la reco vocale auto
       speak(response, {
         onEnd: () => {
           if (modeVocalAuto && !muted) {
@@ -391,20 +428,7 @@ function App() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto relative">
             <button onClick={handleCloseHistory} className="absolute top-3 right-3 text-slate-500 hover:text-red-500"><X className="w-5 h-5" /></button>
             <h2 className="text-xl font-bold mb-4">Discussions récentes</h2>
-            {/* Header pour le menu historique (pour éviter l'erreur de props) */}
-            <Header
-              muted={muted}
-              onMute={mute}
-              onUnmute={unmute}
-              onNewDiscussion={handleNewDiscussion}
-              onOpenHistory={handleOpenHistory}
-              onOpenTTSSettings={() => setShowTTSSettings(true)}
-              selectedPersonality={selectedPersonality}
-              onChangePersonality={setSelectedPersonality}
-              stop={stop}
-              modeVocalAuto={modeVocalAuto}
-              setModeVocalAuto={setModeVocalAuto}
-            />
+            
             {/* Sélection groupée */}
             {historyList.length > 0 && (
               <div className="flex items-center mb-2 gap-2">
@@ -496,6 +520,7 @@ function App() {
           onNewDiscussion={handleNewDiscussion}
           onOpenHistory={handleOpenHistory}
           onOpenTTSSettings={() => setShowTTSSettings(true)}
+          onOpenRagDocs={() => setShowRagDocs(true)}
           selectedPersonality={selectedPersonality}
           onChangePersonality={setSelectedPersonality}
           stop={stop}
@@ -509,28 +534,7 @@ function App() {
           <VoiceInput onSendMessage={handleSendMessage} isLoading={isLoading} />
         </Card>
 
-        {/* Enhanced Footer */}
-        {/* <div className="text-center mt-4 sm:mt-6 space-y-2">
-          <div className="text-xs text-muted-foreground/80 flex items-center justify-center gap-2">
-            <span>Propulsé par Google Gemini Pro</span>
-            <span>•</span>
-            <span>Reconnaissance et synthèse vocale activées</span>
-          </div>
-          <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground/60">
-            <span className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              Réponses instantanées
-            </span>
-            <span className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              Chiffrement de bout en bout
-            </span>
-            <span className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-              Multilingue
-            </span>
-          </div>
-        </div> */}
+        
       </div>
 
       <TTSSettingsModal
@@ -557,6 +561,9 @@ function App() {
           Mode vocal automatique activé
         </div>
       )}
+
+      {/* Modale de gestion des documents RAG */}
+      <RagDocsModal open={showRagDocs} onClose={() => setShowRagDocs(false)} />
     </div>
   );
 }

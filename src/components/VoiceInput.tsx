@@ -10,12 +10,15 @@ interface VoiceInputProps {
   isLoading: boolean;
 }
 
+const EMOJIS = ['😀','😂','😍','😎','🥳','😢','😡','👍','🙏','👏','🤔','😅','😇','😱','🎉','❤️','��','💡','🤖','🙌'];
+
 export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   // Reconnaissance vocale
   const {
@@ -55,6 +58,19 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
     if (e.target.files && e.target.files[0]) {
       setSelectedImage(e.target.files[0]);
     }
+  };
+
+  const handleEmojiClick = (emoji: string) => {
+    if (!inputRef.current) return;
+    const input = inputRef.current;
+    const start = input.selectionStart || 0;
+    const end = input.selectionEnd || 0;
+    setInputValue(prev => prev.slice(0, start) + emoji + prev.slice(end));
+    setTimeout(() => {
+      input.focus();
+      input.setSelectionRange(start + emoji.length, start + emoji.length);
+    }, 0);
+    setShowEmojiPicker(false);
   };
 
   const handleSend = () => {
@@ -192,9 +208,26 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
                 size="icon"
                 variant="ghost"
                 className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-muted-foreground transition-all duration-200"
+                onClick={() => setShowEmojiPicker(v => !v)}
+                tabIndex={-1}
+                aria-label="Insérer un emoji"
               >
                 <Smile className="h-3 w-3" />
               </Button>
+              {showEmojiPicker && (
+                <div className="absolute z-50 bottom-10 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg p-2 flex flex-wrap gap-1 w-64 animate-fadeIn">
+                  {EMOJIS.map(e => (
+                    <button
+                      key={e}
+                      type="button"
+                      className="text-xl p-1 hover:bg-blue-100 dark:hover:bg-blue-900 rounded transition"
+                      onClick={() => handleEmojiClick(e)}
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           {/* Erreur reconnaissance vocale */}
