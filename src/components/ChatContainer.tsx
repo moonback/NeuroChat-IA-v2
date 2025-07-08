@@ -2,9 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
-import { Loader2, Sparkles, ArrowDown, Trash2, Square, MessageCircle, Mic, Zap, Brain, Clock } from 'lucide-react';
+import { Sparkles, ArrowDown, MessageCircle, Mic, Zap, Brain, Clock } from 'lucide-react';
 import { TypingIndicator } from './TypingIndicator';
-import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 
 interface Message {
   id: string;
@@ -54,12 +53,6 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const clearChat = () => {
-    // This would need to be implemented in the parent component
-    // For now, we'll just show a toast
-    console.log('Clear chat functionality would be implemented here');
   };
 
   return (

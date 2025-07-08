@@ -365,8 +365,6 @@ function App() {
   // Hook reconnaissance vocale (mode vocal auto)
   const {
     listening: listeningAuto,
-    transcript: transcriptAuto,
-    error: errorAuto,
     start: startAuto,
     stop: stopAuto,
     reset: resetAuto,
@@ -375,7 +373,7 @@ function App() {
     interimResults: true,
     lang: 'fr-FR',
     continuous: false,
-    onResult: (finalText) => {
+    onResult: (/* finalText */) => {
       // Rien ici, on attend la fin
     },
     onEnd: (finalText) => {
