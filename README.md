@@ -17,6 +17,11 @@
 ## ✨ Fonctionnalités
 
 ### 🆕 Nouvelles fonctionnalités déployées
+#### 🛡️ Mode privé / conversation éphémère
+- **Mode privé/éphémère** : Activez un mode où aucune donnée n’est sauvegardée localement, pour des conversations confidentielles.
+- **Effacement automatique** : Les messages sont supprimés à la fermeture ou au rafraîchissement de la page.
+- **Indicateur visuel** : Icône de bouclier animée dans l’interface pour signaler l’activation du mode privé.
+- **Activation/désactivation rapide** : Basculez facilement entre mode normal et mode privé depuis la barre supérieure.
 
 #### 🔥 Hyperparamètres Gemini personnalisables
 - **Réglages avancés** : Ajustez la température, topK, topP, maxOutputTokens, stopSequences et candidateCount directement depuis l’interface.
