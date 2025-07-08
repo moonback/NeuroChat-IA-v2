@@ -82,6 +82,8 @@ interface HeaderProps {
   setRagEnabled: (v: boolean) => void;
   onOpenGeminiSettings?: () => void;
   geminiConfig?: any;
+  modePrive: boolean;
+  setModePrive: (v: boolean) => void;
 }
 
 export function Header({
@@ -102,6 +104,8 @@ export function Header({
   setRagEnabled,
   onOpenGeminiSettings,
   geminiConfig,
+  modePrive,
+  setModePrive,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
@@ -210,6 +214,24 @@ export function Header({
               <ReactTooltip id="gemini-summary-tooltip" place="bottom" />
             </>
           )}
+          {/* Bouton mode privé/éphémère */}
+          <Button
+            variant={modePrive ? 'destructive' : 'outline'}
+            size="icon"
+            onClick={() => setModePrive(!modePrive)}
+            className={modePrive ? 'bg-red-600 text-white animate-pulse border-red-700 shadow-lg' : 'hover:bg-red-100 dark:hover:bg-red-900'}
+            title={modePrive ? 'Désactiver le mode privé/éphémère' : 'Activer le mode privé/éphémère'}
+            aria-label={modePrive ? 'Désactiver le mode privé/éphémère' : 'Activer le mode privé/éphémère'}
+            data-tooltip-id="header-tooltip"
+            data-tooltip-content={modePrive ? 'Mode privé activé : rien n’est sauvegardé.' : 'Activer le mode privé : les messages ne seront pas sauvegardés et seront effacés à la fermeture.'}
+          >
+            {/* Icône cadenas/flamme */}
+            {modePrive ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v2m0 0a4 4 0 00-4 4v2a4 4 0 004 4 4 4 0 004-4V9a4 4 0 00-4-4zm0 0V3m0 0a9 9 0 019 9v5a3 3 0 01-3 3H6a3 3 0 01-3-3v-5a9 9 0 019-9z" /></svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v2m0 0a4 4 0 00-4 4v2a4 4 0 004 4 4 4 0 004-4V9a4 4 0 00-4-4zm0 0V3" /></svg>
+            )}
+          </Button>
         </div>
         {/* Groupe vocal */}
         <div className="flex items-center gap-1 sm:gap-2 bg-slate-100/70 dark:bg-slate-800/70 rounded-xl px-2 py-1 shadow-inner backdrop-blur-xl hover:shadow-xl transition-all duration-200 border border-slate-200 dark:border-slate-700 mx-2">

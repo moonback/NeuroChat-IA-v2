@@ -98,6 +98,15 @@ function App() {
   // Gestion des presets Gemini
   const [presets, setPresets] = useState<{ name: string; config: GeminiGenerationConfig }[]>([]);
 
+  // --- Mode privé/éphémère ---
+  const [modePrive, setModePrive] = useState(false);
+  // Affichage d'un toast d'avertissement lors de l'activation
+  useEffect(() => {
+    if (modePrive) {
+      // toast.warning('Mode privé activé : les messages ne seront pas sauvegardés et seront effacés à la fermeture.');
+    }
+  }, [modePrive]);
+
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
   const LOCALSTORAGE_CURRENT = 'gemini_current_discussion';
@@ -114,6 +123,10 @@ function App() {
 
   // Charger la dernière discussion au démarrage
   useEffect(() => {
+    if (modePrive) {
+      setMessages([]);
+      return;
+    }
     const saved = localStorage.getItem(LOCALSTORAGE_CURRENT);
     if (saved) {
       try {
@@ -123,12 +136,13 @@ function App() {
         setMessages([]);
       }
     }
-  }, []);
+  }, [modePrive]);
 
   // Sauvegarder la discussion courante à chaque changement
   useEffect(() => {
+    if (modePrive) return; // Pas de sauvegarde en mode privé
     localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify(messages));
-  }, [messages]);
+  }, [messages, modePrive]);
 
   // Charger les presets au montage
   useEffect(() => {
@@ -147,6 +161,7 @@ function App() {
 
   // Sauvegarder une discussion dans l'historique (sans doublons consécutifs)
   const saveDiscussionToHistory = (discussion: Message[]) => {
+    if (modePrive) return; // Pas de sauvegarde en mode privé
     if (!discussion.length) return;
     const historyRaw = localStorage.getItem(LOCALSTORAGE_KEY);
     let history: Discussion[] = [];
@@ -180,17 +195,22 @@ function App() {
 
   // Nouvelle discussion
   const handleNewDiscussion = () => {
-    if (messages.length > 0) {
+    if (!modePrive && messages.length > 0) {
       saveDiscussionToHistory(messages);
     }
     setMessages([]);
-    localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify([]));
+    if (!modePrive) localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify([]));
   };
 
   // Sauvegarde automatique à la fermeture/rafraîchissement de la page
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (messages.length > 0) {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (modePrive && messages.length > 0) {
+        e.preventDefault();
+        e.returnValue = 'Êtes-vous sûr de vouloir quitter ? Les messages privés seront effacés.';
+        return 'Êtes-vous sûr de vouloir quitter ? Les messages privés seront effacés.';
+      }
+      if (!modePrive && messages.length > 0) {
         saveDiscussionToHistory(messages);
       }
     };
@@ -198,8 +218,7 @@ function App() {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages]);
+  }, [messages, modePrive]);
 
   // Monitor online status
   useEffect(() => {
@@ -302,7 +321,7 @@ function App() {
           }
         }
       });
-      toast.success('Réponse reçue !', { duration: 2000 });
+      // toast.success('Réponse reçue !', { duration: 2000 });
     } catch (error) {
       const errorMessage = error instanceof Error 
         ? error.message 
@@ -568,7 +587,19 @@ function App() {
           setRagEnabled={setRagEnabled}
           onOpenGeminiSettings={() => setShowGeminiSettings(true)}
           geminiConfig={geminiConfig}
+          modePrive={modePrive}
+          setModePrive={setModePrive}
         />
+
+        {/* Indicateur visuel du mode privé SOUS le header, centré */}
+        {modePrive && (
+          <div className="w-full flex justify-center animate-slideDown">
+            <div className="mt-1 mb-2 px-5 py-2 rounded-xl shadow-lg bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 text-white font-semibold flex items-center gap-2 border border-red-200 dark:border-red-700">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><rect x="5" y="11" width="14" height="9" rx="2" className="fill-white/20" /><path d="M12 17v-2" className="stroke-white" /><path d="M7 11V7a5 5 0 0110 0v4" className="stroke-white" /></svg>
+              Mode privé activé : aucun message n'est sauvegardé, tout sera effacé à la fermeture.
+            </div>
+          </div>
+        )}
 
         {/* Boutons de sélection et suppression groupée */}
         {/* Les boutons de sélection/groupée ne sont visibles que si une conversation est active */}
@@ -637,6 +668,7 @@ function App() {
             selectMode={selectMode}
             selectedMessageIds={selectedMessageIds}
             onSelectMessage={handleSelectMessage}
+            modePrive={modePrive}
           />
           <VoiceInput onSendMessage={handleSendMessage} isLoading={isLoading} />
         </Card>
@@ -889,6 +921,14 @@ function App() {
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
+
+      {/* Indication visuelle du mode privé */}
+      {/* This block is now redundant as the indicator is moved to the header */}
+      {/* {modePrive && (
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white px-4 py-2 rounded-xl shadow-lg animate-pulse">
+          Mode privé activé : aucun message n'est sauvegardé, tout sera effacé à la fermeture.
+        </div>
+      )} */}
     </div>
   );
 }

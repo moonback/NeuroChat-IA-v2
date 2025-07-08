@@ -40,9 +40,10 @@ interface ChatContainerProps {
   selectMode?: boolean; // Ajouté
   selectedMessageIds?: string[]; // Ajouté
   onSelectMessage?: (id: string) => void; // Ajouté
+  modePrive?: boolean; // Ajouté
 }
 
-export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMessage, onReplyToMessage, selectMode = false, selectedMessageIds = [], onSelectMessage }: ChatContainerProps) {
+export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMessage, onReplyToMessage, selectMode = false, selectedMessageIds = [], onSelectMessage, modePrive = false }: ChatContainerProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
@@ -78,7 +79,17 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
   }, []);
 
   return (
-    <div className="flex-1 h-full relative bg-gradient-to-br from-slate-50/50 via-white to-blue-50/30 dark:from-slate-900/50 dark:via-slate-900 dark:to-slate-800/30">
+    <div className={
+      "flex-1 h-full relative bg-gradient-to-br from-slate-50/50 via-white to-blue-50/30 dark:from-slate-900/50 dark:via-slate-900 dark:to-slate-800/30 " +
+      (modePrive ? " animate-prive-glow ring-4 ring-red-400/60 shadow-2xl shadow-red-400/30" : "")
+    }>
+      {/* Badge privé animé en haut à droite */}
+      {modePrive && (
+        <div className="absolute top-3 right-3 z-30 px-3 py-1 rounded-full bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 text-white font-bold text-xs shadow-lg animate-bouncePrivé border-2 border-white/40 select-none pointer-events-none">
+          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' className='inline align-middle mr-1'><rect x='5' y='11' width='14' height='9' rx='2' className='fill-white/20'/><path d='M12 17v-2' className='stroke-white'/><path d='M7 11V7a5 5 0 0110 0v4' className='stroke-white'/></svg>
+          Privé
+        </div>
+      )}
       <ScrollArea
         className="flex-1 h-full overflow-y-auto p-2 sm:p-3"
         ref={scrollAreaRef}
@@ -87,72 +98,104 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
         <div className="space-y-2 sm:space-y-3">
           {/* Conditional rendering for hero section or chat content */}
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full min-h-[250px] sm:min-h-[300px] text-center px-2 mb-4">
-              {/* Hero section améliorée */}
-              <div className="relative mb-4 group">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:rotate-2">
-                  <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            modePrive ? (
+              <div className="flex flex-col items-center justify-center h-full min-h-[250px] sm:min-h-[300px] text-center px-2 mb-4 animate-fadeIn">
+                {/* Icône cadenas et badge privé */}
+                <div className="relative mb-4 group">
+                  <div className="w-16 h-16 bg-gradient-to-br from-red-500 via-orange-500 to-yellow-400 rounded-2xl flex items-center justify-center shadow-2xl animate-bouncePrivé">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white drop-shadow-lg">
+                      <rect x="5" y="11" width="14" height="9" rx="2" className="fill-white/20" />
+                      <path d="M12 17v-2" className="stroke-white" />
+                      <path d="M7 11V7a5 5 0 0110 0v4" className="stroke-white" />
+                    </svg>
+                  </div>
+                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 text-white font-bold text-xs shadow-lg border-2 border-white/40 select-none animate-bouncePrivé">Mode privé</div>
                 </div>
-                {/* Animated status indicator */}
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center shadow-lg animate-pulse">
-                  <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
-                </div>
-                {/* Floating particles */}
-                <div className="absolute -top-3 -left-3 w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.5s] opacity-70 shadow-lg"></div>
-                <div className="absolute -bottom-3 -right-3 w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:1s] opacity-70 shadow-md"></div>
-                <div className="absolute top-1/2 -left-4 w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:1.5s] opacity-70 shadow-md"></div>
-                <div className="absolute -top-2 right-3 w-1 h-1 bg-pink-400 rounded-full animate-bounce [animation-delay:2s] opacity-60 shadow-sm"></div>
-                {/* Pulsating circles */}
-                <div className="absolute inset-0 rounded-full border border-blue-300 animate-ping opacity-30"></div>
-                <div className="absolute inset-0 rounded-full border border-purple-300 animate-ping opacity-20 [animation-delay:1s]"></div>
-              </div>
-              <div className="max-w-xl mx-auto">
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 dark:from-slate-200 dark:via-slate-300 dark:to-slate-400 bg-clip-text text-transparent">
-                  Bienvenue sur NeuroChat
-                </h3>
-                <p className="text-muted-foreground max-w-md mx-auto text-xs sm:text-sm leading-relaxed mb-4">
-                  Découvrez le futur de la conversation avec l'IA : reconnaissance vocale avancée, langage naturel et réponses intelligentes.
-                </p>
-                {/* Feature Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 w-full max-w-xl mb-4">
-                  <div className="group p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 rounded-xl border border-blue-200/50 dark:border-blue-700/30 hover:shadow-lg transition-all duration-300 hover:scale-105">
-                    <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mb-2 mx-auto group-hover:scale-105 transition-transform duration-300">
-                      <Brain className="w-4 h-4 text-white" />
-                    </div>
-                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1 text-xs">IA avancée</h4>
-                    <p className="text-[10px] text-blue-700 dark:text-blue-300">Compréhension contextuelle et réponses naturelles</p>
-                  </div>
-                  <div className="group p-3 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/20 rounded-xl border border-emerald-200/50 dark:border-emerald-700/30 hover:shadow-lg transition-all duration-300 hover:scale-105">
-                    <div className="w-7 h-7 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center mb-2 mx-auto group-hover:scale-105 transition-transform duration-300">
-                      <Mic className="w-4 h-4 text-white" />
-                    </div>
-                    <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-1 text-xs">Prêt pour la voix</h4>
-                    <p className="text-[10px] text-emerald-700 dark:text-emerald-300">Parlez naturellement et écoutez les réponses</p>
-                  </div>
-                  <div className="group p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/20 rounded-xl border border-purple-200/50 dark:border-purple-700/30 hover:shadow-lg transition-all duration-300 hover:scale-105 sm:col-span-2 lg:col-span-1">
-                    <div className="w-7 h-7 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mb-2 mx-auto group-hover:scale-105 transition-transform duration-300">
-                      <Zap className="w-4 h-4 text-white" />
-                    </div>
-                    <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-1 text-xs">Temps réel</h4>
-                    <p className="text-[10px] text-purple-700 dark:text-purple-300">Réponses instantanées et fluides</p>
-                  </div>
-                </div>
-                {/* Call to action */}
-                <div className="p-3 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-700/50 rounded-xl border border-slate-200/50 dark:border-slate-600/50 backdrop-blur-sm">
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse" />
-                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                      Prêt à commencer ?
-                    </span>
-                    <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse [animation-delay:0.5s]" />
-                  </div>
-                  <p className="text-[11px] text-muted-foreground/80">
-                    Écrivez un message ou cliquez sur le micro pour parler.
+                <div className="max-w-xl mx-auto">
+                  <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 bg-gradient-to-r from-red-700 via-orange-700 to-yellow-700 dark:from-red-200 dark:via-orange-200 dark:to-yellow-200 bg-clip-text text-transparent">Mode privé activé</h3>
+                  <p className="text-orange-900 dark:text-orange-200 max-w-md mx-auto text-xs sm:text-sm leading-relaxed mb-4 font-semibold">
+                    Vos messages ne seront <span className="underline underline-offset-2">jamais sauvegardés</span> et seront <span className="underline underline-offset-2">effacés automatiquement</span> à la fermeture de la page.<br />
+                    <span className="text-red-700 dark:text-red-300 font-bold">Aucune trace n’est conservée.</span>
                   </p>
+                  <div className="p-3 bg-gradient-to-r from-red-50 to-yellow-50 dark:from-red-900/40 dark:to-yellow-900/30 rounded-xl border border-red-200/50 dark:border-red-700/50 backdrop-blur-sm">
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 animate-pulse"><rect x="5" y="11" width="14" height="9" rx="2" className="fill-white/20" /><path d="M12 17v-2" className="stroke-white" /><path d="M7 11V7a5 5 0 0110 0v4" className="stroke-white" /></svg>
+                      <span className="text-xs font-medium text-red-700 dark:text-red-200">Vous pouvez discuter en toute confidentialité.</span>
+                    </div>
+                    <p className="text-[11px] text-orange-800 dark:text-orange-200/80">
+                      Écrivez un message ou cliquez sur le micro pour démarrer une conversation éphémère.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full min-h-[250px] sm:min-h-[300px] text-center px-2 mb-4">
+                {/* Hero section améliorée */}
+                <div className="relative mb-4 group">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:rotate-2">
+                    <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </div>
+                  {/* Animated status indicator */}
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center shadow-lg animate-pulse">
+                    <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
+                  </div>
+                  {/* Floating particles */}
+                  <div className="absolute -top-3 -left-3 w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.5s] opacity-70 shadow-lg"></div>
+                  <div className="absolute -bottom-3 -right-3 w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:1s] opacity-70 shadow-md"></div>
+                  <div className="absolute top-1/2 -left-4 w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:1.5s] opacity-70 shadow-md"></div>
+                  <div className="absolute -top-2 right-3 w-1 h-1 bg-pink-400 rounded-full animate-bounce [animation-delay:2s] opacity-60 shadow-sm"></div>
+                  {/* Pulsating circles */}
+                  <div className="absolute inset-0 rounded-full border border-blue-300 animate-ping opacity-30"></div>
+                  <div className="absolute inset-0 rounded-full border border-purple-300 animate-ping opacity-20 [animation-delay:1s]"></div>
+                </div>
+                <div className="max-w-xl mx-auto">
+                  <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 dark:from-slate-200 dark:via-slate-300 dark:to-slate-400 bg-clip-text text-transparent">
+                    Bienvenue sur NeuroChat
+                  </h3>
+                  <p className="text-muted-foreground max-w-md mx-auto text-xs sm:text-sm leading-relaxed mb-4">
+                    Découvrez le futur de la conversation avec l'IA : reconnaissance vocale avancée, langage naturel et réponses intelligentes.
+                  </p>
+                  {/* Feature Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 w-full max-w-xl mb-4">
+                    <div className="group p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 rounded-xl border border-blue-200/50 dark:border-blue-700/30 hover:shadow-lg transition-all duration-300 hover:scale-105">
+                      <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mb-2 mx-auto group-hover:scale-105 transition-transform duration-300">
+                        <Brain className="w-4 h-4 text-white" />
+                      </div>
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1 text-xs">IA avancée</h4>
+                      <p className="text-[10px] text-blue-700 dark:text-blue-300">Compréhension contextuelle et réponses naturelles</p>
+                    </div>
+                    <div className="group p-3 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/20 rounded-xl border border-emerald-200/50 dark:border-emerald-700/30 hover:shadow-lg transition-all duration-300 hover:scale-105">
+                      <div className="w-7 h-7 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center mb-2 mx-auto group-hover:scale-105 transition-transform duration-300">
+                        <Mic className="w-4 h-4 text-white" />
+                      </div>
+                      <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-1 text-xs">Prêt pour la voix</h4>
+                      <p className="text-[10px] text-emerald-700 dark:text-emerald-300">Parlez naturellement et écoutez les réponses</p>
+                    </div>
+                    <div className="group p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/20 rounded-xl border border-purple-200/50 dark:border-purple-700/30 hover:shadow-lg transition-all duration-300 hover:scale-105 sm:col-span-2 lg:col-span-1">
+                      <div className="w-7 h-7 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mb-2 mx-auto group-hover:scale-105 transition-transform duration-300">
+                        <Zap className="w-4 h-4 text-white" />
+                      </div>
+                      <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-1 text-xs">Temps réel</h4>
+                      <p className="text-[10px] text-purple-700 dark:text-purple-300">Réponses instantanées et fluides</p>
+                    </div>
+                  </div>
+                  {/* Call to action */}
+                  <div className="p-3 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-700/50 rounded-xl border border-slate-200/50 dark:border-slate-600/50 backdrop-blur-sm">
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse" />
+                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                        Prêt à commencer ?
+                      </span>
+                      <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse [animation-delay:0.5s]" />
+                    </div>
+                    <p className="text-[11px] text-muted-foreground/80">
+                      Écrivez un message ou cliquez sur le micro pour parler.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )
           ) : (
             <>
               {/* Chat Header */}
