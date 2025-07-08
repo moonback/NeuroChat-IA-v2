@@ -286,10 +286,13 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto relative">
-        <button onClick={onClose} className="absolute top-3 right-3 text-slate-500 hover:text-red-500"><X className="w-5 h-5" /></button>
-        <h2 className="text-xl font-bold mb-4">Gestion des documents RAG</h2>
-        <div className="mb-4 flex items-center gap-2">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8 w-full max-w-3xl max-h-[90vh] overflow-y-auto relative transition-all duration-300">
+        <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-red-500"><X className="w-6 h-6" /></button>
+        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+          <UploadCloud className="w-6 h-6 text-blue-500" />
+          Gestion des documents RAG
+        </h2>
+        <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <input
             type="file"
             accept=".txt,.md,.pdf,.docx,.csv,.html"
@@ -311,77 +314,89 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Rechercher un document..."
-          className="w-full mb-3 px-3 py-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full mb-4 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
+        <div className="mb-4 flex justify-between items-center">
+          <span className="text-sm text-slate-500">
+            {filteredDocs.length} document{filteredDocs.length !== 1 ? "s" : ""} affiché{filteredDocs.length !== 1 ? "s" : ""}
+          </span>
+          <span className="text-xs text-slate-400">
+            {docs.length} au total
+          </span>
+        </div>
         {filteredDocs.length === 0 ? (
-          <div className="text-muted-foreground text-center">Aucun document trouvé.</div>
+          <div className="text-muted-foreground text-center py-12">Aucun document trouvé.</div>
         ) : (
-          <ul className="space-y-3">
+          <ul className="space-y-4">
             {filteredDocs.map(doc => {
               return (
-                <li key={doc.id} className="border rounded-lg p-3 bg-slate-50 dark:bg-slate-800 flex items-center gap-2">
-                  <div className="flex-1 min-w-0 flex gap-2 items-center">
-                    {getIcon(doc.extension || '')}
-                    {editingId === doc.id ? (
-                      <div className="flex items-center gap-1">
-                        <input
-                          type="text"
-                          value={editingValue}
-                          onChange={handleEditChange}
-                          onBlur={() => handleEditSave(doc)}
-                          onKeyDown={e => handleEditKeyDown(e, doc)}
-                          autoFocus
-                          className="text-sm font-semibold bg-transparent border-b border-blue-400 focus:outline-none px-1 w-32"
-                        />
-                        <Button size="icon" variant="ghost" onClick={() => handleEditSave(doc)}><Check className="w-4 h-4 text-green-500" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => { setEditingId(null); setEditingValue(''); }}><XIcon className="w-4 h-4 text-red-500" /></Button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1">
-                        <span className="font-semibold text-blue-900 dark:text-blue-100 text-sm truncate">{doc.titre}</span>
-                        {doc.origine === 'utilisateur' && (
-                          <Button size="icon" variant="ghost" onClick={() => handleStartEdit(doc)} title="Renommer"><Pencil className="w-4 h-4 text-blue-400" /></Button>
-                        )}
-                      </div>
-                    )}
-                    <div className="text-xs text-muted-foreground truncate">{doc.contenu.slice(0, 80)}...</div>
-                    <div className="text-[10px] text-slate-400 ml-1">.{doc.extension}</div>
+                <li key={doc.id} className="border rounded-xl p-4 bg-slate-50 dark:bg-slate-800 flex flex-col sm:flex-row items-start sm:items-center gap-3 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex-1 min-w-0 flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+                    <div className="flex-shrink-0">{getIcon(doc.extension || '')}</div>
+                    <div className="flex flex-col gap-1 w-full">
+                      {editingId === doc.id ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={editingValue}
+                            onChange={handleEditChange}
+                            onBlur={() => handleEditSave(doc)}
+                            onKeyDown={e => handleEditKeyDown(e, doc)}
+                            autoFocus
+                            className="text-base font-semibold bg-transparent border-b border-blue-400 focus:outline-none px-1 w-40"
+                          />
+                          <Button size="icon" variant="ghost" onClick={() => handleEditSave(doc)} title="Valider"><Check className="w-5 h-5 text-green-500" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => { setEditingId(null); setEditingValue(''); }} title="Annuler"><XIcon className="w-5 h-5 text-red-500" /></Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-blue-900 dark:text-blue-100 text-base truncate max-w-[200px]">{doc.titre}</span>
+                          {doc.origine === 'utilisateur' && (
+                            <Button size="icon" variant="ghost" onClick={() => handleStartEdit(doc)} title="Renommer"><Pencil className="w-4 h-4 text-blue-400" /></Button>
+                          )}
+                        </div>
+                      )}
+                      <div className="text-xs text-muted-foreground truncate max-w-[350px]">{doc.contenu.slice(0, 120)}{doc.contenu.length > 120 ? "…" : ""}</div>
+                      <div className="text-[11px] text-slate-400">.{doc.extension}</div>
+                    </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="ml-1"
-                    title="Aperçu"
-                    onClick={() => setPreviewDoc(doc)}
-                  >
-                    <Eye className="w-4 h-4 text-indigo-500" />
-                  </Button>
-                  {doc.origine === 'utilisateur' ? (
+                  <div className="flex gap-1 mt-2 sm:mt-0">
                     <Button
                       variant="ghost"
                       size="icon"
                       className="ml-1"
-                      title="Supprimer"
-                      onClick={() => handleDelete(doc.id)}
+                      title="Aperçu"
+                      onClick={() => setPreviewDoc(doc)}
                     >
-                      <Trash2 className="w-4 h-4 text-red-500" />
+                      <Eye className="w-5 h-5 text-indigo-500" />
                     </Button>
-                  ) : null}
+                    {doc.origine === 'utilisateur' ? (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="ml-1"
+                        title="Supprimer"
+                        onClick={() => handleDelete(doc.id)}
+                      >
+                        <Trash2 className="w-5 h-5 text-red-500" />
+                      </Button>
+                    ) : null}
+                  </div>
                 </li>
               );
             })}
           </ul>
         )}
-        <Button onClick={onClose} className="mt-6 w-full">Fermer</Button>
+        <Button onClick={onClose} className="mt-8 w-full text-base py-3">Fermer</Button>
       </div>
       {/* Modale d'aperçu */}
       {previewDoc && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto relative">
-            <button onClick={() => setPreviewDoc(null)} className="absolute top-3 right-3 text-slate-500 hover:text-red-500"><X className="w-5 h-5" /></button>
-            <h3 className="text-lg font-bold mb-2">{previewDoc.titre}</h3>
-            <pre className="whitespace-pre-wrap text-xs bg-slate-100 dark:bg-slate-800 rounded p-3 max-h-[60vh] overflow-y-auto">{previewDoc.contenu}</pre>
-            <Button onClick={() => setPreviewDoc(null)} className="mt-4 w-full">Fermer l'aperçu</Button>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8 w-full max-w-2xl max-h-[95vh] overflow-y-auto relative">
+            <button onClick={() => setPreviewDoc(null)} className="absolute top-4 right-4 text-slate-500 hover:text-red-500"><X className="w-6 h-6" /></button>
+            <h3 className="text-xl font-bold mb-4">{previewDoc.titre}</h3>
+            <pre className="whitespace-pre-wrap text-sm bg-slate-100 dark:bg-slate-800 rounded p-4 max-h-[70vh] overflow-y-auto">{previewDoc.contenu}</pre>
+            <Button onClick={() => setPreviewDoc(null)} className="mt-6 w-full text-base py-3">Fermer l'aperçu</Button>
           </div>
         </div>
       )}

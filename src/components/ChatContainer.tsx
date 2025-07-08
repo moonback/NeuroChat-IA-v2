@@ -34,6 +34,8 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(true);
+  // État global pour l'affichage des passages RAG
+  const [showAllPassages, setShowAllPassages] = useState<{ [id: string]: boolean }>({});
 
   useEffect(() => {
     if (isNearBottom) {
@@ -160,6 +162,7 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
               {messages.map((message, index) => {
                 if ((message as any).isRagContext) {
                   const rag = message as RagContextMessage;
+                  const passagesToShow = showAllPassages[rag.id] ? rag.passages : rag.passages.slice(0, 3);
                   return (
                     <div key={rag.id} className="animate-fadeIn">
                       <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-400 dark:border-blue-500 rounded-xl p-2 mb-2">
@@ -167,7 +170,7 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
                           <span role="img" aria-label="Livre">📚</span> Passages de la base :
                         </div>
                         <ol className="list-decimal pl-3 space-y-1">
-                          {rag.passages.map((p) => (
+                          {passagesToShow.map((p) => (
                             <li key={p.id}>
                               <span className="font-bold text-blue-900 dark:text-blue-100 text-xs">{p.titre} : </span>
                               <span className="text-xs text-blue-900 dark:text-blue-100 bg-blue-100/60 dark:bg-blue-800/40 rounded px-1">
@@ -176,6 +179,14 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
                             </li>
                           ))}
                         </ol>
+                        {rag.passages.length > 3 && (
+                          <button
+                            className="text-xs text-blue-600 hover:underline mt-1"
+                            onClick={() => setShowAllPassages((prev) => ({ ...prev, [rag.id]: !prev[rag.id] }))}
+                          >
+                            {showAllPassages[rag.id] ? 'Réduire' : `Afficher tout (${rag.passages.length})`}
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
