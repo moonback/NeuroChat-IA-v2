@@ -534,28 +534,7 @@ function App() {
           <VoiceInput onSendMessage={handleSendMessage} isLoading={isLoading} />
         </Card>
 
-        {/* Enhanced Footer */}
-        {/* <div className="text-center mt-4 sm:mt-6 space-y-2">
-          <div className="text-xs text-muted-foreground/80 flex items-center justify-center gap-2">
-            <span>Propulsé par Google Gemini Pro</span>
-            <span>•</span>
-            <span>Reconnaissance et synthèse vocale activées</span>
-          </div>
-          <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground/60">
-            <span className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              Réponses instantanées
-            </span>
-            <span className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              Chiffrement de bout en bout
-            </span>
-            <span className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-              Multilingue
-            </span>
-          </div>
-        </div> */}
+        
       </div>
 
       <TTSSettingsModal
