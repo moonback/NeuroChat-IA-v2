@@ -319,9 +319,9 @@ function App() {
   };
 
   // Renommer une discussion (compatible avec le nouveau composant)
-  const handleRenameDiscussion = (idx: number, newTitle: string, newCategory: string) => {
+  const handleRenameDiscussion = (idx: number, newTitle: string) => {
     const newHistory = [...historyList];
-    newHistory[idx] = { ...newHistory[idx], title: newTitle || `Discussion ${idx + 1}`, category: newCategory };
+    newHistory[idx] = { ...newHistory[idx], title: newTitle || `Discussion ${idx + 1}` };
     setHistoryList(newHistory);
     localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newHistory));
   };

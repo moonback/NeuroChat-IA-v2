@@ -129,12 +129,14 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
                 const nbQuestions = discussion.messages.filter(m => m.isUser).length;
                 const nbReponses = nbMessages - nbQuestions;
                 const date = discussion.messages[0]?.timestamp ? new Date(discussion.messages[0].timestamp) : null;
+                // Trouver l'index réel dans history
+                const realIdx = history.findIndex(d => d === discussion);
                 return (
                   <li
-                    key={idx}
+                    key={realIdx}
                     className="group border rounded-2xl p-5 bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-900 dark:to-blue-950 hover:shadow-xl transition-all duration-200 flex items-center gap-4 focus-within:ring-2 focus-within:ring-blue-400 animate-fadeIn"
                     tabIndex={0}
-                    aria-label={`Charger la discussion ${discussion.title || `Discussion ${idx + 1}`}`}
+                    aria-label={`Charger la discussion ${discussion.title || `Discussion ${realIdx + 1}`}`}
                   >
                     <div className="flex flex-col items-center gap-2 mr-2">
                       <History className="w-6 h-6 text-blue-400 group-hover:scale-110 transition-transform" />
@@ -159,7 +161,7 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
                             />
                           </>
                         ) : (
-                          <span className="font-semibold truncate text-lg" title={discussion.title}>{discussion.title || `Discussion ${idx + 1}`}</span>
+                          <span className="font-semibold truncate text-lg" title={discussion.title}>{discussion.title || `Discussion ${realIdx + 1}`}</span>
                         )}
                         <span className="ml-auto text-xs text-muted-foreground flex items-center gap-1"><CalendarDays className="w-3 h-3 mr-0.5" />{date ? formatDate(date) : ''}</span>
                       </div>
@@ -177,7 +179,7 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
                           size="icon"
                           className="ml-2"
                           title="Valider"
-                          onClick={() => { onRename(idx, editingValue); setEditingIdx(null); setEditingValue(''); }}
+                          onClick={() => { onRename(realIdx, editingValue); setEditingIdx(null); setEditingValue(''); }}
                           aria-label="Valider"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
@@ -210,7 +212,7 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
                       size="icon"
                       className="ml-1"
                       title="Supprimer"
-                      onClick={() => onDelete(idx)}
+                      onClick={() => onDelete(realIdx)}
                       aria-label="Supprimer"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
