@@ -108,9 +108,17 @@ export function Header({
             <span className={`relative inline-flex rounded-full h-3 w-3 ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></span>
           </span>
         </div>
-        <div className="flex flex-col min-w-0">
-          <span className="text-xl sm:text-2xl font-extrabold truncate bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent drop-shadow-sm tracking-tight">NeuroChat</span>
-          <span className="text-xs text-muted-foreground truncate font-medium">Conversations IA, à votre image</span>
+        <div
+          className="flex flex-col min-w-0 cursor-pointer"
+          onClick={onNewDiscussion}
+          title="Nouvelle conversation"
+        >
+          <span className="text-xl sm:text-2xl font-extrabold truncate bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
+            NeuroChat
+          </span>
+          <span className="text-xs text-muted-foreground truncate font-medium">
+            Conversations IA, à votre image
+          </span>
         </div>
       </div>
       {/* Actions */}
