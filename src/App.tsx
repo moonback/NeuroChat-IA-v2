@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
 import { sendMessageToGemini } from '@/services/geminiApi';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
-import { Mic, MessageCircle, Zap, Shield, Globe, History, X, Settings2, Volume2, VolumeX } from 'lucide-react';
+import { History, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { TTSSettingsModal } from '@/components/TTSSettingsModal';
 import { Header } from '@/components/Header';
