@@ -83,7 +83,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
       "flex-1 h-full relative bg-gradient-to-br from-slate-50/50 via-white to-blue-50/30 dark:from-slate-900/50 dark:via-slate-900 dark:to-slate-800/30 " +
       (modePrive ? " animate-prive-glow ring-4 ring-red-400/60 shadow-2xl shadow-red-400/30" : "")
     }>
-      {/* Badge privé animé en haut à droite */}
+      {/* Badge privé animé en haut à droite
       {modePrive && (
         <div className="absolute top-3 right-3 z-30 px-3 py-1 rounded-full bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-800 text-white font-bold text-xs shadow-lg animate-bouncePrivé border-2 border-white/40 select-none pointer-events-none">
           <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' className='inline align-middle mr-1'>
@@ -93,7 +93,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
           </svg>
           Privé
         </div>
-      )}
+      )} */}
       <ScrollArea
         className="flex-1 h-full overflow-y-auto p-2 sm:p-3"
         ref={scrollAreaRef}
