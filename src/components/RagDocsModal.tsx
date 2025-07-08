@@ -197,42 +197,45 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
 
   // Ajouter un document utilisateur
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const ext = getExtension(file.name);
-    if (!['txt','md','pdf','docx','csv','html'].includes(ext)) {
-      toast.error('Type de fichier non supporté.');
-      return;
-    }
-    let text = '';
-    try {
-      text = await extractTextFromFile(file);
-    } catch (err: any) {
-      toast.error(err.message || 'Erreur lors de l\'extraction du texte.');
-      return;
-    }
-    if (!text.trim()) {
-      toast.error('Aucun texte extrait du fichier.');
-      return;
-    }
-    const titre = file.name.replace(/\.[^/.]+$/, '');
-    const newDoc: RagDoc = {
-      id: 'user-' + Date.now(),
-      titre,
-      contenu: text,
-      origine: 'utilisateur',
-      extension: ext,
-    };
-    // Sauvegarder dans le localStorage
-    const userRaw = localStorage.getItem(LS_KEY);
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    let userRaw = localStorage.getItem(LS_KEY);
     let userDocs: RagDoc[] = [];
     if (userRaw) {
       try { userDocs = JSON.parse(userRaw); } catch {}
     }
-    userDocs.push(newDoc);
+    let addedCount = 0;
+    for (const file of Array.from(files)) {
+      const ext = getExtension(file.name);
+      if (!['txt','md','pdf','docx','csv','html'].includes(ext)) {
+        toast.error(`Type de fichier non supporté : ${file.name}`);
+        continue;
+      }
+      let text = '';
+      try {
+        text = await extractTextFromFile(file);
+      } catch (err: any) {
+        toast.error(`${file.name} : ${err.message || 'Erreur lors de l\'extraction du texte.'}`);
+        continue;
+      }
+      if (!text.trim()) {
+        toast.error(`${file.name} : Aucun texte extrait du fichier.`);
+        continue;
+      }
+      const titre = file.name.replace(/\.[^/.]+$/, '');
+      const newDoc: RagDoc = {
+        id: 'user-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+        titre,
+        contenu: text,
+        origine: 'utilisateur',
+        extension: ext,
+      };
+      userDocs.push(newDoc);
+      addedCount++;
+    }
     localStorage.setItem(LS_KEY, JSON.stringify(userDocs));
-    setDocs(docs => [...docs, newDoc]);
-    toast.success('Document ajouté !');
+    setDocs(docs => [...docs, ...userDocs.filter(d => !docs.some(doc => doc.id === d.id))]);
+    if (addedCount > 0) toast.success(`${addedCount} document(s) ajouté(s) !`);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -300,6 +303,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
             accept=".txt,.md,.pdf,.docx,.csv,.html"
             style={{ display: 'none' }}
             ref={fileInputRef}
+            multiple
             onChange={handleFileChange}
           />
           <Button
