@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { History, X, Search, ChevronDown, ChevronUp, Tag, MessageCircle, Users, CalendarDays } from 'lucide-react';
+import { History, X, Search, ChevronDown, ChevronUp, Tag, MessageCircle, Users, CalendarDays, Trash2, CheckSquare, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Discussion } from '@/hooks/useDiscussions';
 
@@ -13,6 +13,7 @@ interface HistoryModalProps {
   onLoad: (discussion: DiscussionWithCategory) => void;
   onDelete: (idx: number) => void;
   onRename: (idx: number, newTitle: string) => void;
+  onDeleteMultiple?: (indices: number[]) => void;
 }
 
 // Formatage contextuel de la date
@@ -42,11 +43,12 @@ function EmptyIllustration() {
   );
 }
 
-export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRename }: HistoryModalProps) {
+export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRename, onDeleteMultiple }: HistoryModalProps) {
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState('');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<'date-desc' | 'date-asc' | 'alpha'>('date-desc');
+  const [selected, setSelected] = useState<number[]>([]);
 
   // Recherche + tri
   const filtered = useMemo(() => {
@@ -75,6 +77,28 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
     }
     return arr;
   }, [history, search, sort]);
+
+  // Gestion sélection multiple
+  const toggleSelect = (idx: number) => {
+    setSelected(sel => sel.includes(idx) ? sel.filter(i => i !== idx) : [...sel, idx]);
+  };
+  const selectAll = () => {
+    if (selected.length === filtered.length) {
+      setSelected([]);
+    } else {
+      setSelected(filtered.map(discussion => history.findIndex(d => d === discussion)));
+    }
+  };
+  const handleDeleteSelected = () => {
+    if (selected.length === 0) return;
+    if (!window.confirm('Supprimer toutes les discussions sélectionnées ?')) return;
+    if (onDeleteMultiple) {
+      onDeleteMultiple(selected);
+    } else {
+      [...selected].sort((a, b) => b - a).forEach(idx => onDelete(idx));
+    }
+    setSelected([]);
+  };
 
   if (!open) return null;
 
@@ -118,6 +142,29 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
             </select>
           </div>
         </div>
+        {/* Boutons sélection multiple */}
+        <div className="flex items-center gap-2 px-7 pt-4 pb-2">
+          <button
+            className="flex items-center gap-1 px-3 py-1 rounded-lg border text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-900 transition"
+            onClick={selectAll}
+            type="button"
+            title={selected.length === filtered.length ? 'Tout désélectionner' : 'Tout sélectionner'}
+          >
+            {selected.length === filtered.length ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+            {selected.length === filtered.length ? 'Tout désélectionner' : 'Tout sélectionner'}
+          </button>
+          <button
+            className="flex items-center gap-1 px-3 py-1 rounded-lg border text-xs font-semibold bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 text-red-700 dark:text-red-300 transition disabled:opacity-50"
+            onClick={handleDeleteSelected}
+            type="button"
+            disabled={selected.length === 0}
+            title="Supprimer la sélection"
+          >
+            <Trash2 className="w-4 h-4" />
+            Supprimer la sélection
+          </button>
+          <span className="text-xs text-slate-400 ml-2">{selected.length} sélectionné{selected.length > 1 ? 's' : ''}</span>
+        </div>
         {/* Liste ou état vide */}
         <div className="px-7 py-6">
           {filtered.length === 0 ? (
@@ -138,6 +185,15 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
                     tabIndex={0}
                     aria-label={`Charger la discussion ${discussion.title || `Discussion ${realIdx + 1}`}`}
                   >
+                    {/* Case à cocher sélection multiple */}
+                    <input
+                      type="checkbox"
+                      checked={selected.includes(realIdx)}
+                      onChange={() => toggleSelect(realIdx)}
+                      className="mr-2 accent-blue-500"
+                      title="Sélectionner cette discussion"
+                      onClick={e => e.stopPropagation()}
+                    />
                     <div className="flex flex-col items-center gap-2 mr-2">
                       <History className="w-6 h-6 text-blue-400 group-hover:scale-110 transition-transform" />
                     </div>

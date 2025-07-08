@@ -404,6 +404,14 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [muted]);
 
+  // Supprimer plusieurs discussions d'un coup (filtrage)
+  const handleDeleteMultipleDiscussions = (indices: number[]) => {
+    const indicesSet = new Set(indices);
+    const newHistory = historyList.filter((_, idx) => !indicesSet.has(idx));
+    setHistoryList(newHistory);
+    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newHistory));
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Menu historique des discussions */}
@@ -414,6 +422,7 @@ function App() {
         onLoad={handleLoadDiscussion}
         onDelete={handleDeleteDiscussion}
         onRename={handleRenameDiscussion}
+        onDeleteMultiple={handleDeleteMultipleDiscussions}
       />
 
       <div className="w-full max-w-12xl h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] flex flex-col relative z-10">
