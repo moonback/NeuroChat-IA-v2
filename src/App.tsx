@@ -224,7 +224,7 @@ function App() {
       let ragContext = '';
       if (passages.length > 0) {
         ragContext = 'Contexte documentaire :\n';
-        passages.forEach((p, idx) => {
+        passages.forEach((p) => {
           ragContext += `- [${p.titre}] ${p.contenu}\n`;
         });
         ragContext += '\n';

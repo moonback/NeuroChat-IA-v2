@@ -1,8 +1,6 @@
 import { MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Square, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
-import { cn } from '@/lib/utils';
-import { Select } from '@/components/ui/select';
 
 interface HeaderProps {
   muted: boolean;
