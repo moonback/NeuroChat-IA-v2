@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { History, X, Search, ChevronDown, ChevronUp, Tag, MessageCircle, Users, CalendarDays, Trash2, CheckSquare, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Discussion } from '@/hooks/useDiscussions';
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
 
 // Interface sans le champ category
 export interface DiscussionWithCategory extends Discussion {}
@@ -49,6 +50,7 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<'date-desc' | 'date-asc' | 'alpha'>('date-desc');
   const [selected, setSelected] = useState<number[]>([]);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // Recherche + tri
   const filtered = useMemo(() => {
@@ -91,13 +93,13 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
   };
   const handleDeleteSelected = () => {
     if (selected.length === 0) return;
-    if (!window.confirm('Supprimer toutes les discussions sélectionnées ?')) return;
     if (onDeleteMultiple) {
       onDeleteMultiple(selected);
     } else {
       [...selected].sort((a, b) => b - a).forEach(idx => onDelete(idx));
     }
     setSelected([]);
+    setShowConfirm(false);
   };
 
   if (!open) return null;
@@ -153,16 +155,31 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
             {selected.length === filtered.length ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
             {selected.length === filtered.length ? 'Tout désélectionner' : 'Tout sélectionner'}
           </button>
-          <button
-            className="flex items-center gap-1 px-3 py-1 rounded-lg border text-xs font-semibold bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 text-red-700 dark:text-red-300 transition disabled:opacity-50"
-            onClick={handleDeleteSelected}
-            type="button"
-            disabled={selected.length === 0}
-            title="Supprimer la sélection"
-          >
-            <Trash2 className="w-4 h-4" />
-            Supprimer la sélection
-          </button>
+          <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+            <AlertDialogTrigger asChild>
+              <button
+                className="flex items-center gap-1 px-3 py-1 rounded-lg border text-xs font-semibold bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 text-red-700 dark:text-red-300 transition disabled:opacity-50"
+                type="button"
+                disabled={selected.length === 0}
+                title="Supprimer la sélection"
+              >
+                <Trash2 className="w-4 h-4" />
+                Supprimer la sélection
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Supprimer toutes les discussions sélectionnées&nbsp;?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Cette action est irréversible. Les discussions sélectionnées seront définitivement supprimées.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteSelected}>Supprimer</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <span className="text-xs text-slate-400 ml-2">{selected.length} sélectionné{selected.length > 1 ? 's' : ''}</span>
         </div>
         {/* Liste ou état vide */}
