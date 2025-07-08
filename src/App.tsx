@@ -4,7 +4,7 @@ import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
 import { sendMessageToGemini, GeminiGenerationConfig } from '@/services/geminiApi';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
-import { History, X, Info, Sliders } from 'lucide-react';
+import { Info, Sliders } from 'lucide-react';
 import { toast } from 'sonner';
 import { TTSSettingsModal } from '@/components/TTSSettingsModal';
 import { Header } from '@/components/Header';
@@ -390,22 +390,7 @@ function App() {
     toast.success('Réglages réinitialisés.');
   };
 
-  // Supprimer plusieurs discussions sélectionnées
-  const handleDeleteSelected = () => {
-    const newHistory = historyList.filter((_, idx) => !selectedDiscussions.includes(idx));
-    setHistoryList(newHistory);
-    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newHistory));
-    setSelectedDiscussions([]);
-  };
 
-  // Sélectionner/désélectionner tout
-  const handleSelectAll = () => {
-    if (selectedDiscussions.length === historyList.length) {
-      setSelectedDiscussions([]);
-    } else {
-      setSelectedDiscussions(historyList.map((_, idx) => idx));
-    }
-  };
 
   // Hook reconnaissance vocale (mode vocal auto)
   const {
@@ -549,30 +534,10 @@ function App() {
   };
 
   // Appliquer un preset
-  const handleLoadPreset = (name: string) => {
-    const found = presets.find(p => p.name === name);
-    if (found) {
-      setGeminiConfig(found.config);
-      setSelectedPreset(name);
-    }
-  };
 
   // Sauvegarder un preset
-  const handleSavePreset = () => {
-    if (!presetName.trim()) return;
-    setPresets(prev => {
-      const filtered = prev.filter(p => p.name !== presetName.trim());
-      return [...filtered, { name: presetName.trim(), config: geminiConfig }];
-    });
-    setSelectedPreset(presetName.trim());
-    setPresetName('');
-  };
 
   // Supprimer un preset
-  const handleDeletePreset = (name: string) => {
-    setPresets(prev => prev.filter(p => p.name !== name));
-    if (selectedPreset === name) setSelectedPreset('');
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
