@@ -85,8 +85,12 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
     }>
       {/* Badge privé animé en haut à droite */}
       {modePrive && (
-        <div className="absolute top-3 right-3 z-30 px-3 py-1 rounded-full bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 text-white font-bold text-xs shadow-lg animate-bouncePrivé border-2 border-white/40 select-none pointer-events-none">
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' className='inline align-middle mr-1'><rect x='5' y='11' width='14' height='9' rx='2' className='fill-white/20'/><path d='M12 17v-2' className='stroke-white'/><path d='M7 11V7a5 5 0 0110 0v4' className='stroke-white'/></svg>
+        <div className="absolute top-3 right-3 z-30 px-3 py-1 rounded-full bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-800 text-white font-bold text-xs shadow-lg animate-bouncePrivé border-2 border-white/40 select-none pointer-events-none">
+          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' className='inline align-middle mr-1'>
+            <rect x='5' y='11' width='14' height='9' rx='2' className='fill-white/20'/>
+            <path d='M12 17v-2' className='stroke-white'/>
+            <path d='M7 11V7a5 5 0 0110 0v4' className='stroke-white'/>
+          </svg>
           Privé
         </div>
       )}
@@ -99,31 +103,115 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
           {/* Conditional rendering for hero section or chat content */}
           {messages.length === 0 ? (
             modePrive ? (
-              <div className="flex flex-col items-center justify-center h-full min-h-[250px] sm:min-h-[300px] text-center px-2 mb-4 animate-fadeIn">
-                {/* Icône cadenas et badge privé */}
-                <div className="relative mb-4 group">
-                  <div className="w-16 h-16 bg-gradient-to-br from-red-500 via-orange-500 to-yellow-400 rounded-2xl flex items-center justify-center shadow-2xl animate-bouncePrivé">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white drop-shadow-lg">
-                      <rect x="5" y="11" width="14" height="9" rx="2" className="fill-white/20" />
-                      <path d="M12 17v-2" className="stroke-white" />
-                      <path d="M7 11V7a5 5 0 0110 0v4" className="stroke-white" />
+              <div className="flex flex-col items-center justify-center h-full min-h-[250px] sm:min-h-[320px] text-center px-2 mb-4 animate-fadeIn">
+                {/* Icône héros : bouclier sécurisé avec effets de halo et particules */}
+                <div className="relative mb-6 group animate-fadeIn" style={{ animationDelay: "0.1s" }}>
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-3xl flex items-center justify-center shadow-2xl border-4 border-white/20 dark:border-slate-800/60 backdrop-blur-xl relative">
+                    {/* Effet de halo glass */}
+                    <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-400/20 via-indigo-400/10 to-emerald-300/10 blur-2xl pointer-events-none"></div>
+                    {/* Glow subtil */}
+                    <div className="absolute inset-0 rounded-3xl ring-2 ring-blue-400/20 animate-pulse pointer-events-none"></div>
+                    {/* Icône bouclier stylisé */}
+                    <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="url(#shield-gradient)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-white drop-shadow-xl z-10 animate-popIn">
+                      <defs>
+                        <linearGradient id="shield-gradient" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor="#60a5fa" />
+                          <stop offset="60%" stopColor="#6366f1" />
+                          <stop offset="100%" stopColor="#a21caf" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M12 3l7 4v5c0 5-3.5 9-7 9s-7-4-7-9V7l7-4z" className="fill-white/10" />
+                      <path d="M9.5 12.5l2 2 3-3" className="stroke-emerald-300 animate-pulse" />
                     </svg>
                   </div>
-                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 text-white font-bold text-xs shadow-lg border-2 border-white/40 select-none animate-bouncePrivé">Mode privé</div>
+                  {/* Badge confidentiel glass */}
+                  <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full bg-white/30 dark:bg-slate-900/40 backdrop-blur-xl border border-blue-300/30 dark:border-blue-700/30 shadow-lg text-blue-900 dark:text-blue-100 font-bold text-xs select-none animate-bouncePrivé tracking-wide" style={{boxShadow:'0 2px 16px 0 rgba(99,102,241,0.12)'}}>Confidentiel</div>
                 </div>
-                <div className="max-w-xl mx-auto">
-                  <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 bg-gradient-to-r from-red-700 via-orange-700 to-yellow-700 dark:from-red-200 dark:via-orange-200 dark:to-yellow-200 bg-clip-text text-transparent">Mode privé activé</h3>
-                  <p className="text-orange-900 dark:text-orange-200 max-w-md mx-auto text-xs sm:text-sm leading-relaxed mb-4 font-semibold">
-                    Vos messages ne seront <span className="underline underline-offset-2">jamais sauvegardés</span> et seront <span className="underline underline-offset-2">effacés automatiquement</span> à la fermeture de la page.<br />
-                    <span className="text-red-700 dark:text-red-300 font-bold">Aucune trace n’est conservée.</span>
+                <div className="max-w-2xl mx-auto w-full">
+                  {/* Sous-titre rassurant premium */}
+                  <p className="text-blue-900 dark:text-blue-100 max-w-lg mx-auto text-xs sm:text-sm leading-relaxed mb-6 font-medium animate-fadeIn" style={{ animationDelay: "0.3s" }}>
+                    Profitez d'une confidentialité totale : vos messages ne sont <span className="underline underline-offset-2 decoration-emerald-400">jamais sauvegardés</span>, <span className="underline underline-offset-2 decoration-blue-400">effacés automatiquement</span> à la fermeture, et <span className="underline underline-offset-2 decoration-slate-400">chiffrés localement</span>.<br />
+                    <span className="text-indigo-700 dark:text-indigo-300 font-bold">Aucune trace, aucune fuite, 100% sécurisé.</span>
                   </p>
-                  <div className="p-3 bg-gradient-to-r from-red-50 to-yellow-50 dark:from-red-900/40 dark:to-yellow-900/30 rounded-xl border border-red-200/50 dark:border-red-700/50 backdrop-blur-sm">
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 animate-pulse"><rect x="5" y="11" width="14" height="9" rx="2" className="fill-white/20" /><path d="M12 17v-2" className="stroke-white" /><path d="M7 11V7a5 5 0 0110 0v4" className="stroke-white" /></svg>
-                      <span className="text-xs font-medium text-red-700 dark:text-red-200">Vous pouvez discuter en toute confidentialité.</span>
+                  {/* Grille de fonctionnalités premium glass */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full max-w-2xl mx-auto mb-6 animate-fadeIn" style={{ animationDelay: "0.4s" }}>
+                    {/* Carte 1 : Aucune sauvegarde */}
+                    <div className="group p-4 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-blue-200/40 dark:border-blue-700/30 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col items-center justify-center min-h-[120px] backdrop-blur-xl">
+                      <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mb-2 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                          <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7" />
+                          <path d="M16 3v4H8V3" />
+                          <path d="M10 12l2 2 4-4" className="stroke-emerald-200 animate-pulse" />
+                        </svg>
+                      </div>
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1 text-xs">Aucune sauvegarde</h4>
+                      <p className="text-[11px] text-blue-800 dark:text-blue-200/90">Vos messages restent uniquement sur votre appareil.</p>
                     </div>
-                    <p className="text-[11px] text-orange-800 dark:text-orange-200/80">
-                      Écrivez un message ou cliquez sur le micro pour démarrer une conversation éphémère.
+                    {/* Carte 2 : Effacement automatique */}
+                    <div className="group p-4 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-indigo-200/40 dark:border-indigo-700/30 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col items-center justify-center min-h-[120px] backdrop-blur-xl">
+                      <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-blue-700 rounded-xl flex items-center justify-center mb-2 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                          <rect x="3" y="6" width="18" height="14" rx="2" className="fill-white/10" />
+                          <path d="M8 10v6" />
+                          <path d="M16 10v6" />
+                          <path d="M5 6V4a2 2 0 012-2h10a2 2 0 012 2v2" />
+                        </svg>
+                      </div>
+                      <h4 className="font-semibold text-indigo-900 dark:text-indigo-100 mb-1 text-xs">Effacement auto</h4>
+                      <p className="text-[11px] text-indigo-800 dark:text-indigo-200/90">Tout est supprimé dès que vous quittez la page.</p>
+                    </div>
+                    {/* Carte 3 : Chiffrement local */}
+                    <div className="group p-4 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-emerald-200/40 dark:border-emerald-700/30 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col items-center justify-center min-h-[120px] backdrop-blur-xl">
+                      <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-blue-600 rounded-xl flex items-center justify-center mb-2 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                          <circle cx="12" cy="12" r="6" className="fill-white/10" />
+                          <path d="M12 9v3l2 2" className="stroke-emerald-200 animate-pulse" />
+                          <path d="M16 7.5a6 6 0 01-8 9" className="stroke-emerald-300/80" />
+                        </svg>
+                      </div>
+                      <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-1 text-xs">Chiffrement local</h4>
+                      <p className="text-[11px] text-emerald-800 dark:text-emerald-200/90">Vos données sont protégées et inaccessibles à autrui.</p>
+                    </div>
+                  </div>
+                  {/* Indicateurs visuels de sécurité */}
+                  <div className="flex items-center justify-center gap-3 mb-2 animate-fadeIn" style={{ animationDelay: "0.5s" }}>
+                    <div className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                      <span className="text-xs text-blue-700 dark:text-blue-200 font-medium">Sécurisé</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse [animation-delay:0.3s]"></span>
+                      <span className="text-xs text-indigo-700 dark:text-indigo-200 font-medium">Chiffré</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse [animation-delay:0.6s]"></span>
+                      <span className="text-xs text-emerald-700 dark:text-emerald-200 font-medium">Éphémère</span>
+                    </div>
+                  </div>
+                  {/* Call-to-action clair glass premium */}
+                  <div className="p-3 bg-white/60 dark:bg-slate-900/60 rounded-xl border border-blue-200/40 dark:border-blue-700/30 backdrop-blur-xl shadow-inner animate-fadeIn transition-all duration-300 hover:scale-105 hover:shadow-indigo-400/30 hover:ring-2 hover:ring-indigo-400/40 group cursor-pointer" style={{ animationDelay: '0.6s' }}>
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      {/* Icône bouclier stylisé */}
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#shield-gradient2)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400 drop-shadow animate-popIn">
+                        <defs>
+                          <linearGradient id="shield-gradient2" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor="#60a5fa" />
+                            <stop offset="60%" stopColor="#6366f1" />
+                            <stop offset="100%" stopColor="#a21caf" />
+                          </linearGradient>
+                        </defs>
+                        <path d="M12 3l7 4v5c0 5-3.5 9-7 9s-7-4-7-9V7l7-4z" className="fill-white/10" />
+                        <path d="M9.5 12.5l2 2 3-3" className="stroke-emerald-200 animate-pulse" />
+                      </svg>
+                      <span className="text-xs font-semibold text-blue-900 dark:text-blue-100 tracking-wide flex items-center gap-2">
+                        Commencez à discuter en toute sérénité
+                        {/* Badge confidentiel animé glass */}
+                        <span className="ml-2 px-2 py-0.5 rounded-full bg-white/40 dark:bg-slate-900/40 border border-blue-200/30 dark:border-blue-700/30 text-blue-900 dark:text-blue-100 text-[10px] font-bold shadow-lg animate-bouncePrivé select-none">Confidentiel</span>
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-blue-800 dark:text-blue-200/90 mt-1 font-medium">
+                      Ce mode garantit une confidentialité absolue : vos messages sont <span className="underline underline-offset-2 decoration-emerald-400">éphémères</span>, <span className="underline underline-offset-2 decoration-blue-400">jamais stockés</span> et <span className="underline underline-offset-2 decoration-slate-400">protégés localement</span>.<br />
+                      <span className="text-indigo-700 dark:text-indigo-300 font-semibold">Profitez d’un espace de discussion privé, sécurisé et sans trace.</span>
                     </p>
                   </div>
                 </div>

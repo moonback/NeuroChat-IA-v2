@@ -1,7 +1,7 @@
 import { MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Square, Mic, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Tooltip as ReactTooltip } from 'react-tooltip';
 
 // Dropdown custom pour la personnalité IA
@@ -109,6 +109,14 @@ export function Header({
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
+  // Ajout du son à l'activation du mode privé
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    if (modePrive && audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play();
+    }
+  }, [modePrive]);
   useEffect(() => {
     setIsOnline(navigator.onLine);
     const handleOnline = () => setIsOnline(true);
@@ -123,6 +131,8 @@ export function Header({
 
   return (
     <header className="w-full flex flex-col sm:flex-row items-center justify-between px-3 sm:px-6 py-2 sm:py-3 bg-white/80 dark:bg-slate-900/80 shadow-2xl rounded-3xl mb-4 gap-2 border border-white/30 dark:border-slate-800/50 backdrop-blur-3xl transition-all duration-300 glass relative z-20 ring-1 ring-blue-100/40 dark:ring-blue-900/30">
+      {/* Audio pour le bip premium */}
+      <audio ref={audioRef} src="/bip.wav" preload="auto" />
       {/* Logo & nom avec indicateur de statut */}
       <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto mb-2 sm:mb-0 group cursor-pointer hover:scale-105 transition-transform duration-200">
         <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 text-white shadow-lg relative group/logo transition-all duration-300 hover:shadow-2xl hover:scale-110">
