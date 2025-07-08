@@ -273,8 +273,8 @@ function App() {
         // Migration si ancien format (Message[][])
         let discussions: Discussion[];
         if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
-          discussions = parsed.map((msgs: Message[], idx: number) => ({
-            title: `Discussion ${idx + 1}`,
+          discussions = parsed.map((msgs: Message[]) => ({
+            title: `Discussion`,
             messages: msgs.map(msg => ({ ...msg, timestamp: new Date(msg.timestamp) })),
           }));
         } else {
