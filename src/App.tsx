@@ -72,6 +72,8 @@ function App() {
   const [modeVocalAuto, setModeVocalAuto] = useState(false);
   // Ajout du state pour la modale de gestion des documents RAG
   const [showRagDocs, setShowRagDocs] = useState(false);
+  // Ajout du state pour activer/désactiver le RAG
+  const [ragEnabled, setRagEnabled] = useState(true);
 
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
@@ -208,10 +210,13 @@ function App() {
       toast.error('Pas de connexion Internet. Vérifie ta connexion réseau.');
       return;
     }
-    // Étape RAG : recherche documentaire
-    const passages = await searchDocuments(userMessage, 3);
-    if (passages.length > 0) {
-      addRagContextMessage(passages);
+    // Étape RAG : recherche documentaire (seulement si activé)
+    let passages: { id: number; titre: string; contenu: string }[] = [];
+    if (ragEnabled) {
+      passages = await searchDocuments(userMessage, 3);
+      if (passages.length > 0) {
+        addRagContextMessage(passages);
+      }
     }
     // Ajoute le message utilisateur localement
     const newMessage = addMessage(userMessage, true, imageFile);
@@ -223,7 +228,7 @@ function App() {
       const filteredHistory = fullHistory.filter(m => typeof m.text === 'string');
       // On construit le contexte documentaire pour le prompt
       let ragContext = '';
-      if (passages.length > 0) {
+      if (ragEnabled && passages.length > 0) {
         ragContext = 'Contexte documentaire :\n';
         passages.forEach((p) => {
           ragContext += `- [${p.titre}] ${p.contenu}\n`;
@@ -441,6 +446,8 @@ function App() {
           modeVocalAuto={modeVocalAuto}
           setModeVocalAuto={setModeVocalAuto}
           hasActiveConversation={messages.length > 0}
+          ragEnabled={ragEnabled}
+          setRagEnabled={setRagEnabled}
         />
 
         {/* Enhanced Chat Interface */}

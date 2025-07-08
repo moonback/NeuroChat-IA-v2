@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Trash2, UploadCloud, Eye, Pencil, Check, X as XIcon, FileText, FileSpreadsheet, FileCode2, FileType2, File } from 'lucide-react';
+import { X, Trash2, UploadCloud, Eye, Pencil, Check, X as XIcon, FileText, FileSpreadsheet, FileCode2, FileType2, File, FilePlus2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 // @ts-ignore
@@ -58,6 +58,8 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   // Ajout de l'état pour le modal
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  // Ajout de l'état pour le drag & drop
+  const [isDragging, setIsDragging] = useState(false);
 
   // Charger les docs du dossier (via import.meta.glob)
   useEffect(() => {
@@ -300,22 +302,39 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
           <UploadCloud className="w-6 h-6 text-blue-500" />
           Gestion des documents RAG
         </h2>
-        <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <input
-            type="file"
-            accept=".txt,.md,.pdf,.docx,.csv,.html"
-            style={{ display: 'none' }}
-            ref={fileInputRef}
-            multiple
-            onChange={handleFileChange}
-          />
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            variant="secondary"
-            className="flex items-center gap-2"
-          >
-            <UploadCloud className="w-4 h-4" /> Ajouter un document
-          </Button>
+        <div
+          onDrop={e => {
+            e.preventDefault();
+            setIsDragging(false);
+            const files = Array.from(e.dataTransfer.files);
+            if (files.length > 0) {
+              // On crée un event factice pour réutiliser handleFileChange
+              const dt = new DataTransfer();
+              files.forEach(f => dt.items.add(f));
+              if (fileInputRef.current) {
+                fileInputRef.current.files = dt.files;
+                // On déclenche manuellement le changement
+                const event = { target: { files: dt.files } } as React.ChangeEvent<HTMLInputElement>;
+                handleFileChange(event);
+              }
+            }
+          }}
+          onDragOver={e => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragLeave={e => {
+            e.preventDefault();
+            setIsDragging(false);
+          }}
+          className={`w-full p-6 mb-3 rounded-xl border-2 border-dashed transition-all text-center cursor-pointer flex flex-col items-center justify-center gap-2
+            ${isDragging ? 'border-blue-500 bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 dark:from-blue-900 dark:via-blue-950 dark:to-indigo-900 shadow-xl scale-[1.02]' : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800'}
+          `}
+        >
+          <UploadCloud className={`w-10 h-10 mb-2 ${isDragging ? 'text-blue-500 animate-bounce' : 'text-blue-400'}`} />
+          <span className="font-semibold text-base">
+            {isDragging ? "Déposez vos fichiers ici..." : "Glissez-déposez vos fichiers ici ou cliquez sur 'Ajouter un document'"}
+          </span>
           <span className="text-xs text-muted-foreground">(txt, md, pdf, docx, csv, html)</span>
         </div>
         <input
@@ -387,12 +406,37 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
           </DialogContent>
         </Dialog>
         {filteredDocs.length === 0 ? (
-          <div className="text-muted-foreground text-center py-12">Aucun document trouvé.</div>
+          <div className="flex flex-col items-center justify-center py-12 opacity-80 select-none animate-fadeIn">
+            <svg width="90" height="90" viewBox="0 0 90 90" fill="none" className="mb-4">
+              <rect x="10" y="20" width="70" height="50" rx="10" fill="#e0e7ef" />
+              <rect x="20" y="30" width="50" height="8" rx="4" fill="#b6c3e0" />
+              <rect x="20" y="45" width="35" height="6" rx="3" fill="#cfd8ea" />
+              <rect x="20" y="57" width="25" height="6" rx="3" fill="#cfd8ea" />
+              <circle cx="70" cy="60" r="6" fill="#b6c3e0" />
+              <FilePlus2 x={30} y={65} className="w-8 h-8 text-blue-400 opacity-60" />
+            </svg>
+            <div className="text-muted-foreground text-lg font-semibold mb-1">Aucun document trouvé</div>
+            <div className="text-xs text-slate-400">Ajoutez vos documents pour commencer.</div>
+          </div>
         ) : (
           <ul className="space-y-4">
             {filteredDocs.map(doc => {
               return (
-                <li key={doc.id} className="border rounded-xl p-4 bg-slate-50 dark:bg-slate-800 flex flex-col sm:flex-row items-start sm:items-center gap-3 shadow-sm hover:shadow-md transition-shadow">
+                <li key={doc.id}
+                  className={`border rounded-xl p-4 bg-slate-50 dark:bg-slate-800 flex flex-col sm:flex-row items-start sm:items-center gap-3 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-200 border-transparent hover:border-blue-400/60 relative group animate-fadeIn`}
+                >
+                  {/* Badge type */}
+                  <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-bold
+                    ${doc.extension === 'pdf' ? 'bg-red-100 text-red-600' :
+                      doc.extension === 'docx' ? 'bg-indigo-100 text-indigo-600' :
+                      doc.extension === 'csv' ? 'bg-green-100 text-green-600' :
+                      doc.extension === 'md' ? 'bg-blue-100 text-blue-600' :
+                      doc.extension === 'txt' ? 'bg-slate-200 text-slate-600' :
+                      doc.extension === 'html' ? 'bg-orange-100 text-orange-600' :
+                      'bg-slate-200 text-slate-600'}
+                  `}>
+                    {doc.extension?.toUpperCase()}
+                  </span>
                   {doc.origine === 'utilisateur' && (
                     <input
                       type="checkbox"

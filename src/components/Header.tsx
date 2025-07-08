@@ -65,6 +65,8 @@ interface HeaderProps {
   modeVocalAuto: boolean;
   setModeVocalAuto: (v: boolean) => void;
   hasActiveConversation: boolean;
+  ragEnabled: boolean;
+  setRagEnabled: (v: boolean) => void;
 }
 
 export function Header({
@@ -81,6 +83,8 @@ export function Header({
   modeVocalAuto,
   setModeVocalAuto,
   hasActiveConversation,
+  ragEnabled,
+  setRagEnabled,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
@@ -97,11 +101,11 @@ export function Header({
   }, []);
 
   return (
-    <header className="w-full flex flex-col sm:flex-row items-center justify-between px-3 sm:px-6 py-2 sm:py-3 bg-white/90 dark:bg-slate-900/90 shadow-2xl rounded-3xl mb-4 gap-2 border border-white/40 dark:border-slate-800/60 backdrop-blur-2xl transition-all duration-300 glass relative z-10">
+    <header className="w-full flex flex-col sm:flex-row items-center justify-between px-3 sm:px-6 py-2 sm:py-3 bg-white/80 dark:bg-slate-900/80 shadow-2xl rounded-3xl mb-4 gap-2 border border-white/30 dark:border-slate-800/50 backdrop-blur-3xl transition-all duration-300 glass relative z-20 ring-1 ring-blue-100/40 dark:ring-blue-900/30">
       {/* Logo & nom avec indicateur de statut */}
       <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto mb-2 sm:mb-0 group cursor-pointer hover:scale-105 transition-transform duration-200">
-        <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 text-white shadow-lg relative">
-          <MessageCircle className="w-6 h-6 group-hover:rotate-6 transition-transform duration-200" />
+        <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 text-white shadow-lg relative group/logo transition-all duration-300 hover:shadow-2xl hover:scale-110">
+          <MessageCircle className="w-6 h-6 group-hover/logo:rotate-12 group-hover/logo:scale-110 transition-transform duration-300" />
           {/* Point vert animé */}
           <span className="absolute -bottom-1 -right-1 flex h-3 w-3">
             <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isOnline ? 'bg-green-400' : 'bg-red-400'} opacity-75`}></span>
@@ -124,7 +128,7 @@ export function Header({
       {/* Actions */}
       <div className="flex flex-wrap items-center gap-1 sm:gap-2 justify-end w-full sm:w-auto">
         {/* Groupe principal */}
-        <div className="flex items-center gap-1 sm:gap-2 bg-slate-100/70 dark:bg-slate-800/70 rounded-xl px-2 py-1 shadow-inner backdrop-blur-xl hover:shadow-xl transition-all duration-200">
+        <div className="flex items-center gap-1 sm:gap-2 bg-slate-100/70 dark:bg-slate-800/70 rounded-xl px-2 py-1 shadow-inner backdrop-blur-xl hover:shadow-xl transition-all duration-200 border border-slate-200 dark:border-slate-700">
           <Button
             variant="ghost"
             size="icon"
@@ -167,7 +171,7 @@ export function Header({
           </Button>
         </div>
         {/* Groupe vocal */}
-        <div className="flex items-center gap-1 sm:gap-2 bg-slate-100/70 dark:bg-slate-800/70 rounded-xl px-2 py-1 shadow-inner backdrop-blur-xl hover:shadow-xl transition-all duration-200">
+        <div className="flex items-center gap-1 sm:gap-2 bg-slate-100/70 dark:bg-slate-800/70 rounded-xl px-2 py-1 shadow-inner backdrop-blur-xl hover:shadow-xl transition-all duration-200 border border-slate-200 dark:border-slate-700 mx-2">
           <Button
             variant="ghost"
             size="icon"
@@ -210,7 +214,7 @@ export function Header({
           </Button>
         </div>
         {/* Groupe IA & RAG */}
-        <div className="flex items-center gap-1 sm:gap-2 bg-slate-100/70 dark:bg-slate-800/70 rounded-xl px-2 py-1 shadow-inner backdrop-blur-xl hover:shadow-xl transition-all duration-200">
+        <div className="flex items-center gap-1 sm:gap-2 bg-slate-100/70 dark:bg-slate-800/70 rounded-xl px-2 py-1 shadow-inner backdrop-blur-xl hover:shadow-xl transition-all duration-200 border border-slate-200 dark:border-slate-700 mx-2">
           <Button
             variant="ghost"
             size="icon"
@@ -222,6 +226,24 @@ export function Header({
             data-tooltip-content="Gérer les documents RAG"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-green-600 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+          </Button>
+          {/* Toggle RAG */}
+          <Button
+            variant={ragEnabled ? 'secondary' : 'outline'}
+            size="sm"
+            onClick={() => setRagEnabled(!ragEnabled)}
+            className={`relative ${ragEnabled ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-white dark:bg-slate-900'}`}
+            title={ragEnabled ? 'Désactiver la recherche documentaire' : 'Activer la recherche documentaire'}
+            aria-label={ragEnabled ? 'Désactiver la recherche documentaire' : 'Activer la recherche documentaire'}
+            data-tooltip-id="header-tooltip"
+            data-tooltip-content={ragEnabled ? 'Désactiver la recherche documentaire' : 'Activer la recherche documentaire'}
+          >
+            {/* Badge désactivé animé */}
+            {!ragEnabled && (
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse shadow-lg"></span>
+            )}
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 01-8 0m8 0a4 4 0 00-8 0m8 0V5a4 4 0 00-8 0v2m8 0a4 4 0 01-8 0" /></svg>
+            {ragEnabled ? 'RAG activé' : 'RAG désactivé'}
           </Button>
           {/* Sélecteur de personnalité IA (dropdown custom) */}
           <PersonalityDropdown selected={selectedPersonality} onChange={onChangePersonality} />
