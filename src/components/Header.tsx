@@ -2,7 +2,7 @@ import { MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCir
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import { useEffect, useState } from 'react';
-import { Tooltip } from 'react-tooltip';
+import { Tooltip as ReactTooltip } from 'react-tooltip';
 
 // Dropdown custom pour la personnalité IA
 const personalities = [
@@ -46,9 +46,22 @@ function PersonalityDropdown({ selected, onChange }: { selected: string; onChang
           ))}
         </ul>
       )}
-      <Tooltip id="personality-tooltip" place="bottom" />
+      <ReactTooltip id="personality-tooltip" place="bottom" />
     </div>
   );
+}
+
+// Utilitaire pour formater le résumé des hyperparamètres
+function geminiConfigSummary(config: any) {
+  if (!config) return '';
+  return [
+    `Temp: ${config.temperature ?? 0.7}`,
+    `topK: ${config.topK ?? 40}`,
+    `topP: ${config.topP ?? 0.95}`,
+    `maxTokens: ${config.maxOutputTokens ?? 4096}`,
+    `stopSeq: ${(config.stopSequences && config.stopSequences.length > 0) ? config.stopSequences.join(',') : '-'}`,
+    `cand: ${config.candidateCount ?? 1}`
+  ].join(' | ');
 }
 
 interface HeaderProps {
@@ -67,6 +80,8 @@ interface HeaderProps {
   hasActiveConversation: boolean;
   ragEnabled: boolean;
   setRagEnabled: (v: boolean) => void;
+  onOpenGeminiSettings?: () => void;
+  geminiConfig?: any;
 }
 
 export function Header({
@@ -85,6 +100,8 @@ export function Header({
   hasActiveConversation,
   ragEnabled,
   setRagEnabled,
+  onOpenGeminiSettings,
+  geminiConfig,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
@@ -169,6 +186,30 @@ export function Header({
               <Moon className="w-5 h-5 text-slate-600 group-hover:-rotate-12 transition-transform" />
             )}
           </Button>
+          {onOpenGeminiSettings && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onOpenGeminiSettings}
+                className="hover:bg-purple-100 dark:hover:bg-purple-900 group"
+                title="Réglages Gemini"
+                aria-label="Réglages Gemini"
+                data-tooltip-id="gemini-summary-tooltip"
+                data-tooltip-content={geminiConfigSummary(geminiConfig)}
+              >
+                {/* Icône Gemini SVG officielle */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none">
+                  <g>
+                    <circle cx="20" cy="20" r="20" fill="#fff" />
+                    <path d="M20 7C13.373 7 8 12.373 8 19c0 6.627 5.373 12 12 12s12-5.373 12-12c0-6.627-5.373-12-12-12zm0 21c-4.971 0-9-4.029-9-9s4.029-9 9-9 9 4.029 9 9-4.029 9-9 9z" fill="#8B5CF6"/>
+                    <path d="M20 13a6 6 0 100 12 6 6 0 000-12zm0 10a4 4 0 110-8 4 4 0 010 8z" fill="#A78BFA"/>
+                  </g>
+                </svg>
+              </Button>
+              <ReactTooltip id="gemini-summary-tooltip" place="bottom" />
+            </>
+          )}
         </div>
         {/* Groupe vocal */}
         <div className="flex items-center gap-1 sm:gap-2 bg-slate-100/70 dark:bg-slate-800/70 rounded-xl px-2 py-1 shadow-inner backdrop-blur-xl hover:shadow-xl transition-all duration-200 border border-slate-200 dark:border-slate-700 mx-2">
@@ -266,7 +307,7 @@ export function Header({
           </Button>
         )}
       </div>
-      <Tooltip id="header-tooltip" place="bottom" />
+      <ReactTooltip id="header-tooltip" place="bottom" />
     </header>
   );
 }
