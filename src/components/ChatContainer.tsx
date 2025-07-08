@@ -37,9 +37,12 @@ interface ChatContainerProps {
   onEditMessage?: (id: string, newText: string) => void; // New prop for editing messages
   onDeleteMessage?: (id: string) => void; // New prop for deleting messages
   onReplyToMessage?: (messageContent: string) => void; // New prop for replying to messages
+  selectMode?: boolean; // Ajouté
+  selectedMessageIds?: string[]; // Ajouté
+  onSelectMessage?: (id: string) => void; // Ajouté
 }
 
-export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMessage, onReplyToMessage }: ChatContainerProps) {
+export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMessage, onReplyToMessage, selectMode = false, selectedMessageIds = [], onSelectMessage }: ChatContainerProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
@@ -224,13 +227,22 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                 } else if (!(message as RagContextMessage).isRagContext) {
                   const msg = message as Message;
                   return (
-                    <div key={msg.id} className="animate-fadeIn">
+                    <div key={msg.id} className="flex items-center gap-2">
+                      {selectMode && (
+                        <input
+                          type="checkbox"
+                          checked={selectedMessageIds.includes(msg.id)}
+                          onChange={() => onSelectMessage && onSelectMessage(msg.id)}
+                          className="accent-blue-600 w-4 h-4 mt-2"
+                          title="Sélectionner ce message"
+                        />
+                      )}
                       <MessageBubble
                         message={msg.text}
                         isUser={msg.isUser}
                         timestamp={msg.timestamp}
-                        isLatest={index === messages.length - 1}
                         imageUrl={msg.imageUrl}
+                        isLatest={index === messages.length - 1}
                         onEdit={onEditMessage ? (newText) => onEditMessage(msg.id, newText) : undefined}
                         onDelete={onDeleteMessage ? () => onDeleteMessage(msg.id) : undefined}
                         onReply={onReplyToMessage}

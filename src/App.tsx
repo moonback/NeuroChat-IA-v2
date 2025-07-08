@@ -12,6 +12,8 @@ import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { searchDocuments } from '@/services/ragSearch';
 import { RagDocsModal } from '@/components/RagDocsModal';
 import { HistoryModal, DiscussionWithCategory } from '@/components/HistoryModal';
+import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
 interface Message {
   id: string;
@@ -73,7 +75,14 @@ function App() {
   // Ajout du state pour la modale de gestion des documents RAG
   const [showRagDocs, setShowRagDocs] = useState(false);
   // Ajout du state pour activer/désactiver le RAG
-  const [ragEnabled, setRagEnabled] = useState(true);
+  const [ragEnabled, setRagEnabled] = useState(false);
+  // --- Sélection multiple de messages pour suppression groupée ---
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedMessageIds, setSelectedMessageIds] = useState<string[]>([]);
+  const [showConfirmDeleteMultiple, setShowConfirmDeleteMultiple] = useState(false);
+  // Ajout du state pour activer/désactiver le RAG
+  const [showRagActivated, setShowRagActivated] = useState(false);
+  const [showRagDeactivated, setShowRagDeactivated] = useState(false);
 
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
@@ -417,6 +426,79 @@ function App() {
     localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newHistory));
   };
 
+  // Fonction pour supprimer un message par son id
+  const handleDeleteMessage = (id: string) => {
+    setMessages(prev => {
+      const updated = prev.filter(msg => msg.id !== id);
+      localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify(updated));
+      // Mise à jour de l'historique : on retire le message de chaque discussion
+      const historyRaw = localStorage.getItem(LOCALSTORAGE_KEY);
+      if (historyRaw) {
+        try {
+          const history = JSON.parse(historyRaw);
+          const updatedHistory = history.map((discussion: any) => ({
+            ...discussion,
+            messages: discussion.messages.filter((msg: any) => msg.id !== id)
+          }));
+          localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(updatedHistory));
+        } catch {}
+      }
+      return updated;
+    });
+  };
+
+  // Handler pour activer/désactiver le mode sélection
+  const handleToggleSelectMode = () => {
+    setSelectMode((prev) => {
+      if (prev) setSelectedMessageIds([]); // On vide la sélection si on quitte le mode
+      return !prev;
+    });
+  };
+
+  // Handler pour sélectionner/désélectionner un message
+  const handleSelectMessage = (id: string) => {
+    setSelectedMessageIds((prev) =>
+      prev.includes(id) ? prev.filter((mid) => mid !== id) : [...prev, id]
+    );
+  };
+
+  // Handler pour supprimer plusieurs messages
+  const handleDeleteMultipleMessages = () => {
+    setMessages((prev) => {
+      const updated = prev.filter((msg) => !selectedMessageIds.includes(msg.id));
+      localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify(updated));
+      // Mise à jour de l'historique : on retire les messages de chaque discussion
+      const historyRaw = localStorage.getItem(LOCALSTORAGE_KEY);
+      if (historyRaw) {
+        try {
+          const history = JSON.parse(historyRaw);
+          const updatedHistory = history.map((discussion: any) => ({
+            ...discussion,
+            messages: discussion.messages.filter((msg: any) => !selectedMessageIds.includes(msg.id))
+          }));
+          localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(updatedHistory));
+        } catch {}
+      }
+      return updated;
+    });
+    setSelectedMessageIds([]);
+    setSelectMode(false);
+    setShowConfirmDeleteMultiple(false);
+  };
+
+  // Afficher un popup animé quand le RAG s'active ou se désactive
+  useEffect(() => {
+    if (ragEnabled) {
+      setShowRagActivated(true);
+      const timeout = setTimeout(() => setShowRagActivated(false), 2000);
+      return () => clearTimeout(timeout);
+    } else {
+      setShowRagDeactivated(true);
+      const timeout = setTimeout(() => setShowRagDeactivated(false), 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, [ragEnabled]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Menu historique des discussions */}
@@ -450,9 +532,69 @@ function App() {
           setRagEnabled={setRagEnabled}
         />
 
+        {/* Boutons de sélection et suppression groupée */}
+        <div className="flex gap-2 items-center mb-2 px-2">
+          <Button
+            variant={selectMode ? 'secondary' : 'outline'}
+            size="sm"
+            onClick={handleToggleSelectMode}
+          >
+            {selectMode ? 'Annuler la sélection' : 'Sélectionner'}
+          </Button>
+          {selectMode && messages.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                // On ne sélectionne que les messages classiques (pas RAG)
+                const allIds = messages.filter((m: any) => !m.isRagContext).map((m: any) => m.id);
+                if (selectedMessageIds.length === allIds.length) {
+                  setSelectedMessageIds([]);
+                } else {
+                  setSelectedMessageIds(allIds);
+                }
+              }}
+            >
+              {selectedMessageIds.length === messages.filter((m: any) => !m.isRagContext).length ? 'Tout désélectionner' : 'Sélectionner tout'}
+            </Button>
+          )}
+          {selectMode && selectedMessageIds.length > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setShowConfirmDeleteMultiple(true)}
+            >
+              Supprimer la sélection ({selectedMessageIds.length})
+            </Button>
+          )}
+        </div>
+
+        {/* Confirmation globale suppression multiple */}
+        <AlertDialog open={showConfirmDeleteMultiple} onOpenChange={setShowConfirmDeleteMultiple}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Supprimer {selectedMessageIds.length} message{selectedMessageIds.length > 1 ? 's' : ''} ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Cette action est irréversible. Les messages sélectionnés seront définitivement supprimés de la conversation et de l'historique.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteMultipleMessages}>Supprimer</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* Enhanced Chat Interface */}
         <Card className="flex-1 flex flex-col shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl overflow-hidden ring-1 ring-white/20 dark:ring-slate-700/20">
-          <ChatContainer messages={messages} isLoading={isLoading} />
+          <ChatContainer
+            messages={messages}
+            isLoading={isLoading}
+            onDeleteMessage={handleDeleteMessage}
+            selectMode={selectMode}
+            selectedMessageIds={selectedMessageIds}
+            onSelectMessage={handleSelectMessage}
+          />
           <VoiceInput onSendMessage={handleSendMessage} isLoading={isLoading} />
         </Card>
 
@@ -481,6 +623,34 @@ function App() {
       {modeVocalAuto && (
         <div className="fixed top-2 right-2 z-50 bg-blue-600 text-white px-4 py-2 rounded-xl shadow-lg animate-pulse">
           Mode vocal automatique activé
+        </div>
+      )}
+
+      {showRagActivated && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="relative flex flex-col items-center justify-center px-8 py-7 min-w-[320px] max-w-[90vw] bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-2xl border border-blue-200 dark:border-blue-800 animate-fadeIn animate-zoomIn animate-pulse backdrop-blur-xl">
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex items-center justify-center">
+              <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-green-400 rounded-full p-2 shadow-lg animate-bounce">
+                <svg xmlns='http://www.w3.org/2000/svg' className="w-12 h-12 text-yellow-300 drop-shadow-xl" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 01-8 0m8 0a4 4 0 00-8 0m8 0V5a4 4 0 00-8 0v2m8 0a4 4 0 01-8 0" /></svg>
+              </div>
+            </div>
+            <span className="font-extrabold text-xl sm:text-2xl text-blue-700 dark:text-blue-200 text-center mt-8 mb-2 drop-shadow-lg tracking-wide">Mode RAG activé</span>
+            <span className="text-sm sm:text-base font-medium text-slate-700 dark:text-slate-200 text-center">La recherche documentaire est maintenant active pour enrichir les réponses de l'IA.</span>
+          </div>
+        </div>
+      )}
+
+      {showRagDeactivated && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="relative flex flex-col items-center justify-center px-8 py-7 min-w-[320px] max-w-[90vw] bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-2xl border border-red-200 dark:border-red-800 animate-fadeIn animate-zoomIn animate-pulse backdrop-blur-xl">
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex items-center justify-center">
+              <div className="bg-gradient-to-br from-red-400 via-pink-500 to-purple-400 rounded-full p-2 shadow-lg animate-bounce">
+                <svg xmlns='http://www.w3.org/2000/svg' className="w-12 h-12 text-red-300 drop-shadow-xl" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </div>
+            </div>
+            <span className="font-extrabold text-xl sm:text-2xl text-red-700 dark:text-red-200 text-center mt-8 mb-2 drop-shadow-lg tracking-wide">Mode RAG désactivé</span>
+            <span className="text-sm sm:text-base font-medium text-slate-700 dark:text-slate-200 text-center">La recherche documentaire est désactivée. Les réponses de l'IA ne seront plus enrichies par les documents.</span>
+          </div>
         </div>
       )}
 
