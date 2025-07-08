@@ -71,7 +71,7 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
       >
         <div className="space-y-2 sm:space-y-3">
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full min-h-[250px] sm:min-h-[300px] text-center px-2">
+            <div className="flex flex-col items-center justify-center h-full min-h-[250px] sm:min-h-[300px] text-center px-2 mb-4" style={{ marginBottom: '15px' }}>
               {/* Hero section améliorée */}
               <div className="relative mb-4 group">
                 <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:rotate-2">
@@ -96,7 +96,7 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
                   Bienvenue sur NeuroChat
                 </h3>
                 <p className="text-muted-foreground max-w-md mx-auto text-xs sm:text-sm leading-relaxed mb-4">
-                  Découvre le futur de la conversation avec l'IA : reconnaissance vocale avancée, langage naturel et réponses intelligentes propulsées par Google Gemini Pro.
+                  Découvre le futur de la conversation avec l'IA : reconnaissance vocale avancée, langage naturel et réponses intelligentes.
                 </p>
                 {/* Cartes de fonctionnalités */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 w-full max-w-xl mb-4">
