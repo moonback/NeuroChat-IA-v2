@@ -162,17 +162,17 @@ export function ChatContainer({ messages, isLoading }: ChatContainerProps) {
                   const rag = message as RagContextMessage;
                   return (
                     <div key={rag.id} className="animate-fadeIn">
-                      <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-400 dark:border-blue-500 rounded-xl p-3 mb-2">
-                        <div className="font-semibold text-blue-800 dark:text-blue-200 mb-1 text-xs flex items-center gap-1">
-                          <span role="img" aria-label="Livre">📚</span> Passages issus de la base documentaire :
+                      <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-400 dark:border-blue-500 rounded-xl p-2 mb-2">
+                        <div className="font-semibold text-blue-800 dark:text-blue-200 text-xs flex items-center gap-1 mb-1">
+                          <span role="img" aria-label="Livre">📚</span> Passages de la base :
                         </div>
-                        <ol className="list-decimal pl-4 space-y-2">
-                          {rag.passages.map((p, i) => (
+                        <ol className="list-decimal pl-3 space-y-1">
+                          {rag.passages.map((p) => (
                             <li key={p.id}>
-                              <div className="font-bold text-blue-900 dark:text-blue-100 text-xs mb-1">{p.titre}</div>
-                              <div className="text-xs text-blue-900 dark:text-blue-100 whitespace-pre-line bg-blue-100/60 dark:bg-blue-800/40 rounded p-2">
-                                {p.contenu.length > 350 ? p.contenu.slice(0, 350) + '…' : p.contenu}
-                              </div>
+                              <span className="font-bold text-blue-900 dark:text-blue-100 text-xs">{p.titre} : </span>
+                              <span className="text-xs text-blue-900 dark:text-blue-100 bg-blue-100/60 dark:bg-blue-800/40 rounded px-1">
+                                {p.contenu.length > 150 ? p.contenu.slice(0, 150) + '…' : p.contenu}
+                              </span>
                             </li>
                           ))}
                         </ol>
