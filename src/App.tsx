@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
-import { sendMessageToGemini } from '@/services/geminiApi';
+import { sendMessageToGemini, GeminiGenerationConfig } from '@/services/geminiApi';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
-import { History, X } from 'lucide-react';
+import { Info, Sliders } from 'lucide-react';
 import { toast } from 'sonner';
 import { TTSSettingsModal } from '@/components/TTSSettingsModal';
 import { Header } from '@/components/Header';
@@ -14,6 +14,12 @@ import { RagDocsModal } from '@/components/RagDocsModal';
 import { HistoryModal, DiscussionWithCategory } from '@/components/HistoryModal';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
+import { Button as UIButton } from '@/components/ui/button';
+import { Tooltip } from 'react-tooltip';
 
 interface Message {
   id: string;
@@ -63,11 +69,9 @@ function App() {
   } = useSpeechSynthesis();
   const [showHistory, setShowHistory] = useState(false);
   const [historyList, setHistoryList] = useState<DiscussionWithCategory[]>([]);
-  const [editingTitleIdx, setEditingTitleIdx] = useState<number | null>(null);
-  const [editingTitleValue, setEditingTitleValue] = useState('');
+  
   const [showTTSSettings, setShowTTSSettings] = useState(false);
-  // Sélection multiple de discussions
-  const [selectedDiscussions, setSelectedDiscussions] = useState<number[]>([]);
+  
   // Ajout du state pour la personnalité IA
   const [selectedPersonality, setSelectedPersonality] = useState('formel');
   // Ajout du state pour le mode vocal automatique
@@ -83,10 +87,30 @@ function App() {
   // Ajout du state pour activer/désactiver le RAG
   const [showRagActivated, setShowRagActivated] = useState(false);
   const [showRagDeactivated, setShowRagDeactivated] = useState(false);
+  // Hyperparamètres Gemini
+  const [geminiConfig, setGeminiConfig] = useState<GeminiGenerationConfig>({
+    temperature: 0.7,
+    topK: 40,
+    topP: 0.95,
+    maxOutputTokens: 1024,
+  });
+  const [showGeminiSettings, setShowGeminiSettings] = useState(false);
+  // Gestion des presets Gemini
+  const [presets, setPresets] = useState<{ name: string; config: GeminiGenerationConfig }[]>([]);
 
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
   const LOCALSTORAGE_CURRENT = 'gemini_current_discussion';
+
+  // Valeurs par défaut pour badge et reset individuel
+  const DEFAULTS = {
+    temperature: 0.7,
+    topK: 40,
+    topP: 0.95,
+    maxOutputTokens: 1024,
+    stopSequences: [],
+    candidateCount: 1,
+  };
 
   // Charger la dernière discussion au démarrage
   useEffect(() => {
@@ -105,6 +129,21 @@ function App() {
   useEffect(() => {
     localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify(messages));
   }, [messages]);
+
+  // Charger les presets au montage
+  useEffect(() => {
+    const raw = localStorage.getItem('gemini_presets');
+    if (raw) {
+      try {
+        setPresets(JSON.parse(raw));
+      } catch {}
+    }
+  }, []);
+
+  // Sauvegarder les presets à chaque modification
+  useEffect(() => {
+    localStorage.setItem('gemini_presets', JSON.stringify(presets));
+  }, [presets]);
 
   // Sauvegarder une discussion dans l'historique (sans doublons consécutifs)
   const saveDiscussionToHistory = (discussion: Message[]) => {
@@ -251,7 +290,8 @@ function App() {
       const response = await sendMessageToGemini(
         filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
         imageFile ? [imageFile] : undefined,
-        prompt
+        prompt,
+        geminiConfig
       );
       addMessage(response, false);
       speak(response, {
@@ -346,22 +386,7 @@ function App() {
     toast.success('Réglages réinitialisés.');
   };
 
-  // Supprimer plusieurs discussions sélectionnées
-  const handleDeleteSelected = () => {
-    const newHistory = historyList.filter((_, idx) => !selectedDiscussions.includes(idx));
-    setHistoryList(newHistory);
-    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newHistory));
-    setSelectedDiscussions([]);
-  };
 
-  // Sélectionner/désélectionner tout
-  const handleSelectAll = () => {
-    if (selectedDiscussions.length === historyList.length) {
-      setSelectedDiscussions([]);
-    } else {
-      setSelectedDiscussions(historyList.map((_, idx) => idx));
-    }
-  };
 
   // Hook reconnaissance vocale (mode vocal auto)
   const {
@@ -499,6 +524,17 @@ function App() {
     }
   }, [ragEnabled]);
 
+  // Handler pour modifier un hyperparamètre Gemini
+  const handleGeminiConfigChange = (key: keyof GeminiGenerationConfig, value: any) => {
+    setGeminiConfig(cfg => ({ ...cfg, [key]: value }));
+  };
+
+  // Appliquer un preset
+
+  // Sauvegarder un preset
+
+  // Supprimer un preset
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Menu historique des discussions */}
@@ -530,6 +566,8 @@ function App() {
           hasActiveConversation={messages.length > 0}
           ragEnabled={ragEnabled}
           setRagEnabled={setRagEnabled}
+          onOpenGeminiSettings={() => setShowGeminiSettings(true)}
+          geminiConfig={geminiConfig}
         />
 
         {/* Boutons de sélection et suppression groupée */}
@@ -661,6 +699,196 @@ function App() {
 
       {/* Modale de gestion des documents RAG */}
       <RagDocsModal open={showRagDocs} onClose={() => setShowRagDocs(false)} />
+
+      {/* Modale latérale pour les réglages Gemini */}
+      <Drawer open={showGeminiSettings} onOpenChange={setShowGeminiSettings}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Réglages avancés Gemini</DrawerTitle>
+          </DrawerHeader>
+          <div className="flex flex-col items-center justify-center pt-6 pb-2">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-500 p-2 rounded-2xl shadow-lg">
+                <Sliders className="w-7 h-7 text-white drop-shadow" />
+              </div>
+              <span className="text-2xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">Hyperparamètres Gemini</span>
+            </div>
+            <div className="text-sm text-muted-foreground text-center max-w-xl mb-2">Ajustez finement le comportement du modèle Gemini pour chaque génération. Passez la souris sur <Info className='inline w-4 h-4 align-text-bottom' /> pour obtenir des explications détaillées.</div>
+          </div>
+          <div className="border-b border-slate-200 dark:border-slate-700 mb-4" />
+          <div className="p-0 sm:p-6 space-y-6">
+            {/* Paramètres dans des cartes premium */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Température */}
+              <div className="relative bg-gradient-to-br from-white/90 to-blue-50/60 dark:from-slate-900/80 dark:to-blue-950/40 rounded-2xl shadow-md border border-blue-100 dark:border-blue-900/30 p-4 flex flex-col gap-2 transition-all duration-200 hover:shadow-xl">
+                <div className="flex items-center gap-2 mb-1">
+                  <Label htmlFor="gemini-temperature">Température&nbsp;:
+                    <span className="font-mono ml-1">{geminiConfig.temperature?.toFixed(2)}</span>
+                  </Label>
+                  {geminiConfig.temperature === DEFAULTS.temperature && (
+                    <span className="ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-xs text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">par défaut</span>
+                  )}
+                  <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-temp">
+                    <Info className="w-4 h-4" />
+                  </button>
+                  <button type="button" className="ml-2 text-xs text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded transition" onClick={() => handleGeminiConfigChange('temperature', DEFAULTS.temperature)}>Réinit.</button>
+                  <Tooltip id="tip-temp" place="right" content="Contrôle la créativité de la génération. 0 = déterministe, 2 = très créatif. Valeur recommandée : 0.7" />
+                </div>
+                <Slider
+                  id="gemini-temperature"
+                  min={0}
+                  max={2}
+                  step={0.01}
+                  value={[geminiConfig.temperature ?? 0.7]}
+                  onValueChange={([v]) => handleGeminiConfigChange('temperature', v)}
+                  className="mt-2"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                  <span>Déterministe</span>
+                  <span>Créatif</span>
+                </div>
+              </div>
+              {/* topK */}
+              <div className="relative bg-gradient-to-br from-white/90 to-blue-50/60 dark:from-slate-900/80 dark:to-blue-950/40 rounded-2xl shadow-md border border-blue-100 dark:border-blue-900/30 p-4 flex flex-col gap-2 transition-all duration-200 hover:shadow-xl">
+                <div className="flex items-center gap-2 mb-1">
+                  <Label htmlFor="gemini-topk">topK&nbsp;:
+                    <span className="font-mono ml-1">{geminiConfig.topK}</span>
+                  </Label>
+                  {geminiConfig.topK === DEFAULTS.topK && (
+                    <span className="ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-xs text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">par défaut</span>
+                  )}
+                  <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-topk">
+                    <Info className="w-4 h-4" />
+                  </button>
+                  <button type="button" className="ml-2 text-xs text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded transition" onClick={() => handleGeminiConfigChange('topK', DEFAULTS.topK)}>Réinit.</button>
+                  <Tooltip id="tip-topk" place="right" content="Nombre de tokens candidats considérés à chaque étape. Plus élevé = plus de diversité, mais moins de cohérence. Recommandé : 40" />
+                </div>
+                <Input
+                  id="gemini-topk"
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={geminiConfig.topK ?? 40}
+                  onChange={e => handleGeminiConfigChange('topK', Number(e.target.value))}
+                  className="mt-2 w-32"
+                />
+              </div>
+              {/* topP */}
+              <div className="relative bg-gradient-to-br from-white/90 to-blue-50/60 dark:from-slate-900/80 dark:to-blue-950/40 rounded-2xl shadow-md border border-blue-100 dark:border-blue-900/30 p-4 flex flex-col gap-2 transition-all duration-200 hover:shadow-xl">
+                <div className="flex items-center gap-2 mb-1">
+                  <Label htmlFor="gemini-topp">topP&nbsp;:
+                    <span className="font-mono ml-1">{geminiConfig.topP?.toFixed(2)}</span>
+                  </Label>
+                  {geminiConfig.topP === DEFAULTS.topP && (
+                    <span className="ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-xs text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">par défaut</span>
+                  )}
+                  <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-topp">
+                    <Info className="w-4 h-4" />
+                  </button>
+                  <button type="button" className="ml-2 text-xs text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded transition" onClick={() => handleGeminiConfigChange('topP', DEFAULTS.topP)}>Réinit.</button>
+                  <Tooltip id="tip-topp" place="right" content="Probabilité cumulative pour l'échantillonnage. 1 = plus de diversité, 0 = plus conservateur. Recommandé : 0.95" />
+                </div>
+                <Slider
+                  id="gemini-topp"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={[geminiConfig.topP ?? 0.95]}
+                  onValueChange={([v]) => handleGeminiConfigChange('topP', v)}
+                  className="mt-2"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                  <span>Moins varié</span>
+                  <span>Plus varié</span>
+                </div>
+              </div>
+              {/* maxOutputTokens */}
+              <div className="relative bg-gradient-to-br from-white/90 to-blue-50/60 dark:from-slate-900/80 dark:to-blue-950/40 rounded-2xl shadow-md border border-blue-100 dark:border-blue-900/30 p-4 flex flex-col gap-2 transition-all duration-200 hover:shadow-xl">
+                <div className="flex items-center gap-2 mb-1">
+                  <Label htmlFor="gemini-maxoutput">maxOutputTokens&nbsp;:
+                    <span className="font-mono ml-1">{geminiConfig.maxOutputTokens}</span>
+                  </Label>
+                  {geminiConfig.maxOutputTokens === DEFAULTS.maxOutputTokens && (
+                    <span className="ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-xs text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">par défaut</span>
+                  )}
+                  <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-maxout">
+                    <Info className="w-4 h-4" />
+                  </button>
+                  <button type="button" className="ml-2 text-xs text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded transition" onClick={() => handleGeminiConfigChange('maxOutputTokens', DEFAULTS.maxOutputTokens)}>Réinit.</button>
+                  <Tooltip id="tip-maxout" place="right" content="Nombre maximal de tokens générés dans la réponse. Plus élevé = réponses plus longues. Recommandé : 1024" />
+                </div>
+                <Input
+                  id="gemini-maxoutput"
+                  type="number"
+                  min={64}
+                  max={4096}
+                  value={geminiConfig.maxOutputTokens ?? 1024}
+                  onChange={e => handleGeminiConfigChange('maxOutputTokens', Number(e.target.value))}
+                  className="mt-2 w-32"
+                />
+                {(geminiConfig.maxOutputTokens ?? 1024) > 4096 && (
+                  <div className="mt-2 text-xs text-red-600 flex items-center gap-1 animate-fadeIn">
+                    <span className="font-bold">⚠️</span>
+                    La valeur maximale autorisée est 4096 tokens.
+                  </div>
+                )}
+              </div>
+              {/* stopSequences */}
+              <div className="relative bg-gradient-to-br from-white/90 to-blue-50/60 dark:from-slate-900/80 dark:to-blue-950/40 rounded-2xl shadow-md border border-blue-100 dark:border-blue-900/30 p-4 flex flex-col gap-2 transition-all duration-200 hover:shadow-xl">
+                <div className="flex items-center gap-2 mb-1">
+                  <Label htmlFor="gemini-stopseq">stopSequences&nbsp;:</Label>
+                  {Array.isArray(geminiConfig.stopSequences) && geminiConfig.stopSequences.length === 0 && (
+                    <span className="ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-xs text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">par défaut</span>
+                  )}
+                  <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-stopseq">
+                    <Info className="w-4 h-4" />
+                  </button>
+                  <button type="button" className="ml-2 text-xs text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded transition" onClick={() => handleGeminiConfigChange('stopSequences', DEFAULTS.stopSequences)}>Réinit.</button>
+                  <Tooltip id="tip-stopseq" place="right" content="Séquences de texte qui arrêtent la génération. Laisser vide pour ignorer. Ex : END,STOP" />
+                </div>
+                <Input
+                  id="gemini-stopseq"
+                  type="text"
+                  value={geminiConfig.stopSequences?.join(',') ?? ''}
+                  onChange={e => handleGeminiConfigChange('stopSequences', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                  placeholder="Ex: END,STOP"
+                  className="mt-2"
+                />
+                <div className="text-xs text-muted-foreground mt-1">Séparez par des virgules</div>
+              </div>
+              {/* candidateCount */}
+              <div className="relative bg-gradient-to-br from-white/90 to-blue-50/60 dark:from-slate-900/80 dark:to-blue-950/40 rounded-2xl shadow-md border border-blue-100 dark:border-blue-900/30 p-4 flex flex-col gap-2 transition-all duration-200 hover:shadow-xl">
+                <div className="flex items-center gap-2 mb-1">
+                  <Label htmlFor="gemini-candidates">candidateCount&nbsp;:
+                    <span className="font-mono ml-1">{geminiConfig.candidateCount}</span>
+                  </Label>
+                  {geminiConfig.candidateCount === DEFAULTS.candidateCount && (
+                    <span className="ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-xs text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">par défaut</span>
+                  )}
+                  <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-cand">
+                    <Info className="w-4 h-4" />
+                  </button>
+                  <button type="button" className="ml-2 text-xs text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded transition" onClick={() => handleGeminiConfigChange('candidateCount', DEFAULTS.candidateCount)}>Réinit.</button>
+                  <Tooltip id="tip-cand" place="right" content="Nombre de réponses générées à chaque requête. 1 = une seule réponse. Plus = alternatives. Recommandé : 1" />
+                </div>
+                <Input
+                  id="gemini-candidates"
+                  type="number"
+                  min={1}
+                  max={8}
+                  value={geminiConfig.candidateCount ?? 1}
+                  onChange={e => handleGeminiConfigChange('candidateCount', Number(e.target.value))}
+                  className="mt-2 w-32"
+                />
+              </div>
+            </div>
+          </div>
+          <DrawerFooter>
+            <UIButton variant="secondary" onClick={() => setGeminiConfig({ temperature: 0.7, topK: 40, topP: 0.95, maxOutputTokens: 1024, stopSequences: [], candidateCount: 1 })}>Réinitialiser</UIButton>
+            <UIButton onClick={() => setShowGeminiSettings(false)}>Fermer</UIButton>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

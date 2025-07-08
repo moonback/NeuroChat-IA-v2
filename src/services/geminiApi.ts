@@ -13,10 +13,20 @@ interface GeminiResponse {
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
+export interface GeminiGenerationConfig {
+  temperature?: number;
+  topK?: number;
+  topP?: number;
+  maxOutputTokens?: number;
+  stopSequences?: string[];
+  candidateCount?: number;
+}
+
 export async function sendMessageToGemini(
   messages: { text: string; isUser: boolean }[],
   files?: File[],
-  systemPrompt?: string
+  systemPrompt?: string,
+  generationConfig?: GeminiGenerationConfig
 ): Promise<string> {
   if (!API_KEY) {
     throw new Error('Clé API Gemini introuvable. Merci d\'ajouter VITE_GEMINI_API_KEY dans ton fichier .env.local.');
@@ -62,10 +72,12 @@ export async function sendMessageToGemini(
       body: JSON.stringify({
         contents,
         generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1024,
+          temperature: generationConfig?.temperature ?? 0.7,
+          topK: generationConfig?.topK ?? 40,
+          topP: generationConfig?.topP ?? 0.95,
+          maxOutputTokens: generationConfig?.maxOutputTokens ?? 4096,
+          stopSequences: generationConfig?.stopSequences ?? [],
+          candidateCount: generationConfig?.candidateCount ?? 1,
         },
         safetySettings: [
           {
