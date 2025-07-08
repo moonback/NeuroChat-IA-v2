@@ -533,57 +533,62 @@ function App() {
         />
 
         {/* Boutons de sélection et suppression groupée */}
-        <div className="flex gap-2 items-center mb-2 px-2">
-          <Button
-            variant={selectMode ? 'secondary' : 'outline'}
-            size="sm"
-            onClick={handleToggleSelectMode}
-          >
-            {selectMode ? 'Annuler la sélection' : 'Sélectionner'}
-          </Button>
-          {selectMode && messages.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                // On ne sélectionne que les messages classiques (pas RAG)
-                const allIds = messages.filter((m: any) => !m.isRagContext).map((m: any) => m.id);
-                if (selectedMessageIds.length === allIds.length) {
-                  setSelectedMessageIds([]);
-                } else {
-                  setSelectedMessageIds(allIds);
-                }
-              }}
-            >
-              {selectedMessageIds.length === messages.filter((m: any) => !m.isRagContext).length ? 'Tout désélectionner' : 'Sélectionner tout'}
-            </Button>
-          )}
-          {selectMode && selectedMessageIds.length > 0 && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => setShowConfirmDeleteMultiple(true)}
-            >
-              Supprimer la sélection ({selectedMessageIds.length})
-            </Button>
-          )}
-        </div>
+        {/* Les boutons de sélection/groupée ne sont visibles que si une conversation est active */}
+        {messages.length > 0 && (
+          <>
+            <div className="flex gap-2 items-center mb-2 px-2">
+              <Button
+                variant={selectMode ? 'secondary' : 'outline'}
+                size="sm"
+                onClick={handleToggleSelectMode}
+              >
+                {selectMode ? 'Annuler la sélection' : 'Sélectionner'}
+              </Button>
+              {selectMode && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    // On ne sélectionne que les messages classiques (pas RAG)
+                    const allIds = messages.filter((m: any) => !m.isRagContext).map((m: any) => m.id);
+                    if (selectedMessageIds.length === allIds.length) {
+                      setSelectedMessageIds([]);
+                    } else {
+                      setSelectedMessageIds(allIds);
+                    }
+                  }}
+                >
+                  {selectedMessageIds.length === messages.filter((m: any) => !m.isRagContext).length ? 'Tout désélectionner' : 'Sélectionner tout'}
+                </Button>
+              )}
+              {selectMode && selectedMessageIds.length > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setShowConfirmDeleteMultiple(true)}
+                >
+                  Supprimer la sélection ({selectedMessageIds.length})
+                </Button>
+              )}
+            </div>
 
-        {/* Confirmation globale suppression multiple */}
-        <AlertDialog open={showConfirmDeleteMultiple} onOpenChange={setShowConfirmDeleteMultiple}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Supprimer {selectedMessageIds.length} message{selectedMessageIds.length > 1 ? 's' : ''} ?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Cette action est irréversible. Les messages sélectionnés seront définitivement supprimés de la conversation et de l'historique.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Annuler</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteMultipleMessages}>Supprimer</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+            {/* Confirmation globale suppression multiple */}
+            <AlertDialog open={showConfirmDeleteMultiple} onOpenChange={setShowConfirmDeleteMultiple}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Supprimer {selectedMessageIds.length} message{selectedMessageIds.length > 1 ? 's' : ''} ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Cette action est irréversible. Les messages sélectionnés seront définitivement supprimés de la conversation et de l'historique.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteMultipleMessages}>Supprimer</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
+        )}
 
         {/* Enhanced Chat Interface */}
         <Card className="flex-1 flex flex-col shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl overflow-hidden ring-1 ring-white/20 dark:ring-slate-700/20">
