@@ -16,6 +16,31 @@
 
 ## ✨ Fonctionnalités
 
+### 🆕 Nouvelles fonctionnalités déployées
+
+#### 🔥 Hyperparamètres Gemini personnalisables
+- **Réglages avancés** : Ajustez la température, topK, topP, maxOutputTokens, stopSequences et candidateCount directement depuis l’interface.
+- **Réinitialisation rapide** des paramètres aux valeurs par défaut.
+- **Interface moderne** pour une configuration fine du comportement du modèle Gemini.
+
+#### 🗂️ Gestion améliorée de l’historique
+- **Suppression groupée** de messages et de discussions via sélection multiple.
+- **Renommage** instantané des discussions.
+- **Recherche et tri** avancés dans l’historique.
+
+#### 📚 RAG (Recherche Augmentée par les Documents)
+- **Activation/désactivation dynamique** du mode RAG.
+- **Popup animé** lors de l’activation/désactivation.
+- **Gestion des documents** enrichie : ajout, renommage, suppression groupée, aperçu, drag & drop.
+
+#### 🎤 Mode vocal automatique
+- **Activation d’un mode conversation continue** : l’IA écoute et répond sans intervention manuelle.
+- **Indicateur visuel** du mode vocal actif.
+
+#### 🧹 Divers
+- **Correction de bugs** et amélioration de la stabilité.
+- **Optimisation de l’interface** pour une expérience plus fluide.
+
 ### 🗣️ Communication vocale
 - **Reconnaissance vocale** avancée (Web Speech API)
 - **Synthèse vocale** personnalisable (voix, vitesse, tonalité)
