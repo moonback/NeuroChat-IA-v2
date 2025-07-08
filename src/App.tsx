@@ -97,8 +97,6 @@ function App() {
   const [showGeminiSettings, setShowGeminiSettings] = useState(false);
   // Gestion des presets Gemini
   const [presets, setPresets] = useState<{ name: string; config: GeminiGenerationConfig }[]>([]);
-  const [presetName, setPresetName] = useState('');
-  const [selectedPreset, setSelectedPreset] = useState<string>('');
 
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
