@@ -53,6 +53,8 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Sélection multiple pour suppression
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Charger les docs du dossier (via import.meta.glob)
   useEffect(() => {
@@ -324,6 +326,38 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
             {docs.length} au total
           </span>
         </div>
+        {/* Boutons de sélection et suppression groupée */}
+        <div className="mb-4 flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSelectedIds(docs.filter(d => d.origine === 'utilisateur').map(d => d.id))}
+            disabled={docs.filter(d => d.origine === 'utilisateur').length === 0}
+          >
+            Tout sélectionner
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => {
+              if (selectedIds.length === 0) return;
+              if (!window.confirm('Supprimer tous les documents sélectionnés ?')) return;
+              const userRaw = localStorage.getItem(LS_KEY);
+              let userDocs: RagDoc[] = [];
+              if (userRaw) {
+                try { userDocs = JSON.parse(userRaw); } catch {}
+              }
+              userDocs = userDocs.filter(doc => !selectedIds.includes(doc.id));
+              localStorage.setItem(LS_KEY, JSON.stringify(userDocs));
+              setDocs(docs => docs.filter(doc => !selectedIds.includes(doc.id)));
+              setSelectedIds([]);
+              toast.success('Documents supprimés.');
+            }}
+            disabled={selectedIds.length === 0}
+          >
+            Tout supprimer
+          </Button>
+        </div>
         {filteredDocs.length === 0 ? (
           <div className="text-muted-foreground text-center py-12">Aucun document trouvé.</div>
         ) : (
@@ -331,6 +365,17 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
             {filteredDocs.map(doc => {
               return (
                 <li key={doc.id} className="border rounded-xl p-4 bg-slate-50 dark:bg-slate-800 flex flex-col sm:flex-row items-start sm:items-center gap-3 shadow-sm hover:shadow-md transition-shadow">
+                  {doc.origine === 'utilisateur' && (
+                    <input
+                      type="checkbox"
+                      className="mr-2 mt-1"
+                      checked={selectedIds.includes(doc.id)}
+                      onChange={e => {
+                        if (e.target.checked) setSelectedIds(ids => [...ids, doc.id]);
+                        else setSelectedIds(ids => ids.filter(id => id !== doc.id));
+                      }}
+                    />
+                  )}
                   <div className="flex-1 min-w-0 flex flex-col sm:flex-row gap-2 items-start sm:items-center">
                     <div className="flex-shrink-0">{getIcon(doc.extension || '')}</div>
                     <div className="flex flex-col gap-1 w-full">
