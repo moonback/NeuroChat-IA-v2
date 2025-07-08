@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf';
 import mammoth from 'mammoth';
 import Papa from 'papaparse';
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 
 interface RagDocsModalProps {
   open: boolean;
@@ -55,6 +56,8 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Sélection multiple pour suppression
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  // Ajout de l'état pour le modal
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
   // Charger les docs du dossier (via import.meta.glob)
   useEffect(() => {
@@ -343,25 +346,46 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
           <Button
             variant="destructive"
             size="sm"
-            onClick={() => {
-              if (selectedIds.length === 0) return;
-              if (!window.confirm('Supprimer tous les documents sélectionnés ?')) return;
-              const userRaw = localStorage.getItem(LS_KEY);
-              let userDocs: RagDoc[] = [];
-              if (userRaw) {
-                try { userDocs = JSON.parse(userRaw); } catch {}
-              }
-              userDocs = userDocs.filter(doc => !selectedIds.includes(doc.id));
-              localStorage.setItem(LS_KEY, JSON.stringify(userDocs));
-              setDocs(docs => docs.filter(doc => !selectedIds.includes(doc.id)));
-              setSelectedIds([]);
-              toast.success('Documents supprimés.');
-            }}
+            onClick={() => setOpenDeleteModal(true)}
             disabled={selectedIds.length === 0}
           >
             Tout supprimer
           </Button>
         </div>
+        <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Supprimer les documents sélectionnés ?</DialogTitle>
+            </DialogHeader>
+            <div className="py-2 text-sm">
+              Cette action est <span className="text-red-600 font-semibold">irréversible</span>.<br />
+              Voulez-vous vraiment supprimer {selectedIds.length} document{selectedIds.length > 1 ? 's' : ''} ?
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>
+                Annuler
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  const userRaw = localStorage.getItem(LS_KEY);
+                  let userDocs: RagDoc[] = [];
+                  if (userRaw) {
+                    try { userDocs = JSON.parse(userRaw); } catch {}
+                  }
+                  userDocs = userDocs.filter(doc => !selectedIds.includes(doc.id));
+                  localStorage.setItem(LS_KEY, JSON.stringify(userDocs));
+                  setDocs(docs => docs.filter(doc => !selectedIds.includes(doc.id)));
+                  setSelectedIds([]);
+                  setOpenDeleteModal(false);
+                  toast.success('Documents supprimés.');
+                }}
+              >
+                Confirmer la suppression
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         {filteredDocs.length === 0 ? (
           <div className="text-muted-foreground text-center py-12">Aucun document trouvé.</div>
         ) : (
