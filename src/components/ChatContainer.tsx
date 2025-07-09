@@ -114,7 +114,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
           {/* Conditional rendering for hero section or chat content */}
           {messages.length === 0 ? (
             modePrive ? (
-              <div className="flex flex-col items-center justify-center min-h-[60vh] sm:min-h-[320px] text-center px-1 mb-3 animate-fadeIn">
+              <div className="flex flex-col items-center justify-center h-auto lg:h-[80vh] text-center px-1 mb-3 animate-fadeIn">
                 {/* Icône héros : bouclier sécurisé avec effets de halo et particules */}
                 <div className="relative mb-6 group animate-fadeIn" style={{ animationDelay: "0.1s" }}>
                   <div className="w-20 h-20 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-3xl flex items-center justify-center shadow-2xl border-4 border-white/20 dark:border-slate-800/60 backdrop-blur-xl relative">
@@ -228,7 +228,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col  pt-10  items-center justify-center min-h-[60vh] sm:min-h-[300px] text-center px-1 mb-3">
+              <div className="flex flex-col  pt-10  items-center justify-center h-auto lg:h-[80vh] text-center px-1 mb-3">
                 {/* Hero section améliorée */}
                 <div className="relative mb-4 group">
                   <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:rotate-2">
