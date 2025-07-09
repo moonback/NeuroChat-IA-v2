@@ -197,7 +197,7 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
               <div className="flex flex-col gap-2">
                 <textarea
                   ref={editInputRef}
-                  className="w-full rounded-lg border px-2 py-1 text-sm text-slate-900 dark:text-slate-100 dark:bg-slate-700 resize-y min-h-[40px]"
+                  className="w-full rounded-lg border px-2 py-1 text-sm text-slate-900 dark:text-slate-100 dark:bg-slate-700 resize-y min-h-10"
                   value={editValue}
                   onChange={e => setEditValue(e.target.value)}
                   onKeyDown={handleEditKeyDown}

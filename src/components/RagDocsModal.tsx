@@ -467,13 +467,13 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-blue-900 dark:text-blue-100 text-base truncate max-w-[200px]">{doc.titre}</span>
+                          <span className="font-semibold text-blue-900 dark:text-blue-100 text-base truncate max-w-48">{doc.titre}</span>
                           {doc.origine === 'utilisateur' && (
                             <Button size="icon" variant="ghost" onClick={() => handleStartEdit(doc)} title="Renommer"><Pencil className="w-4 h-4 text-blue-400" /></Button>
                           )}
                         </div>
                       )}
-                      <div className="text-xs text-muted-foreground truncate max-w-[350px]">{doc.contenu.slice(0, 120)}{doc.contenu.length > 120 ? "…" : ""}</div>
+                      <div className="text-xs text-muted-foreground truncate max-w-80">{doc.contenu.slice(0, 120)}{doc.contenu.length > 120 ? "…" : ""}</div>
                       <div className="text-[11px] text-slate-400">.{doc.extension}</div>
                     </div>
                   </div>

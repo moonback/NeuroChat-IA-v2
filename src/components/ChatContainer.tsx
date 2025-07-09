@@ -103,7 +103,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
           {/* Conditional rendering for hero section or chat content */}
           {messages.length === 0 ? (
             modePrive ? (
-              <div className="flex flex-col items-center justify-center h-full min-h-[250px] sm:min-h-[320px] text-center px-2 mb-4 animate-fadeIn">
+              <div className="flex flex-col items-center justify-center h-full min-h-64 sm:min-h-80 text-center px-2 mb-4 animate-fadeIn">
                 {/* Icône héros : bouclier sécurisé avec effets de halo et particules */}
                 <div className="relative mb-6 group animate-fadeIn" style={{ animationDelay: "0.1s" }}>
                   <div className="w-20 h-20 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-3xl flex items-center justify-center shadow-2xl border-4 border-white/20 dark:border-slate-800/60 backdrop-blur-xl relative">
@@ -136,7 +136,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                   {/* Grille de fonctionnalités premium glass */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full max-w-2xl mx-auto mb-6 animate-fadeIn" style={{ animationDelay: "0.4s" }}>
                     {/* Carte 1 : Aucune sauvegarde */}
-                    <div className="group p-4 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-blue-200/40 dark:border-blue-700/30 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col items-center justify-center min-h-[120px] backdrop-blur-xl">
+                    <div className="group p-4 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-blue-200/40 dark:border-blue-700/30 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col items-center justify-center min-h-28 backdrop-blur-xl">
                       <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mb-2 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="text-white">
                           <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7" />
@@ -148,7 +148,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                       <p className="text-[11px] text-blue-800 dark:text-blue-200/90">Vos messages restent uniquement sur votre appareil.</p>
                     </div>
                     {/* Carte 2 : Effacement automatique */}
-                    <div className="group p-4 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-indigo-200/40 dark:border-indigo-700/30 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col items-center justify-center min-h-[120px] backdrop-blur-xl">
+                    <div className="group p-4 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-indigo-200/40 dark:border-indigo-700/30 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col items-center justify-center min-h-28 backdrop-blur-xl">
                       <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-blue-700 rounded-xl flex items-center justify-center mb-2 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="text-white">
                           <rect x="3" y="6" width="18" height="14" rx="2" className="fill-white/10" />
@@ -161,7 +161,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                       <p className="text-[11px] text-indigo-800 dark:text-indigo-200/90">Tout est supprimé dès que vous quittez la page.</p>
                     </div>
                     {/* Carte 3 : Chiffrement local */}
-                    <div className="group p-4 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-emerald-200/40 dark:border-emerald-700/30 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col items-center justify-center min-h-[120px] backdrop-blur-xl">
+                    <div className="group p-4 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-emerald-200/40 dark:border-emerald-700/30 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col items-center justify-center min-h-28 backdrop-blur-xl">
                       <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-blue-600 rounded-xl flex items-center justify-center mb-2 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="text-white">
                           <circle cx="12" cy="12" r="6" className="fill-white/10" />
@@ -217,7 +217,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full min-h-[250px] sm:min-h-[300px] text-center px-2 mb-4">
+              <div className="flex flex-col items-center justify-center h-full min-h-64 sm:min-h-72 text-center px-2 mb-4">
                 {/* Hero section améliorée */}
                 <div className="relative mb-4 group">
                   <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:rotate-2">

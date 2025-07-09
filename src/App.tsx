@@ -551,7 +551,7 @@ function App() {
  
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-center relative overflow-hidden">
       {/* Menu historique des discussions */}
       <HistoryModal
         open={showHistory}
@@ -563,7 +563,7 @@ function App() {
         onDeleteMultiple={handleDeleteMultipleDiscussions}
       />
 
-      <div className="w-full max-w-12xl h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] flex flex-col relative z-10">
+      <div className="w-full max-w-7xl h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] flex flex-col relative z-10">
         {/* Header compact performant */}
         <Header
           muted={muted}
@@ -699,7 +699,7 @@ function App() {
 
       {showRagActivated && (
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-          <div className="relative flex flex-col items-center justify-center px-8 py-7 min-w-[320px] max-w-[90vw] bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-2xl border border-blue-200 dark:border-blue-800 animate-fadeIn animate-zoomIn animate-pulse backdrop-blur-xl">
+          <div className="relative flex flex-col items-center justify-center px-8 py-7 min-w-72 max-w-[90vw] bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-2xl border border-blue-200 dark:border-blue-800 animate-fadeIn animate-zoomIn animate-pulse backdrop-blur-xl">
             <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex items-center justify-center">
               <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-green-400 rounded-full p-2 shadow-lg animate-bounce">
                 <svg xmlns='http://www.w3.org/2000/svg' className="w-12 h-12 text-yellow-300 drop-shadow-xl" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 01-8 0m8 0a4 4 0 00-8 0m8 0V5a4 4 0 00-8 0v2m8 0a4 4 0 01-8 0" /></svg>
@@ -713,7 +713,7 @@ function App() {
 
       {showRagDeactivated && (
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-          <div className="relative flex flex-col items-center justify-center px-8 py-7 min-w-[320px] max-w-[90vw] bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-2xl border border-red-200 dark:border-red-800 animate-fadeIn animate-zoomIn animate-pulse backdrop-blur-xl">
+          <div className="relative flex flex-col items-center justify-center px-8 py-7 min-w-72 max-w-[90vw] bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-2xl border border-red-200 dark:border-red-800 animate-fadeIn animate-zoomIn animate-pulse backdrop-blur-xl">
             <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex items-center justify-center">
               <div className="bg-gradient-to-br from-red-400 via-pink-500 to-purple-400 rounded-full p-2 shadow-lg animate-bounce">
                 <svg xmlns='http://www.w3.org/2000/svg' className="w-12 h-12 text-red-300 drop-shadow-xl" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>

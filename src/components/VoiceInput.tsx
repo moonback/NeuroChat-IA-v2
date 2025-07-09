@@ -127,7 +127,7 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
           </div>
           <div className="flex flex-col min-w-0">
             <span
-              className="text-xs text-blue-700 dark:text-blue-200 truncate max-w-[90px]"
+              className="text-xs text-blue-700 dark:text-blue-200 truncate max-w-24 sm:max-w-36"
               title={selectedImage.name}
             >
               {selectedImage.name}
