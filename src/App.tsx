@@ -697,7 +697,7 @@ function App() {
         </div>
       )}
 
-      {showRagActivated && (
+      {/* {showRagActivated && (
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
           <div className="relative flex flex-col items-center justify-center px-8 py-7 min-w-[320px] max-w-[90vw] bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-2xl border border-blue-200 dark:border-blue-800 animate-fadeIn animate-zoomIn animate-pulse backdrop-blur-xl">
             <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex items-center justify-center">
@@ -709,9 +709,9 @@ function App() {
             <span className="text-sm sm:text-base font-medium text-slate-700 dark:text-slate-200 text-center">La recherche documentaire est maintenant active pour enrichir les réponses de l'IA.</span>
           </div>
         </div>
-      )}
+      )} */}
 
-      {showRagDeactivated && (
+      {/* {showRagDeactivated && (
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
           <div className="relative flex flex-col items-center justify-center px-8 py-7 min-w-[320px] max-w-[90vw] bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-2xl border border-red-200 dark:border-red-800 animate-fadeIn animate-zoomIn animate-pulse backdrop-blur-xl">
             <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex items-center justify-center">
@@ -723,7 +723,7 @@ function App() {
             <span className="text-sm sm:text-base font-medium text-slate-700 dark:text-slate-200 text-center">La recherche documentaire est désactivée. Les réponses de l'IA ne seront plus enrichies par les documents.</span>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Modale de gestion des documents RAG */}
       <RagDocsModal open={showRagDocs} onClose={() => setShowRagDocs(false)} />

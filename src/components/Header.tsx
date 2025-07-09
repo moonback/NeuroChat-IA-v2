@@ -8,6 +8,7 @@ import { useTheme } from '@/hooks/useTheme';
 import {
   MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Square, Mic, User
 } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 // =====================
 // Constantes & Utilitaires
@@ -126,6 +127,8 @@ export function Header({
   const [isOnline, setIsOnline] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [showStopButton, setShowStopButton] = useState(true);
+  const [showMobileMenu, setShowMobileMenu] = useState(false); // Ajout menu mobile
+  const closeMobileMenu = () => setShowMobileMenu(false);
 
   // Effet bip mode privé
   useEffect(() => {
@@ -158,11 +161,11 @@ export function Header({
 
   return (
     <header
-      className="w-full flex flex-col sm:flex-row items-center justify-between px-2 sm:px-3 py-0 sm:py-0 bg-white/70 dark:bg-slate-900/80 shadow-2xl rounded-3xl mb-1 gap-0.5 sm:gap-1 border border-white/40 dark:border-slate-800/60 backdrop-blur-2xl transition-all duration-300 glass relative z-20 ring-1 ring-blue-100/40 dark:ring-blue-900/30"
+      className="w-full flex flex-col sm:flex-row items-center justify-between px-2 sm:px-4 py-1 sm:py-0 bg-white/80 dark:bg-slate-900/90 shadow-2xl rounded-3xl mb-1 gap-1 border border-white/40 dark:border-slate-800/60 backdrop-blur-2xl transition-all duration-300 glass relative z-20 ring-1 ring-blue-100/40 dark:ring-blue-900/30"
       style={{ boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.10)' }}
     >
       {/* Badge PRIVÉ animé en haut à droite */}
-      {modePrive && (
+      {/* {modePrive && (
         <div className="absolute top-1 right-2 z-30 px-2 py-0.5 rounded-full bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-800 text-white font-bold text-[10px] shadow-lg animate-bouncePrivé border border-white/30 select-none pointer-events-none">
           <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' className='inline align-middle mr-1'>
             <rect x='5' y='11' width='14' height='9' rx='2' className='fill-white/20'/>
@@ -171,14 +174,14 @@ export function Header({
           </svg>
           PRIVÉ
         </div>
-      )}
+      )} */}
       {/* Audio bip premium */}
       <audio ref={audioRef} src="/bip2.mp3" preload="auto" />
 
       {/* Logo & nom + statut */}
-      <div className="flex items-center gap-1 min-w-0 w-full sm:w-auto mb-0.5 sm:mb-0 group cursor-pointer hover:scale-105 transition-transform duration-200">
-        <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 text-white shadow-xl relative group/logo transition-all duration-300 hover:shadow-blue-400/40 hover:scale-110 ring-2 ring-blue-400/10 dark:ring-blue-900/30">
-          <MessageCircle className="w-5 h-5 group-hover/logo:rotate-12 group-hover/logo:scale-110 transition-transform duration-300" />
+      <div className="flex items-center gap-2 min-w-0 w-full sm:w-auto mb-1 sm:mb-0 group cursor-pointer hover:scale-105 transition-transform duration-200">
+        <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 text-white shadow-xl relative group/logo transition-all duration-300 hover:shadow-blue-400/40 hover:scale-110 ring-2 ring-blue-400/10 dark:ring-blue-900/30">
+          <MessageCircle className="w-6 h-6 group-hover/logo:rotate-12 group-hover/logo:scale-110 transition-transform duration-300" />
           {/* Point vert animé */}
           <span className="absolute -bottom-1 -right-1 flex h-2 w-2">
             <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isOnline ? 'bg-green-400' : 'bg-red-400'} opacity-75`}></span>
@@ -190,14 +193,23 @@ export function Header({
           onClick={onNewDiscussion}
           title="Nouvelle conversation"
         >
-          <span className="text-lg sm:text-lg font-extrabold truncate bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent drop-shadow-md tracking-tight animate-glowText group-hover:scale-105 transition-transform duration-200">
-            NeuroChat
+          <span className="text-lg sm:text-xl font-extrabold truncate bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent drop-shadow-md tracking-tight animate-glowText group-hover:scale-105 transition-transform duration-200">
+            <span className="hidden xs:inline">NeuroChat</span>
+            <span className="inline xs:hidden">NC</span>
           </span>
         </div>
+        {/* Bouton menu mobile visible uniquement sur mobile */}
+        <button
+          className="sm:hidden ml-auto p-2 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
+          onClick={() => setShowMobileMenu(true)}
+          aria-label="Ouvrir le menu"
+        >
+          <svg className="w-6 h-6 text-slate-700 dark:text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
       </div>
 
-      {/* Actions principales */}
-      <div className="flex flex-wrap items-center gap-1 sm:gap-1 justify-end w-full sm:w-auto">
+      {/* Actions principales - desktop */}
+      <div className="hidden sm:flex flex-wrap items-center gap-1 justify-end w-full sm:w-auto flex-1 overflow-x-auto">
         {/* Groupe : Actions principales */}
         <div className="flex items-center gap-0.5 sm:gap-1 bg-white/60 dark:bg-slate-800/70 rounded-xl px-1 py-0 shadow-xl backdrop-blur-xl hover:shadow-blue-400/20 transition-all duration-200 border border-slate-200 dark:border-slate-700 ring-1 ring-blue-200/20 dark:ring-blue-900/10">
           <Button
@@ -391,24 +403,76 @@ export function Header({
           <PersonalityDropdown selected={selectedPersonality} onChange={onChangePersonality} />
         </div>
 
-        {/* Bouton Stop voix */}
-        {showStopButton && hasActiveConversation && (
-          <Button
-            variant="destructive"
-            size="icon"
-            onClick={() => { setShowStopButton(false); stop(); }}
-            disabled={muted}
-            className="text-xs px-2 py-0 ml-1 rounded-lg flex items-center gap-1 shadow hover:bg-red-600/90 bg-red-500/90 text-white border-0 transition-all duration-200 focus:ring-2 focus:ring-red-400 disabled:opacity-50 disabled:cursor-not-allowed animate-pulse w-14"
-            title="Arrêter la voix"
-            aria-label="Arrêter la voix"
-            data-tooltip-id="header-tooltip"
-            data-tooltip-content="Arrêter la lecture vocale en cours"
-          >
-            <Square className="w-4 h-4 mr-1" />
-            Stop
-          </Button>
-        )}
+        
       </div>
+
+      {/* Menu mobile (modale centrée) */}
+      <Dialog open={showMobileMenu} onOpenChange={setShowMobileMenu}>
+        <DialogContent className="max-w-[95vw] w-full sm:max-w-md p-0 bg-gradient-to-br from-blue-50 via-white to-indigo-100 dark:from-slate-900 dark:via-slate-950 dark:to-indigo-950 rounded-3xl shadow-2xl border-0 overflow-hidden animate-fadeIn animate-slideInFromTop backdrop-blur-2xl">
+          <div className="flex flex-col gap-6 p-0 max-h-[90vh] overflow-y-auto">
+            {/* Header du menu mobile */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-3 border-b border-blue-100 dark:border-slate-800 bg-gradient-to-r from-blue-100/60 via-white/60 to-indigo-100/60 dark:from-blue-900/40 dark:via-slate-900/40 dark:to-indigo-950/40 rounded-t-3xl">
+              <div className="flex items-center gap-2">
+                <MessageCircle className="w-7 h-7 text-blue-500 drop-shadow" />
+                <span className="text-xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight">Menu</span>
+              </div>
+              <button onClick={closeMobileMenu} aria-label="Fermer le menu" className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-400 transition-all duration-200">
+                <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="flex flex-col gap-6 px-6 pb-6">
+              {/* Groupe 1 : Actions principales */}
+              <div className="flex flex-col gap-3">
+                <Button variant="ghost" size="lg" className="w-full flex items-center gap-3 bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-md hover:shadow-blue-300/30 dark:hover:shadow-blue-900/30 hover:scale-[1.03] transition-all duration-200 text-blue-900 dark:text-blue-100 font-semibold text-base" onClick={() => { onNewDiscussion(); closeMobileMenu(); }}>
+                  <PlusCircle className="w-5 h-5 text-blue-500" /> Nouvelle discussion
+                </Button>
+                <Button variant="ghost" size="lg" className="w-full flex items-center gap-3 bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-md hover:shadow-indigo-300/30 dark:hover:shadow-indigo-900/30 hover:scale-[1.03] transition-all duration-200 text-indigo-900 dark:text-indigo-100 font-semibold text-base" onClick={() => { onOpenHistory(); closeMobileMenu(); }}>
+                  <History className="w-5 h-5 text-indigo-500" /> Historique
+                </Button>
+                <Button variant="ghost" size="lg" className="w-full flex items-center gap-3 bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-md hover:shadow-yellow-300/30 dark:hover:shadow-yellow-900/30 hover:scale-[1.03] transition-all duration-200 text-yellow-900 dark:text-yellow-100 font-semibold text-base" onClick={toggleTheme}>
+                  {theme === 'dark' ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-slate-600" />} {theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+                </Button>
+                {onOpenGeminiSettings && (
+                  <Button variant="ghost" size="lg" className="w-full flex items-center gap-3 bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-md hover:shadow-purple-300/30 dark:hover:shadow-purple-900/30 hover:scale-[1.03] transition-all duration-200 text-purple-900 dark:text-purple-100 font-semibold text-base" onClick={() => { onOpenGeminiSettings(); closeMobileMenu(); }}>
+                    <Settings2 className="w-5 h-5 text-purple-500" /> Réglages Gemini
+                  </Button>
+                )}
+                <Button variant={modePrive ? 'destructive' : 'ghost'} size="lg" className={`w-full flex items-center gap-3 bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-md hover:shadow-red-300/30 dark:hover:shadow-red-900/30 hover:scale-[1.03] transition-all duration-200 font-semibold text-base ${modePrive ? 'text-red-700 dark:text-red-200' : 'text-slate-900 dark:text-slate-100'}`} onClick={() => { setModePrive(!modePrive); closeMobileMenu(); }}>
+                  <Square className="w-5 h-5 text-red-500" /> {modePrive ? 'Désactiver le mode privé' : 'Activer le mode privé'}
+                </Button>
+              </div>
+              {/* Séparateur */}
+              <div className="h-px w-full bg-gradient-to-r from-blue-200 via-slate-200 to-indigo-200 dark:from-blue-900 dark:via-slate-800 dark:to-indigo-900 my-2" />
+              {/* Groupe 2 : Vocal */}
+              <div className="flex flex-col gap-3">
+                <Button variant="ghost" size="lg" className="w-full flex items-center gap-3 bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-md hover:shadow-green-300/30 dark:hover:shadow-green-900/30 hover:scale-[1.03] transition-all duration-200 text-green-900 dark:text-green-100 font-semibold text-base" onClick={muted ? onUnmute : onMute}>
+                  {muted ? <Volume2 className="w-5 h-5 text-green-500" /> : <VolumeX className="w-5 h-5 text-red-500" />} {muted ? 'Activer la synthèse vocale' : 'Désactiver la synthèse vocale'}
+                </Button>
+                <Button variant={modeVocalAuto ? 'secondary' : 'ghost'} size="lg" className="w-full flex items-center gap-3 bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-md hover:shadow-blue-300/30 dark:hover:shadow-blue-900/30 hover:scale-[1.03] transition-all duration-200 font-semibold text-base" onClick={() => { setModeVocalAuto(!modeVocalAuto); closeMobileMenu(); }}>
+                  <Mic className="w-5 h-5 text-blue-500" /> {modeVocalAuto ? 'Désactiver vocal auto' : 'Activer vocal auto'}
+                </Button>
+                <Button variant="ghost" size="lg" className="w-full flex items-center gap-3 bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-md hover:shadow-blue-300/30 dark:hover:shadow-blue-900/30 hover:scale-[1.03] transition-all duration-200 text-blue-900 dark:text-blue-100 font-semibold text-base" onClick={() => { onOpenTTSSettings(); closeMobileMenu(); }}>
+                  <Settings2 className="w-5 h-5 text-blue-500" /> Réglages synthèse vocale
+                </Button>
+              </div>
+              {/* Séparateur */}
+              <div className="h-px w-full bg-gradient-to-r from-blue-200 via-slate-200 to-indigo-200 dark:from-blue-900 dark:via-slate-800 dark:to-indigo-900 my-2" />
+              {/* Groupe 3 : IA & RAG */}
+              <div className="flex flex-col gap-3">
+                <Button variant="ghost" size="lg" className="w-full flex items-center gap-3 bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-md hover:shadow-green-300/30 dark:hover:shadow-green-900/30 hover:scale-[1.03] transition-all duration-200 text-green-900 dark:text-green-100 font-semibold text-base" onClick={() => { onOpenRagDocs(); closeMobileMenu(); }}>
+                  <Settings2 className="w-5 h-5 text-green-500" /> Docs RAG
+                </Button>
+                <Button variant={ragEnabled ? 'secondary' : 'ghost'} size="lg" className="w-full flex items-center gap-3 bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-md hover:shadow-indigo-300/30 dark:hover:shadow-indigo-900/30 hover:scale-[1.03] transition-all duration-200 font-semibold text-base" onClick={() => { setRagEnabled(!ragEnabled); closeMobileMenu(); }}>
+                  <Square className="w-5 h-5 text-indigo-500" /> {ragEnabled ? 'Désactiver RAG' : 'Activer RAG'}
+                </Button>
+                <div className="mt-1">
+                  <PersonalityDropdown selected={selectedPersonality} onChange={v => { onChangePersonality(v); closeMobileMenu(); }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       <ReactTooltip id="header-tooltip" place="bottom" />
     </header>
   );
