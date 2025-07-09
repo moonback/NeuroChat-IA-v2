@@ -9,6 +9,7 @@ import {
   MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Square, Mic, User, Brain, Shield
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 
 // =====================
 // Constantes & Utilitaires
@@ -39,11 +40,14 @@ function geminiConfigSummary(config: any) {
 
 function PersonalityModal({ open, onClose, selected, onChange }: { open: boolean; onClose: () => void; selected: string; onChange: (v: string) => void }) {
   return (
-    <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-xs w-full p-0 rounded-2xl shadow-2xl border-0 animate-fadeIn animate-zoomIn">
-        <DialogHeader>
-          <DialogTitle className="text-center text-xl font-extrabold mb-2">Choisir la personnalité de l'IA</DialogTitle>
-        </DialogHeader>
+    <Drawer open={open} onOpenChange={v => { if (!v) onClose(); }}>
+      <DrawerContent className="w-[98vw] sm:w-[90vw] md:w-[70vw] lg:w-[50vw] max-w-xs px-2 sm:px-6 py-2 sm:py-6 rounded-2xl shadow-2xl border-0 bg-white/80 dark:bg-slate-900/90 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20 max-h-[95vh] overflow-y-auto animate-fadeIn animate-zoomIn">
+        <DrawerHeader>
+          <DrawerTitle className="text-center text-xl font-extrabold mb-2">Choisir la personnalité de l'IA</DrawerTitle>
+          <button onClick={onClose} className="absolute top-3 right-3 text-slate-500 hover:text-red-500 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-red-400" title="Fermer" aria-label="Fermer">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </DrawerHeader>
         <div className="flex flex-col gap-2 px-2 pb-2">
           {personalities.map(p => (
             <button
@@ -59,9 +63,11 @@ function PersonalityModal({ open, onClose, selected, onChange }: { open: boolean
             </button>
           ))}
         </div>
-        <button onClick={onClose} className="w-full py-2 mt-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Fermer</button>
-      </DialogContent>
-    </Dialog>
+        <DrawerFooter>
+          <button onClick={onClose} className="w-full py-2 mt-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Fermer</button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }
 
