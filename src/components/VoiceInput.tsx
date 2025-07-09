@@ -105,7 +105,7 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
   };
 
   return (
-    <div className="p-3 sm:p-4 bg-white/80 dark:bg-slate-900/80 border-t border-white/20 dark:border-slate-800/40 shadow-inner backdrop-blur-xl rounded-b-3xl">
+    <div className="sticky bottom-0 p-3 sm:p-4 bg-white/80 dark:bg-slate-900/80 border-t border-white/20 dark:border-slate-800/40 shadow-inner backdrop-blur-xl rounded-b-3xl">
       {/* Aperçu compact de l'image sélectionnée au-dessus de la barre d'envoi */}
       {selectedImage && (
         <div className="relative flex items-center gap-2 mb-3 p-2 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-950/40 dark:to-indigo-950/40 rounded-xl max-w-xs shadow-lg animate-fadeIn border border-blue-200/40 dark:border-blue-800/40">

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
 import { Sparkles, ArrowDown, MessageCircle, Mic, Zap, Brain, Clock, Info, ExternalLink } from 'lucide-react'; // Added Info, ExternalLink
@@ -101,8 +100,8 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
           Privé
         </div>
       )}
-      <ScrollArea
-        className="flex-1 h-full overflow-y-auto p-1 sm:p-3"
+      <div
+        className="flex flex-col-reverse overflow-y-auto flex-1 h-full p-1 sm:p-3"
         ref={scrollAreaRef}
         onScrollCapture={handleScroll}
         style={{
@@ -110,7 +109,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
           maxHeight: 'calc(100vh - 110px)', // Ajuste selon la hauteur du header/footer sur mobile
         }}
       >
-        <div className="space-y-2 sm:space-y-3 min-h-[calc(60vh)] sm:min-h-0">
+        <div className="space-y-2 sm:space-y-3 space-y-reverse min-h-[calc(60vh)] sm:min-h-0">
           {/* Conditional rendering for hero section or chat content */}
           {messages.length === 0 ? (
             modePrive ? (
@@ -420,7 +419,6 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
             </Button>
           )}
         </div>
-      </ScrollArea>
+      </div>
     </div>
-  );
-}
+  );}
