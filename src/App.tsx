@@ -15,6 +15,7 @@ import { RagDocsModal } from '@/components/RagDocsModal';
 import { HistoryModal } from '@/components/HistoryModal';
 import type { DiscussionWithCategory } from '@/components/HistoryModal';
 import { HomePage } from '@/components/HomePage';
+import { HowItWorksPage } from '@/components/HowItWorksPage';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
@@ -46,7 +47,7 @@ type RagContextMessage = {
 };
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<'home' | 'chat'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'chat' | 'how-it-works'>('home');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -494,6 +495,10 @@ function App() {
     setCurrentPage('home');
   };
 
+  const handleOpenHowItWorks = () => {
+    setCurrentPage('how-it-works');
+  };
+
   // Calcul des statistiques pour la page d'accueil
   const getStats = () => {
     const historyRaw = localStorage.getItem(LOCALSTORAGE_KEY);
@@ -596,8 +601,18 @@ function App() {
         onStartChat={handleStartChat}
         onOpenHistory={handleOpenHistory}
         onOpenSettings={() => setShowTTSSettings(true)}
+        onOpenHowItWorks={handleOpenHowItWorks}
         totalDiscussions={totalDiscussions}
         totalMessages={totalMessages}
+      />
+    );
+  }
+
+  if (currentPage === 'how-it-works') {
+    return (
+      <HowItWorksPage
+        onGoBack={handleGoHome}
+        onStartChat={handleStartChat}
       />
     );
   }
