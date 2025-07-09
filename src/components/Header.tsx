@@ -6,7 +6,7 @@ import { Tooltip as ReactTooltip } from 'react-tooltip';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import {
-  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Square, Mic, User
+  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Square, Mic, User, Brain, Shield
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
@@ -164,22 +164,11 @@ export function Header({
       className="w-full flex flex-col sm:flex-row items-center justify-between px-2 sm:px-4 py-1 sm:py-0 bg-white/80 dark:bg-slate-900/90 shadow-2xl rounded-3xl mb-1 gap-1 border border-white/40 dark:border-slate-800/60 backdrop-blur-2xl transition-all duration-300 glass relative z-20 ring-1 ring-blue-100/40 dark:ring-blue-900/30"
       style={{ boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.10)' }}
     >
-      {/* Badge PRIVÉ animé en haut à droite */}
-      {/* {modePrive && (
-        <div className="absolute top-1 right-2 z-30 px-2 py-0.5 rounded-full bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-800 text-white font-bold text-[10px] shadow-lg animate-bouncePrivé border border-white/30 select-none pointer-events-none">
-          <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' className='inline align-middle mr-1'>
-            <rect x='5' y='11' width='14' height='9' rx='2' className='fill-white/20'/>
-            <path d='M12 17v-2' className='stroke-white'/>
-            <path d='M7 11V7a5 5 0 0110 0v4' className='stroke-white'/>
-          </svg>
-          PRIVÉ
-        </div>
-      )} */}
       {/* Audio bip premium */}
       <audio ref={audioRef} src="/bip2.mp3" preload="auto" />
 
       {/* Logo & nom + statut */}
-      <div className="flex items-center gap-2 min-w-0 w-full sm:w-auto mb-1 sm:mb-0 group cursor-pointer hover:scale-105 transition-transform duration-200">
+      <div className="flex items-center gap-2 min-w-0 w-full sm:w-auto mb-1 sm:mb-0 group cursor-pointer hover:scale-105 transition-transform duration-200 relative">
         <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 text-white shadow-xl relative group/logo transition-all duration-300 hover:shadow-blue-400/40 hover:scale-110 ring-2 ring-blue-400/10 dark:ring-blue-900/30">
           <MessageCircle className="w-6 h-6 group-hover/logo:rotate-12 group-hover/logo:scale-110 transition-transform duration-300" />
           {/* Point vert animé */}
@@ -198,15 +187,30 @@ export function Header({
             <span className="inline xs:hidden">NC</span>
           </span>
         </div>
-        {/* Bouton menu mobile visible uniquement sur mobile */}
-        <button
-          className="sm:hidden ml-auto p-2 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
-          onClick={() => setShowMobileMenu(true)}
-          aria-label="Ouvrir le menu"
-        >
-          <svg className="w-6 h-6 text-slate-700 dark:text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-        </button>
+        {/* Badges d'état (desktop: à droite, mobile: icônes à droite du logo) */}
+        <div className="hidden sm:flex flex-col gap-1 ml-4 items-end min-w-[120px]">
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold shadow border select-none ${modePrive ? 'bg-gradient-to-r from-red-500 to-red-700 text-white border-red-600' : 'bg-gradient-to-r from-slate-200 to-slate-400 text-slate-700 border-slate-400 dark:from-slate-700 dark:to-slate-800 dark:text-slate-100 dark:border-slate-700'}`}> <Shield className="w-4 h-4 mr-1" /> {modePrive ? 'Privé activé' : 'Privé désactivé'} </span>
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold shadow border select-none ${ragEnabled ? 'bg-gradient-to-r from-green-400 to-emerald-600 text-white border-green-500' : 'bg-gradient-to-r from-slate-200 to-slate-400 text-slate-700 border-slate-400 dark:from-slate-700 dark:to-slate-800 dark:text-slate-100 dark:border-slate-700'}`}> <Brain className="w-4 h-4 mr-1" /> {ragEnabled ? 'RAG activé' : 'RAG désactivé'} </span>
+        </div>
+        {/* Badges d'état mobile (icônes sur une ligne à droite du logo) + bouton burger */}
+        <div className="flex sm:hidden flex-row gap-2 items-center ml-auto">
+          <span title={modePrive ? 'Mode privé activé' : 'Mode privé désactivé'} className={`inline-flex items-center justify-center w-7 h-7 rounded-full border-2 ${modePrive ? 'bg-gradient-to-r from-red-500 to-red-700 border-red-600' : 'bg-gradient-to-r from-slate-200 to-slate-400 border-slate-400 dark:from-slate-700 dark:to-slate-800 dark:border-slate-700'} shadow`}>
+            <Shield className={`w-4 h-4 ${modePrive ? 'text-white' : 'text-slate-500 dark:text-slate-200'}`} />
+          </span>
+          <span title={ragEnabled ? 'RAG activé' : 'RAG désactivé'} className={`inline-flex items-center justify-center w-7 h-7 rounded-full border-2 ${ragEnabled ? 'bg-gradient-to-r from-green-400 to-emerald-600 border-green-500' : 'bg-gradient-to-r from-slate-200 to-slate-400 border-slate-400 dark:from-slate-700 dark:to-slate-800 dark:border-slate-700'} shadow`}>
+            <Brain className={`w-4 h-4 ${ragEnabled ? 'text-white' : 'text-slate-500 dark:text-slate-200'}`} />
+          </span>
+          <button
+            className="p-2 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 shadow focus:outline-none focus:ring-2 focus:ring-blue-400 ml-1"
+            onClick={() => setShowMobileMenu(true)}
+            aria-label="Ouvrir le menu"
+          >
+            <svg className="w-6 h-6 text-slate-700 dark:text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+        </div>
       </div>
+      {/* Badges d'état mobile (sous le logo) */}
+      {/* SUPPRIMÉ : plus d'affichage vertical sous le logo sur mobile */}
 
       {/* Actions principales - desktop */}
       <div className="hidden sm:flex flex-wrap items-center gap-1 justify-end w-full sm:w-auto flex-1 overflow-x-auto">
