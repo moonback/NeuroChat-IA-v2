@@ -123,7 +123,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                     {/* Glow subtil */}
                     <div className="absolute inset-0 rounded-3xl ring-2 ring-blue-400/20 animate-pulse pointer-events-none"></div>
                     {/* Icône bouclier stylisé */}
-                    <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="url(#shield-gradient)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-white drop-shadow-xl z-10 animate-popIn">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="url(#shield-gradient)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-white drop-shadow-xl z-10 animate-popIn">
                       <defs>
                         <linearGradient id="shield-gradient" x1="0" y1="0" x2="1" y2="1">
                           <stop offset="0%" stopColor="#60a5fa" />
@@ -138,14 +138,13 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                   {/* Badge confidentiel glass */}
                   <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full bg-white/30 dark:bg-slate-900/40 backdrop-blur-xl border border-blue-300/30 dark:border-blue-700/30 shadow-lg text-blue-900 dark:text-blue-100 font-bold text-xs select-none animate-bouncePrivé tracking-wide" style={{boxShadow:'0 2px 16px 0 rgba(99,102,241,0.12)'}}>Confidentiel</div>
                 </div>
-                <div className="max-w-2xl mx-auto w-full">
+                <div className="max-w-4xl mx-auto w-full">
                   {/* Sous-titre rassurant premium */}
-                  <p className="text-blue-900 dark:text-blue-100 max-w-lg mx-auto text-xs sm:text-sm leading-relaxed mb-6 font-medium animate-fadeIn" style={{ animationDelay: "0.3s" }}>
+                  <p className="text-blue-900 dark:text-blue-100 max-w-xl mx-auto text-xs sm:text-sm leading-relaxed mb-6 font-medium animate-fadeIn" style={{ animationDelay: "0.3s" }}>
                     Profitez d'une confidentialité totale : vos messages ne sont <span className="underline underline-offset-2 decoration-emerald-400">jamais sauvegardés</span>, <span className="underline underline-offset-2 decoration-blue-400">effacés automatiquement</span> à la fermeture, et <span className="underline underline-offset-2 decoration-slate-400">chiffrés localement</span>.<br />
-                    <span className="text-indigo-700 dark:text-indigo-300 font-bold">Aucune trace, aucune fuite, 100% sécurisé.</span>
                   </p>
                   {/* Grille de fonctionnalités premium glass */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full max-w-2xl mx-auto mb-6 animate-fadeIn" style={{ animationDelay: "0.4s" }}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full max-w-4xl mx-auto mb-6 animate-fadeIn" style={{ animationDelay: "0.4s" }}>
                     {/* Carte 1 : Aucune sauvegarde */}
                     <div className="group p-4 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-blue-200/40 dark:border-blue-700/30 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col items-center justify-center min-h-[120px] backdrop-blur-xl">
                       <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mb-2 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
@@ -184,21 +183,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                       <p className="text-[11px] text-emerald-800 dark:text-emerald-200/90">Vos données sont protégées et inaccessibles à autrui.</p>
                     </div>
                   </div>
-                  {/* Indicateurs visuels de sécurité */}
-                  <div className="flex items-center justify-center gap-3 mb-2 animate-fadeIn" style={{ animationDelay: "0.5s" }}>
-                    <div className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                      <span className="text-xs text-blue-700 dark:text-blue-200 font-medium">Sécurisé</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse [animation-delay:0.3s]"></span>
-                      <span className="text-xs text-indigo-700 dark:text-indigo-200 font-medium">Chiffré</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse [animation-delay:0.6s]"></span>
-                      <span className="text-xs text-emerald-700 dark:text-emerald-200 font-medium">Éphémère</span>
-                    </div>
-                  </div>
+                  
                   {/* Call-to-action clair glass premium */}
                   <div className="p-3 bg-white/60 dark:bg-slate-900/60 rounded-xl border border-blue-200/40 dark:border-blue-700/30 backdrop-blur-xl shadow-inner animate-fadeIn transition-all duration-300 hover:scale-105 hover:shadow-indigo-400/30 hover:ring-2 hover:ring-indigo-400/40 group cursor-pointer" style={{ animationDelay: '0.6s' }}>
                     <div className="flex items-center justify-center gap-2 mb-1">
