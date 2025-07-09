@@ -106,7 +106,7 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-0 w-full max-w-2xl max-h-[90vh] overflow-y-auto relative animate-fadeIn">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-0 w-full max-w4xl max-h-[90vh] overflow-y-auto relative animate-fadeIn">
         {/* Header premium */}
         <div className="rounded-t-2xl px-7 py-6 bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100 dark:from-blue-900 dark:via-slate-900 dark:to-purple-950 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
           <History className="w-7 h-7 text-blue-500 mr-2" />
