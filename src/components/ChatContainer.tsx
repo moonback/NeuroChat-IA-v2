@@ -102,7 +102,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
         </div>
       )}
       <ScrollArea
-        className="flex-1 h-full overflow-y-auto p-1 sm:p-3"
+        className="flex-1 h-full overflow-y-auto p-1 sm:p-3 pb-32" // pb-32 pour laisser la place à l'input sticky
         ref={scrollAreaRef}
         onScrollCapture={handleScroll}
         style={{

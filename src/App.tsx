@@ -656,7 +656,7 @@ function App() {
         )}
 
         {/* Enhanced Chat Interface */}
-        <Card className="flex-1 flex flex-col shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl overflow-hidden ring-1 ring-white/20 dark:ring-slate-700/20">
+        <Card className="flex-1 flex flex-col shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl overflow-hidden ring-1 ring-white/20 dark:ring-slate-700/20 relative">
           <ChatContainer
             messages={messages}
             isLoading={isLoading}
@@ -666,7 +666,10 @@ function App() {
             onSelectMessage={handleSelectMessage}
             modePrive={modePrive}
           />
-          <VoiceInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+          {/* Zone de saisie sticky en bas */}
+          <div className="sticky bottom-0 left-0 w-full bg-white/90 dark:bg-slate-900/90 z-20 px-2 pt-2 pb-2 border-t border-slate-200 dark:border-slate-700 backdrop-blur-xl">
+            <VoiceInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+          </div>
         </Card>
 
         
