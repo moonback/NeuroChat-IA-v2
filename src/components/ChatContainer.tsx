@@ -228,7 +228,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center min-h-[60vh] sm:min-h-[300px] text-center px-1 mb-3">
+              <div className="flex flex-col  pt-10  items-center justify-center min-h-[60vh] sm:min-h-[300px] text-center px-1 mb-3">
                 {/* Hero section améliorée */}
                 <div className="relative mb-4 group">
                   <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:rotate-2">
