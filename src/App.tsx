@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
-import { sendMessageToGemini, GeminiGenerationConfig } from '@/services/geminiApi';
+import { sendMessageToGemini } from '@/services/geminiApi';
+import type { GeminiGenerationConfig } from '@/services/geminiApi';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { Info, Sliders } from 'lucide-react';
 import { toast } from 'sonner';
@@ -11,7 +12,9 @@ import { Header } from '@/components/Header';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { searchDocuments } from '@/services/ragSearch';
 import { RagDocsModal } from '@/components/RagDocsModal';
-import { HistoryModal, DiscussionWithCategory } from '@/components/HistoryModal';
+import { HistoryModal } from '@/components/HistoryModal';
+import type { DiscussionWithCategory } from '@/components/HistoryModal';
+import { HomePage } from '@/components/HomePage';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
@@ -43,6 +46,7 @@ type RagContextMessage = {
 };
 
 function App() {
+  const [currentPage, setCurrentPage] = useState<'home' | 'chat'>('home');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -464,10 +468,44 @@ function App() {
 
   // Supprimer plusieurs discussions d'un coup (filtrage)
   const handleDeleteMultipleDiscussions = (indices: number[]) => {
-    const indicesSet = new Set(indices);
-    const newHistory = historyList.filter((_, idx) => !indicesSet.has(idx));
-    setHistoryList(newHistory);
-    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newHistory));
+    const historyRaw = localStorage.getItem(LOCALSTORAGE_KEY);
+    let history: Discussion[] = [];
+    if (historyRaw) {
+      try {
+        history = JSON.parse(historyRaw);
+      } catch {}
+    }
+    // Supprimer les discussions dans l'ordre décroissant pour éviter les problèmes d'index
+    const sortedIndices = [...indices].sort((a, b) => b - a);
+    sortedIndices.forEach(idx => {
+      history.splice(idx, 1);
+    });
+    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(history));
+    loadHistory();
+    toast.success(`${indices.length} discussion(s) supprimée(s).`);
+  };
+
+  // Fonctions de navigation
+  const handleStartChat = () => {
+    setCurrentPage('chat');
+  };
+
+  const handleGoHome = () => {
+    setCurrentPage('home');
+  };
+
+  // Calcul des statistiques pour la page d'accueil
+  const getStats = () => {
+    const historyRaw = localStorage.getItem(LOCALSTORAGE_KEY);
+    let history: Discussion[] = [];
+    if (historyRaw) {
+      try {
+        history = JSON.parse(historyRaw);
+      } catch {}
+    }
+    const totalDiscussions = history.length;
+    const totalMessages = history.reduce((acc, discussion) => acc + discussion.messages.length, 0) + messages.length;
+    return { totalDiscussions, totalMessages };
   };
 
   // Fonction pour supprimer un message par son id
@@ -550,6 +588,21 @@ function App() {
 
  
 
+  // --- Rendu principal ---
+  if (currentPage === 'home') {
+    const { totalDiscussions, totalMessages } = getStats();
+    return (
+      <HomePage
+        onStartChat={handleStartChat}
+        onOpenHistory={handleOpenHistory}
+        onOpenSettings={() => setShowTTSSettings(true)}
+        totalDiscussions={totalDiscussions}
+        totalMessages={totalMessages}
+      />
+    );
+  }
+
+  // Rendu du chat (page principale)
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Menu historique des discussions */}
@@ -564,6 +617,12 @@ function App() {
       />
 
       <div className="w-full max-w-12xl h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] flex flex-col relative z-10">
+        {/* Bouton retour accueil */}
+        <div className="absolute top-2 left-2 z-50">
+          <Button variant="outline" size="sm" onClick={handleGoHome}>
+            Accueil
+          </Button>
+        </div>
         {/* Header compact performant */}
         <Header
           muted={muted}
