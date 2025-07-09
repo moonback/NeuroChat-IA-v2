@@ -294,202 +294,212 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8 w-full max-w-3xl max-h-[90vh] overflow-y-auto relative transition-all duration-300">
-        <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-red-500"><X className="w-6 h-6" /></button>
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <UploadCloud className="w-6 h-6 text-blue-500" />
-          Gestion des documents RAG
-        </h2>
-        <div className="w-full p-6 mb-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-center flex flex-col items-center justify-center gap-2">
-          <UploadCloud className="w-10 h-10 mb-2 text-blue-400" />
-          <span className="font-semibold text-base">
-            Cliquez sur « Ajouter un document » pour importer vos fichiers
-          </span>
-          <span className="text-xs text-muted-foreground">(Formats acceptés : txt, md, pdf, docx, csv, html)</span>
-          <button
-            type="button"
-            className="mt-3 px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            onClick={() => fileInputRef.current && fileInputRef.current.click()}
-          >
-            Ajouter un document
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-0 w-full max-w-6xl max-h-[90vh] overflow-y-auto relative transition-all duration-300">
+        {/* Header premium */}
+        <div className="rounded-t-2xl px-7 py-6 bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100 dark:from-blue-900 dark:via-slate-900 dark:to-purple-950 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 animate-fadeIn animate-slideInFromTop">
+          <UploadCloud className="w-7 h-7 text-blue-500 mr-2" />
+          <div className="flex-1 min-w-0">
+            <h2 className="text-2xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight mb-1">Gestion des documents RAG</h2>
+            <div className="text-xs text-muted-foreground font-medium">Ajoutez, renommez ou supprimez vos documents pour la recherche contextuelle.</div>
+          </div>
+          <button onClick={onClose} className="ml-auto text-slate-500 hover:text-red-500 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-red-400" title="Fermer" aria-label="Fermer">
+            <X className="w-6 h-6" />
           </button>
         </div>
-        <input
-          type="file"
-          multiple
-          accept=".txt,.md,.pdf,.docx,.csv,.html"
-          ref={fileInputRef}
-          style={{ display: 'none' }}
-          onChange={handleFileChange}
-        />
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Rechercher un document..."
-          className="w-full mb-4 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-        <div className="mb-4 flex justify-between items-center">
-          <span className="text-sm text-slate-500">
-            {filteredDocs.length} document{filteredDocs.length !== 1 ? "s" : ""} affiché{filteredDocs.length !== 1 ? "s" : ""}
-          </span>
-          <span className="text-xs text-slate-400">
-            {docs.length} au total
-          </span>
-        </div>
-        {/* Boutons de sélection et suppression groupée */}
-        <div className="mb-4 flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setSelectedIds(docs.filter(d => d.origine === 'utilisateur').map(d => d.id))}
-            disabled={docs.filter(d => d.origine === 'utilisateur').length === 0}
-          >
-            Tout sélectionner
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setOpenDeleteModal(true)}
-            disabled={selectedIds.length === 0}
-          >
-            Tout supprimer
-          </Button>
-        </div>
-        <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Supprimer les documents sélectionnés ?</DialogTitle>
-            </DialogHeader>
-            <div className="py-2 text-sm">
-              Cette action est <span className="text-red-600 font-semibold">irréversible</span>.<br />
-              Voulez-vous vraiment supprimer {selectedIds.length} document{selectedIds.length > 1 ? 's' : ''} ?
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>
-                Annuler
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  const userRaw = localStorage.getItem(LS_KEY);
-                  let userDocs: RagDoc[] = [];
-                  if (userRaw) {
-                    try { userDocs = JSON.parse(userRaw); } catch {}
-                  }
-                  userDocs = userDocs.filter(doc => !selectedIds.includes(doc.id));
-                  localStorage.setItem(LS_KEY, JSON.stringify(userDocs));
-                  setDocs(docs => docs.filter(doc => !selectedIds.includes(doc.id)));
-                  setSelectedIds([]);
-                  setOpenDeleteModal(false);
-                  toast.success('Documents supprimés.');
-                }}
-              >
-                Confirmer la suppression
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        {filteredDocs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 opacity-80 select-none animate-fadeIn">
-            <svg width="90" height="90" viewBox="0 0 90 90" fill="none" className="mb-4">
-              <rect x="10" y="20" width="70" height="50" rx="10" fill="#e0e7ef" />
-              <rect x="20" y="30" width="50" height="8" rx="4" fill="#b6c3e0" />
-              <rect x="20" y="45" width="35" height="6" rx="3" fill="#cfd8ea" />
-              <rect x="20" y="57" width="25" height="6" rx="3" fill="#cfd8ea" />
-              <circle cx="70" cy="60" r="6" fill="#b6c3e0" />
-              <FilePlus2 x={30} y={65} className="w-8 h-8 text-blue-400 opacity-60" />
-            </svg>
-            <div className="text-muted-foreground text-lg font-semibold mb-1">Aucun document trouvé</div>
-            <div className="text-xs text-slate-400">Ajoutez vos documents pour commencer.</div>
+        {/* Séparation visuelle */}
+        <div className="border-b border-slate-100 dark:border-slate-800" />
+        <div className="p-8 pt-6">
+          <div className="w-full p-6 mb-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-center flex flex-col items-center justify-center gap-2">
+            <UploadCloud className="w-10 h-10 mb-2 text-blue-400" />
+            <span className="font-semibold text-base">
+              Cliquez sur « Ajouter un document » pour importer vos fichiers
+            </span>
+            <span className="text-xs text-muted-foreground">(Formats acceptés : txt, md, pdf, docx, csv, html)</span>
+            <button
+              type="button"
+              className="mt-3 px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              onClick={() => fileInputRef.current && fileInputRef.current.click()}
+            >
+              Ajouter un document
+            </button>
           </div>
-        ) : (
-          <ul className="space-y-4">
-            {filteredDocs.map(doc => {
-              return (
-                <li key={doc.id}
-                  className={`border rounded-xl p-4 bg-slate-50 dark:bg-slate-800 flex flex-col sm:flex-row items-start sm:items-center gap-3 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-200 border-transparent hover:border-blue-400/60 relative group animate-fadeIn`}
+          <input
+            type="file"
+            multiple
+            accept=".txt,.md,.pdf,.docx,.csv,.html"
+            ref={fileInputRef}
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Rechercher un document..."
+            className="w-full mb-4 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+          <div className="mb-4 flex justify-between items-center">
+            <span className="text-sm text-slate-500">
+              {filteredDocs.length} document{filteredDocs.length !== 1 ? "s" : ""} affiché{filteredDocs.length !== 1 ? "s" : ""}
+            </span>
+            <span className="text-xs text-slate-400">
+              {docs.length} au total
+            </span>
+          </div>
+          {/* Boutons de sélection et suppression groupée */}
+          <div className="mb-4 flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedIds(docs.filter(d => d.origine === 'utilisateur').map(d => d.id))}
+              disabled={docs.filter(d => d.origine === 'utilisateur').length === 0}
+            >
+              Tout sélectionner
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setOpenDeleteModal(true)}
+              disabled={selectedIds.length === 0}
+            >
+              Tout supprimer
+            </Button>
+          </div>
+          <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Supprimer les documents sélectionnés ?</DialogTitle>
+              </DialogHeader>
+              <div className="py-2 text-sm">
+                Cette action est <span className="text-red-600 font-semibold">irréversible</span>.<br />
+                Voulez-vous vraiment supprimer {selectedIds.length} document{selectedIds.length > 1 ? 's' : ''} ?
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>
+                  Annuler
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    const userRaw = localStorage.getItem(LS_KEY);
+                    let userDocs: RagDoc[] = [];
+                    if (userRaw) {
+                      try { userDocs = JSON.parse(userRaw); } catch {}
+                    }
+                    userDocs = userDocs.filter(doc => !selectedIds.includes(doc.id));
+                    localStorage.setItem(LS_KEY, JSON.stringify(userDocs));
+                    setDocs(docs => docs.filter(doc => !selectedIds.includes(doc.id)));
+                    setSelectedIds([]);
+                    setOpenDeleteModal(false);
+                    toast.success('Documents supprimés.');
+                  }}
                 >
-                  {/* Badge type */}
-                  <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-bold
-                    ${doc.extension === 'pdf' ? 'bg-red-100 text-red-600' :
-                      doc.extension === 'docx' ? 'bg-indigo-100 text-indigo-600' :
-                      doc.extension === 'csv' ? 'bg-green-100 text-green-600' :
-                      doc.extension === 'md' ? 'bg-blue-100 text-blue-600' :
-                      doc.extension === 'txt' ? 'bg-slate-200 text-slate-600' :
-                      doc.extension === 'html' ? 'bg-orange-100 text-orange-600' :
-                      'bg-slate-200 text-slate-600'}
-                  `}>
-                    {doc.extension?.toUpperCase()}
-                  </span>
-                  {doc.origine === 'utilisateur' && (
-                    <input
-                      type="checkbox"
-                      className="mr-2 mt-1"
-                      checked={selectedIds.includes(doc.id)}
-                      onChange={e => {
-                        if (e.target.checked) setSelectedIds(ids => [...ids, doc.id]);
-                        else setSelectedIds(ids => ids.filter(id => id !== doc.id));
-                      }}
-                    />
-                  )}
-                  <div className="flex-1 min-w-0 flex flex-col sm:flex-row gap-2 items-start sm:items-center">
-                    <div className="flex-shrink-0">{getIcon(doc.extension || '')}</div>
-                    <div className="flex flex-col gap-1 w-full">
-                      {editingId === doc.id ? (
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={editingValue}
-                            onChange={handleEditChange}
-                            onBlur={() => handleEditSave(doc)}
-                            onKeyDown={e => handleEditKeyDown(e, doc)}
-                            autoFocus
-                            className="text-base font-semibold bg-transparent border-b border-blue-400 focus:outline-none px-1 w-40"
-                          />
-                          <Button size="icon" variant="ghost" onClick={() => handleEditSave(doc)} title="Valider"><Check className="w-5 h-5 text-green-500" /></Button>
-                          <Button size="icon" variant="ghost" onClick={() => { setEditingId(null); setEditingValue(''); }} title="Annuler"><XIcon className="w-5 h-5 text-red-500" /></Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-blue-900 dark:text-blue-100 text-base truncate max-w-[200px]">{doc.titre}</span>
-                          {doc.origine === 'utilisateur' && (
-                            <Button size="icon" variant="ghost" onClick={() => handleStartEdit(doc)} title="Renommer"><Pencil className="w-4 h-4 text-blue-400" /></Button>
-                          )}
-                        </div>
-                      )}
-                      <div className="text-xs text-muted-foreground truncate max-w-[350px]">{doc.contenu.slice(0, 120)}{doc.contenu.length > 120 ? "…" : ""}</div>
-                      <div className="text-[11px] text-slate-400">.{doc.extension}</div>
+                  Confirmer la suppression
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          {filteredDocs.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 opacity-80 select-none animate-fadeIn">
+              <svg width="90" height="90" viewBox="0 0 90 90" fill="none" className="mb-4">
+                <rect x="10" y="20" width="70" height="50" rx="10" fill="#e0e7ef" />
+                <rect x="20" y="30" width="50" height="8" rx="4" fill="#b6c3e0" />
+                <rect x="20" y="45" width="35" height="6" rx="3" fill="#cfd8ea" />
+                <rect x="20" y="57" width="25" height="6" rx="3" fill="#cfd8ea" />
+                <circle cx="70" cy="60" r="6" fill="#b6c3e0" />
+                <FilePlus2 x={30} y={65} className="w-8 h-8 text-blue-400 opacity-60" />
+              </svg>
+              <div className="text-muted-foreground text-lg font-semibold mb-1">Aucun document trouvé</div>
+              <div className="text-xs text-slate-400">Ajoutez vos documents pour commencer.</div>
+            </div>
+          ) : (
+            <ul className="space-y-4">
+              {filteredDocs.map(doc => {
+                return (
+                  <li key={doc.id}
+                    className={`border rounded-xl p-4 bg-slate-50 dark:bg-slate-800 flex flex-col sm:flex-row items-start sm:items-center gap-3 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-200 border-transparent hover:border-blue-400/60 relative group animate-fadeIn`}
+                  >
+                    {/* Badge type */}
+                    <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-bold
+                      ${doc.extension === 'pdf' ? 'bg-red-100 text-red-600' :
+                        doc.extension === 'docx' ? 'bg-indigo-100 text-indigo-600' :
+                        doc.extension === 'csv' ? 'bg-green-100 text-green-600' :
+                        doc.extension === 'md' ? 'bg-blue-100 text-blue-600' :
+                        doc.extension === 'txt' ? 'bg-slate-200 text-slate-600' :
+                        doc.extension === 'html' ? 'bg-orange-100 text-orange-600' :
+                        'bg-slate-200 text-slate-600'}
+                    `}>
+                      {doc.extension?.toUpperCase()}
+                    </span>
+                    {doc.origine === 'utilisateur' && (
+                      <input
+                        type="checkbox"
+                        className="mr-2 mt-1"
+                        checked={selectedIds.includes(doc.id)}
+                        onChange={e => {
+                          if (e.target.checked) setSelectedIds(ids => [...ids, doc.id]);
+                          else setSelectedIds(ids => ids.filter(id => id !== doc.id));
+                        }}
+                      />
+                    )}
+                    <div className="flex-1 min-w-0 flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+                      <div className="flex-shrink-0">{getIcon(doc.extension || '')}</div>
+                      <div className="flex flex-col gap-1 w-full">
+                        {editingId === doc.id ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={editingValue}
+                              onChange={handleEditChange}
+                              onBlur={() => handleEditSave(doc)}
+                              onKeyDown={e => handleEditKeyDown(e, doc)}
+                              autoFocus
+                              className="text-base font-semibold bg-transparent border-b border-blue-400 focus:outline-none px-1 w-40"
+                            />
+                            <Button size="icon" variant="ghost" onClick={() => handleEditSave(doc)} title="Valider"><Check className="w-5 h-5 text-green-500" /></Button>
+                            <Button size="icon" variant="ghost" onClick={() => { setEditingId(null); setEditingValue(''); }} title="Annuler"><XIcon className="w-5 h-5 text-red-500" /></Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-blue-900 dark:text-blue-100 text-base truncate max-w-[200px]">{doc.titre}</span>
+                            {doc.origine === 'utilisateur' && (
+                              <Button size="icon" variant="ghost" onClick={() => handleStartEdit(doc)} title="Renommer"><Pencil className="w-4 h-4 text-blue-400" /></Button>
+                            )}
+                          </div>
+                        )}
+                        <div className="text-xs text-muted-foreground truncate max-w-[350px]">{doc.contenu.slice(0, 120)}{doc.contenu.length > 120 ? "…" : ""}</div>
+                        <div className="text-[11px] text-slate-400">.{doc.extension}</div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-1 mt-2 sm:mt-0">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="ml-1"
-                      title="Aperçu"
-                      onClick={() => setPreviewDoc(doc)}
-                    >
-                      <Eye className="w-5 h-5 text-indigo-500" />
-                    </Button>
-                    {doc.origine === 'utilisateur' ? (
+                    <div className="flex gap-1 mt-2 sm:mt-0">
                       <Button
                         variant="ghost"
                         size="icon"
                         className="ml-1"
-                        title="Supprimer"
-                        onClick={() => handleDelete(doc.id)}
+                        title="Aperçu"
+                        onClick={() => setPreviewDoc(doc)}
                       >
-                        <Trash2 className="w-5 h-5 text-red-500" />
+                        <Eye className="w-5 h-5 text-indigo-500" />
                       </Button>
-                    ) : null}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        <Button onClick={onClose} className="mt-8 w-full text-base py-3">Fermer</Button>
+                      {doc.origine === 'utilisateur' ? (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="ml-1"
+                          title="Supprimer"
+                          onClick={() => handleDelete(doc.id)}
+                        >
+                          <Trash2 className="w-5 h-5 text-red-500" />
+                        </Button>
+                      ) : null}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <Button onClick={onClose} className="mt-8 w-full text-base py-3">Fermer</Button>
+        </div>
       </div>
       {/* Modale d'aperçu */}
       {previewDoc && (
