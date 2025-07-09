@@ -90,7 +90,7 @@ export function TTSSettingsModal({ open, onClose, rate, setRate, pitch, setPitch
 
   return (
     <Drawer open={open} onOpenChange={onClose}>
-      <DrawerContent className="max-w-full w-[95vw] sm:w-[100%] px-2 py-2 rounded-3xl shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20">
+      <DrawerContent className="w-[98vw] sm:w-[90vw] md:w-[70vw] lg:w-[50vw] max-w-2xl px-2 sm:px-6 py-2 sm:py-6 rounded-3xl shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20 max-h-[95vh] overflow-y-auto">
         <DrawerHeader className="pb-2">
           <div className="flex items-center gap-2">
             <Sliders className="w-5 h-5 text-blue-500" />
