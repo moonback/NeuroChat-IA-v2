@@ -169,7 +169,10 @@ npm run preview      # Prévisualisation du build
 # Qualité
 npm run lint         # Analyse du code
 npm run type-check   # Vérification TypeScript
+npm test             # Affiche "No tests specified"
 ```
+
+> **Note :** Les tests unitaires ne sont pas encore implémentés.
 
 ---
 
