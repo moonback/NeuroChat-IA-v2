@@ -178,12 +178,17 @@ export function Header({
             <span className="inline xs:hidden">NeuroChat</span>
           </span>
         </div>
-        {/* Badges d'état (desktop: à droite, mobile: icônes à droite du logo) */}
-        {/* SUPPRIMÉ : plus d'affichage d'état RAG ou privé, ni sur desktop ni sur mobile */}
-
-        {/* Badges d'état mobile (icônes sur une ligne à droite du logo) + bouton burger */}
-        {/* SUPPRIMÉ : plus d'affichage d'état RAG ou privé sur mobile */}
+        
         <div className="sm:hidden flex flex-row gap-2 items-center ml-auto">
+          <button
+            onClick={onNewDiscussion}
+            className="inline-flex items-center justify-center w-7 h-7 rounded-full border-2 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-400/60 bg-gradient-to-r from-blue-500 to-indigo-600 border-blue-500 hover:scale-105 hover:shadow shadow-md mr-1"
+            aria-label="Nouvelle conversation"
+            title="Démarrer une nouvelle conversation"
+            type="button"
+          >
+            <PlusCircle className="w-4 h-4 text-white" />
+          </button>
           <button
             onClick={() => setModePrive(!modePrive)}
             className={`inline-flex items-center justify-center w-7 h-7 rounded-full border-2 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-red-400/60 ${modePrive ? 'bg-gradient-to-r from-red-500 to-red-700 border-red-600 scale-105 shadow-lg' : 'bg-gradient-to-r from-slate-200 to-slate-400 border-slate-400 dark:from-slate-700 dark:to-slate-800 dark:border-slate-700 hover:scale-105 hover:shadow'}"}`}
