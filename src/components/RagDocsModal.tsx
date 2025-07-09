@@ -58,8 +58,6 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   // Ajout de l'état pour le modal
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  // Ajout de l'état pour le drag & drop
-  const [isDragging, setIsDragging] = useState(false);
 
   // Charger les docs du dossier (via import.meta.glob)
   useEffect(() => {
@@ -302,41 +300,28 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
           <UploadCloud className="w-6 h-6 text-blue-500" />
           Gestion des documents RAG
         </h2>
-        <div
-          onDrop={e => {
-            e.preventDefault();
-            setIsDragging(false);
-            const files = Array.from(e.dataTransfer.files);
-            if (files.length > 0) {
-              // On crée un event factice pour réutiliser handleFileChange
-              const dt = new DataTransfer();
-              files.forEach(f => dt.items.add(f));
-              if (fileInputRef.current) {
-                fileInputRef.current.files = dt.files;
-                // On déclenche manuellement le changement
-                const event = { target: { files: dt.files } } as React.ChangeEvent<HTMLInputElement>;
-                handleFileChange(event);
-              }
-            }
-          }}
-          onDragOver={e => {
-            e.preventDefault();
-            setIsDragging(true);
-          }}
-          onDragLeave={e => {
-            e.preventDefault();
-            setIsDragging(false);
-          }}
-          className={`w-full p-6 mb-3 rounded-xl border-2 border-dashed transition-all text-center cursor-pointer flex flex-col items-center justify-center gap-2
-            ${isDragging ? 'border-blue-500 bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 dark:from-blue-900 dark:via-blue-950 dark:to-indigo-900 shadow-xl scale-[1.02]' : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800'}
-          `}
-        >
-          <UploadCloud className={`w-10 h-10 mb-2 ${isDragging ? 'text-blue-500 animate-bounce' : 'text-blue-400'}`} />
+        <div className="w-full p-6 mb-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-center flex flex-col items-center justify-center gap-2">
+          <UploadCloud className="w-10 h-10 mb-2 text-blue-400" />
           <span className="font-semibold text-base">
-            {isDragging ? "Déposez vos fichiers ici..." : "Glissez-déposez vos fichiers ici ou cliquez sur 'Ajouter un document'"}
+            Cliquez sur « Ajouter un document » pour importer vos fichiers
           </span>
-          <span className="text-xs text-muted-foreground">(txt, md, pdf, docx, csv, html)</span>
+          <span className="text-xs text-muted-foreground">(Formats acceptés : txt, md, pdf, docx, csv, html)</span>
+          <button
+            type="button"
+            className="mt-3 px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            onClick={() => fileInputRef.current && fileInputRef.current.click()}
+          >
+            Ajouter un document
+          </button>
         </div>
+        <input
+          type="file"
+          multiple
+          accept=".txt,.md,.pdf,.docx,.csv,.html"
+          ref={fileInputRef}
+          style={{ display: 'none' }}
+          onChange={handleFileChange}
+        />
         <input
           type="text"
           value={search}
