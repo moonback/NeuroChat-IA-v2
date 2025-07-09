@@ -80,15 +80,11 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
   return (
     <div
       className={
-        "flex-1 relative bg-gradient-to-br from-slate-50/50 via-white to-blue-50/30 dark:from-slate-900/50 dark:via-slate-900 dark:to-slate-800/30 " +
-        (modePrive ? " animate-prive-glow ring-4 ring-red-400/60 shadow-2xl shadow-red-400/30" : "")
+        cn(
+          'flex-1 relative bg-gradient-to-br from-slate-50/50 via-white to-blue-50/30 dark:from-slate-900/50 dark:via-slate-900 dark:to-slate-800/30 h-full max-h-screen min-h-0',
+          modePrive && 'animate-prive-glow ring-4 ring-red-400/60 shadow-2xl shadow-red-400/30'
+        )
       }
-      style={{
-        minHeight: '0',
-        height: '100%',
-        maxHeight: '100vh',
-        // Sur mobile, occupe tout l'écran sans scroll inutile
-      }}
     >
       {modePrive && (
         <div className="absolute top-3 right-3 z-30 px-3 py-1 rounded-full bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-800 text-white font-bold text-xs shadow-lg animate-bouncePrivé border-2 border-white/40 select-none pointer-events-none">
@@ -102,18 +98,16 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
       )}
       <div
         className="flex flex-col-reverse overflow-y-auto flex-1 h-full p-1 sm:p-3"
+
         ref={scrollAreaRef}
         onScrollCapture={handleScroll}
-        style={{
-          minHeight: 0,
-          maxHeight: 'calc(100vh - 110px)', // Ajuste selon la hauteur du header/footer sur mobile
-        }}
       >
         <div className="space-y-2 sm:space-y-3 space-y-reverse min-h-[calc(60vh)] sm:min-h-0">
+
           {/* Conditional rendering for hero section or chat content */}
           {messages.length === 0 ? (
             modePrive ? (
-              <div className="flex flex-col items-center justify-center min-h-[60vh] sm:min-h-[320px] text-center px-1 mb-3 animate-fadeIn">
+              <div className="flex flex-col items-center justify-center min-h-[60vh] md:min-h-[320px] text-center px-1 mb-3 animate-fadeIn">
                 {/* Icône héros : bouclier sécurisé avec effets de halo et particules */}
                 <div className="relative mb-6 group animate-fadeIn" style={{ animationDelay: "0.1s" }}>
                   <div className="w-20 h-20 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-3xl flex items-center justify-center shadow-2xl border-4 border-white/20 dark:border-slate-800/60 backdrop-blur-xl relative">
@@ -227,7 +221,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col  pt-10  items-center justify-center min-h-[60vh] sm:min-h-[300px] text-center px-1 mb-3">
+              <div className="flex flex-col  pt-10  items-center justify-center min-h-[60vh] md:min-h-[300px] text-center px-1 mb-3">
                 {/* Hero section améliorée */}
                 <div className="relative mb-4 group">
                   <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:rotate-2">

@@ -89,7 +89,9 @@ export function TTSSettingsModal({ open, onClose, rate, setRate, pitch, setPitch
 
   return open ? (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm" aria-modal="true" role="dialog">
-      <div className="bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl p-6 w-full max-w-[95vw] max-h-[90vh] relative animate-slideInFromBottom overflow-y-auto" style={{ minHeight: '400px' }}>
+      <div
+        className="bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl p-6 w-full max-w-[95vw] max-h-[90vh] relative animate-slideInFromBottom overflow-y-auto min-h-[60vh] md:min-h-[400px]"
+      >
         <button onClick={onClose} className="absolute top-3 right-3 text-slate-500 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-400 rounded-full p-1 bg-white dark:bg-slate-800 shadow-lg" aria-label="Fermer">
           <X className="w-5 h-5" />
         </button>
