@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, RefreshCcw, Play, Volume2, Sliders, Activity, UploadCloud, DownloadCloud, Trash2, CheckCircle2, Info } from 'lucide-react';
+import { X, RefreshCcw, Play, Volume2, Sliders, Activity, UploadCloud, DownloadCloud, Trash2, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -85,8 +85,7 @@ export function TTSSettingsModal({ open, onClose, rate, setRate, pitch, setPitch
     toast.success('Réglages réinitialisés.');
   };
 
-  // Trouver la voix sélectionnée
-  const selectedVoice = availableVoices.find(v => v.voiceURI === voiceURI);
+  
 
   return open ? (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm" aria-modal="true" role="dialog">
