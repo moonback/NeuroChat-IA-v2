@@ -216,9 +216,7 @@ export function Header({
           </button>
         </div>
       </div>
-      {/* Badges d'état mobile (sous le logo) */}
-      {/* SUPPRIMÉ : plus d'affichage vertical sous le logo sur mobile */}
-
+      
       {/* Actions principales - desktop */}
       <div className="hidden sm:flex flex-wrap items-center gap-1 justify-end w-full sm:w-auto flex-1 overflow-x-auto">
         {/* Groupe : Actions principales */}
