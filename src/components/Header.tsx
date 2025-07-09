@@ -487,6 +487,18 @@ export function Header({
                 <Button variant={ragEnabled ? 'secondary' : 'ghost'} size="lg" className="w-full flex items-center gap-3 bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-md hover:shadow-indigo-300/30 dark:hover:shadow-indigo-900/30 hover:scale-[1.03] transition-all duration-200 font-semibold text-base" onClick={() => { setRagEnabled(!ragEnabled); closeMobileMenu(); }}>
                   <Square className="w-5 h-5 text-indigo-500" /> {ragEnabled ? 'Désactiver RAG' : 'Activer RAG'}
                 </Button>
+                {/* Bouton pour changer la personnalité IA */}
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  className="w-full flex items-center gap-3 bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-md hover:shadow-blue-300/30 dark:hover:shadow-blue-900/30 hover:scale-[1.03] transition-all duration-200 text-blue-900 dark:text-blue-100 font-semibold text-base"
+                  onClick={() => setShowPersonalityModal(true)}
+                  type="button"
+                >
+                  {personalities.find(p => p.value === selectedPersonality)?.icon}
+                  {personalities.find(p => p.value === selectedPersonality)?.label}
+                  <span className="ml-auto text-xs text-blue-600 font-bold">(personnalité)</span>
+                </Button>
                 <div className="mt-1">
                   <PersonalityModal
                     open={showPersonalityModal}
