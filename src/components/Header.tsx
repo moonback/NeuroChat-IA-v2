@@ -8,7 +8,7 @@ import { useTheme } from '@/hooks/useTheme';
 import {
   MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Square, Mic, User, Brain, Shield
 } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // =====================
 // Constantes & Utilitaires
@@ -35,42 +35,33 @@ function geminiConfigSummary(config: any) {
 // =====================
 // Composants internes
 // =====================
-function PersonalityDropdown({ selected, onChange }: { selected: string; onChange: (v: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const current = personalities.find(p => p.value === selected) || personalities[0];
+// Ancien PersonalityDropdown supprimé
+
+function PersonalityModal({ open, onClose, selected, onChange }: { open: boolean; onClose: () => void; selected: string; onChange: (v: string) => void }) {
   return (
-    <div className="relative ml-1">
-      <button
-        className={`flex items-center gap-2 px-3 py-1 rounded-lg shadow font-semibold text-xs transition-all duration-200 cursor-pointer border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400 ${current.bg} hover:scale-105 hover:shadow-xl`}
-        onClick={() => setOpen(v => !v)}
-        title="Personnalité de l'IA"
-        aria-label="Personnalité de l'IA"
-        type="button"
-        data-tooltip-id="personality-tooltip"
-        data-tooltip-content="Choisir la personnalité de l'IA"
-      >
-        <span className="flex items-center">{current.icon} {current.label}</span>
-        <svg className={`w-3 h-3 ml-1 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 20 20"><path fill="currentColor" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.06l3.71-3.83a.75.75 0 1 1 1.08 1.04l-4.25 4.39a.75.75 0 0 1-1.08 0L5.21 8.27a.75.75 0 0 1 .02-1.06z"/></svg>
-      </button>
-      {open && (
-        <ul className="absolute z-30 left-0 mt-2 w-44 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden animate-fadeIn animate-slideInFromRight">
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-xs w-full p-0 rounded-2xl shadow-2xl border-0 animate-fadeIn animate-zoomIn">
+        <DialogHeader>
+          <DialogTitle className="text-center text-xl font-extrabold mb-2">Choisir la personnalité de l'IA</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-2 px-2 pb-2">
           {personalities.map(p => (
-            <li key={p.value}>
-              <button
-                className={`flex items-center w-full gap-2 px-3 py-2 text-xs font-semibold transition-all duration-150 ${p.bg} hover:scale-105 hover:bg-opacity-80 focus:bg-opacity-90 ${selected === p.value ? 'ring-2 ring-blue-400' : ''}`}
-                onClick={() => { onChange(p.value); setOpen(false); }}
-                type="button"
-                data-tooltip-id="personality-tooltip"
-                data-tooltip-content={`Sélectionner la personnalité : ${p.label}`}
-              >
-                {p.icon} {p.label}
-              </button>
-            </li>
+            <button
+              key={p.value}
+              className={`flex items-center gap-2 w-full px-4 py-3 rounded-xl font-semibold text-base transition-all duration-150 ${p.bg} border-2 ${selected === p.value ? 'border-blue-500 ring-2 ring-blue-400' : 'border-transparent'} hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-400`}
+              onClick={() => { onChange(p.value); onClose(); }}
+              type="button"
+              aria-label={`Sélectionner la personnalité ${p.label}`}
+            >
+              {p.icon}
+              <span>{p.label}</span>
+              {selected === p.value && <span className="ml-auto text-xs text-blue-600 font-bold">(actif)</span>}
+            </button>
           ))}
-        </ul>
-      )}
-      <ReactTooltip id="personality-tooltip" place="bottom" />
-    </div>
+        </div>
+        <button onClick={onClose} className="w-full py-2 mt-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Fermer</button>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -127,6 +118,7 @@ export function Header({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [, setShowStopButton] = useState(true);
   const [showMobileMenu, setShowMobileMenu] = useState(false); // Ajout menu mobile
+  const [showPersonalityModal, setShowPersonalityModal] = useState(false);
   const closeMobileMenu = () => setShowMobileMenu(false);
 
   // Effet bip mode privé
@@ -414,7 +406,23 @@ export function Header({
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 01-8 0m8 0a4 4 0 00-8 0m8 0V5a4 4 0 00-8 0v2m8 0a4 4 0 01-8 0" /></svg>
             {ragEnabled ? 'RAG' : 'RAG'}
           </Button>
-          <PersonalityDropdown selected={selectedPersonality} onChange={onChangePersonality} />
+          {/* Remplacer PersonalityDropdown par un bouton qui ouvre la modale */}
+          <button
+            className={`flex items-center gap-2 px-3 py-1 rounded-lg shadow font-semibold text-xs transition-all duration-200 cursor-pointer border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400 ${personalities.find(p => p.value === selectedPersonality)?.bg} hover:scale-105 hover:shadow-xl`}
+            onClick={() => setShowPersonalityModal(true)}
+            title="Personnalité de l'IA"
+            aria-label="Personnalité de l'IA"
+            type="button"
+          >
+            <span className="flex items-center">{personalities.find(p => p.value === selectedPersonality)?.icon} {personalities.find(p => p.value === selectedPersonality)?.label}</span>
+            <svg className={`w-3 h-3 ml-1 transition-transform`} viewBox="0 0 20 20"><path fill="currentColor" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.06l3.71-3.83a.75.75 0 1 1 1.08 1.04l-4.25 4.39a.75.75 0 0 1-1.08 0L5.21 8.27a.75.75 0 0 1 .02-1.06z"/></svg>
+          </button>
+          <PersonalityModal
+            open={showPersonalityModal}
+            onClose={() => setShowPersonalityModal(false)}
+            selected={selectedPersonality}
+            onChange={onChangePersonality}
+          />
         </div>
 
         
@@ -480,7 +488,12 @@ export function Header({
                   <Square className="w-5 h-5 text-indigo-500" /> {ragEnabled ? 'Désactiver RAG' : 'Activer RAG'}
                 </Button>
                 <div className="mt-1">
-                  <PersonalityDropdown selected={selectedPersonality} onChange={v => { onChangePersonality(v); closeMobileMenu(); }} />
+                  <PersonalityModal
+                    open={showPersonalityModal}
+                    onClose={() => setShowPersonalityModal(false)}
+                    selected={selectedPersonality}
+                    onChange={onChangePersonality}
+                  />
                 </div>
               </div>
             </div>
