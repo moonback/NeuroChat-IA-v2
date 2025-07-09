@@ -449,8 +449,8 @@ export function Header({
                 {onOpenGeminiSettings && (
                   <Button variant="ghost" size="lg" className="w-full flex items-center gap-3 bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-md hover:shadow-purple-300/30 dark:hover:shadow-purple-900/30 hover:scale-[1.03] transition-all duration-200 text-purple-900 dark:text-purple-100 font-semibold text-base" onClick={() => { onOpenGeminiSettings(); closeMobileMenu(); }}>
                     <Settings2 className="w-5 h-5 text-purple-500" /> Réglages Gemini
-                  </Button>
-                )}
+          </Button>
+        )}
                 <Button variant={modePrive ? 'destructive' : 'ghost'} size="lg" className={`w-full flex items-center gap-3 bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-md hover:shadow-red-300/30 dark:hover:shadow-red-900/30 hover:scale-[1.03] transition-all duration-200 font-semibold text-base ${modePrive ? 'text-red-700 dark:text-red-200' : 'text-slate-900 dark:text-slate-100'}`} onClick={() => { setModePrive(!modePrive); closeMobileMenu(); }}>
                   <Square className="w-5 h-5 text-red-500" /> {modePrive ? 'Désactiver le mode privé' : 'Activer le mode privé'}
                 </Button>
@@ -484,7 +484,7 @@ export function Header({
                 </div>
               </div>
             </div>
-          </div>
+      </div>
         </DialogContent>
       </Dialog>
       <ReactTooltip id="header-tooltip" place="bottom" />
