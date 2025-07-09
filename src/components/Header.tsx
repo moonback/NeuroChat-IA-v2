@@ -187,28 +187,11 @@ export function Header({
           </span>
         </div>
         {/* Badges d'état (desktop: à droite, mobile: icônes à droite du logo) */}
-        <div className="hidden sm:flex flex-col gap-1 ml-4 items-end min-w-[120px]">
-          <button
-            onClick={() => setModePrive(!modePrive)}
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold shadow border select-none transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-red-400/60 ${modePrive ? 'bg-gradient-to-r from-red-500 to-red-700 text-white border-red-600 scale-105 shadow-lg' : 'bg-gradient-to-r from-slate-200 to-slate-400 text-slate-700 border-slate-400 dark:from-slate-700 dark:to-slate-800 dark:text-slate-100 dark:border-slate-700 hover:scale-105 hover:shadow'}"}`}
-            aria-label={modePrive ? 'Désactiver le mode privé/éphémère' : 'Activer le mode privé/éphémère'}
-            title={modePrive ? 'Désactiver le mode privé/éphémère' : 'Activer le mode privé/éphémère'}
-            type="button"
-          >
-            <Shield className="w-4 h-4 mr-1" /> {modePrive ? 'Privé activé' : 'Privé désactivé'}
-          </button>
-          <button
-            onClick={() => setRagEnabled(!ragEnabled)}
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold shadow border select-none transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-green-400/60 ${ragEnabled ? 'bg-gradient-to-r from-green-400 to-emerald-600 text-white border-green-500 scale-105 shadow-lg' : 'bg-gradient-to-r from-slate-200 to-slate-400 text-slate-700 border-slate-400 dark:from-slate-700 dark:to-slate-800 dark:text-slate-100 dark:border-slate-700 hover:scale-105 hover:shadow'}"}`}
-            aria-label={ragEnabled ? 'Désactiver la recherche documentaire' : 'Activer la recherche documentaire'}
-            title={ragEnabled ? 'Désactiver la recherche documentaire' : 'Activer la recherche documentaire'}
-            type="button"
-          >
-            <Brain className="w-4 h-4 mr-1" /> {ragEnabled ? 'RAG activé' : 'RAG désactivé'}
-          </button>
-        </div>
+        {/* SUPPRIMÉ : plus d'affichage d'état RAG ou privé, ni sur desktop ni sur mobile */}
+
         {/* Badges d'état mobile (icônes sur une ligne à droite du logo) + bouton burger */}
-        <div className="flex sm:hidden flex-row gap-2 items-center ml-auto">
+        {/* SUPPRIMÉ : plus d'affichage d'état RAG ou privé sur mobile */}
+        <div className="sm:hidden flex flex-row gap-2 items-center ml-auto">
           <button
             onClick={() => setModePrive(!modePrive)}
             className={`inline-flex items-center justify-center w-7 h-7 rounded-full border-2 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-red-400/60 ${modePrive ? 'bg-gradient-to-r from-red-500 to-red-700 border-red-600 scale-105 shadow-lg' : 'bg-gradient-to-r from-slate-200 to-slate-400 border-slate-400 dark:from-slate-700 dark:to-slate-800 dark:border-slate-700 hover:scale-105 hover:shadow'}"}`}
