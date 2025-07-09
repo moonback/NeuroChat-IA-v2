@@ -3,6 +3,7 @@ import { History, X, Search, MessageCircle, Users, CalendarDays, Trash2, CheckSq
 import { Button } from '@/components/ui/button';
 import { Discussion } from '@/hooks/useDiscussions';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 
 // Interface sans le champ category
 export interface DiscussionWithCategory extends Discussion {}
@@ -105,19 +106,19 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-0 w-full max-w4xl max-h-[90vh] overflow-y-auto relative animate-fadeIn">
-        {/* Header premium */}
-        <div className="rounded-t-2xl px-7 py-6 bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100 dark:from-blue-900 dark:via-slate-900 dark:to-purple-950 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
-          <History className="w-7 h-7 text-blue-500 mr-2" />
-          <div className="flex-1 min-w-0">
-            <h2 className="text-2xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight mb-1">Discussions récentes</h2>
-            <div className="text-xs text-muted-foreground font-medium">{filtered.length} résultat{filtered.length !== 1 ? 's' : ''} / {history.length} au total</div>
+    <Drawer open={open} onOpenChange={onClose}>
+      <DrawerContent className="max-w-full w-[95vw] sm:w-[100%] px-2 py-2 rounded-3xl shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20">
+        <DrawerHeader className="pb-2">
+          <div className="flex items-center gap-2">
+            <History className="w-7 h-7 text-blue-500 mr-2" />
+            <DrawerTitle className="text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
+              Discussions récentes
+            </DrawerTitle>
+            <button onClick={onClose} className="ml-auto text-slate-500 hover:text-red-500 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-red-400" title="Fermer" aria-label="Fermer">
+              <X className="w-6 h-6" />
+            </button>
           </div>
-          <button onClick={onClose} className="ml-auto text-slate-500 hover:text-red-500 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-red-400" title="Fermer" aria-label="Fermer">
-            <X className="w-6 h-6" />
-          </button>
-        </div>
+        </DrawerHeader>
         {/* Barre de recherche et tri */}
         <div className="flex flex-col sm:flex-row items-center gap-2 px-7 py-4 bg-white dark:bg-slate-900 sticky top-0 z-10 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center w-full sm:w-1/2 relative">
@@ -296,7 +297,10 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
             </ul>
           )}
         </div>
-      </div>
-    </div>
+        <DrawerFooter className="flex flex-row gap-2 justify-end pt-3">
+          <Button onClick={onClose} className="w-full text-base py-3">Fermer</Button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 } 

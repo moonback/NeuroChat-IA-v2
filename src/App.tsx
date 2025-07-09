@@ -700,70 +700,44 @@ function App() {
         </div>
       )}
 
-      {/* {showRagActivated && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-          <div className="relative flex flex-col items-center justify-center px-8 py-7 min-w-[320px] max-w-[90vw] bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-2xl border border-blue-200 dark:border-blue-800 animate-fadeIn animate-zoomIn animate-pulse backdrop-blur-xl">
-            <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex items-center justify-center">
-              <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-green-400 rounded-full p-2 shadow-lg animate-bounce">
-                <svg xmlns='http://www.w3.org/2000/svg' className="w-12 h-12 text-yellow-300 drop-shadow-xl" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 01-8 0m8 0a4 4 0 00-8 0m8 0V5a4 4 0 00-8 0v2m8 0a4 4 0 01-8 0" /></svg>
-              </div>
-            </div>
-            <span className="font-extrabold text-xl sm:text-2xl text-blue-700 dark:text-blue-200 text-center mt-8 mb-2 drop-shadow-lg tracking-wide">Mode RAG activé</span>
-            <span className="text-sm sm:text-base font-medium text-slate-700 dark:text-slate-200 text-center">La recherche documentaire est maintenant active pour enrichir les réponses de l'IA.</span>
-          </div>
-        </div>
-      )} */}
-
-      {/* {showRagDeactivated && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-          <div className="relative flex flex-col items-center justify-center px-8 py-7 min-w-[320px] max-w-[90vw] bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-2xl border border-red-200 dark:border-red-800 animate-fadeIn animate-zoomIn animate-pulse backdrop-blur-xl">
-            <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex items-center justify-center">
-              <div className="bg-gradient-to-br from-red-400 via-pink-500 to-purple-400 rounded-full p-2 shadow-lg animate-bounce">
-                <svg xmlns='http://www.w3.org/2000/svg' className="w-12 h-12 text-red-300 drop-shadow-xl" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </div>
-            </div>
-            <span className="font-extrabold text-xl sm:text-2xl text-red-700 dark:text-red-200 text-center mt-8 mb-2 drop-shadow-lg tracking-wide">Mode RAG désactivé</span>
-            <span className="text-sm sm:text-base font-medium text-slate-700 dark:text-slate-200 text-center">La recherche documentaire est désactivée. Les réponses de l'IA ne seront plus enrichies par les documents.</span>
-          </div>
-        </div>
-      )} */}
+      
 
       {/* Modale de gestion des documents RAG */}
       <RagDocsModal open={showRagDocs} onClose={() => setShowRagDocs(false)} />
 
-      {/* Modale latérale pour les réglages Gemini */}
+      {/* Modale latérale compacte pour les réglages Gemini */}
       <Drawer open={showGeminiSettings} onOpenChange={setShowGeminiSettings}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Réglages avancés Gemini</DrawerTitle>
-          </DrawerHeader>
-          <div className="flex flex-col items-center justify-center pt-6 pb-2">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-500 p-2 rounded-2xl shadow-lg">
-                <Sliders className="w-7 h-7 text-white drop-shadow" />
+        <DrawerContent className="max-w-full w-[95vw] sm:w-[100%] px-2 py-2">
+          <DrawerHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-500 p-1.5 rounded-xl shadow">
+                <Sliders className="w-5 h-5 text-white" />
               </div>
-              <span className="text-2xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">Hyperparamètres Gemini</span>
+              <DrawerTitle className="text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
+                Réglages Gemini
+              </DrawerTitle>
             </div>
-            <div className="text-sm text-muted-foreground text-center max-w-xl mb-2">Ajustez finement le comportement du modèle Gemini pour chaque génération. Passez la souris sur <Info className='inline w-4 h-4 align-text-bottom' /> pour obtenir des explications détaillées.</div>
-          </div>
-          <div className="border-b border-slate-200 dark:border-slate-700 mb-4" />
-          <div className="p-0 sm:p-6 space-y-6">
-            {/* Paramètres dans des cartes premium */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="text-xs text-muted-foreground text-center max-w-xs mx-auto mt-1">
+              Ajustez le comportement du modèle. <Info className="inline w-3 h-3 align-text-bottom" /> pour infos.
+            </div>
+          </DrawerHeader>
+          <div className="border-b border-slate-200 dark:border-slate-700 mb-2" />
+          <div className="p-0 space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {/* Température */}
-              <div className="relative bg-gradient-to-br from-white/90 to-blue-50/60 dark:from-slate-900/80 dark:to-blue-950/40 rounded-2xl shadow-md border border-blue-100 dark:border-blue-900/30 p-4 flex flex-col gap-2 transition-all duration-200 hover:shadow-xl">
-                <div className="flex items-center gap-2 mb-1">
-                  <Label htmlFor="gemini-temperature">Température&nbsp;:
+              <div className="bg-white/80 dark:bg-slate-900/80 rounded-xl border border-blue-100 dark:border-blue-900/30 p-2 flex flex-col gap-1 shadow-sm">
+                <div className="flex items-center gap-1">
+                  <Label htmlFor="gemini-temperature" className="text-xs">Température
                     <span className="font-mono ml-1">{geminiConfig.temperature?.toFixed(2)}</span>
                   </Label>
                   {geminiConfig.temperature === DEFAULTS.temperature && (
-                    <span className="ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-xs text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">par défaut</span>
+                    <span className="ml-1 px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-[10px] text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">défaut</span>
                   )}
                   <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-temp">
-                    <Info className="w-4 h-4" />
+                    <Info className="w-3 h-3" />
                   </button>
-                  <button type="button" className="ml-2 text-xs text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded transition" onClick={() => handleGeminiConfigChange('temperature', DEFAULTS.temperature)}>Réinit.</button>
-                  <Tooltip id="tip-temp" place="right" content="Contrôle la créativité de la génération. 0 = déterministe, 2 = très créatif. Valeur recommandée : 0.7" />
+                  <button type="button" className="ml-1 text-[10px] text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded" onClick={() => handleGeminiConfigChange('temperature', DEFAULTS.temperature)}>Reset</button>
+                  <Tooltip id="tip-temp" place="right" content="0 = déterministe, 2 = créatif. Reco : 0.7" />
                 </div>
                 <Slider
                   id="gemini-temperature"
@@ -772,27 +746,27 @@ function App() {
                   step={0.01}
                   value={[geminiConfig.temperature ?? 0.7]}
                   onValueChange={([v]) => handleGeminiConfigChange('temperature', v)}
-                  className="mt-2"
+                  className="mt-1"
                 />
-                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
                   <span>Déterministe</span>
                   <span>Créatif</span>
                 </div>
               </div>
               {/* topK */}
-              <div className="relative bg-gradient-to-br from-white/90 to-blue-50/60 dark:from-slate-900/80 dark:to-blue-950/40 rounded-2xl shadow-md border border-blue-100 dark:border-blue-900/30 p-4 flex flex-col gap-2 transition-all duration-200 hover:shadow-xl">
-                <div className="flex items-center gap-2 mb-1">
-                  <Label htmlFor="gemini-topk">topK&nbsp;:
+              <div className="bg-white/80 dark:bg-slate-900/80 rounded-xl border border-blue-100 dark:border-blue-900/30 p-2 flex flex-col gap-1 shadow-sm">
+                <div className="flex items-center gap-1">
+                  <Label htmlFor="gemini-topk" className="text-xs">topK
                     <span className="font-mono ml-1">{geminiConfig.topK}</span>
                   </Label>
                   {geminiConfig.topK === DEFAULTS.topK && (
-                    <span className="ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-xs text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">par défaut</span>
+                    <span className="ml-1 px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-[10px] text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">défaut</span>
                   )}
                   <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-topk">
-                    <Info className="w-4 h-4" />
+                    <Info className="w-3 h-3" />
                   </button>
-                  <button type="button" className="ml-2 text-xs text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded transition" onClick={() => handleGeminiConfigChange('topK', DEFAULTS.topK)}>Réinit.</button>
-                  <Tooltip id="tip-topk" place="right" content="Nombre de tokens candidats considérés à chaque étape. Plus élevé = plus de diversité, mais moins de cohérence. Recommandé : 40" />
+                  <button type="button" className="ml-1 text-[10px] text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded" onClick={() => handleGeminiConfigChange('topK', DEFAULTS.topK)}>Reset</button>
+                  <Tooltip id="tip-topk" place="right" content="Tokens candidats. Plus = diversité. Reco : 40" />
                 </div>
                 <Input
                   id="gemini-topk"
@@ -801,23 +775,23 @@ function App() {
                   max={100}
                   value={geminiConfig.topK ?? 40}
                   onChange={e => handleGeminiConfigChange('topK', Number(e.target.value))}
-                  className="mt-2 w-32"
+                  className="mt-1 w-20 text-xs"
                 />
               </div>
               {/* topP */}
-              <div className="relative bg-gradient-to-br from-white/90 to-blue-50/60 dark:from-slate-900/80 dark:to-blue-950/40 rounded-2xl shadow-md border border-blue-100 dark:border-blue-900/30 p-4 flex flex-col gap-2 transition-all duration-200 hover:shadow-xl">
-                <div className="flex items-center gap-2 mb-1">
-                  <Label htmlFor="gemini-topp">topP&nbsp;:
+              <div className="bg-white/80 dark:bg-slate-900/80 rounded-xl border border-blue-100 dark:border-blue-900/30 p-2 flex flex-col gap-1 shadow-sm">
+                <div className="flex items-center gap-1">
+                  <Label htmlFor="gemini-topp" className="text-xs">topP
                     <span className="font-mono ml-1">{geminiConfig.topP?.toFixed(2)}</span>
                   </Label>
                   {geminiConfig.topP === DEFAULTS.topP && (
-                    <span className="ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-xs text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">par défaut</span>
+                    <span className="ml-1 px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-[10px] text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">défaut</span>
                   )}
                   <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-topp">
-                    <Info className="w-4 h-4" />
+                    <Info className="w-3 h-3" />
                   </button>
-                  <button type="button" className="ml-2 text-xs text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded transition" onClick={() => handleGeminiConfigChange('topP', DEFAULTS.topP)}>Réinit.</button>
-                  <Tooltip id="tip-topp" place="right" content="Probabilité cumulative pour l'échantillonnage. 1 = plus de diversité, 0 = plus conservateur. Recommandé : 0.95" />
+                  <button type="button" className="ml-1 text-[10px] text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded" onClick={() => handleGeminiConfigChange('topP', DEFAULTS.topP)}>Reset</button>
+                  <Tooltip id="tip-topp" place="right" content="Probabilité cumulative. 1 = diversité. Reco : 0.95" />
                 </div>
                 <Slider
                   id="gemini-topp"
@@ -826,27 +800,27 @@ function App() {
                   step={0.01}
                   value={[geminiConfig.topP ?? 0.95]}
                   onValueChange={([v]) => handleGeminiConfigChange('topP', v)}
-                  className="mt-2"
+                  className="mt-1"
                 />
-                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
                   <span>Moins varié</span>
                   <span>Plus varié</span>
                 </div>
               </div>
               {/* maxOutputTokens */}
-              <div className="relative bg-gradient-to-br from-white/90 to-blue-50/60 dark:from-slate-900/80 dark:to-blue-950/40 rounded-2xl shadow-md border border-blue-100 dark:border-blue-900/30 p-4 flex flex-col gap-2 transition-all duration-200 hover:shadow-xl">
-                <div className="flex items-center gap-2 mb-1">
-                  <Label htmlFor="gemini-maxoutput">maxOutputTokens&nbsp;:
+              <div className="bg-white/80 dark:bg-slate-900/80 rounded-xl border border-blue-100 dark:border-blue-900/30 p-2 flex flex-col gap-1 shadow-sm">
+                <div className="flex items-center gap-1">
+                  <Label htmlFor="gemini-maxoutput" className="text-xs">maxTokens
                     <span className="font-mono ml-1">{geminiConfig.maxOutputTokens}</span>
                   </Label>
                   {geminiConfig.maxOutputTokens === DEFAULTS.maxOutputTokens && (
-                    <span className="ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-xs text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">par défaut</span>
+                    <span className="ml-1 px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-[10px] text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">défaut</span>
                   )}
                   <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-maxout">
-                    <Info className="w-4 h-4" />
+                    <Info className="w-3 h-3" />
                   </button>
-                  <button type="button" className="ml-2 text-xs text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded transition" onClick={() => handleGeminiConfigChange('maxOutputTokens', DEFAULTS.maxOutputTokens)}>Réinit.</button>
-                  <Tooltip id="tip-maxout" place="right" content="Nombre maximal de tokens générés dans la réponse. Plus élevé = réponses plus longues. Recommandé : 1024" />
+                  <button type="button" className="ml-1 text-[10px] text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded" onClick={() => handleGeminiConfigChange('maxOutputTokens', DEFAULTS.maxOutputTokens)}>Reset</button>
+                  <Tooltip id="tip-maxout" place="right" content="Max tokens générés. Reco : 1024" />
                 </div>
                 <Input
                   id="gemini-maxoutput"
@@ -855,27 +829,27 @@ function App() {
                   max={4096}
                   value={geminiConfig.maxOutputTokens ?? 1024}
                   onChange={e => handleGeminiConfigChange('maxOutputTokens', Number(e.target.value))}
-                  className="mt-2 w-32"
+                  className="mt-1 w-20 text-xs"
                 />
                 {(geminiConfig.maxOutputTokens ?? 1024) > 4096 && (
-                  <div className="mt-2 text-xs text-red-600 flex items-center gap-1 animate-fadeIn">
+                  <div className="mt-1 text-[10px] text-red-600 flex items-center gap-1 animate-fadeIn">
                     <span className="font-bold">⚠️</span>
-                    La valeur maximale autorisée est 4096 tokens.
+                    Max 4096 tokens.
                   </div>
                 )}
               </div>
               {/* stopSequences */}
-              <div className="relative bg-gradient-to-br from-white/90 to-blue-50/60 dark:from-slate-900/80 dark:to-blue-950/40 rounded-2xl shadow-md border border-blue-100 dark:border-blue-900/30 p-4 flex flex-col gap-2 transition-all duration-200 hover:shadow-xl">
-                <div className="flex items-center gap-2 mb-1">
-                  <Label htmlFor="gemini-stopseq">stopSequences&nbsp;:</Label>
+              <div className="bg-white/80 dark:bg-slate-900/80 rounded-xl border border-blue-100 dark:border-blue-900/30 p-2 flex flex-col gap-1 shadow-sm">
+                <div className="flex items-center gap-1">
+                  <Label htmlFor="gemini-stopseq" className="text-xs">stopSeq</Label>
                   {Array.isArray(geminiConfig.stopSequences) && geminiConfig.stopSequences.length === 0 && (
-                    <span className="ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-xs text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">par défaut</span>
+                    <span className="ml-1 px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-[10px] text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">défaut</span>
                   )}
                   <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-stopseq">
-                    <Info className="w-4 h-4" />
+                    <Info className="w-3 h-3" />
                   </button>
-                  <button type="button" className="ml-2 text-xs text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded transition" onClick={() => handleGeminiConfigChange('stopSequences', DEFAULTS.stopSequences)}>Réinit.</button>
-                  <Tooltip id="tip-stopseq" place="right" content="Séquences de texte qui arrêtent la génération. Laisser vide pour ignorer. Ex : END,STOP" />
+                  <button type="button" className="ml-1 text-[10px] text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded" onClick={() => handleGeminiConfigChange('stopSequences', DEFAULTS.stopSequences)}>Reset</button>
+                  <Tooltip id="tip-stopseq" place="right" content="Séquences d'arrêt. Ex: END,STOP" />
                 </div>
                 <Input
                   id="gemini-stopseq"
@@ -883,24 +857,24 @@ function App() {
                   value={geminiConfig.stopSequences?.join(',') ?? ''}
                   onChange={e => handleGeminiConfigChange('stopSequences', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
                   placeholder="Ex: END,STOP"
-                  className="mt-2"
+                  className="mt-1 text-xs"
                 />
-                <div className="text-xs text-muted-foreground mt-1">Séparez par des virgules</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">Séparez par virgule</div>
               </div>
               {/* candidateCount */}
-              <div className="relative bg-gradient-to-br from-white/90 to-blue-50/60 dark:from-slate-900/80 dark:to-blue-950/40 rounded-2xl shadow-md border border-blue-100 dark:border-blue-900/30 p-4 flex flex-col gap-2 transition-all duration-200 hover:shadow-xl">
-                <div className="flex items-center gap-2 mb-1">
-                  <Label htmlFor="gemini-candidates">candidateCount&nbsp;:
+              <div className="bg-white/80 dark:bg-slate-900/80 rounded-xl border border-blue-100 dark:border-blue-900/30 p-2 flex flex-col gap-1 shadow-sm">
+                <div className="flex items-center gap-1">
+                  <Label htmlFor="gemini-candidates" className="text-xs">candidates
                     <span className="font-mono ml-1">{geminiConfig.candidateCount}</span>
                   </Label>
                   {geminiConfig.candidateCount === DEFAULTS.candidateCount && (
-                    <span className="ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-xs text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">par défaut</span>
+                    <span className="ml-1 px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-[10px] text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">défaut</span>
                   )}
                   <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-cand">
-                    <Info className="w-4 h-4" />
+                    <Info className="w-3 h-3" />
                   </button>
-                  <button type="button" className="ml-2 text-xs text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded transition" onClick={() => handleGeminiConfigChange('candidateCount', DEFAULTS.candidateCount)}>Réinit.</button>
-                  <Tooltip id="tip-cand" place="right" content="Nombre de réponses générées à chaque requête. 1 = une seule réponse. Plus = alternatives. Recommandé : 1" />
+                  <button type="button" className="ml-1 text-[10px] text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded" onClick={() => handleGeminiConfigChange('candidateCount', DEFAULTS.candidateCount)}>Reset</button>
+                  <Tooltip id="tip-cand" place="right" content="Nombre de réponses générées. Reco : 1" />
                 </div>
                 <Input
                   id="gemini-candidates"
@@ -909,25 +883,23 @@ function App() {
                   max={8}
                   value={geminiConfig.candidateCount ?? 1}
                   onChange={e => handleGeminiConfigChange('candidateCount', Number(e.target.value))}
-                  className="mt-2 w-32"
+                  className="mt-1 w-20 text-xs"
                 />
               </div>
             </div>
           </div>
-          <DrawerFooter>
-            <UIButton variant="secondary" onClick={() => setGeminiConfig({ temperature: 0.7, topK: 40, topP: 0.95, maxOutputTokens: 1024, stopSequences: [], candidateCount: 1 })}>Réinitialiser</UIButton>
-            <UIButton onClick={() => setShowGeminiSettings(false)}>Fermer</UIButton>
+          <DrawerFooter className="flex flex-row gap-2 justify-end pt-3">
+            <UIButton variant="secondary" size="sm" onClick={() => setGeminiConfig({ temperature: 0.7, topK: 40, topP: 0.95, maxOutputTokens: 1024, stopSequences: [], candidateCount: 1 })}>
+              Réinitialiser
+            </UIButton>
+            <UIButton size="sm" onClick={() => setShowGeminiSettings(false)}>
+              Fermer
+            </UIButton>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
 
-      {/* Indication visuelle du mode privé */}
-      {/* This block is now redundant as the indicator is moved to the header */}
-      {/* {modePrive && (
-        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white px-4 py-2 rounded-xl shadow-lg animate-pulse">
-          Mode privé activé : aucun message n'est sauvegardé, tout sera effacé à la fermeture.
-        </div>
-      )} */}
+      
     </div>
   );
 }

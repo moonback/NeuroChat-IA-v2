@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { X, RefreshCcw, Play, Volume2, Sliders, Activity, UploadCloud, DownloadCloud, Trash2, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 
 interface TTSSettingsModalProps {
   open: boolean;
@@ -87,16 +88,21 @@ export function TTSSettingsModal({ open, onClose, rate, setRate, pitch, setPitch
 
   
 
-  return open ? (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm" aria-modal="true" role="dialog">
-      <div className="bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl p-6 w-full max-w-[95vw] max-h-[90vh] relative animate-slideInFromBottom overflow-y-auto" style={{ minHeight: '400px' }}>
-        <button onClick={onClose} className="absolute top-3 right-3 text-slate-500 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-400 rounded-full p-1 bg-white dark:bg-slate-800 shadow-lg" aria-label="Fermer">
-          <X className="w-5 h-5" />
-        </button>
-        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <Sliders className="w-5 h-5 text-blue-500" /> Réglages de la synthèse vocale
-        </h2>
-        {/* Nouvelle présentation en cartes premium, grille responsive */}
+  return (
+    <Drawer open={open} onOpenChange={onClose}>
+      <DrawerContent className="max-w-full w-[95vw] sm:w-[100%] px-2 py-2 rounded-3xl shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20">
+        <DrawerHeader className="pb-2">
+          <div className="flex items-center gap-2">
+            <Sliders className="w-5 h-5 text-blue-500" />
+            <DrawerTitle className="text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
+              Réglages de la synthèse vocale
+            </DrawerTitle>
+            <button onClick={onClose} className="ml-auto text-slate-500 hover:text-red-500 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-red-400" title="Fermer" aria-label="Fermer">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        </DrawerHeader>
+        {/* Ancien contenu de la modale ici, sans le header/titre ni bouton fermer */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {/* Voix */}
           <div className="relative bg-gradient-to-br from-white/90 to-blue-50/60 dark:from-slate-900/80 dark:to-blue-950/40 rounded-2xl shadow-md border border-blue-100 dark:border-blue-900/30 p-4 flex flex-col gap-2 transition-all duration-200 hover:shadow-xl">
@@ -205,7 +211,7 @@ export function TTSSettingsModal({ open, onClose, rate, setRate, pitch, setPitch
             </div>
           </div>
         </div>
-        {/* Animation d'onde lors du test de la voix */}
+        {/* Animation d'onde lors du test de la voix, boutons, etc. */}
         <div className="flex gap-2 mt-6 items-center">
           <Button onClick={handleTestVoice} variant="outline" className="flex-1 flex items-center gap-2" disabled={availableVoices.length === 0}>
             <Play className="w-4 h-4" /> Tester la voix
@@ -233,8 +239,10 @@ export function TTSSettingsModal({ open, onClose, rate, setRate, pitch, setPitch
             <Trash2 className="w-4 h-4" /> Supprimer
           </Button>
         </div>
-        <Button onClick={onClose} className="mt-4 w-full text-base py-3">Fermer</Button>
-      </div>
-    </div>
-  ) : null;
+        <DrawerFooter className="flex flex-row gap-2 justify-end pt-3">
+          <Button onClick={onClose} className="w-full text-base py-3">Fermer</Button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
+  );
 } 

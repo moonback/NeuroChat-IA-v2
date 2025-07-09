@@ -7,6 +7,7 @@ import * as pdfjsLib from 'pdfjs-dist/build/pdf';
 import mammoth from 'mammoth';
 import Papa from 'papaparse';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 
 interface RagDocsModalProps {
   open: boolean;
@@ -293,21 +294,20 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-0 w-full max-w-6xl max-h-[90vh] overflow-y-auto relative transition-all duration-300">
-        {/* Header premium */}
-        <div className="rounded-t-2xl px-7 py-6 bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100 dark:from-blue-900 dark:via-slate-900 dark:to-purple-950 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 animate-fadeIn animate-slideInFromTop">
-          <UploadCloud className="w-7 h-7 text-blue-500 mr-2" />
-          <div className="flex-1 min-w-0">
-            <h2 className="text-2xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight mb-1">Gestion des documents RAG</h2>
-            <div className="text-xs text-muted-foreground font-medium">Ajoutez, renommez ou supprimez vos documents pour la recherche contextuelle.</div>
+    <Drawer open={open} onOpenChange={onClose}>
+      <DrawerContent className="max-w-full w-[95vw] sm:w-[100%] px-2 py-2 rounded-3xl shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20">
+        <DrawerHeader className="pb-2">
+          <div className="flex items-center gap-2">
+            <UploadCloud className="w-7 h-7 text-blue-500 mr-2" />
+            <DrawerTitle className="text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
+              Gestion des documents RAG
+            </DrawerTitle>
+            <button onClick={onClose} className="ml-auto text-slate-500 hover:text-red-500 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-red-400" title="Fermer" aria-label="Fermer">
+              <X className="w-6 h-6" />
+            </button>
           </div>
-          <button onClick={onClose} className="ml-auto text-slate-500 hover:text-red-500 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-red-400" title="Fermer" aria-label="Fermer">
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-        {/* Séparation visuelle */}
-        <div className="border-b border-slate-100 dark:border-slate-800" />
+        </DrawerHeader>
+        {/* Ancien contenu de la modale ici, sans le header/titre ni bouton fermer */}
         <div className="p-8 pt-6">
           <div className="w-full p-6 mb-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-center flex flex-col items-center justify-center gap-2">
             <UploadCloud className="w-10 h-10 mb-2 text-blue-400" />
@@ -498,9 +498,11 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
               })}
             </ul>
           )}
-          <Button onClick={onClose} className="mt-8 w-full text-base py-3">Fermer</Button>
         </div>
-      </div>
+        <DrawerFooter className="flex flex-row gap-2 justify-end pt-3">
+          <Button onClick={onClose} className="w-full text-base py-3">Fermer</Button>
+        </DrawerFooter>
+      </DrawerContent>
       {/* Modale d'aperçu */}
       {previewDoc && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -512,6 +514,6 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
           </div>
         </div>
       )}
-    </div>
+    </Drawer>
   );
 } 
