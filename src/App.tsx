@@ -85,8 +85,8 @@ function App() {
   const [selectedMessageIds, setSelectedMessageIds] = useState<string[]>([]);
   const [showConfirmDeleteMultiple, setShowConfirmDeleteMultiple] = useState(false);
   // Ajout du state pour activer/désactiver le RAG
-  const [showRagActivated, setShowRagActivated] = useState(false);
-  const [showRagDeactivated, setShowRagDeactivated] = useState(false);
+  const [, setShowRagActivated] = useState(false);
+  const [, setShowRagDeactivated] = useState(false);
   // Hyperparamètres Gemini
   const [geminiConfig, setGeminiConfig] = useState<GeminiGenerationConfig>({
     temperature: 0.7,

@@ -112,7 +112,6 @@ export function Header({
   onOpenRagDocs,
   selectedPersonality,
   onChangePersonality,
-  stop,
   modeVocalAuto,
   setModeVocalAuto,
   hasActiveConversation,
@@ -126,7 +125,7 @@ export function Header({
   const { theme, toggleTheme } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [showStopButton, setShowStopButton] = useState(true);
+  const [, setShowStopButton] = useState(true);
   const [showMobileMenu, setShowMobileMenu] = useState(false); // Ajout menu mobile
   const closeMobileMenu = () => setShowMobileMenu(false);
 
@@ -189,17 +188,45 @@ export function Header({
         </div>
         {/* Badges d'état (desktop: à droite, mobile: icônes à droite du logo) */}
         <div className="hidden sm:flex flex-col gap-1 ml-4 items-end min-w-[120px]">
-          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold shadow border select-none ${modePrive ? 'bg-gradient-to-r from-red-500 to-red-700 text-white border-red-600' : 'bg-gradient-to-r from-slate-200 to-slate-400 text-slate-700 border-slate-400 dark:from-slate-700 dark:to-slate-800 dark:text-slate-100 dark:border-slate-700'}`}> <Shield className="w-4 h-4 mr-1" /> {modePrive ? 'Privé activé' : 'Privé désactivé'} </span>
-          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold shadow border select-none ${ragEnabled ? 'bg-gradient-to-r from-green-400 to-emerald-600 text-white border-green-500' : 'bg-gradient-to-r from-slate-200 to-slate-400 text-slate-700 border-slate-400 dark:from-slate-700 dark:to-slate-800 dark:text-slate-100 dark:border-slate-700'}`}> <Brain className="w-4 h-4 mr-1" /> {ragEnabled ? 'RAG activé' : 'RAG désactivé'} </span>
+          <button
+            onClick={() => setModePrive(!modePrive)}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold shadow border select-none transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-red-400/60 ${modePrive ? 'bg-gradient-to-r from-red-500 to-red-700 text-white border-red-600 scale-105 shadow-lg' : 'bg-gradient-to-r from-slate-200 to-slate-400 text-slate-700 border-slate-400 dark:from-slate-700 dark:to-slate-800 dark:text-slate-100 dark:border-slate-700 hover:scale-105 hover:shadow'}"}`}
+            aria-label={modePrive ? 'Désactiver le mode privé/éphémère' : 'Activer le mode privé/éphémère'}
+            title={modePrive ? 'Désactiver le mode privé/éphémère' : 'Activer le mode privé/éphémère'}
+            type="button"
+          >
+            <Shield className="w-4 h-4 mr-1" /> {modePrive ? 'Privé activé' : 'Privé désactivé'}
+          </button>
+          <button
+            onClick={() => setRagEnabled(!ragEnabled)}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold shadow border select-none transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-green-400/60 ${ragEnabled ? 'bg-gradient-to-r from-green-400 to-emerald-600 text-white border-green-500 scale-105 shadow-lg' : 'bg-gradient-to-r from-slate-200 to-slate-400 text-slate-700 border-slate-400 dark:from-slate-700 dark:to-slate-800 dark:text-slate-100 dark:border-slate-700 hover:scale-105 hover:shadow'}"}`}
+            aria-label={ragEnabled ? 'Désactiver la recherche documentaire' : 'Activer la recherche documentaire'}
+            title={ragEnabled ? 'Désactiver la recherche documentaire' : 'Activer la recherche documentaire'}
+            type="button"
+          >
+            <Brain className="w-4 h-4 mr-1" /> {ragEnabled ? 'RAG activé' : 'RAG désactivé'}
+          </button>
         </div>
         {/* Badges d'état mobile (icônes sur une ligne à droite du logo) + bouton burger */}
         <div className="flex sm:hidden flex-row gap-2 items-center ml-auto">
-          <span title={modePrive ? 'Mode privé activé' : 'Mode privé désactivé'} className={`inline-flex items-center justify-center w-7 h-7 rounded-full border-2 ${modePrive ? 'bg-gradient-to-r from-red-500 to-red-700 border-red-600' : 'bg-gradient-to-r from-slate-200 to-slate-400 border-slate-400 dark:from-slate-700 dark:to-slate-800 dark:border-slate-700'} shadow`}>
+          <button
+            onClick={() => setModePrive(!modePrive)}
+            className={`inline-flex items-center justify-center w-7 h-7 rounded-full border-2 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-red-400/60 ${modePrive ? 'bg-gradient-to-r from-red-500 to-red-700 border-red-600 scale-105 shadow-lg' : 'bg-gradient-to-r from-slate-200 to-slate-400 border-slate-400 dark:from-slate-700 dark:to-slate-800 dark:border-slate-700 hover:scale-105 hover:shadow'}"}`}
+            aria-label={modePrive ? 'Désactiver le mode privé/éphémère' : 'Activer le mode privé/éphémère'}
+            title={modePrive ? 'Désactiver le mode privé/éphémère' : 'Activer le mode privé/éphémère'}
+            type="button"
+          >
             <Shield className={`w-4 h-4 ${modePrive ? 'text-white' : 'text-slate-500 dark:text-slate-200'}`} />
-          </span>
-          <span title={ragEnabled ? 'RAG activé' : 'RAG désactivé'} className={`inline-flex items-center justify-center w-7 h-7 rounded-full border-2 ${ragEnabled ? 'bg-gradient-to-r from-green-400 to-emerald-600 border-green-500' : 'bg-gradient-to-r from-slate-200 to-slate-400 border-slate-400 dark:from-slate-700 dark:to-slate-800 dark:border-slate-700'} shadow`}>
+          </button>
+          <button
+            onClick={() => setRagEnabled(!ragEnabled)}
+            className={`inline-flex items-center justify-center w-7 h-7 rounded-full border-2 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-green-400/60 ${ragEnabled ? 'bg-gradient-to-r from-green-400 to-emerald-600 border-green-500 scale-105 shadow-lg' : 'bg-gradient-to-r from-slate-200 to-slate-400 border-slate-400 dark:from-slate-700 dark:to-slate-800 dark:border-slate-700 hover:scale-105 hover:shadow'}"}`}
+            aria-label={ragEnabled ? 'Désactiver la recherche documentaire' : 'Activer la recherche documentaire'}
+            title={ragEnabled ? 'Désactiver la recherche documentaire' : 'Activer la recherche documentaire'}
+            type="button"
+          >
             <Brain className={`w-4 h-4 ${ragEnabled ? 'text-white' : 'text-slate-500 dark:text-slate-200'}`} />
-          </span>
+          </button>
           <button
             className="p-2 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 shadow focus:outline-none focus:ring-2 focus:ring-blue-400 ml-1"
             onClick={() => setShowMobileMenu(true)}
