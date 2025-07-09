@@ -114,16 +114,12 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
           {/* Conditional rendering for hero section or chat content */}
           {messages.length === 0 ? (
             modePrive ? (
-              <div className="flex flex-col items-center justify-center min-h-[60vh] sm:min-h-[320px] text-center px-1 mb-3 animate-fadeIn">
-                {/* Icône héros : bouclier sécurisé avec effets de halo et particules */}
-                <div className="relative mb-6 group animate-fadeIn" style={{ animationDelay: "0.1s" }}>
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-3xl flex items-center justify-center shadow-2xl border-4 border-white/20 dark:border-slate-800/60 backdrop-blur-xl relative">
-                    {/* Effet de halo glass */}
-                    <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-400/20 via-indigo-400/10 to-emerald-300/10 blur-2xl pointer-events-none"></div>
-                    {/* Glow subtil */}
-                    <div className="absolute inset-0 rounded-3xl ring-2 ring-blue-400/20 animate-pulse pointer-events-none"></div>
-                    {/* Icône bouclier stylisé */}
-                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="url(#shield-gradient)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-white drop-shadow-xl z-10 animate-popIn">
+              <div className="flex flex-col items-center justify-center min-h-[60vh] sm:min-h-[320px] text-center px-2 mb-3 animate-fadeIn">
+                {/* Hero: Secure shield, minimal, pro */}
+                <div className="relative mb-5 animate-fadeIn" style={{ animationDelay: "0.1s" }}>
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-2xl flex items-center justify-center shadow-xl border-2 border-white/20 dark:border-slate-800/60 backdrop-blur-xl relative">
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-400/20 via-indigo-400/10 to-emerald-300/10 blur pointer-events-none"></div>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#shield-gradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white drop-shadow z-10 animate-popIn">
                       <defs>
                         <linearGradient id="shield-gradient" x1="0" y1="0" x2="1" y2="1">
                           <stop offset="0%" stopColor="#60a5fa" />
@@ -135,60 +131,15 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                       <path d="M9.5 12.5l2 2 3-3" className="stroke-emerald-300 animate-pulse" />
                     </svg>
                   </div>
-                  {/* Badge confidentiel glass */}
-                  <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full bg-white/30 dark:bg-slate-900/40 backdrop-blur-xl border border-blue-300/30 dark:border-blue-700/30 shadow-lg text-blue-900 dark:text-blue-100 font-bold text-xs select-none animate-bouncePrivé tracking-wide" style={{boxShadow:'0 2px 16px 0 rgba(99,102,241,0.12)'}}>Confidentiel</div>
+                  <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-white/40 dark:bg-slate-900/40 backdrop-blur border border-blue-300/30 dark:border-blue-700/30 shadow text-blue-900 dark:text-blue-100 font-bold text-xs select-none animate-bouncePrivé tracking-wide" style={{boxShadow:'0 2px 12px 0 rgba(99,102,241,0.10)'}}>Confidentiel</div>
                 </div>
-                <div className="max-w-4xl mx-auto w-full">
-                  {/* Sous-titre rassurant premium */}
-                  <p className="text-blue-900 dark:text-blue-100 max-w-xl mx-auto text-xs sm:text-sm leading-relaxed mb-6 font-medium animate-fadeIn" style={{ animationDelay: "0.3s" }}>
-                    Profitez d'une confidentialité totale : vos messages ne sont <span className="underline underline-offset-2 decoration-emerald-400">jamais sauvegardés</span>, <span className="underline underline-offset-2 decoration-blue-400">effacés automatiquement</span> à la fermeture, et <span className="underline underline-offset-2 decoration-slate-400">chiffrés localement</span>.<br />
+                <div className="max-w-md mx-auto w-full">
+                  <p className="text-blue-900 dark:text-blue-100 text-xs sm:text-sm leading-relaxed mb-4 font-medium animate-fadeIn" style={{ animationDelay: "0.2s" }}>
+                    <span className="font-semibold">Confidentialité totale.</span> Vos messages sont <span className="underline decoration-emerald-400">jamais sauvegardés</span>, <span className="underline decoration-blue-400">effacés à la fermeture</span>, <span className="underline decoration-slate-400">chiffrés localement</span>.
                   </p>
-                  {/* Grille de fonctionnalités premium glass */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full max-w-4xl mx-auto mb-6 animate-fadeIn" style={{ animationDelay: "0.4s" }}>
-                    {/* Carte 1 : Aucune sauvegarde */}
-                    <div className="group p-4 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-blue-200/40 dark:border-blue-700/30 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col items-center justify-center min-h-[120px] backdrop-blur-xl">
-                      <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mb-2 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                          <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7" />
-                          <path d="M16 3v4H8V3" />
-                          <path d="M10 12l2 2 4-4" className="stroke-emerald-200 animate-pulse" />
-                        </svg>
-                      </div>
-                      <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1 text-xs">Aucune sauvegarde</h4>
-                      <p className="text-[11px] text-blue-800 dark:text-blue-200/90">Vos messages restent uniquement sur votre appareil.</p>
-                    </div>
-                    {/* Carte 2 : Effacement automatique */}
-                    <div className="group p-4 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-indigo-200/40 dark:border-indigo-700/30 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col items-center justify-center min-h-[120px] backdrop-blur-xl">
-                      <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-blue-700 rounded-xl flex items-center justify-center mb-2 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                          <rect x="3" y="6" width="18" height="14" rx="2" className="fill-white/10" />
-                          <path d="M8 10v6" />
-                          <path d="M16 10v6" />
-                          <path d="M5 6V4a2 2 0 012-2h10a2 2 0 012 2v2" />
-                        </svg>
-                      </div>
-                      <h4 className="font-semibold text-indigo-900 dark:text-indigo-100 mb-1 text-xs">Effacement auto</h4>
-                      <p className="text-[11px] text-indigo-800 dark:text-indigo-200/90">Tout est supprimé dès que vous quittez la page.</p>
-                    </div>
-                    {/* Carte 3 : Chiffrement local */}
-                    <div className="group p-4 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-emerald-200/40 dark:border-emerald-700/30 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col items-center justify-center min-h-[120px] backdrop-blur-xl">
-                      <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-blue-600 rounded-xl flex items-center justify-center mb-2 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                          <circle cx="12" cy="12" r="6" className="fill-white/10" />
-                          <path d="M12 9v3l2 2" className="stroke-emerald-200 animate-pulse" />
-                          <path d="M16 7.5a6 6 0 01-8 9" className="stroke-emerald-300/80" />
-                        </svg>
-                      </div>
-                      <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-1 text-xs">Chiffrement local</h4>
-                      <p className="text-[11px] text-emerald-800 dark:text-emerald-200/90">Vos données sont protégées et inaccessibles à autrui.</p>
-                    </div>
-                  </div>
-                  
-                  {/* Call-to-action clair glass premium */}
-                  <div className="p-3 bg-white/60 dark:bg-slate-900/60 rounded-xl border border-blue-200/40 dark:border-blue-700/30 backdrop-blur-xl shadow-inner animate-fadeIn transition-all duration-300 hover:scale-105 hover:shadow-indigo-400/30 hover:ring-2 hover:ring-indigo-400/40 group cursor-pointer" style={{ animationDelay: '0.6s' }}>
+                  <div className="p-3 bg-white/70 dark:bg-slate-900/60 rounded-xl border border-blue-200/40 dark:border-blue-700/30 backdrop-blur shadow-inner animate-fadeIn transition-all duration-300 hover:scale-105 hover:shadow-indigo-400/20 hover:ring-2 hover:ring-indigo-400/30 group cursor-pointer" style={{ animationDelay: '0.4s' }}>
                     <div className="flex items-center justify-center gap-2 mb-1">
-                      {/* Icône bouclier stylisé */}
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#shield-gradient2)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400 drop-shadow animate-popIn">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="url(#shield-gradient2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400 drop-shadow animate-popIn">
                         <defs>
                           <linearGradient id="shield-gradient2" x1="0" y1="0" x2="1" y2="1">
                             <stop offset="0%" stopColor="#60a5fa" />
@@ -200,72 +151,57 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                         <path d="M9.5 12.5l2 2 3-3" className="stroke-emerald-200 animate-pulse" />
                       </svg>
                       <span className="text-xs font-semibold text-blue-900 dark:text-blue-100 tracking-wide flex items-center gap-2">
-                        Commencez à discuter en toute sérénité
-                        {/* Badge confidentiel animé glass */}
-                        <span className="ml-2 px-2 py-0.5 rounded-full bg-white/40 dark:bg-slate-900/40 border border-blue-200/30 dark:border-blue-700/30 text-blue-900 dark:text-blue-100 text-[10px] font-bold shadow-lg animate-bouncePrivé select-none">Confidentiel</span>
+                        Démarrez une discussion privée
+                        <span className="ml-2 px-2 py-0.5 rounded-full bg-white/40 dark:bg-slate-900/40 border border-blue-200/30 dark:border-blue-700/30 text-blue-900 dark:text-blue-100 text-[10px] font-bold shadow animate-bouncePrivé select-none">Confidentiel</span>
                       </span>
                     </div>
                     <p className="text-[11px] text-blue-800 dark:text-blue-200/90 mt-1 font-medium">
-                      Ce mode garantit une confidentialité absolue : vos messages sont <span className="underline underline-offset-2 decoration-emerald-400">éphémères</span>, <span className="underline underline-offset-2 decoration-blue-400">jamais stockés</span> et <span className="underline underline-offset-2 decoration-slate-400">protégés localement</span>.<br />
-                      <span className="text-indigo-700 dark:text-indigo-300 font-semibold">Profitez d’un espace de discussion privé, sécurisé et sans trace.</span>
+                      Messages <span className="underline decoration-emerald-400">éphémères</span>, <span className="underline decoration-blue-400">jamais stockés</span>, <span className="underline decoration-slate-400">protégés localement</span>.
                     </p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col  pt-10  items-center justify-center min-h-[60vh] sm:min-h-[300px] text-center px-1 mb-3">
-                {/* Hero section améliorée */}
+              <div className="flex flex-col pt-10 items-center justify-center min-h-[60vh] sm:min-h-[300px] text-center px-2 mb-3">
+                {/* Hero section concise, pro */}
                 <div className="relative mb-4 group">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:rotate-2">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl transition-all duration-500 group-hover:scale-105 group-hover:rotate-2">
                     <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
-                  {/* Animated status indicator */}
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center shadow-lg animate-pulse">
-                    <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center shadow animate-pulse">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></div>
                   </div>
-                  {/* Floating particles */}
-                  <div className="absolute -top-3 -left-3 w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.5s] opacity-70 shadow-lg"></div>
-                  <div className="absolute -bottom-3 -right-3 w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:1s] opacity-70 shadow-md"></div>
-                  <div className="absolute top-1/2 -left-4 w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:1.5s] opacity-70 shadow-md"></div>
-                  <div className="absolute -top-2 right-3 w-1 h-1 bg-pink-400 rounded-full animate-bounce [animation-delay:2s] opacity-60 shadow-sm"></div>
-                  {/* Pulsating circles */}
-                  <div className="absolute inset-0 rounded-full border border-blue-300 animate-ping opacity-30"></div>
-                  <div className="absolute inset-0 rounded-full border border-purple-300 animate-ping opacity-20 [animation-delay:1s]"></div>
                 </div>
-                <div className="max-w-xl mx-auto">
-                  <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 dark:from-slate-200 dark:via-slate-300 dark:to-slate-400 bg-clip-text text-transparent">
+                <div className="max-w-md mx-auto">
+                  <h3 className="text-xl font-bold mb-1 bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 dark:from-slate-200 dark:via-slate-300 dark:to-slate-400 bg-clip-text text-transparent">
                     Bienvenue sur NeuroChat
                   </h3>
-                  <p className="text-muted-foreground max-w-md mx-auto text-xs sm:text-sm leading-relaxed mb-4">
-                    Découvrez le futur de la conversation avec l'IA : reconnaissance vocale avancée, langage naturel et réponses intelligentes.
+                  <p className="text-muted-foreground max-w-md mx-auto text-xs sm:text-sm leading-relaxed mb-3">
+                    L'IA conversationnelle nouvelle génération : voix, texte, réponses instantanées.
                   </p>
-                  {/* Feature Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 w-full max-w-xl mb-4">
-                    <div className="group p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 rounded-xl border border-blue-200/50 dark:border-blue-700/30 hover:shadow-lg transition-all duration-300 hover:scale-105">
-                      <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mb-2 mx-auto group-hover:scale-105 transition-transform duration-300">
+                  {/* Features concise */}
+                  <div className="grid grid-cols-3 gap-2 w-full max-w-md mb-3">
+                    <div className="group p-2 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 rounded-lg border border-blue-200/40 dark:border-blue-700/20 hover:shadow transition-all duration-200 hover:scale-105">
+                      <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded flex items-center justify-center mb-1 mx-auto">
                         <Brain className="w-4 h-4 text-white" />
                       </div>
-                      <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1 text-xs">IA avancée</h4>
-                      <p className="text-[10px] text-blue-700 dark:text-blue-300">Compréhension contextuelle et réponses naturelles</p>
+                      <div className="text-[11px] font-semibold text-blue-900 dark:text-blue-100">IA avancée</div>
                     </div>
-                    <div className="group p-3 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/20 rounded-xl border border-emerald-200/50 dark:border-emerald-700/30 hover:shadow-lg transition-all duration-300 hover:scale-105">
-                      <div className="w-7 h-7 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center mb-2 mx-auto group-hover:scale-105 transition-transform duration-300">
+                    <div className="group p-2 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/20 rounded-lg border border-emerald-200/40 dark:border-emerald-700/20 hover:shadow transition-all duration-200 hover:scale-105">
+                      <div className="w-6 h-6 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded flex items-center justify-center mb-1 mx-auto">
                         <Mic className="w-4 h-4 text-white" />
                       </div>
-                      <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-1 text-xs">Prêt pour la voix</h4>
-                      <p className="text-[10px] text-emerald-700 dark:text-emerald-300">Parlez naturellement et écoutez les réponses</p>
+                      <div className="text-[11px] font-semibold text-emerald-900 dark:text-emerald-100">Voix</div>
                     </div>
-                    <div className="group p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/20 rounded-xl border border-purple-200/50 dark:border-purple-700/30 hover:shadow-lg transition-all duration-300 hover:scale-105 sm:col-span-2 lg:col-span-1">
-                      <div className="w-7 h-7 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mb-2 mx-auto group-hover:scale-105 transition-transform duration-300">
+                    <div className="group p-2 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/20 rounded-lg border border-purple-200/40 dark:border-purple-700/20 hover:shadow transition-all duration-200 hover:scale-105">
+                      <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-purple-600 rounded flex items-center justify-center mb-1 mx-auto">
                         <Zap className="w-4 h-4 text-white" />
                       </div>
-                      <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-1 text-xs">Temps réel</h4>
-                      <p className="text-[10px] text-purple-700 dark:text-purple-300">Réponses instantanées et fluides</p>
+                      <div className="text-[11px] font-semibold text-purple-900 dark:text-purple-100">Instantané</div>
                     </div>
                   </div>
                   {/* Call to action */}
-                  <div className="p-3 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-700/50 rounded-xl border border-slate-200/50 dark:border-slate-600/50 backdrop-blur-sm">
+                  <div className="p-3 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-700/50 rounded-xl border border-slate-200/40 dark:border-slate-600/40 backdrop-blur-sm">
                     <div className="flex items-center justify-center gap-1 mb-1">
                       <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse" />
                       <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
@@ -274,7 +210,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                       <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse [animation-delay:0.5s]" />
                     </div>
                     <p className="text-[11px] text-muted-foreground/80">
-                      Écrivez un message ou cliquez sur le micro pour parler.
+                      Écrivez un message ou cliquez sur le micro.
                     </p>
                   </div>
                 </div>

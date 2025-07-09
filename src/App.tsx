@@ -657,22 +657,23 @@ function App() {
 
         {/* Enhanced Chat Interface */}
         <Card className="flex-1 flex flex-col shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl overflow-hidden ring-1 ring-white/20 dark:ring-slate-700/20 relative">
-          <ChatContainer
-            messages={messages}
-            isLoading={isLoading}
-            onDeleteMessage={handleDeleteMessage}
-            selectMode={selectMode}
-            selectedMessageIds={selectedMessageIds}
-            onSelectMessage={handleSelectMessage}
-            modePrive={modePrive}
-          />
-          {/* Zone de saisie sticky en bas */}
-          <div className="sticky bottom-0 left-0 w-full bg-white/90 dark:bg-slate-900/90 z-20 px-2 pt-2 pb-2 border-t border-slate-200 dark:border-slate-700 backdrop-blur-xl">
-            <VoiceInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+          <div className="flex-1 overflow-y-auto pb-20"> {/* Ajout du padding-bottom pour l'input */}
+            <ChatContainer
+              messages={messages}
+              isLoading={isLoading}
+              onDeleteMessage={handleDeleteMessage}
+              selectMode={selectMode}
+              selectedMessageIds={selectedMessageIds}
+              onSelectMessage={handleSelectMessage}
+              modePrive={modePrive}
+            />
           </div>
         </Card>
+      </div>
 
-        
+      {/* Zone de saisie fixée en bas de l'écran */}
+      <div className="fixed bottom-0 left-0 w-full z-50 bg-white/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-700 px-2 pt-2 pb-2 backdrop-blur-xl">
+        <VoiceInput onSendMessage={handleSendMessage} isLoading={isLoading} />
       </div>
 
       <TTSSettingsModal
