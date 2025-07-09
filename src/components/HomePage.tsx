@@ -31,8 +31,11 @@ import {
   Lightbulb,
   Rocket,
   Target,
-  Waves
+  Waves,
+  Sun,
+  Moon
 } from 'lucide-react';
+import { useTheme } from '@/hooks/useTheme';
 
 interface HomePageProps {
   onStartChat: () => void;
@@ -49,6 +52,7 @@ export function HomePage({
   totalDiscussions, 
   totalMessages 
 }: HomePageProps) {
+  const { theme, toggleTheme } = useTheme();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [animatedStats, setAnimatedStats] = useState({ discussions: 0, messages: 0 });
@@ -149,30 +153,6 @@ export function HomePage({
     }
   ];
 
-  const stats = [
-    {
-      label: "Discussions",
-      value: animatedStats.discussions,
-      icon: <MessageCircle className="w-5 h-5" />,
-      color: "from-blue-500 to-indigo-600",
-      change: "+12%"
-    },
-    {
-      label: "Messages",
-      value: animatedStats.messages,
-      icon: <Bot className="w-5 h-5" />,
-      color: "from-emerald-500 to-teal-600",
-      change: "+8%"
-    },
-    {
-      label: "Statut",
-      value: isOnline ? "En ligne" : "Hors ligne",
-      icon: <Activity className="w-5 h-5" />,
-      color: isOnline ? "from-green-500 to-emerald-600" : "from-red-500 to-pink-600",
-      change: isOnline ? "Stable" : "Reconnexion..."
-    }
-  ];
-
   const testimonials = [
     {
       name: "Marie L.",
@@ -232,98 +212,84 @@ export function HomePage({
                 {isOnline ? 'En ligne' : 'Hors ligne'}
               </span>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              title={theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-4 h-4 text-yellow-500" />
+              ) : (
+                <Moon className="w-4 h-4 text-slate-600" />
+              )}
+            </Button>
           </div>
         </div>
       </header>
 
       {/* Contenu principal */}
       <main className="relative z-10 px-6 py-12 max-w-7xl mx-auto">
-        {/* Section héro */}
-        <section className="text-center mb-20">
-          <div className="max-w-4xl mx-auto">
-            <Badge variant="secondary" className="mb-6 px-4 py-2 text-sm font-medium bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 hover:scale-105 transition-transform duration-300">
-              <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+        {/* HERO */}
+        <section className="flex flex-col items-center justify-center text-center mb-16 min-h-[60vh] relative">
+          <div className="absolute left-1/2 top-0 -translate-x-1/2 -z-10 w-[340px] h-[340px] bg-gradient-to-br from-blue-400/30 via-indigo-400/20 to-purple-400/10 rounded-full blur-3xl animate-pulse" />
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl mb-2 relative">
+              <MessageCircle className="w-10 h-10 text-white drop-shadow-xl" />
+              <div className="absolute inset-0 rounded-2xl ring-4 ring-blue-400/10 animate-pulse pointer-events-none" />
+            </div>
+            <Badge variant="secondary" className="mb-4 px-5 py-2 text-base font-medium bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 shadow-md">
+              <Sparkles className="w-5 h-5 mr-2 animate-spin" />
               Nouvelle génération d'IA conversationnelle
             </Badge>
-            
-            <h2 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-slate-100 dark:via-slate-200 dark:to-slate-100 bg-clip-text text-transparent leading-tight animate-fade-in">
+            <h2 className="text-6xl md:text-7xl font-extrabold mb-4 bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 dark:from-blue-200 dark:via-indigo-200 dark:to-purple-200 bg-clip-text text-transparent leading-tight animate-fade-in">
               Découvrez le futur de la
               <span className="block bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 conversation IA
               </span>
             </h2>
-            
-            <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in-delay">
-              Une expérience de chat révolutionnaire combinant reconnaissance vocale avancée, 
-              synthèse vocale naturelle et intelligence artificielle de pointe pour des conversations 
-              fluides et intelligentes.
+            <p className="text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed animate-fade-in-delay">
+              Une expérience de chat révolutionnaire combinant reconnaissance vocale avancée, synthèse vocale naturelle et intelligence artificielle de pointe pour des conversations fluides et intelligentes.
             </p>
-
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-delay-2">
               <Button 
                 onClick={onStartChat}
                 size="lg" 
-                className="px-10 py-5 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-2xl hover:shadow-blue-500/25 hover:scale-105 transition-all duration-300 group"
+                className="px-12 py-5 text-xl font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-2xl hover:shadow-blue-500/25 hover:scale-105 transition-all duration-300 group rounded-2xl"
               >
-                <Play className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+                <Play className="w-6 h-6 mr-2 group-hover:scale-110 transition-transform" />
                 Commencer à discuter
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-6 h-6 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
-              
               <Button 
                 onClick={onOpenHistory}
                 variant="outline" 
                 size="lg"
-                className="px-10 py-5 text-lg font-semibold border-2 hover:bg-gradient-to-r hover:from-slate-100 hover:to-slate-50 dark:hover:from-slate-800 dark:hover:to-slate-700 hover:scale-105 transition-all duration-300"
+                className="px-12 py-5 text-xl font-semibold border-2 hover:bg-gradient-to-r hover:from-slate-100 hover:to-slate-50 dark:hover:from-slate-800 dark:hover:to-slate-700 hover:scale-105 transition-all duration-300 rounded-2xl"
               >
-                <History className="w-5 h-5 mr-2" />
+                <History className="w-6 h-6 mr-2" />
                 Voir l'historique
               </Button>
             </div>
           </div>
         </section>
 
-        {/* Statistiques améliorées */}
-        <section className="mb-20">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {stats.map((stat, index) => (
-              <Card key={index} className="text-center hover:shadow-xl transition-all duration-500 hover:scale-105 border-0 shadow-lg bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 group">
-                <CardContent className="pt-8 pb-6">
-                  <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${stat.color} shadow-lg flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-300`}>
-                    {stat.icon}
-                  </div>
-                  <div className="text-4xl font-bold mb-2 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
-                    {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
-                  </div>
-                  <p className="text-muted-foreground mb-2">{stat.label}</p>
-                  <Badge variant="secondary" className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-                    {stat.change}
-                  </Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* Fonctionnalités avec animation */}
-        <section className="mb-20">
-          <div className="text-center mb-12">
-            <h3 className="text-4xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
+        {/* Fonctionnalités */}
+        <section className="mb-16">
+          <div className="text-center mb-10">
+            <h3 className="text-4xl font-extrabold mb-3 bg-gradient-to-r from-blue-700 to-purple-700 dark:from-blue-200 dark:to-purple-200 bg-clip-text text-transparent">
               Fonctionnalités Premium
             </h3>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Découvrez toutes les fonctionnalités avancées qui font de NeuroChat 
-              l'application de chat IA la plus complète et intuitive.
+              Découvrez toutes les fonctionnalités avancées qui font de NeuroChat l'application de chat IA la plus complète et intuitive.
             </p>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <Card 
                 key={index} 
-                className={`group hover:shadow-2xl transition-all duration-500 hover:scale-105 border-0 shadow-lg cursor-pointer ${
-                  index === activeFeature ? 'ring-2 ring-blue-500 shadow-blue-500/25' : ''
-                }`}
+                className={`group hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-0 shadow-lg cursor-pointer rounded-2xl bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-blue-950 ${index === activeFeature ? 'ring-2 ring-blue-500 shadow-blue-500/25' : ''}`}
                 onMouseEnter={() => setActiveFeature(index)}
               >
                 <CardHeader className="pb-4">
@@ -331,14 +297,16 @@ export function HomePage({
                     <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                       {feature.icon}
                     </div>
-                    <Badge variant="secondary" className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                    <Badge variant="secondary" className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-xl">
                       {feature.badge}
                     </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <CardTitle className="mb-3 text-xl">{feature.title}</CardTitle>
-                  <CardDescription className="text-sm leading-relaxed">
+                  <CardTitle className="mb-3 text-xl font-bold text-blue-900 dark:text-blue-100">
+                    {feature.title}
+                  </CardTitle>
+                  <CardDescription className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                     {feature.description}
                   </CardDescription>
                 </CardContent>
@@ -348,27 +316,26 @@ export function HomePage({
         </section>
 
         {/* Témoignages */}
-        <section className="mb-20">
-          <div className="text-center mb-12">
-            <h3 className="text-4xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
+        <section className="mb-16">
+          <div className="text-center mb-10">
+            <h3 className="text-4xl font-extrabold mb-3 bg-gradient-to-r from-blue-700 to-purple-700 dark:from-blue-200 dark:to-purple-200 bg-clip-text text-transparent">
               Ce que disent nos utilisateurs
             </h3>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Découvrez les retours de notre communauté d'utilisateurs satisfaits.
             </p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="text-center hover:shadow-xl transition-all duration-300 hover:scale-105 border-0 shadow-lg">
-                <CardContent className="pt-6">
+              <Card key={index} className="text-center hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-0 shadow-lg rounded-2xl bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-blue-950">
+                <CardContent className="pt-8 pb-6">
                   <div className="flex justify-center mb-4">
                     {[...Array(testimonial.rating)].map((_, i) => (
                       <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
                     ))}
                   </div>
-                  <p className="text-muted-foreground mb-4 italic">"{testimonial.content}"</p>
-                  <div className="font-semibold">{testimonial.name}</div>
+                  <p className="text-muted-foreground mb-4 italic text-lg">"{testimonial.content}"</p>
+                  <div className="font-semibold text-blue-900 dark:text-blue-100 text-lg">{testimonial.name}</div>
                   <div className="text-sm text-muted-foreground">{testimonial.role}</div>
                 </CardContent>
               </Card>
@@ -376,42 +343,37 @@ export function HomePage({
           </div>
         </section>
 
-        {/* Section CTA améliorée */}
-        <section className="text-center">
-          <Card className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950 dark:via-indigo-950 dark:to-purple-950 border-0 shadow-2xl hover:shadow-3xl transition-all duration-500">
+        {/* CTA final */}
+        <section className="text-center mb-0">
+          <Card className="bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100 dark:from-blue-950 dark:via-indigo-950 dark:to-purple-950 border-0 shadow-2xl hover:shadow-3xl transition-all duration-500 rounded-2xl">
             <CardContent className="pt-16 pb-16">
               <div className="max-w-2xl mx-auto">
-                <div className="w-20 h-20 mx-auto mb-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-3xl flex items-center justify-center shadow-2xl hover:scale-110 transition-transform duration-300">
-                  <Rocket className="w-10 h-10 text-white" />
+                <div className="w-24 h-24 mx-auto mb-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-3xl flex items-center justify-center shadow-2xl hover:scale-110 transition-transform duration-300 animate-pulse">
+                  <Rocket className="w-12 h-12 text-white animate-bounce" />
                 </div>
-                
-                <h3 className="text-4xl font-bold mb-6 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
+                <h3 className="text-4xl font-extrabold mb-6 bg-gradient-to-r from-blue-700 to-purple-700 dark:from-blue-200 dark:to-purple-200 bg-clip-text text-transparent">
                   Prêt à révolutionner vos conversations ?
                 </h3>
-                
                 <p className="text-muted-foreground mb-10 text-xl leading-relaxed">
-                  Rejoignez des milliers d'utilisateurs qui ont déjà découvert 
-                  la puissance de NeuroChat pour leurs conversations quotidiennes.
+                  Rejoignez des milliers d'utilisateurs qui ont déjà découvert la puissance de NeuroChat pour leurs conversations quotidiennes.
                 </p>
-
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button 
                     onClick={onStartChat}
                     size="lg" 
-                    className="px-10 py-5 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-2xl hover:shadow-blue-500/25 hover:scale-105 transition-all duration-300 group"
+                    className="px-12 py-5 text-xl font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-2xl hover:shadow-blue-500/25 hover:scale-105 transition-all duration-300 group rounded-2xl"
                   >
-                    <Target className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" />
+                    <Target className="w-6 h-6 mr-2 group-hover:rotate-12 transition-transform" />
                     Commencer maintenant
-                    <ArrowUpRight className="w-5 h-5 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    <ArrowUpRight className="w-6 h-6 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                   </Button>
-                  
                   <Button 
                     onClick={onOpenSettings}
                     variant="outline" 
                     size="lg"
-                    className="px-10 py-5 text-lg font-semibold border-2 hover:bg-gradient-to-r hover:from-slate-100 hover:to-slate-50 dark:hover:from-slate-800 dark:hover:to-slate-700 hover:scale-105 transition-all duration-300"
+                    className="px-12 py-5 text-xl font-semibold border-2 hover:bg-gradient-to-r hover:from-slate-100 hover:to-slate-50 dark:hover:from-slate-800 dark:hover:to-slate-700 hover:scale-105 transition-all duration-300 rounded-2xl"
                   >
-                    <Settings className="w-5 h-5 mr-2" />
+                    <Settings className="w-6 h-6 mr-2" />
                     Configurer
                   </Button>
                 </div>
@@ -421,11 +383,11 @@ export function HomePage({
         </section>
       </main>
 
-      {/* Footer amélioré */}
+      {/* Footer */}
       <footer className="relative z-10 mt-24 px-6 py-12 border-t border-slate-200/50 dark:border-slate-800/50 bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="text-center mb-4">
+            <div className="flex items-center justify-center gap-3 mb-2">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
                 <MessageCircle className="w-6 h-6 text-white" />
               </div>
@@ -433,24 +395,9 @@ export function HomePage({
                 NeuroChat
               </span>
             </div>
-            <p className="text-muted-foreground mb-6">
-              © 2024 NeuroChat. Propulsé par Google Gemini. 
-              Conçu avec ❤️ pour des conversations intelligentes.
+            <p className="text-muted-foreground mb-2">
+              © 2024 NeuroChat. Propulsé par Google Gemini. Conçu avec ❤️ pour des conversations intelligentes.
             </p>
-            <div className="flex justify-center gap-4">
-              <Badge variant="outline" className="hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors">
-                <Globe className="w-3 h-3 mr-1" />
-                Français
-              </Badge>
-              <Badge variant="outline" className="hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors">
-                <Shield className="w-3 h-3 mr-1" />
-                Sécurisé
-              </Badge>
-              <Badge variant="outline" className="hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors">
-                <Heart className="w-3 h-3 mr-1" />
-                Open Source
-              </Badge>
-            </div>
           </div>
         </div>
       </footer>
