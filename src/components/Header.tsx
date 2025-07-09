@@ -175,7 +175,7 @@ export function Header({
         >
           <span className="text-lg sm:text-xl font-extrabold truncate bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent drop-shadow-md tracking-tight animate-glowText group-hover:scale-105 transition-transform duration-200">
             <span className="hidden xs:inline">NeuroChat</span>
-            <span className="inline xs:hidden">NC</span>
+            <span className="inline xs:hidden">NeuroChat</span>
           </span>
         </div>
         {/* Badges d'état (desktop: à droite, mobile: icônes à droite du logo) */}
