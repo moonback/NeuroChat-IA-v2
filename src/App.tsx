@@ -24,7 +24,6 @@ import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
 import { useMemory } from "@/hooks/useMemory";
 import { MemoryModal } from '@/components/MemoryModal';
 import { pipeline } from "@xenova/transformers";
-import { useRef } from 'react';
 
 interface Message {
   id: string;
