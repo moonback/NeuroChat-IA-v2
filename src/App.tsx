@@ -359,15 +359,21 @@ function App() {
       }
       // Injection de la mémoire dans le prompt système
       const memorySummary = memory.length
-        ? "Voici ce que tu sais sur l'utilisateur :\n" + memory.map(f => "- " + f.content).join("\n") + "\n"
+        ? `Contexte utilisateur à mémoriser et à utiliser dans toutes tes réponses :\n${memory.map(f => "- " + f.content).join("\n")}\n\nTu dois toujours utiliser ces informations pour personnaliser tes réponses, même si l'utilisateur ne les mentionne pas.\n`
         : "";
+      // LOG mémoire injectée
+      console.log('[Mémoire utilisateur injectée]', memorySummary);
       const prompt = `${getSystemPrompt(selectedPersonality)}\n${memorySummary}${ragEnabled ? ragContext : ""}Question utilisateur : ${userMessage}`;
+      // LOG prompt final
+      console.log('[Prompt envoyé à Gemini]', prompt);
       const response = await sendMessageToGemini(
         filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
         imageFile ? [imageFile] : undefined,
         prompt,
         geminiConfig
       );
+      // LOG réponse Gemini
+      console.log('[Réponse Gemini]', response);
       addMessage(response, false);
       speak(response, {
         onEnd: () => {
