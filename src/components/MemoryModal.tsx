@@ -61,7 +61,7 @@ export function MemoryModal({ open, onClose }: MemoryModalProps) {
     a.download = "memoire_utilisateur.json";
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("Mémoire exportée au format JSON.");
+    // toast.success("Mémoire exportée au format JSON.");
   };
 
   const filteredMemory = useMemo(() => {
