@@ -21,6 +21,8 @@ import { Slider } from '@/components/ui/slider';
 import { Button as UIButton } from '@/components/ui/button';
 import { Tooltip } from 'react-tooltip';
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
+import { useMemory } from "@/hooks/useMemory";
+import { MemoryModal } from '@/components/MemoryModal';
 
 interface Message {
   id: string;
@@ -247,6 +249,8 @@ function App() {
     return message;
   };
 
+  const { memory, addFact } = useMemory();
+
  
 
   const getSystemPrompt = (personality: string) => {
@@ -282,7 +286,48 @@ function App() {
     setMessages(prev => [...prev, ragMsg as any]);
   };
 
+  // Détection automatique d'informations à mémoriser
+  function detectAndMemorize(text: string) {
+    // Prénom
+    const nameMatch = text.match(/je m'appelle ([\w\- ]+)/i);
+    if (nameMatch) {
+      addFact(`Le prénom de l'utilisateur est ${nameMatch[1]}`);
+    }
+    // Ville
+    const cityMatch = text.match(/j'habite (à|au|en|aux) ([\w\- ]+)/i);
+    if (cityMatch) {
+      addFact(`L'utilisateur habite ${cityMatch[2]}`);
+    }
+    // Plat préféré
+    const platMatch = text.match(/(mon plat préféré est|je préfère manger|j'adore manger) ([\w\- ]+)/i);
+    if (platMatch) {
+      addFact(`Le plat préféré de l'utilisateur est ${platMatch[2]}`);
+    }
+    // Métier
+    const jobMatch = text.match(/je suis (un |une |)([\w\- ]+)/i);
+    if (jobMatch && !/je suis (fatigué|content|heureux|triste|malade|prêt|prête|désolé|désolée|occupé|occupée|disponible|en forme|en retard|à l'heure|là|ici|ok|d'accord|prêt à|prête à)/i.test(text)) {
+      addFact(`Le métier de l'utilisateur est ${jobMatch[2]}`);
+    }
+    // Date de naissance
+    const birthMatch = text.match(/je suis né(e)? le ([0-9]{1,2} [a-zéû]+ [0-9]{4})/i);
+    if (birthMatch) {
+      addFact(`La date de naissance de l'utilisateur est ${birthMatch[2]}`);
+    }
+    // Animal préféré
+    const animalMatch = text.match(/(mon animal préféré est|j'adore les|je préfère les) ([\w\- ]+)/i);
+    if (animalMatch) {
+      addFact(`L'animal préféré de l'utilisateur est ${animalMatch[2]}`);
+    }
+    // Couleur préférée
+    const colorMatch = text.match(/(ma couleur préférée est|j'aime la couleur|je préfère la couleur) ([\w\- ]+)/i);
+    if (colorMatch) {
+      addFact(`La couleur préférée de l'utilisateur est ${colorMatch[2]}`);
+    }
+    // Autres patterns à enrichir selon besoin
+  }
+
   const handleSendMessage = async (userMessage: string, imageFile?: File) => {
+    detectAndMemorize(userMessage);
     if (!isOnline) {
       toast.error('Pas de connexion Internet. Vérifie ta connexion réseau.');
       return;
@@ -312,10 +357,11 @@ function App() {
         });
         ragContext += '\n';
       }
-      // Utilise le prompt système dynamique selon la personnalité
-      const systemPrompt = getSystemPrompt(selectedPersonality);
-      // On fusionne le contexte documentaire avec le prompt système
-      const prompt = `${systemPrompt}\n${ragContext}Question utilisateur : ${userMessage}`;
+      // Injection de la mémoire dans le prompt système
+      const memorySummary = memory.length
+        ? "Voici ce que tu sais sur l'utilisateur :\n" + memory.map(f => "- " + f.content).join("\n") + "\n"
+        : "";
+      const prompt = `${getSystemPrompt(selectedPersonality)}\n${memorySummary}${ragEnabled ? ragContext : ""}Question utilisateur : ${userMessage}`;
       const response = await sendMessageToGemini(
         filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
         imageFile ? [imageFile] : undefined,
@@ -558,7 +604,7 @@ function App() {
     setGeminiConfig(cfg => ({ ...cfg, [key]: value }));
   };
 
- 
+  const [showMemoryModal, setShowMemoryModal] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
@@ -595,6 +641,7 @@ function App() {
           geminiConfig={geminiConfig}
           modePrive={modePrive}
           setModePrive={setModePrive}
+          onOpenMemoryModal={() => setShowMemoryModal(true)}
         />
 
         {/* Indicateur visuel du mode privé SOUS le header, centré */}
@@ -910,6 +957,7 @@ function App() {
         </DrawerContent>
       </Drawer>
 
+      <MemoryModal open={showMemoryModal} onClose={() => setShowMemoryModal(false)} />
       
     </div>
   );
