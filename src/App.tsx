@@ -73,8 +73,8 @@ function App() {
   
   const [showTTSSettings, setShowTTSSettings] = useState(false);
   
-  // Ajout du state pour la personnalité IA
-  const [selectedPersonality, setSelectedPersonality] = useState('formel');
+  // Ajout du state pour la personnalité IA (par défaut : humoristique)
+  const [selectedPersonality, setSelectedPersonality] = useState('humoristique');
   // Ajout du state pour le mode vocal automatique
   const [modeVocalAuto, setModeVocalAuto] = useState(false);
   // Ajout du state pour la modale de gestion des documents RAG
