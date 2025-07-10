@@ -85,7 +85,6 @@ export function TTSSettingsModal({ open, onClose, rate, setRate, pitch, setPitch
     resetSettings();
     toast.success('Réglages réinitialisés.');
   };
-
   
 
   return (

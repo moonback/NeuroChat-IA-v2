@@ -6,7 +6,7 @@ import { Tooltip as ReactTooltip } from 'react-tooltip';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import {
-  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Square, Mic, User, Brain, Shield
+  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Square, Mic, User, Brain, Shield, BookOpen
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
@@ -94,6 +94,7 @@ interface HeaderProps {
   geminiConfig?: any;
   modePrive: boolean;
   setModePrive: (v: boolean) => void;
+  onOpenMemoryModal: () => void;
 }
 
 // =====================
@@ -118,6 +119,7 @@ export function Header({
   geminiConfig,
   modePrive,
   setModePrive,
+  onOpenMemoryModal,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
@@ -219,6 +221,15 @@ export function Header({
             aria-label="Ouvrir le menu"
           >
             <svg className="w-6 h-6 text-slate-700 dark:text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+          <button
+            type="button"
+            className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900"
+            title="Mémoire utilisateur"
+            onClick={onOpenMemoryModal}
+          >
+            <BookOpen className="w-5 h-5" />
+            <span className="sr-only">Mémoire utilisateur</span>
           </button>
         </div>
       </div>
@@ -330,6 +341,18 @@ export function Header({
                 <path d="M12 13v2" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
             )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onOpenMemoryModal}
+            className="hover:bg-blue-100 dark:hover:bg-blue-900 group focus:ring-2 focus:ring-blue-400/60 w-7 h-7"
+            title="Mémoire utilisateur"
+            aria-label="Mémoire utilisateur"
+            data-tooltip-id="header-tooltip"
+            data-tooltip-content="Afficher la mémoire utilisateur"
+          >
+            <BookOpen className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform" />
           </Button>
         </div>
 
