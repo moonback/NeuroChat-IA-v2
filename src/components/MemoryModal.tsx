@@ -34,7 +34,7 @@ export function MemoryModal({ open, onClose }: MemoryModalProps) {
     if (editValue.trim()) {
       editFact(id, editValue.trim());
       setEditingId(null);
-      toast.success("Information modifiée.");
+      // toast.success("Information modifiée.");
     }
   };
 
@@ -43,13 +43,13 @@ export function MemoryModal({ open, onClose }: MemoryModalProps) {
     if (newFact.trim()) {
       addFact(newFact.trim());
       setNewFact("");
-      toast.success("Information ajoutée à la mémoire.");
+      // toast.success("Information ajoutée à la mémoire.");
     }
   };
 
   const handleRemoveFact = (id: string) => {
     removeFact(id);
-    toast.success("Information supprimée.");
+    // toast.success("Information supprimée.");
   };
 
   const handleExport = () => {
