@@ -27,6 +27,7 @@ export function MemoryModal({ open, onClose, examples, setExamples, semanticThre
   const [newFact, setNewFact] = useState("");
   const [search, setSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const [showExamples, setShowExamples] = useState(false);
 
   useEffect(() => {
     if (open && inputRef.current) {
@@ -73,9 +74,29 @@ export function MemoryModal({ open, onClose, examples, setExamples, semanticThre
   return (
     <Drawer open={open} onOpenChange={v => { if (!v) onClose(); }}>
       <DrawerContent className="max-w-full w-[95vw] sm:w-[100%] px-2 py-2 animate-fadeIn">
-        <MemoryModalHeader />
+        <div className="flex items-center justify-between mb-2">
+          <MemoryModalHeader />
+          <button
+            className="ml-2 p-2 rounded-full border border-transparent hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+            onClick={() => setShowExamples(v => !v)}
+            aria-expanded={showExamples}
+            aria-controls="memory-examples-section"
+            title={showExamples ? "Masquer les exemples" : "Afficher les exemples"}
+          >
+            <span className="sr-only">
+              {showExamples ? "Masquer les exemples" : "Afficher les exemples"}
+            </span>
+            <span aria-hidden="true" className="text-xl">
+              💡
+            </span>
+          </button>
+        </div>
         <div className="flex-1 overflow-y-auto px-2 sm:px-6 py-2 sm:py-4" style={{ maxHeight: '70vh' }}>
-          <MemoryExamplesSection examples={examples} setExamples={setExamples} />
+          {showExamples && (
+            <div id="memory-examples-section">
+              <MemoryExamplesSection examples={examples} setExamples={setExamples} />
+            </div>
+          )}
           <MemoryThresholdSection semanticThreshold={semanticThreshold} setSemanticThreshold={setSemanticThreshold} semanticLoading={semanticLoading} />
           <MemoryAddForm onAdd={handleAddFact} inputRef={inputRef} newFact={newFact} setNewFact={setNewFact} />
           <MemorySearchExportBar search={search} setSearch={setSearch} onExport={handleExport} />
