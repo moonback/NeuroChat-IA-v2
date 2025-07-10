@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
-import { sendMessageToGemini, GeminiGenerationConfig } from '@/services/geminiApi';
+import { sendMessageToGemini, sendMessageWithThinking, GeminiGenerationConfig } from '@/services/geminiApi';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { Info, Sliders } from 'lucide-react';
 import { toast } from 'sonner';
@@ -52,6 +52,15 @@ type RagContextMessage = {
   timestamp: Date;
 };
 
+type ThinkingMessage = {
+  id: string;
+  text: string;
+  isThinking: true;
+  timestamp: Date;
+};
+
+type ChatMessage = Message | RagContextMessage | ThinkingMessage;
+
 // Initialisation du pipeline d'embeddings (hors composant)
 let embedderPromise: Promise<any> | null = null;
 function getEmbedder() {
@@ -73,7 +82,7 @@ function cosineSimilarity(a: number[], b: number[]) {
 }
 
 function App() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const {
@@ -110,6 +119,7 @@ function App() {
   const [showRagDocs, setShowRagDocs] = useState(false);
   // Ajout du state pour activer/désactiver le RAG
   const [ragEnabled, setRagEnabled] = useState(false);
+  const [thinkingEnabled, setThinkingEnabled] = useState(false);
   // --- Sélection multiple de messages pour suppression groupée ---
   const [selectMode, setSelectMode] = useState(false);
   const [selectedMessageIds, setSelectedMessageIds] = useState<string[]>([]);
@@ -274,6 +284,16 @@ function App() {
     };
     setMessages(prev => [...prev, message]);
     return message;
+  };
+
+  const addThinkingMessage = (text: string) => {
+    const message: ThinkingMessage = {
+      id: Date.now().toString(),
+      text,
+      isThinking: true,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, message]);
   };
 
   const { memory, addFact } = useMemory();
@@ -466,16 +486,30 @@ function App() {
       const prompt = `${getSystemPrompt(selectedPersonality)}\n${memorySummary}${ragEnabled ? ragContext : ""}Question utilisateur : ${userMessage}`;
       // LOG prompt final
       // console.log('[Prompt envoyé à Gemini]', prompt);
-      const response = await sendMessageToGemini(
-        filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
-        imageFile ? [imageFile] : undefined,
-        prompt,
-        geminiConfig
-      );
+      let finalAnswer = '';
+      if (thinkingEnabled) {
+        const res = await sendMessageWithThinking(
+          filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
+          imageFile ? [imageFile] : undefined,
+          prompt,
+          geminiConfig
+        );
+        if (res.thinking) {
+          addThinkingMessage(res.thinking);
+        }
+        finalAnswer = res.answer;
+      } else {
+        finalAnswer = await sendMessageToGemini(
+          filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
+          imageFile ? [imageFile] : undefined,
+          prompt,
+          geminiConfig
+        );
+      }
       // LOG réponse Gemini
-      // console.log('[Réponse Gemini]', response);
-      addMessage(response, false);
-      speak(response, {
+      // console.log('[Réponse Gemini]', finalAnswer);
+      addMessage(finalAnswer, false);
+      speak(finalAnswer, {
         onEnd: () => {
           if (modeVocalAuto && !muted) {
             playBip();
@@ -775,6 +809,8 @@ function App() {
           hasActiveConversation={messages.length > 0}
           ragEnabled={ragEnabled}
           setRagEnabled={setRagEnabled}
+          thinkingEnabled={thinkingEnabled}
+          setThinkingEnabled={setThinkingEnabled}
           onOpenGeminiSettings={() => setShowGeminiSettings(true)}
           geminiConfig={geminiConfig}
           modePrive={modePrive}

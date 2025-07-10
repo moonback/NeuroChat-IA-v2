@@ -29,7 +29,14 @@ interface RagContextMessage {
   timestamp: Date;
 }
 
-type ChatMessage = Message | RagContextMessage;
+interface ThinkingMessage {
+  id: string;
+  text: string;
+  isThinking: true;
+  timestamp: Date;
+}
+
+type ChatMessage = Message | RagContextMessage | ThinkingMessage;
 
 interface ChatContainerProps {
   messages: ChatMessage[];
@@ -284,6 +291,16 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                             <ArrowDown className={cn("ml-1 h-3 w-3 transition-transform duration-300", showAllPassages[rag.id] && "rotate-180")} />
                           </Button>
                         )}
+                      </div>
+                    </div>
+                  );
+                } else if ((message as ThinkingMessage).isThinking) {
+                  const think = message as ThinkingMessage;
+                  return (
+                    <div key={think.id} className="animate-fadeIn my-2 px-1">
+                      <div className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-400 dark:border-yellow-500 rounded-xl p-3 shadow-sm flex items-start gap-2 text-sm">
+                        <Zap className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                        <span className="text-yellow-800 dark:text-yellow-100">{think.text}</span>
                       </div>
                     </div>
                   );
