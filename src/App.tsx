@@ -24,6 +24,12 @@ import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
 import { useMemory } from "@/hooks/useMemory";
 import { MemoryModal } from '@/components/MemoryModal';
 import { pipeline } from "@xenova/transformers";
+import { GeminiSettingsDrawer } from '@/components/GeminiSettingsDrawer';
+import { MessageSelectionBar } from '@/components/MessageSelectionBar';
+import { PrivateModeBanner } from '@/components/PrivateModeBanner';
+import { VocalModeIndicator } from '@/components/VocalModeIndicator';
+import { RagStatusPopup } from '@/components/RagStatusPopup';
+import { MemoryFeedback } from '@/components/MemoryFeedback';
 
 interface Message {
   id: string;
@@ -109,8 +115,8 @@ function App() {
   const [selectedMessageIds, setSelectedMessageIds] = useState<string[]>([]);
   const [showConfirmDeleteMultiple, setShowConfirmDeleteMultiple] = useState(false);
   // Ajout du state pour activer/désactiver le RAG
-  const [, setShowRagActivated] = useState(false);
-  const [, setShowRagDeactivated] = useState(false);
+  const [showRagActivated, setShowRagActivated] = useState(false);
+  const [showRagDeactivated, setShowRagDeactivated] = useState(false);
   // Hyperparamètres Gemini
   const [geminiConfig, setGeminiConfig] = useState<GeminiGenerationConfig>({
     temperature: 0.7,
@@ -777,72 +783,44 @@ function App() {
         />
 
         {/* Indicateur visuel du mode privé SOUS le header, centré */}
-        {/* {modePrive && (
-          <div className="w-full flex justify-center animate-slideDown">
-            <div className="mt-1 mb-2 px-5 py-2 rounded-xl shadow-lg bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 text-white font-semibold flex items-center gap-2 border border-red-200 dark:border-red-700">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><rect x="5" y="11" width="14" height="9" rx="2" className="fill-white/20" /><path d="M12 17v-2" className="stroke-white" /><path d="M7 11V7a5 5 0 0110 0v4" className="stroke-white" /></svg>
-              Mode privé activé : aucun message n'est sauvegardé, tout sera effacé à la fermeture.
-            </div>
-          </div>
-        )} */}
+        <PrivateModeBanner visible={modePrive} />
+        <RagStatusPopup activated={showRagActivated} deactivated={showRagDeactivated} />
 
         {/* Boutons de sélection et suppression groupée */}
         {/* Les boutons de sélection/groupée ne sont visibles que si une conversation est active */}
         {messages.length > 0 && (
-          <>
-            <div className="flex gap-2 items-center mb-2 px-2">
-              <Button
-                variant={selectMode ? 'secondary' : 'outline'}
-                size="sm"
-                onClick={handleToggleSelectMode}
-              >
-                {selectMode ? 'Annuler la sélection' : 'Sélectionner'}
-              </Button>
-              {selectMode && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    // On ne sélectionne que les messages classiques (pas RAG)
-                    const allIds = messages.filter((m: any) => !m.isRagContext).map((m: any) => m.id);
-                    if (selectedMessageIds.length === allIds.length) {
-                      setSelectedMessageIds([]);
-                    } else {
-                      setSelectedMessageIds(allIds);
-                    }
-                  }}
-                >
-                  {selectedMessageIds.length === messages.filter((m: any) => !m.isRagContext).length ? 'Tout désélectionner' : 'Sélectionner tout'}
-                </Button>
-              )}
-              {selectMode && selectedMessageIds.length > 0 && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setShowConfirmDeleteMultiple(true)}
-                >
-                  Supprimer la sélection ({selectedMessageIds.length})
-                </Button>
-              )}
-            </div>
-
-            {/* Confirmation globale suppression multiple */}
-            <AlertDialog open={showConfirmDeleteMultiple} onOpenChange={setShowConfirmDeleteMultiple}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Supprimer {selectedMessageIds.length} message{selectedMessageIds.length > 1 ? 's' : ''} ?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Cette action est irréversible. Les messages sélectionnés seront définitivement supprimés de la conversation et de l'historique.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDeleteMultipleMessages}>Supprimer</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </>
+          <MessageSelectionBar
+            selectMode={selectMode}
+            onToggleSelectMode={handleToggleSelectMode}
+            selectedCount={selectedMessageIds.length}
+            totalCount={messages.filter((m: any) => !m.isRagContext).length}
+            onSelectAll={() => {
+              const allIds = messages.filter((m: any) => !m.isRagContext).map((m: any) => m.id);
+              setSelectedMessageIds(allIds);
+            }}
+            onDeselectAll={() => setSelectedMessageIds([])}
+            onRequestDelete={() => setShowConfirmDeleteMultiple(true)}
+            showConfirmDelete={showConfirmDeleteMultiple}
+            setShowConfirmDelete={setShowConfirmDeleteMultiple}
+            onDeleteConfirmed={handleDeleteMultipleMessages}
+          />
         )}
+
+        {/* Confirmation globale suppression multiple */}
+        <AlertDialog open={showConfirmDeleteMultiple} onOpenChange={setShowConfirmDeleteMultiple}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Supprimer {selectedMessageIds.length} message{selectedMessageIds.length > 1 ? 's' : ''} ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Cette action est irréversible. Les messages sélectionnés seront définitivement supprimés de la conversation et de l'historique.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteMultipleMessages}>Supprimer</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Enhanced Chat Interface */}
         <Card className="flex-1 flex flex-col shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl overflow-hidden ring-1 ring-white/20 dark:ring-slate-700/20 relative">
@@ -863,6 +841,7 @@ function App() {
       {/* Zone de saisie fixée en bas de l'écran */}
       <div className="fixed bottom-0 left-0 w-full z-50 bg-white/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-700 px-2 pt-2 pb-2 backdrop-blur-xl">
         <VoiceInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+        <MemoryFeedback loading={semanticLoading} score={semanticScore} />
       </div>
 
       <TTSSettingsModal
@@ -884,11 +863,7 @@ function App() {
         deleteSettings={deleteSettings}
       />
 
-      {modeVocalAuto && (
-        <div className="fixed top-2 right-2 z-50 bg-blue-600 text-white px-4 py-2 rounded-xl shadow-lg animate-pulse">
-          Mode vocal automatique activé
-        </div>
-      )}
+      <VocalModeIndicator visible={modeVocalAuto} />
 
       
 
@@ -896,198 +871,15 @@ function App() {
       <RagDocsModal open={showRagDocs} onClose={() => setShowRagDocs(false)} />
 
       {/* Modale latérale compacte pour les réglages Gemini */}
-      <Drawer open={showGeminiSettings} onOpenChange={setShowGeminiSettings}>
-        <DrawerContent className="max-w-full w-[95vw] sm:w-[100%] px-2 py-2">
-          <DrawerHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-500 p-1.5 rounded-xl shadow">
-                <Sliders className="w-5 h-5 text-white" />
-              </div>
-              <DrawerTitle className="text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
-                Réglages Gemini
-              </DrawerTitle>
-            </div>
-            <div className="text-xs text-muted-foreground text-center max-w-xs mx-auto mt-1">
-              Ajustez le comportement du modèle. <Info className="inline w-3 h-3 align-text-bottom" /> pour infos.
-            </div>
-          </DrawerHeader>
-          <div className="border-b border-slate-200 dark:border-slate-700 mb-2" />
-          <div className="p-0 space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {/* Température */}
-              <div className="bg-white/80 dark:bg-slate-900/80 rounded-xl border border-blue-100 dark:border-blue-900/30 p-2 flex flex-col gap-1 shadow-sm">
-                <div className="flex items-center gap-1">
-                  <Label htmlFor="gemini-temperature" className="text-xs">Température
-                    <span className="font-mono ml-1">{geminiConfig.temperature?.toFixed(2)}</span>
-                  </Label>
-                  {geminiConfig.temperature === DEFAULTS.temperature && (
-                    <span className="ml-1 px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-[10px] text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">défaut</span>
-                  )}
-                  <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-temp">
-                    <Info className="w-3 h-3" />
-                  </button>
-                  <button type="button" className="ml-1 text-[10px] text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded" onClick={() => handleGeminiConfigChange('temperature', DEFAULTS.temperature)}>Reset</button>
-                  <Tooltip id="tip-temp" place="right" content="0 = déterministe, 2 = créatif. Reco : 0.7" />
-                </div>
-                <Slider
-                  id="gemini-temperature"
-                  min={0}
-                  max={2}
-                  step={0.01}
-                  value={[geminiConfig.temperature ?? 0.7]}
-                  onValueChange={([v]) => handleGeminiConfigChange('temperature', v)}
-                  className="mt-1"
-                />
-                <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
-                  <span>Déterministe</span>
-                  <span>Créatif</span>
-                </div>
-              </div>
-              {/* topK */}
-              <div className="bg-white/80 dark:bg-slate-900/80 rounded-xl border border-blue-100 dark:border-blue-900/30 p-2 flex flex-col gap-1 shadow-sm">
-                <div className="flex items-center gap-1">
-                  <Label htmlFor="gemini-topk" className="text-xs">topK
-                    <span className="font-mono ml-1">{geminiConfig.topK}</span>
-                  </Label>
-                  {geminiConfig.topK === DEFAULTS.topK && (
-                    <span className="ml-1 px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-[10px] text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">défaut</span>
-                  )}
-                  <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-topk">
-                    <Info className="w-3 h-3" />
-                  </button>
-                  <button type="button" className="ml-1 text-[10px] text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded" onClick={() => handleGeminiConfigChange('topK', DEFAULTS.topK)}>Reset</button>
-                  <Tooltip id="tip-topk" place="right" content="Tokens candidats. Plus = diversité. Reco : 40" />
-                </div>
-                <Input
-                  id="gemini-topk"
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={geminiConfig.topK ?? 40}
-                  onChange={e => handleGeminiConfigChange('topK', Number(e.target.value))}
-                  className="mt-1 w-20 text-xs"
-                />
-              </div>
-              {/* topP */}
-              <div className="bg-white/80 dark:bg-slate-900/80 rounded-xl border border-blue-100 dark:border-blue-900/30 p-2 flex flex-col gap-1 shadow-sm">
-                <div className="flex items-center gap-1">
-                  <Label htmlFor="gemini-topp" className="text-xs">topP
-                    <span className="font-mono ml-1">{geminiConfig.topP?.toFixed(2)}</span>
-                  </Label>
-                  {geminiConfig.topP === DEFAULTS.topP && (
-                    <span className="ml-1 px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-[10px] text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">défaut</span>
-                  )}
-                  <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-topp">
-                    <Info className="w-3 h-3" />
-                  </button>
-                  <button type="button" className="ml-1 text-[10px] text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded" onClick={() => handleGeminiConfigChange('topP', DEFAULTS.topP)}>Reset</button>
-                  <Tooltip id="tip-topp" place="right" content="Probabilité cumulative. 1 = diversité. Reco : 0.95" />
-                </div>
-                <Slider
-                  id="gemini-topp"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={[geminiConfig.topP ?? 0.95]}
-                  onValueChange={([v]) => handleGeminiConfigChange('topP', v)}
-                  className="mt-1"
-                />
-                <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
-                  <span>Moins varié</span>
-                  <span>Plus varié</span>
-                </div>
-              </div>
-              {/* maxOutputTokens */}
-              <div className="bg-white/80 dark:bg-slate-900/80 rounded-xl border border-blue-100 dark:border-blue-900/30 p-2 flex flex-col gap-1 shadow-sm">
-                <div className="flex items-center gap-1">
-                  <Label htmlFor="gemini-maxoutput" className="text-xs">maxTokens
-                    <span className="font-mono ml-1">{geminiConfig.maxOutputTokens}</span>
-                  </Label>
-                  {geminiConfig.maxOutputTokens === DEFAULTS.maxOutputTokens && (
-                    <span className="ml-1 px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-[10px] text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">défaut</span>
-                  )}
-                  <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-maxout">
-                    <Info className="w-3 h-3" />
-                  </button>
-                  <button type="button" className="ml-1 text-[10px] text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded" onClick={() => handleGeminiConfigChange('maxOutputTokens', DEFAULTS.maxOutputTokens)}>Reset</button>
-                  <Tooltip id="tip-maxout" place="right" content="Max tokens générés. Reco : 1024" />
-                </div>
-                <Input
-                  id="gemini-maxoutput"
-                  type="number"
-                  min={64}
-                  max={4096}
-                  value={geminiConfig.maxOutputTokens ?? 1024}
-                  onChange={e => handleGeminiConfigChange('maxOutputTokens', Number(e.target.value))}
-                  className="mt-1 w-20 text-xs"
-                />
-                {(geminiConfig.maxOutputTokens ?? 1024) > 4096 && (
-                  <div className="mt-1 text-[10px] text-red-600 flex items-center gap-1 animate-fadeIn">
-                    <span className="font-bold">⚠️</span>
-                    Max 4096 tokens.
-                  </div>
-                )}
-              </div>
-              {/* stopSequences */}
-              <div className="bg-white/80 dark:bg-slate-900/80 rounded-xl border border-blue-100 dark:border-blue-900/30 p-2 flex flex-col gap-1 shadow-sm">
-                <div className="flex items-center gap-1">
-                  <Label htmlFor="gemini-stopseq" className="text-xs">stopSeq</Label>
-                  {Array.isArray(geminiConfig.stopSequences) && geminiConfig.stopSequences.length === 0 && (
-                    <span className="ml-1 px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-[10px] text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">défaut</span>
-                  )}
-                  <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-stopseq">
-                    <Info className="w-3 h-3" />
-                  </button>
-                  <button type="button" className="ml-1 text-[10px] text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded" onClick={() => handleGeminiConfigChange('stopSequences', DEFAULTS.stopSequences)}>Reset</button>
-                  <Tooltip id="tip-stopseq" place="right" content="Séquences d'arrêt. Ex: END,STOP" />
-                </div>
-                <Input
-                  id="gemini-stopseq"
-                  type="text"
-                  value={geminiConfig.stopSequences?.join(',') ?? ''}
-                  onChange={e => handleGeminiConfigChange('stopSequences', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
-                  placeholder="Ex: END,STOP"
-                  className="mt-1 text-xs"
-                />
-                <div className="text-[10px] text-muted-foreground mt-0.5">Séparez par virgule</div>
-              </div>
-              {/* candidateCount */}
-              <div className="bg-white/80 dark:bg-slate-900/80 rounded-xl border border-blue-100 dark:border-blue-900/30 p-2 flex flex-col gap-1 shadow-sm">
-                <div className="flex items-center gap-1">
-                  <Label htmlFor="gemini-candidates" className="text-xs">candidates
-                    <span className="font-mono ml-1">{geminiConfig.candidateCount}</span>
-                  </Label>
-                  {geminiConfig.candidateCount === DEFAULTS.candidateCount && (
-                    <span className="ml-1 px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-[10px] text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">défaut</span>
-                  )}
-                  <button type="button" className="ml-1 text-blue-500 hover:text-blue-700" data-tooltip-id="tip-cand">
-                    <Info className="w-3 h-3" />
-                  </button>
-                  <button type="button" className="ml-1 text-[10px] text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-800 px-1 rounded" onClick={() => handleGeminiConfigChange('candidateCount', DEFAULTS.candidateCount)}>Reset</button>
-                  <Tooltip id="tip-cand" place="right" content="Nombre de réponses générées. Reco : 1" />
-                </div>
-                <Input
-                  id="gemini-candidates"
-                  type="number"
-                  min={1}
-                  max={8}
-                  value={geminiConfig.candidateCount ?? 1}
-                  onChange={e => handleGeminiConfigChange('candidateCount', Number(e.target.value))}
-                  className="mt-1 w-20 text-xs"
-                />
-              </div>
-            </div>
-          </div>
-          <DrawerFooter className="flex flex-row gap-2 justify-end pt-3">
-            <UIButton variant="secondary" size="sm" onClick={() => setGeminiConfig({ temperature: 0.7, topK: 40, topP: 0.95, maxOutputTokens: 1024, stopSequences: [], candidateCount: 1 })}>
-              Réinitialiser
-            </UIButton>
-            <UIButton size="sm" onClick={() => setShowGeminiSettings(false)}>
-              Fermer
-            </UIButton>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+      <GeminiSettingsDrawer
+        open={showGeminiSettings}
+        onOpenChange={setShowGeminiSettings}
+        geminiConfig={geminiConfig}
+        onConfigChange={handleGeminiConfigChange}
+        onReset={() => setGeminiConfig(DEFAULTS)}
+        onClose={() => setShowGeminiSettings(false)}
+        DEFAULTS={DEFAULTS}
+      />
 
       <MemoryModal
         open={showMemoryModal}
