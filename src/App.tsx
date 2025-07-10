@@ -23,6 +23,8 @@ import { Tooltip } from 'react-tooltip';
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
 import { useMemory } from "@/hooks/useMemory";
 import { MemoryModal } from '@/components/MemoryModal';
+import { pipeline } from "@xenova/transformers";
+import { useRef } from 'react';
 
 interface Message {
   id: string;
@@ -44,6 +46,26 @@ type RagContextMessage = {
   isRagContext: true;
   timestamp: Date;
 };
+
+// Initialisation du pipeline d'embeddings (hors composant)
+let embedderPromise: Promise<any> | null = null;
+function getEmbedder() {
+  if (!embedderPromise) {
+    embedderPromise = pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+  }
+  return embedderPromise;
+}
+
+// Fonction utilitaire pour la similarité cosinus
+function cosineSimilarity(a: number[], b: number[]) {
+  let dot = 0, normA = 0, normB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+}
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -332,9 +354,71 @@ function App() {
     if (memoryCommand) {
       const info = memoryCommand[2].trim();
       if (info) {
-        addFact(info);
-        // addMessage("Information ajoutée à la mémoire !", false);
-        // toast.success("Information ajoutée à la mémoire !");
+        // Patterns intelligents et détection par mots-clés (rapide)
+        const patterns = [
+          // Prénom
+          { regex: /je m'appelle ([\w\- ]+)/i, label: "prénom" },
+          { regex: /mon prénom est ([\w\- ]+)/i, label: "prénom" },
+          { regex: /on m'appelle ([\w\- ]+)/i, label: "prénom" },
+          // Ville
+          { regex: /j'habite (à|au|en|aux)? ?([\w\- ]+)/i, label: "ville" },
+          { regex: /je vis (à|au|en|aux)? ?([\w\- ]+)/i, label: "ville" },
+          { regex: /je suis (à|au|en|aux)? ?([\w\- ]+)/i, label: "ville" },
+          { regex: /ma ville est ([\w\- ]+)/i, label: "ville" },
+          // Préférences générales
+          { regex: /je préfère ([\w\- ]+)/i, label: "préférence" },
+          { regex: /j'adore ([\w\- ]+)/i, label: "préférence" },
+          { regex: /je n'aime pas ([\w\- ]+)/i, label: "préférence négative" },
+          { regex: /mon (plat|animal|sport|film|livre|couleur|hobby|pays) préféré(e)? (est|sont)? ([\w\- ]+)/i, label: "préférence" },
+          { regex: /ma (couleur|passion|activité) préférée (est|sont)? ([\w\- ]+)/i, label: "préférence" },
+          // Métier
+          { regex: /je travaille comme ([\w\- ]+)/i, label: "métier" },
+          { regex: /mon métier est ([\w\- ]+)/i, label: "métier" },
+          { regex: /je suis (un |une |)([\w\- ]+)/i, label: "métier" },
+          // Date de naissance
+          { regex: /je suis né(e)? le ([0-9]{1,2} [a-zéû]+ [0-9]{4})/i, label: "date de naissance" },
+          { regex: /ma date de naissance est le? ([0-9]{1,2} [a-zéû]+ [0-9]{4})/i, label: "date de naissance" },
+          { regex: /je fête mon anniversaire le ([0-9]{1,2} [a-zéû]+ [0-9]{4})/i, label: "date de naissance" },
+          // Autres infos
+          { regex: /mon animal préféré est ([\w\- ]+)/i, label: "animal préféré" },
+          { regex: /ma couleur préférée est ([\w\- ]+)/i, label: "couleur préférée" },
+          { regex: /mon sport favori est ([\w\- ]+)/i, label: "sport favori" },
+          { regex: /ma passion est ([\w\- ]+)/i, label: "passion" },
+        ];
+        let pertinent = false;
+        for (const p of patterns) {
+          if (p.regex.test(info)) {
+            pertinent = true;
+            break;
+          }
+        }
+        // Fallback : détection par mots-clés sémantiques
+        if (!pertinent) {
+          const keywords = [
+            "prénom", "nom", "ville", "habite", "vis", "travaille", "métier", "préféré", "préférée", "préférés", "préférées",
+            "animal", "couleur", "sport", "passion", "date de naissance", "anniversaire", "plat", "hobby", "pays", "activité"
+          ];
+          const lowerInfo = info.toLowerCase();
+          if (keywords.some(kw => lowerInfo.includes(kw))) {
+            pertinent = true;
+          }
+        }
+        // Si toujours pas pertinent, on tente l'analyse sémantique locale
+        if (!pertinent) {
+          setSemanticLoading(true);
+          addMessage("Analyse sémantique en cours...", false);
+          pertinent = await isPersonalInfoSemantic(info);
+          setSemanticLoading(false);
+        }
+        if (pertinent) {
+          addFact(info);
+          addMessage(`Information pertinente ajoutée à la mémoire !${semanticScore !== null ? ` (score : ${(semanticScore * 100).toFixed(1)}%)` : ''}`, false);
+          toast.success("Information pertinente ajoutée à la mémoire !");
+        } else {
+          addMessage(`Information non pertinente, non ajoutée à la mémoire.${semanticScore !== null ? ` (score : ${(semanticScore * 100).toFixed(1)}%)` : ''}`, false);
+          toast.info("Information non pertinente, non ajoutée à la mémoire.");
+        }
+        setSemanticScore(null);
         return; // On n'envoie pas à l'IA, c'est une commande locale
       }
     }
@@ -622,6 +706,38 @@ function App() {
   };
 
   const [showMemoryModal, setShowMemoryModal] = useState(false);
+  // Exemples d'informations personnelles pertinentes (état modifiable)
+  const [examples, setExamples] = useState<string[]>([
+    "Je m'appelle Lucie",
+    "Mon prénom est Paul",
+    "J'habite à Paris",
+    "Je vis à Marseille",
+    "Je préfère le thé au café",
+    "Je suis développeur",
+    "Ma couleur préférée est le bleu",
+    "Je suis né le 12 mars 1990",
+    "Mon sport favori est le tennis",
+    "Ma passion est la photographie",
+    "Mon animal préféré est le chat",
+    "Je travaille comme infirmière",
+    "Mon métier est enseignant"
+  ]);
+  // Seuil de similarité ajustable
+  const [semanticThreshold, setSemanticThreshold] = useState(0.7);
+  // Loader et feedback UX
+  const [semanticLoading, setSemanticLoading] = useState(false);
+  const [semanticScore, setSemanticScore] = useState<number | null>(null);
+
+  // Fonction asynchrone pour juger la pertinence sémantique (utilise les exemples et seuil du state)
+  const isPersonalInfoSemantic = async (text: string): Promise<boolean> => {
+    const embedder = await getEmbedder();
+    const [inputEmbedding] = await embedder(text);
+    const exampleEmbeddingsLocal = await Promise.all(examples.map((e: string) => embedder(e).then((res: number[][]) => res[0])));
+    const similaritiesLocal = exampleEmbeddingsLocal.map((ex: number[]) => cosineSimilarity(inputEmbedding, ex));
+    const maxSim = Math.max(...similaritiesLocal);
+    setSemanticScore(maxSim);
+    return maxSim > semanticThreshold;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
@@ -974,8 +1090,15 @@ function App() {
         </DrawerContent>
       </Drawer>
 
-      <MemoryModal open={showMemoryModal} onClose={() => setShowMemoryModal(false)} />
-      
+      <MemoryModal
+        open={showMemoryModal}
+        onClose={() => setShowMemoryModal(false)}
+        examples={examples}
+        setExamples={setExamples}
+        semanticThreshold={semanticThreshold}
+        setSemanticThreshold={setSemanticThreshold}
+        semanticLoading={semanticLoading}
+      />
     </div>
   );
 }
