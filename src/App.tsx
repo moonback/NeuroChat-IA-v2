@@ -334,7 +334,7 @@ function App() {
       if (info) {
         addFact(info);
         addMessage("Information ajoutée à la mémoire !", false);
-        toast.success("Information ajoutée à la mémoire !");
+        // toast.success("Information ajoutée à la mémoire !");
         return; // On n'envoie pas à l'IA, c'est une commande locale
       }
     }
