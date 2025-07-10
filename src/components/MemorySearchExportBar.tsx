@@ -1,7 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Download, Search } from "lucide-react";
-import React from "react";
 
 export function MemorySearchExportBar({ search, setSearch, onExport }: { search: string; setSearch: (v: string) => void; onExport: () => void }) {
   return (
