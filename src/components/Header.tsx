@@ -6,7 +6,7 @@ import { Tooltip as ReactTooltip } from 'react-tooltip';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import {
-  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Square, Mic, User, Brain, Shield, BookOpen
+  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Square, Mic, User, Brain, Shield, BookOpen, Zap
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
@@ -90,6 +90,8 @@ interface HeaderProps {
   hasActiveConversation: boolean;
   ragEnabled: boolean;
   setRagEnabled: (v: boolean) => void;
+  thinkingEnabled: boolean;
+  setThinkingEnabled: (v: boolean) => void;
   onOpenGeminiSettings?: () => void;
   geminiConfig?: any;
   modePrive: boolean;
@@ -115,6 +117,8 @@ export function Header({
   hasActiveConversation,
   ragEnabled,
   setRagEnabled,
+  thinkingEnabled,
+  setThinkingEnabled,
   onOpenGeminiSettings,
   geminiConfig,
   modePrive,
@@ -214,6 +218,15 @@ export function Header({
             type="button"
           >
             <Brain className={`w-4 h-4 ${ragEnabled ? 'text-white' : 'text-slate-500 dark:text-slate-200'}`} />
+          </button>
+          <button
+            onClick={() => setThinkingEnabled(!thinkingEnabled)}
+            className={`inline-flex items-center justify-center w-7 h-7 rounded-full border-2 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-yellow-400/60 ${thinkingEnabled ? 'bg-gradient-to-r from-yellow-300 to-orange-500 border-yellow-500 scale-105 shadow-lg' : 'bg-gradient-to-r from-slate-200 to-slate-400 border-slate-400 dark:from-slate-700 dark:to-slate-800 dark:border-slate-700 hover:scale-105 hover:shadow'}`}
+            aria-label={thinkingEnabled ? 'Désactiver la réflexion' : 'Activer la réflexion'}
+            title={thinkingEnabled ? 'Désactiver la réflexion' : 'Activer la réflexion'}
+            type="button"
+          >
+            <Zap className={`w-4 h-4 ${thinkingEnabled ? 'text-white' : 'text-slate-500 dark:text-slate-200'}`} />
           </button>
           <button
             className="p-2 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 shadow focus:outline-none focus:ring-2 focus:ring-blue-400 ml-1"
@@ -518,6 +531,9 @@ export function Header({
                 </Button>
                 <Button variant={ragEnabled ? 'secondary' : 'ghost'} size="lg" className="w-full flex items-center gap-3 bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-md hover:shadow-indigo-300/30 dark:hover:shadow-indigo-900/30 hover:scale-[1.03] transition-all duration-200 font-semibold text-base" onClick={() => { setRagEnabled(!ragEnabled); closeMobileMenu(); }}>
                   <Square className="w-5 h-5 text-indigo-500" /> {ragEnabled ? 'Désactiver RAG' : 'Activer RAG'}
+                </Button>
+                <Button variant={thinkingEnabled ? 'secondary' : 'ghost'} size="lg" className="w-full flex items-center gap-3 bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-md hover:shadow-yellow-300/30 dark:hover:shadow-yellow-900/30 hover:scale-[1.03] transition-all duration-200 font-semibold text-base" onClick={() => { setThinkingEnabled(!thinkingEnabled); closeMobileMenu(); }}>
+                  <Zap className="w-5 h-5 text-yellow-500" /> {thinkingEnabled ? 'Désactiver réflexion' : 'Activer réflexion'}
                 </Button>
                 {/* Bouton pour changer la personnalité IA */}
                 <Button
