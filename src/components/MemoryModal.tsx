@@ -1,11 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useMemory, MemoryFact } from "@/hooks/useMemory";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { BookOpen, Download, Search, Plus, X } from "lucide-react";
-import { MemoryFactList } from "@/components/MemoryFactList";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { toast } from "sonner";
+import { MemoryFactList } from "@/components/MemoryFactList";
+import { MemoryModalHeader } from "@/components/MemoryModalHeader";
+import { MemoryExamplesSection } from "@/components/MemoryExamplesSection";
+import { MemoryThresholdSection } from "@/components/MemoryThresholdSection";
+import { MemoryAddForm } from "@/components/MemoryAddForm";
+import { MemorySearchExportBar } from "@/components/MemorySearchExportBar";
+import { MemoryModalFooter } from "@/components/MemoryModalFooter";
 
 interface MemoryModalProps {
   open: boolean;
@@ -15,196 +18,6 @@ interface MemoryModalProps {
   semanticThreshold: number;
   setSemanticThreshold: (v: number) => void;
   semanticLoading?: boolean;
-}
-
-// Header
-function MemoryModalHeader() {
-  return (
-    <DrawerHeader className="pb-2">
-      <div className="flex items-center gap-2">
-        <div className="bg-blue-500 p-2 rounded-full shadow">
-          <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-        </div>
-        <DrawerTitle className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
-          Mémoire de l'utilisateur
-        </DrawerTitle>
-      </div>
-      <div className="text-xs text-muted-foreground text-center max-w-xs mx-auto mt-1">
-        Ajoutez, modifiez ou supprimez les informations mémorisées par l'IA. Ces informations sont utilisées pour personnaliser vos réponses.
-      </div>
-    </DrawerHeader>
-  );
-}
-
-// Exemples pour la détection sémantique
-function MemoryExamplesSection({ examples, setExamples }: { examples: string[]; setExamples: (ex: string[]) => void }) {
-  const [newExample, setNewExample] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
-  const handleAdd = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newExample.trim()) {
-      setExamples([...examples, newExample.trim()]);
-      setNewExample("");
-      inputRef.current?.focus();
-    }
-  };
-  const handleRemove = (idx: number) => {
-    setExamples(examples.filter((_, i) => i !== idx));
-  };
-  return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800/60 dark:to-slate-700/60 rounded-xl p-3 sm:p-4 mb-3 shadow-inner border border-blue-100 dark:border-slate-600">
-      <div className="font-semibold text-blue-700 dark:text-blue-200 mb-2 text-sm flex items-center gap-2">
-        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-        Exemples pour la détection sémantique
-      </div>
-      {examples.length > 0 && (
-        <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {examples.map((ex, idx) => (
-            <div key={idx} className="bg-white dark:bg-slate-900 px-3 py-2 rounded-lg shadow-sm text-xs flex items-center justify-between gap-2 border border-blue-100 dark:border-slate-600 hover:shadow-md transition-shadow">
-              <span className="flex-1 truncate" title={ex}>{ex}</span>
-              <button 
-                type="button" 
-                className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-1 rounded-full transition-colors flex-shrink-0" 
-                onClick={() => handleRemove(idx)} 
-                title="Supprimer"
-                aria-label={`Supprimer l'exemple "${ex}"`}
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-      <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-2">
-        <input
-          ref={inputRef}
-          value={newExample}
-          onChange={e => setNewExample(e.target.value)}
-          placeholder="Ajouter un exemple..."
-          className="flex-1 text-xs px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-          maxLength={80}
-          aria-label="Ajouter un nouvel exemple"
-        />
-        <Button 
-          type="submit" 
-          size="sm" 
-          variant="secondary" 
-          disabled={!newExample.trim()}
-          className="px-4 py-2 text-xs sm:px-6"
-        >
-          <Plus className="w-3 h-3 mr-1" />
-          Ajouter
-        </Button>
-      </form>
-    </div>
-  );
-}
-
-// Seuil de similarité
-function MemoryThresholdSection({ semanticThreshold, setSemanticThreshold, semanticLoading }: { semanticThreshold: number; setSemanticThreshold: (v: number) => void; semanticLoading?: boolean }) {
-  return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800/60 dark:to-slate-700/60 rounded-xl p-3 sm:p-4 mb-4 shadow-inner border border-blue-100 dark:border-slate-600">
-      <label htmlFor="semantic-threshold" className="text-xs sm:text-sm font-semibold text-blue-700 dark:text-blue-200 flex items-center gap-2 mb-2">
-        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-        Seuil de similarité sémantique : <span className="font-mono bg-blue-100 dark:bg-blue-900/60 px-2 py-1 rounded text-xs">{semanticThreshold}</span>
-      </label>
-      <input
-        id="semantic-threshold"
-        type="range"
-        min={0.5}
-        max={0.95}
-        step={0.01}
-        value={semanticThreshold}
-        onChange={e => setSemanticThreshold(Number(e.target.value))}
-        className="w-full h-2 bg-blue-200 dark:bg-blue-700 rounded-lg appearance-none cursor-pointer slider"
-      />
-      <div className="text-xs text-muted-foreground mt-1">Plus le seuil est élevé, plus la détection est stricte.</div>
-      {semanticLoading && (
-        <div className="flex items-center gap-2 mt-2 bg-blue-100 dark:bg-blue-900/60 rounded-lg px-3 py-2 animate-pulse">
-          <svg className="animate-spin w-4 h-4 text-blue-600" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-          </svg>
-          <span className="text-xs">Analyse sémantique en cours...</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Formulaire d'ajout
-function MemoryAddForm({ onAdd, inputRef, newFact, setNewFact }: { onAdd: (e: React.FormEvent) => void; inputRef: React.RefObject<HTMLInputElement>; newFact: string; setNewFact: (v: string) => void }) {
-  return (
-    <form onSubmit={onAdd} className="mb-4">
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Input
-          ref={inputRef}
-          value={newFact}
-          onChange={e => setNewFact(e.target.value)}
-          placeholder="Ajouter une information (ex : J'habite à Lyon)"
-          className="flex-1 text-sm"
-          maxLength={120}
-          aria-label="Ajouter une information à la mémoire"
-        />
-        <Button 
-          type="submit" 
-          variant="default" 
-          disabled={!newFact.trim()} 
-          aria-label="Ajouter"
-          className="px-4 sm:px-6 whitespace-nowrap"
-        >
-          <Plus className="w-4 h-4 mr-1" />
-          Ajouter
-        </Button>
-      </div>
-      <div className="text-xs text-muted-foreground mt-1">
-        Exemple : "Je préfère le thé au café", "Je suis développeur", "J'habite à Paris"
-      </div>
-    </form>
-  );
-}
-
-// Barre de recherche et export
-function MemorySearchExportBar({ search, setSearch, onExport }: { search: string; setSearch: (v: string) => void; onExport: () => void }) {
-  return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-4">
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <Input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Rechercher dans la mémoire..."
-          className="pl-10 text-sm"
-          aria-label="Rechercher dans la mémoire"
-        />
-      </div>
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={onExport} 
-        title="Exporter la mémoire" 
-        aria-label="Exporter la mémoire"
-        className="px-3 sm:px-4"
-      >
-        <Download className="w-4 h-4 mr-1" />
-        <span className="hidden sm:inline">Exporter</span>
-      </Button>
-    </div>
-  );
-}
-
-// Footer
-function MemoryModalFooter({ count, onClose }: { count: number; onClose: () => void }) {
-  return (
-    <DrawerFooter className="flex flex-row gap-2 justify-end pt-3">
-      <div className="flex-1 text-xs text-muted-foreground flex items-center">
-        {count} information{count > 1 ? 's' : ''} mémorisée{count > 1 ? 's' : ''}
-      </div>
-      <Button onClick={onClose} variant="secondary" aria-label="Fermer" className="px-6">
-        Fermer
-      </Button>
-    </DrawerFooter>
-  );
 }
 
 export function MemoryModal({ open, onClose, examples, setExamples, semanticThreshold, setSemanticThreshold, semanticLoading }: MemoryModalProps) {
