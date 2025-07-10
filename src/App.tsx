@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Button as UIButton } from '@/components/ui/button';
 import { Tooltip } from 'react-tooltip';
+import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
 
 interface Message {
   id: string;
@@ -246,20 +247,29 @@ function App() {
     return message;
   };
 
-  // Générateur de prompt système selon la personnalité
+ 
+
   const getSystemPrompt = (personality: string) => {
+    let personalityAddition = '';
     switch (personality) {
       case 'formel':
-        return "Tu es Emilie, une assistante vocale très polie, formelle, précise et utile. Tu utilises un langage soutenu et tu réponds toujours en français, même si la question est dans une autre langue. Sois claire, concise et directe, sans jamais indiquer que tu es une IA.";
+        personalityAddition = "Adopte un ton très poli, formel et précis. Utilise un langage soutenu et reste toujours claire, concise et directe.";
+        break;
       case 'amical':
-        return "Tu es Emilie, une assistante vocale chaleureuse, empathique, amicale et accessible. Tu tutoies l'utilisateur, utilises un ton convivial et bienveillant, et tu réponds toujours en français. Sois encourageante, rassurante et propose des suggestions utiles.";
+        personalityAddition = "Sois chaleureuse, empathique et amicale. Tutoie l'utilisateur, utilise un ton convivial et bienveillant. Sois encourageante, rassurante et propose des suggestions utiles.";
+        break;
       case 'expert':
-        return "Tu es Emilie, une assistante vocale experte, rigoureuse et pédagogique. Tu expliques les concepts de façon claire, détaillée et structurée, en t'adaptant au niveau de l'utilisateur. Tu réponds toujours en français, sans jamais indiquer que tu es une IA.";
+        personalityAddition = "Sois experte, rigoureuse et pédagogique. Explique les concepts de façon claire, détaillée et structurée, en t'adaptant au niveau de l'utilisateur.";
+        break;
       case 'humoristique':
-        return "Tu es Emilie, une assistante vocale drôle, pleine d'humour et de répartie. Tu ajoutes une touche d'humour ou une blague subtile à chaque réponse, tout en restant utile et pertinente. Tu réponds toujours en français, sans jamais indiquer que tu es une IA.";
+        personalityAddition = "Ajoute une touche d'humour ou une blague subtile à chaque réponse, tout en restant utile et pertinente.";
+        break;
       default:
-        return "Tu es Emilie, une assistante vocale bienveillante, empathique, concise et utile. Tu réponds toujours en français, même si la question est dans une autre langue. Adapte ton ton et ton niveau de langage à l'utilisateur (soutenu, courant ou familier selon le contexte). Prends en compte le contexte de la conversation pour offrir des réponses cohérentes et personnalisées. Si la question n'est pas claire, reformule ou demande des précisions. Propose des suggestions ou compléments d'information utiles lorsque c'est pertinent. Encourage et rassure l'utilisateur si besoin. Sois toujours claire, précise, concise et directe. N'indique jamais que tu es une IA, ne donne pas d'avertissement, ne cite pas de sources, ne fais pas de disclaimer. Réponds directement à la demande.";
+        personalityAddition = "";
+        break;
     }
+    // On combine le prompt système de base avec l'ajout lié à la personnalité
+    return SYSTEM_PROMPT + (personalityAddition ? " " + personalityAddition : "");
   };
 
   const addRagContextMessage = (passages: { id: number; titre: string; contenu: string }[]) => {
