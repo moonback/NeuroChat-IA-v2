@@ -327,6 +327,17 @@ function App() {
   }
 
   const handleSendMessage = async (userMessage: string, imageFile?: File) => {
+    // Commande spéciale : ajout manuel à la mémoire via le chat
+    const memoryCommand = userMessage.match(/^(enregistre dans la mémoire|ajoute à la mémoire|mémorise) *: *(.+)/i);
+    if (memoryCommand) {
+      const info = memoryCommand[2].trim();
+      if (info) {
+        addFact(info);
+        addMessage("Information ajoutée à la mémoire !", false);
+        toast.success("Information ajoutée à la mémoire !");
+        return; // On n'envoie pas à l'IA, c'est une commande locale
+      }
+    }
     detectAndMemorize(userMessage);
     if (!isOnline) {
       toast.error('Pas de connexion Internet. Vérifie ta connexion réseau.');
@@ -362,10 +373,10 @@ function App() {
         ? `Contexte utilisateur à mémoriser et à utiliser dans toutes tes réponses :\n${memory.map(f => "- " + f.content).join("\n")}\n\nTu dois toujours utiliser ces informations pour personnaliser tes réponses, même si l'utilisateur ne les mentionne pas.\n`
         : "";
       // LOG mémoire injectée
-      console.log('[Mémoire utilisateur injectée]', memorySummary);
+      // console.log('[Mémoire utilisateur injectée]', memorySummary);
       const prompt = `${getSystemPrompt(selectedPersonality)}\n${memorySummary}${ragEnabled ? ragContext : ""}Question utilisateur : ${userMessage}`;
       // LOG prompt final
-      console.log('[Prompt envoyé à Gemini]', prompt);
+      // console.log('[Prompt envoyé à Gemini]', prompt);
       const response = await sendMessageToGemini(
         filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
         imageFile ? [imageFile] : undefined,
@@ -373,7 +384,7 @@ function App() {
         geminiConfig
       );
       // LOG réponse Gemini
-      console.log('[Réponse Gemini]', response);
+      // console.log('[Réponse Gemini]', response);
       addMessage(response, false);
       speak(response, {
         onEnd: () => {

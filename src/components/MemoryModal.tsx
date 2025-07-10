@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useMemory, MemoryFact } from "@/hooks/useMemory";
-import { Dialog, DialogContent, DialogHeader, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BookOpen, Download } from "lucide-react";
@@ -74,8 +74,12 @@ export function MemoryModal({ open, onClose }: MemoryModalProps) {
       <DialogContent className="max-w-lg w-full mx-auto bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-0 overflow-hidden animate-fadeIn">
         <div className="flex flex-col items-center pt-6 pb-2 px-6">
           <BookOpen className="w-10 h-10 text-blue-500 mb-2 animate-bounce" />
-          <h2 className="text-xl font-bold mb-1">Mémoire de l'utilisateur</h2>
-          <p className="text-sm text-muted-foreground text-center mb-2">Ajoutez, modifiez ou supprimez les informations mémorisées par l'IA. Ces informations sont utilisées pour personnaliser vos réponses.</p>
+          <DialogTitle asChild>
+            <h2 className="text-xl font-bold mb-1">Mémoire de l'utilisateur</h2>
+          </DialogTitle>
+          <DialogDescription asChild>
+            <p className="text-sm text-muted-foreground text-center mb-2">Ajoutez, modifiez ou supprimez les informations mémorisées par l'IA. Ces informations sont utilisées pour personnaliser vos réponses.</p>
+          </DialogDescription>
         </div>
         <form onSubmit={handleAddFact} className="flex gap-2 px-6 mb-1">
           <Input
