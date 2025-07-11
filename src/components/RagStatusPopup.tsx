@@ -5,7 +5,7 @@ interface RagStatusPopupProps {
   deactivated: boolean;
 }
 
-export const RagStatusPopup: React.FC<RagStatusPopupProps> = ({ activated, deactivated }) => {
+export const RagStatusPopup: React.FC<RagStatusPopupProps> = ({ deactivated }) => {
   // Afficher seulement quand RAG est désactivé
   if (!deactivated) return null;
   
