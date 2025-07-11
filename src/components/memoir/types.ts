@@ -45,6 +45,7 @@ export interface SearchResult {
   contextSnippet?: string;
 }
 
+// Constantes pour les catégories de mémoire
 export const MEMORY_CATEGORIES: MemoryCategory[] = [
   {
     id: 'identity',

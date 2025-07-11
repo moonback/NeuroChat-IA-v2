@@ -21,6 +21,8 @@ import {
   MemorySearchResults,
   MemoryCategorySummary,
   MemoryPreferences as MemoryPreferencesComponent,
+  MemoryFactEditor,
+  MemoryStats,
   MemoryDetectionService,
   MemorySearchService,
   type MemoryFact,
@@ -53,6 +55,8 @@ export function MemoryDashboard({
     privacyLevel: 'basic'
   });
   const [selectedFact, setSelectedFact] = useState<MemoryFact | null>(null);
+  const [showFactEditor, setShowFactEditor] = useState(false);
+  const [editingFact, setEditingFact] = useState<MemoryFact | null>(null);
   
   // Services
   const detectionService = useMemo(() => MemoryDetectionService.getInstance(), []);
@@ -96,6 +100,38 @@ export function MemoryDashboard({
     }
   };
 
+  // Ajouter un exemple à une catégorie manquante
+  const addExampleToCategory = (categoryId: string) => {
+    const category = MEMORY_CATEGORIES.find(cat => cat.id === categoryId);
+    if (category && category.examples.length > 0) {
+      const randomExample = category.examples[Math.floor(Math.random() * category.examples.length)];
+      analyzeNewFact(randomExample);
+    }
+  };
+
+  // Gestionnaire pour l'ajout rapide de fait
+  const handleQuickAdd = () => {
+    setEditingFact(null);
+    setShowFactEditor(true);
+  };
+
+  // Gestionnaire pour l'édition d'un fait
+  const handleEditFact = (fact: MemoryFact) => {
+    setEditingFact(fact);
+    setShowFactEditor(true);
+  };
+
+  // Gestionnaire pour la sauvegarde d'un fait
+  const handleSaveFact = (factData: Partial<MemoryFact>) => {
+    if (editingFact && onFactEdit) {
+      onFactEdit({ ...editingFact, ...factData } as MemoryFact);
+    } else if (onFactAdd) {
+      onFactAdd(factData);
+    }
+    setShowFactEditor(false);
+    setEditingFact(null);
+  };
+
   // Gestion des préférences
   const handlePreferencesChange = (newPreferences: MemoryPreferences) => {
     setPreferences(newPreferences);
@@ -119,6 +155,34 @@ export function MemoryDashboard({
     }
   }, []);
 
+  // Raccourcis clavier
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + N pour ajouter un nouveau fait
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        handleQuickAdd();
+      }
+      // Ctrl/Cmd + F pour focus sur la recherche
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        // Focus sur l'input de recherche si disponible
+        const searchInput = document.querySelector('input[placeholder*="Rechercher"]') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
+      // Échap pour fermer les modales
+      if (e.key === 'Escape') {
+        setShowFactEditor(false);
+        setSelectedFact(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header du dashboard */}
@@ -130,6 +194,20 @@ export function MemoryDashboard({
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             Gérez et explorez vos souvenirs intelligemment
           </p>
+          <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs">Ctrl+N</kbd>
+              Nouveau fait
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs">Ctrl+F</kbd>
+              Rechercher
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs">Esc</kbd>
+              Fermer
+            </span>
+          </div>
         </div>
         
         <div className="flex items-center gap-3">
@@ -137,7 +215,7 @@ export function MemoryDashboard({
             <Brain className="w-4 h-4" />
             IA activée
           </Badge>
-          <Button onClick={() => analyzeNewFact("Exemple de nouveau fait à analyser")}>
+          <Button onClick={handleQuickAdd}>
             <Plus className="w-4 h-4 mr-2" />
             Ajouter un fait
           </Button>
@@ -252,7 +330,7 @@ export function MemoryDashboard({
               <CardContent>
                 <MemorySearchResults
                   results={searchResults}
-                  onEdit={onFactEdit}
+                  onEdit={handleEditFact}
                   onDelete={onFactDelete}
                   onView={setSelectedFact}
                 />
@@ -287,66 +365,7 @@ export function MemoryDashboard({
           </div>
 
           {/* Statistiques détaillées */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Statistiques détaillées</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <h4 className="font-medium mb-3">Par importance</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Élevée</span>
-                      <Badge variant="destructive">{stats.byImportance.high || 0}</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Moyenne</span>
-                      <Badge variant="secondary">{stats.byImportance.medium || 0}</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Faible</span>
-                      <Badge variant="outline">{stats.byImportance.low || 0}</Badge>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-3">Récents</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Cette semaine</span>
-                      <Badge>{stats.recentFacts}</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Ratio hebdomadaire</span>
-                      <Badge variant="outline">
-                        {Math.round((stats.recentFacts / stats.total) * 100)}%
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-3">Qualité</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Avec catégorie</span>
-                      <Badge>
-                        {facts.filter(f => f.category).length}
-                      </Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Avec tags</span>
-                      <Badge variant="outline">
-                        {facts.filter(f => f.tags && f.tags.length > 0).length}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <MemoryStats facts={facts} />
         </TabsContent>
 
         {/* Onglet Préférences */}
@@ -425,7 +444,11 @@ export function MemoryDashboard({
                           Aucun fait détecté dans cette catégorie
                         </div>
                       </div>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => addExampleToCategory(categoryId)}
+                      >
                         Ajouter exemple
                       </Button>
                     </div>
@@ -436,6 +459,18 @@ export function MemoryDashboard({
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Éditeur de fait modal */}
+      <MemoryFactEditor
+        open={showFactEditor}
+        onClose={() => {
+          setShowFactEditor(false);
+          setEditingFact(null);
+        }}
+        fact={editingFact}
+        onSave={handleSaveFact}
+        isEditing={!!editingFact}
+      />
     </div>
   );
 } 

@@ -16,6 +16,9 @@ export { MemoryPreferences } from './MemoryPreferences';
 export { MemoryAdvancedSearch } from './MemoryAdvancedSearch';
 export { MemorySearchResults } from './MemorySearchResults';
 export { MemoryDashboard } from './MemoryDashboard';
+export { MemoryFactEditor } from './MemoryFactEditor';
+export { MemoryTooltip, QuickMemoryTooltip } from './MemoryTooltip';
+export { MemoryStats } from './MemoryStats';
 
 // Services
 export { MemoryDetectionService } from './MemoryDetectionService';

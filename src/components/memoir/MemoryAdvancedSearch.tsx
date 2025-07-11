@@ -235,7 +235,15 @@ export function MemoryAdvancedSearch({
 
         {/* Historique et suggestions */}
         {(showHistory || suggestions.length > 0) && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+          <div 
+            className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto"
+            onBlur={() => {
+              setTimeout(() => {
+                setShowHistory(false);
+                setSuggestions([]);
+              }, 150);
+            }}
+          >
             {/* Suggestions */}
             {suggestions.length > 0 && (
               <div className="p-2">
