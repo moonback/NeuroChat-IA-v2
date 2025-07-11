@@ -14,7 +14,7 @@ import { HistoryModal, DiscussionWithCategory } from '@/components/HistoryModal'
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
 import { useMemory } from "@/hooks/useMemory";
-import { MemoryModal, MemoryFeedback } from '@/components/memoir';
+import { MemoryModal, MemoryFeedback, MemoryDashboard } from '@/components/memoir';
 import { pipeline } from "@xenova/transformers";
 import { GeminiSettingsDrawer } from '@/components/GeminiSettingsDrawer';
 import { MessageSelectionBar } from '@/components/MessageSelectionBar';
@@ -267,7 +267,7 @@ function App() {
     return message;
   };
 
-  const { memory, addFact } = useMemory();
+  const { memory, addFact, editFact, removeFact } = useMemory();
 
  
 
@@ -702,6 +702,7 @@ function App() {
   };
 
   const [showMemoryModal, setShowMemoryModal] = useState(false);
+  const [showMemoryDashboard, setShowMemoryDashboard] = useState(false);
   // Exemples d'informations personnelles pertinentes (état modifiable)
   const [examples, setExamples] = useState<string[]>([
     "Je m'appelle Lucie",
@@ -771,6 +772,7 @@ function App() {
           modePrive={modePrive}
           setModePrive={setModePrive}
           onOpenMemoryModal={() => setShowMemoryModal(true)}
+          onOpenMemoryDashboard={() => setShowMemoryDashboard(true)}
         />
 
         {/* Indicateur visuel du mode privé SOUS le header, centré
@@ -881,6 +883,45 @@ function App() {
         setSemanticThreshold={setSemanticThreshold}
         semanticLoading={semanticLoading}
       />
+
+      {/* Dashboard mémoire avancé */}
+      {showMemoryDashboard && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                Dashboard Mémoire Avancé
+              </h2>
+              <button
+                onClick={() => setShowMemoryDashboard(false)}
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-0">
+              <MemoryDashboard
+                facts={memory}
+                onFactAdd={(fact) => {
+                  if (fact.content) {
+                    addFact(fact.content);
+                  }
+                }}
+                onFactEdit={(fact) => {
+                  if (fact.content) {
+                    editFact(fact.id, fact.content);
+                  }
+                }}
+                onFactDelete={(fact) => {
+                  removeFact(fact.id);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

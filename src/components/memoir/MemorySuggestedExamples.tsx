@@ -89,7 +89,7 @@ export function MemorySuggestedExamples({
         Suggestions d'exemples :
       </p>
       <div className="flex flex-wrap gap-1">
-        {availableSuggestions.map((suggestion, index) => (
+        {availableSuggestions.map((suggestion) => (
           <Button
             key={suggestion}
             type="button"
