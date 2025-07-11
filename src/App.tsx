@@ -561,9 +561,14 @@ function App() {
 
 
 
+  // État pour gérer le délai d'attente du mode vocal auto
+  const [autoVoiceTimeout, setAutoVoiceTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [tempTranscriptAuto, setTempTranscriptAuto] = useState('');
+
   // Hook reconnaissance vocale (mode vocal auto)
   const {
     listening: listeningAuto,
+    transcript: transcriptAuto,
     start: startAuto,
     stop: stopAuto,
     reset: resetAuto,
@@ -571,14 +576,32 @@ function App() {
   } = useSpeechRecognition({
     interimResults: true,
     lang: 'fr-FR',
-    continuous: false,
-    onResult: (/* finalText */) => {
-      // Rien ici, on attend la fin
+    continuous: true, // Mode continu pour ne pas s'arrêter pendant les pauses
+    onResult: (finalText) => {
+      if (modeVocalAuto) {
+        setTempTranscriptAuto(finalText);
+        
+        // Annuler le timeout précédent
+        if (autoVoiceTimeout) {
+          clearTimeout(autoVoiceTimeout);
+        }
+        
+        // Créer un nouveau timeout de 3 secondes
+        const timeout = setTimeout(() => {
+          if (finalText && finalText.trim().length > 0) {
+            handleSendMessage(finalText.trim());
+            setTempTranscriptAuto('');
+            resetAuto();
+          }
+        }, 3000); // 3 secondes d'attente après la dernière parole
+        
+        setAutoVoiceTimeout(timeout);
+      }
     },
     onEnd: (finalText) => {
-      if (modeVocalAuto && finalText && finalText.trim().length > 0) {
-        handleSendMessage(finalText.trim());
-        resetAuto();
+      // Ne plus envoyer automatiquement ici - c'est géré par le timeout
+      if (modeVocalAuto && finalText) {
+        setTempTranscriptAuto(finalText);
       }
     },
   });
@@ -602,6 +625,12 @@ function App() {
         stopAuto();
         resetAuto();
       }
+      // Nettoyer le timeout quand on désactive le mode
+      if (autoVoiceTimeout) {
+        clearTimeout(autoVoiceTimeout);
+        setAutoVoiceTimeout(null);
+      }
+      setTempTranscriptAuto('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modeVocalAuto]);
@@ -612,6 +641,12 @@ function App() {
       setModeVocalAuto(false);
       stopAuto();
       resetAuto();
+      // Nettoyer le timeout
+      if (autoVoiceTimeout) {
+        clearTimeout(autoVoiceTimeout);
+        setAutoVoiceTimeout(null);
+      }
+      setTempTranscriptAuto('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [muted]);
@@ -736,6 +771,15 @@ function App() {
     return maxSim > semanticThreshold;
   };
 
+  // Nettoyer le timeout à la fermeture du composant
+  useEffect(() => {
+    return () => {
+      if (autoVoiceTimeout) {
+        clearTimeout(autoVoiceTimeout);
+      }
+    };
+  }, [autoVoiceTimeout]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Menu historique des discussions */}
@@ -855,7 +899,13 @@ function App() {
         deleteSettings={deleteSettings}
       />
 
-      <VocalModeIndicator visible={modeVocalAuto} />
+      <VocalModeIndicator 
+        visible={modeVocalAuto} 
+        listening={listeningAuto}
+        transcript={tempTranscriptAuto}
+        muted={muted}
+        timeoutActive={autoVoiceTimeout !== null}
+      />
 
       
 
