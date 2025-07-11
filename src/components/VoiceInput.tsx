@@ -32,17 +32,14 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
   } = useSpeechRecognition({
     interimResults: true,
     lang: 'fr-FR',
-    continuous: false,
+    continuous: true, // Mode continu pour ne pas s'arrêter à chaque pause
     onResult: (finalText) => {
       setInputValue(finalText);
     },
     onEnd: (finalText) => {
-      // Envoi automatique à la fin de la dictée
-      if (finalText && finalText.trim().length > 0) {
-        onSendMessage(finalText.trim(), selectedImage || undefined);
-        setInputValue('');
-        setSelectedImage(null);
-        reset();
+      // Ne plus envoyer automatiquement - laisser l'utilisateur décider
+      if (finalText) {
+        setInputValue(finalText);
       }
     },
   });
@@ -76,6 +73,12 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
   const handleSend = () => {
     const valueToSend = listening && transcript ? transcript : inputValue;
     if (!valueToSend.trim() && !selectedImage) return;
+    
+    // Arrêter la dictée vocale si elle est en cours
+    if (listening) {
+      stop();
+    }
+    
     onSendMessage(valueToSend, selectedImage || undefined);
     setInputValue('');
     setSelectedImage(null);
@@ -189,7 +192,7 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
                 onKeyPress={handleKeyPress}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                placeholder={listening ? "🎤 Parlez maintenant..." : "💭 Votre message..."}
+                placeholder={listening ? "🎤 Dictée en cours... Cliquez sur 'Arrêter' quand vous avez fini" : "💭 Votre message..."}
                 disabled={isLoading || listening}
                 className={cn(
                   "border-0 bg-transparent h-12 sm:h-14 text-sm sm:text-base rounded-2xl pr-28 sm:pr-32 pl-4 sm:pl-6 py-3 sm:py-4 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-slate-500/70 dark:placeholder:text-slate-400/70 text-slate-800 dark:text-slate-200 font-medium",
@@ -211,7 +214,7 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
                       : "bg-slate-100/80 dark:bg-slate-700/80 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 hover:scale-110 border-transparent"
                   )}
                   onClick={handleMicClick}
-                  title={listening ? "Arrêter la dictée vocale" : !isSupported ? "Reconnaissance vocale non supportée" : "Activer la dictée vocale"}
+                  title={listening ? "Arrêter la dictée vocale" : !isSupported ? "Reconnaissance vocale non supportée" : "Démarrer la dictée vocale (mode continu)"}
                   disabled={isLoading || !isSupported}
                 >
                   {listening ? (
@@ -310,24 +313,41 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
 
         {/* Indicateur de statut vocal amélioré */}
         {listening && (
-          <div className="flex items-center justify-center gap-3 mt-4 animate-in slide-in-from-bottom-4 fade-in-0 duration-300">
-            <div className="flex items-center gap-2">
-              <div className="flex gap-1">
-                {[...Array(3)].map((_, i) => (
-                  <div 
-                    key={i}
-                    className="w-2 h-2 bg-red-500 rounded-full animate-bounce" 
-                    style={{ animationDelay: `${i * 150}ms` }} 
-                  />
-                ))}
+          <div className="flex flex-col items-center gap-3 mt-4 animate-in slide-in-from-bottom-4 fade-in-0 duration-300">
+            <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  {[...Array(3)].map((_, i) => (
+                    <div 
+                      key={i}
+                      className="w-2 h-2 bg-red-500 rounded-full animate-bounce" 
+                      style={{ animationDelay: `${i * 150}ms` }} 
+                    />
+                  ))}
+                </div>
+                <span className="text-sm font-semibold text-red-600 dark:text-red-400">🎤 Dictée en cours - Parlez librement</span>
               </div>
-              <span className="text-sm font-semibold text-red-600 dark:text-red-400">Écoute en cours...</span>
+              
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleMicClick}
+                className="bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-red-500/40 transition-all duration-200 px-4 py-2 rounded-xl border-2 border-white/20"
+              >
+                <MicOff className="w-4 h-4 mr-2" />
+                Arrêter
+              </Button>
+              
+              <div className="px-3 py-1 bg-red-100/80 dark:bg-red-950/50 rounded-full border border-red-200 dark:border-red-800 backdrop-blur-xl">
+                <div className="flex items-center gap-1 text-xs text-red-700 dark:text-red-300">
+                  <Zap className="w-3 h-3" />
+                  <span>Mode continu</span>
+                </div>
+              </div>
             </div>
-            <div className="px-3 py-1 bg-red-100/80 dark:bg-red-950/50 rounded-full border border-red-200 dark:border-red-800 backdrop-blur-xl">
-              <div className="flex items-center gap-1 text-xs text-red-700 dark:text-red-300">
-                <Zap className="w-3 h-3" />
-                <span>Actif</span>
-              </div>
+            
+            <div className="text-xs text-slate-600 dark:text-slate-400 text-center bg-blue-50/80 dark:bg-blue-950/30 px-3 py-2 rounded-xl border border-blue-200 dark:border-blue-800 backdrop-blur-xl">
+              💡 <span className="font-medium">Conseil :</span> Parlez naturellement avec des pauses. Cliquez sur "Arrêter" quand vous avez fini, puis sur "Envoyer".
             </div>
           </div>
         )}
