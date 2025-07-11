@@ -22,6 +22,7 @@ import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 import { RagStatusPopup } from '@/components/RagStatusPopup';
 import { MemoryFeedback } from '@/components/MemoryFeedback';
+import { CollaborativeEditor } from '@/components/CollaborativeEditor';
 
 interface Message {
   id: string;
@@ -128,6 +129,10 @@ function App() {
       // toast.warning('Mode privé activé : les messages ne seront pas sauvegardés et seront effacés à la fermeture.');
     }
   }, [modePrive]);
+
+  // --- Éditeur collaboratif ---
+  const [showCollaborativeEditor, setShowCollaborativeEditor] = useState(false);
+  const [collaborativeEditorResponse, setCollaborativeEditorResponse] = useState<((response: string) => void) | null>(null);
 
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
@@ -345,7 +350,7 @@ function App() {
     // Autres patterns à enrichir selon besoin
   }
 
-  const handleSendMessage = async (userMessage: string, imageFile?: File) => {
+  const handleSendMessage = async (userMessage: string, imageFile?: File, sendToEditor = false) => {
     // Commande spéciale : ajout manuel à la mémoire via le chat
     const memoryCommand = userMessage.match(/^(enregistre dans la mémoire|ajoute à la mémoire|mémorise) *: *(.+)/i);
     if (memoryCommand) {
@@ -432,14 +437,14 @@ function App() {
         addRagContextMessage(passages);
       }
     }
-    // Ajoute le message utilisateur localement
-    const newMessage = addMessage(userMessage, true, imageFile);
+    // Ajoute le message utilisateur localement (seulement si ce n'est pas pour l'éditeur)
+    const newMessage = sendToEditor ? null : addMessage(userMessage, true, imageFile);
     setIsLoading(true);
     try {
-      // On prépare l'historique complet (y compris le message utilisateur tout juste ajouté)
-      const fullHistory = [...messages, newMessage];
+      // On prépare l'historique complet (y compris le message utilisateur tout juste ajouté si ce n'est pas pour l'éditeur)
+      const fullHistory = sendToEditor ? messages : [...messages, newMessage!];
       // On ne garde que les messages qui ont un champ text (donc pas les messages RAG)
-      const filteredHistory = fullHistory.filter(m => typeof m.text === 'string');
+      const filteredHistory = fullHistory.filter((m: any) => typeof m.text === 'string');
       // On construit le contexte documentaire pour le prompt
       let ragContext = '';
       if (ragEnabled && passages.length > 0) {
@@ -466,15 +471,24 @@ function App() {
       );
       // LOG réponse Gemini
       // console.log('[Réponse Gemini]', response);
-      addMessage(response, false);
-      speak(response, {
-        onEnd: () => {
-          if (modeVocalAuto && !muted) {
-            playBip();
-            startAuto();
-          }
+      
+      if (sendToEditor) {
+        // Envoyer la réponse à l'éditeur collaboratif
+        if (collaborativeEditorResponse) {
+          collaborativeEditorResponse(response);
         }
-      });
+      } else {
+        // Ajouter la réponse au chat principal
+        addMessage(response, false);
+        speak(response, {
+          onEnd: () => {
+            if (modeVocalAuto && !muted) {
+              playBip();
+              startAuto();
+            }
+          }
+        });
+      }
       // toast.success('Réponse reçue !', { duration: 2000 });
     } catch (error) {
       const errorMessage = error instanceof Error 
@@ -529,6 +543,15 @@ function App() {
     setShowHistory(true);
   };
   const handleCloseHistory = () => setShowHistory(false);
+
+  // Gestion de l'éditeur collaboratif
+  const handleOpenCollaborativeEditor = () => {
+    setShowCollaborativeEditor(true);
+  };
+
+  const handleCloseCollaborativeEditor = () => {
+    setShowCollaborativeEditor(false);
+  };
 
   // Recharger une discussion
   const handleLoadDiscussion = (discussion: DiscussionWithCategory) => {
@@ -772,6 +795,7 @@ function App() {
           modePrive={modePrive}
           setModePrive={setModePrive}
           onOpenMemoryModal={() => setShowMemoryModal(true)}
+          onOpenCollaborativeEditor={handleOpenCollaborativeEditor}
         />
 
         {/* Indicateur visuel du mode privé SOUS le header, centré */}
@@ -881,6 +905,13 @@ function App() {
         semanticThreshold={semanticThreshold}
         setSemanticThreshold={setSemanticThreshold}
         semanticLoading={semanticLoading}
+      />
+
+      <CollaborativeEditor
+        isOpen={showCollaborativeEditor}
+        onClose={handleCloseCollaborativeEditor}
+        onSendMessage={(message) => handleSendMessage(message, undefined, true)}
+        onRegisterResponseHandler={setCollaborativeEditorResponse}
       />
     </div>
   );

@@ -6,7 +6,7 @@ import { Tooltip as ReactTooltip } from 'react-tooltip';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import {
-  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, User, Brain, Shield, BookOpen, Sparkles
+  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, User, Brain, Shield, BookOpen, Sparkles, Code
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
@@ -153,6 +153,7 @@ interface HeaderProps {
   modePrive: boolean;
   setModePrive: (v: boolean) => void;
   onOpenMemoryModal: () => void;
+  onOpenCollaborativeEditor: () => void;
 }
 
 // =====================
@@ -178,6 +179,7 @@ export function Header({
   modePrive,
   setModePrive,
   onOpenMemoryModal,
+  onOpenCollaborativeEditor,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
@@ -402,6 +404,19 @@ export function Header({
           >
             <BookOpen className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
           </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onOpenCollaborativeEditor}
+            className="w-10 h-10 rounded-xl hover:bg-purple-100 dark:hover:bg-purple-900/50 group transition-all duration-200 hover:scale-110 focus:ring-2 focus:ring-purple-400/50 focus:ring-offset-1"
+            title="Éditeur collaboratif"
+            aria-label="Éditeur collaboratif"
+            data-tooltip-id="header-tooltip"
+            data-tooltip-content="Ouvrir l'éditeur collaboratif"
+          >
+            <Code className="w-5 h-5 text-purple-500 group-hover:scale-110 transition-transform duration-200" />
+          </Button>
         </div>
 
         {/* Séparateur visuel amélioré */}
@@ -565,6 +580,18 @@ export function Header({
                     <History className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                   </div>
                   <span>Historique</span>
+                </Button>
+                
+                <Button 
+                  variant="ghost" 
+                  size="lg" 
+                  className="w-full flex items-center gap-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 text-purple-900 dark:text-purple-100 font-medium text-base justify-start h-12" 
+                  onClick={() => { onOpenCollaborativeEditor(); closeMobileMenu(); }}
+                >
+                  <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                    <Code className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <span>Éditeur collaboratif</span>
                 </Button>
                 
                 <Button 
