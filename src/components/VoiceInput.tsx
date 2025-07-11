@@ -125,7 +125,7 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
                   {selectedImage.name}
                 </div>
                 <div className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2">
-                  <span>{(selectedImage.size / 1024).toFixed(1)} Ko</span>
+                  <span>{(selectedImage.size / 4096).toFixed(1)} Ko</span>
                   <div className="w-1 h-1 bg-slate-400 rounded-full" />
                   <span>Image</span>
                 </div>
