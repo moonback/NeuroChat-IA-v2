@@ -6,7 +6,7 @@ import { Tooltip as ReactTooltip } from 'react-tooltip';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import {
-  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, User, Brain, Shield, BookOpen, Sparkles
+  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, User, Brain, Shield, BookOpen, Sparkles, BarChart3
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
@@ -153,6 +153,7 @@ interface HeaderProps {
   modePrive: boolean;
   setModePrive: (v: boolean) => void;
   onOpenMemoryModal: () => void;
+  onOpenMemoryDashboard: () => void;
 }
 
 // =====================
@@ -178,6 +179,7 @@ export function Header({
   modePrive,
   setModePrive,
   onOpenMemoryModal,
+  onOpenMemoryDashboard,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
@@ -304,6 +306,16 @@ export function Header({
           <Button
             variant="ghost"
             size="sm"
+            onClick={onOpenMemoryDashboard}
+            className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-200 hover:scale-110 focus:ring-2 focus:ring-slate-400/50 focus:ring-offset-2"
+            title="Dashboard mémoire"
+          >
+            <BarChart3 className="w-5 h-5" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setShowMobileMenu(true)}
             className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-200 hover:scale-110 focus:ring-2 focus:ring-slate-400/50 focus:ring-offset-2"
             aria-label="Menu"
@@ -401,6 +413,19 @@ export function Header({
             data-tooltip-content="Afficher la mémoire utilisateur"
           >
             <BookOpen className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onOpenMemoryDashboard}
+            className="w-10 h-10 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 group transition-all duration-200 hover:scale-110 focus:ring-2 focus:ring-indigo-400/50 focus:ring-offset-1"
+            title="Dashboard mémoire"
+            aria-label="Dashboard mémoire"
+            data-tooltip-id="header-tooltip"
+            data-tooltip-content="Tableau de bord mémoire avancé"
+          >
+            <BarChart3 className="w-5 h-5 text-indigo-500 group-hover:scale-110 transition-transform duration-200" />
           </Button>
         </div>
 
