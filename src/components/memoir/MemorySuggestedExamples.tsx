@@ -13,18 +13,55 @@ export function MemorySuggestedExamples({
   onAddSuggestion, 
   maxVisible = 3 
 }: MemorySuggestedExamplesProps) {
-  // Exemples prédéfinis suggérés
+  // Exemples prédéfinis suggérés - optimisés pour la détection sémantique
   const suggestedExamples = useMemo(() => [
-    "Je m'appelle Marie",
-    "J'habite à Lyon", 
-    "Je suis développeur web",
-    "Ma couleur préférée est le violet",
-    "Je préfère le café au thé",
-    "Mon métier est infirmière",
-    "Je suis né le 15 juin 1985",
-    "Mon sport favori est le tennis",
-    "Mon animal préféré est le chat",
-    "Je travaille à distance"
+    // Identité et informations personnelles
+    "Je m'appelle Sophie et j'ai 28 ans",
+    "Mon nom de famille est Dubois",
+    "Je suis née le 12 mars 1995 à Paris",
+    "Je mesure 1m68 et j'ai les yeux verts",
+    
+    // Localisation et habitation
+    "J'habite au 15 rue de la Paix à Lyon",
+    "Je vis dans le 13ème arrondissement de Paris",
+    "Mon code postal est 69000",
+    "Ma ville natale est Marseille",
+    
+    // Profession et éducation
+    "Je travaille comme ingénieure informatique",
+    "J'ai étudié à l'université de Sorbonne",
+    "Mon entreprise s'appelle TechCorp",
+    "Je suis freelance en développement web",
+    
+    // Famille et relations
+    "J'ai deux enfants : Emma et Lucas",
+    "Mon mari s'appelle Pierre",
+    "Mes parents habitent en Bretagne",
+    "J'ai un frère qui vit à l'étranger",
+    
+    // Préférences et loisirs
+    "J'adore la cuisine italienne",
+    "Mon sport préféré est la natation",
+    "Je pratique le yoga tous les matins",
+    "J'aime lire des romans policiers",
+    
+    // Santé et bien-être
+    "Je suis allergique aux fruits de mer",
+    "Je porte des lunettes depuis l'âge de 10 ans",
+    "Je fais du jogging 3 fois par semaine",
+    "J'évite le gluten dans mon alimentation",
+    
+    // Technologie et habitudes
+    "Mon téléphone est un iPhone 14",
+    "J'utilise Gmail pour mes emails",
+    "Je préfère Netflix à Amazon Prime",
+    "Mon mot de passe contient toujours des chiffres",
+    
+    // Projets et aspirations
+    "Je rêve de voyager au Japon",
+    "J'apprends l'espagnol en ligne",
+    "Je veux acheter une maison l'année prochaine",
+    "Mon objectif est de courir un marathon"
   ], []);
 
   // Gestion optimisée de l'ajout d'exemples suggérés
