@@ -2,13 +2,13 @@ import React, { useState, useRef, useEffect } from "react";
 import { useMemory, MemoryFact } from "@/hooks/useMemory";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { toast } from "sonner";
-import { MemoryFactList } from "@/components/MemoryFactList";
-import { MemoryModalHeader } from "@/components/MemoryModalHeader";
-import { MemoryExamplesSection } from "@/components/MemoryExamplesSection";
-import { MemoryThresholdSection } from "@/components/MemoryThresholdSection";
-import { MemoryAddForm } from "@/components/MemoryAddForm";
-import { MemorySearchExportBar } from "@/components/MemorySearchExportBar";
-import { MemoryModalFooter } from "@/components/MemoryModalFooter";
+import { MemoryFactList } from "./MemoryFactList";
+import { MemoryModalHeader } from "./MemoryModalHeader";
+import { MemoryExamplesSection } from "./MemoryExamplesSection";
+import { MemoryThresholdSection } from "./MemoryThresholdSection";
+import { MemoryAddForm } from "./MemoryAddForm";
+import { MemorySearchExportBar } from "./MemorySearchExportBar";
+import { MemoryModalFooter } from "./MemoryModalFooter";
 
 interface MemoryModalProps {
   open: boolean;

@@ -14,14 +14,13 @@ import { HistoryModal, DiscussionWithCategory } from '@/components/HistoryModal'
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
 import { useMemory } from "@/hooks/useMemory";
-import { MemoryModal } from '@/components/MemoryModal';
+import { MemoryModal, MemoryFeedback } from '@/components/memoir';
 import { pipeline } from "@xenova/transformers";
 import { GeminiSettingsDrawer } from '@/components/GeminiSettingsDrawer';
 import { MessageSelectionBar } from '@/components/MessageSelectionBar';
-import { PrivateModeBanner } from '@/components/PrivateModeBanner';
+// import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 import { RagStatusPopup } from '@/components/RagStatusPopup';
-import { MemoryFeedback } from '@/components/MemoryFeedback';
 
 interface Message {
   id: string;
@@ -774,8 +773,8 @@ function App() {
           onOpenMemoryModal={() => setShowMemoryModal(true)}
         />
 
-        {/* Indicateur visuel du mode privé SOUS le header, centré */}
-        <PrivateModeBanner visible={modePrive} />
+        {/* Indicateur visuel du mode privé SOUS le header, centré
+        <PrivateModeBanner visible={modePrive} /> */}
         <RagStatusPopup activated={showRagActivated} deactivated={showRagDeactivated} />
 
         {/* Boutons de sélection et suppression groupée */}
