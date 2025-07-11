@@ -23,6 +23,9 @@ import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 import { RagStatusPopup } from '@/components/RagStatusPopup';
 import { MemoryFeedback } from '@/components/MemoryFeedback';
 import { memoryDetectionService } from '@/services/memoryDetection';
+import { MemoryAnalytics } from '@/components/MemoryAnalytics';
+import { learningService } from '@/services/learningService';
+
 
 interface Message {
   id: string;
@@ -719,6 +722,7 @@ function App() {
   };
 
   const [showMemoryModal, setShowMemoryModal] = useState(false);
+  const [showMemoryAnalytics, setShowMemoryAnalytics] = useState(false);
   // Exemples d'informations personnelles pertinentes (état modifiable)
   const [examples, setExamples] = useState<string[]>([
     "Je m'appelle Lucie",
@@ -751,6 +755,8 @@ function App() {
     setSemanticScore(maxSim);
     return maxSim > semanticThreshold;
   };
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
@@ -788,6 +794,7 @@ function App() {
           modePrive={modePrive}
           setModePrive={setModePrive}
           onOpenMemoryModal={() => setShowMemoryModal(true)}
+          onOpenMemoryAnalytics={() => setShowMemoryAnalytics(true)}
         />
 
         {/* Indicateur visuel du mode privé SOUS le header, centré */}
@@ -898,6 +905,15 @@ function App() {
         setSemanticThreshold={setSemanticThreshold}
         semanticLoading={semanticLoading}
       />
+
+      {showMemoryAnalytics && (
+        <MemoryAnalytics
+          memory={memory}
+          onClose={() => setShowMemoryAnalytics(false)}
+        />
+      )}
+
+
     </div>
   );
 }

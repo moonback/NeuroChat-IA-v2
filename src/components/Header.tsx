@@ -153,6 +153,7 @@ interface HeaderProps {
   modePrive: boolean;
   setModePrive: (v: boolean) => void;
   onOpenMemoryModal: () => void;
+  onOpenMemoryAnalytics: () => void;
 }
 
 // =====================
@@ -178,6 +179,7 @@ export function Header({
   modePrive,
   setModePrive,
   onOpenMemoryModal,
+  onOpenMemoryAnalytics,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
@@ -401,6 +403,21 @@ export function Header({
             data-tooltip-content="Afficher la mémoire utilisateur"
           >
             <BookOpen className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onOpenMemoryAnalytics}
+            className="w-10 h-10 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 group transition-all duration-200 hover:scale-110 focus:ring-2 focus:ring-indigo-400/50 focus:ring-offset-1"
+            title="Statistiques de mémoire"
+            aria-label="Statistiques de mémoire"
+            data-tooltip-id="header-tooltip"
+            data-tooltip-content="Afficher les statistiques et tendances de la mémoire"
+          >
+            <svg className="w-5 h-5 text-indigo-500 group-hover:scale-110 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
           </Button>
         </div>
 
@@ -698,6 +715,21 @@ export function Header({
                   </div>
                   <span>{personalities.find(p => p.value === selectedPersonality)?.label}</span>
                   <span className="ml-auto text-xs text-blue-600 dark:text-blue-400 font-medium">Personnalité</span>
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  className="w-full flex items-center gap-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 text-indigo-900 dark:text-indigo-100 font-medium text-base justify-start h-12"
+                  onClick={() => { onOpenMemoryAnalytics(); closeMobileMenu(); }}
+                  type="button"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <span>Statistiques Mémoire</span>
                 </Button>
               </div>
             </div>
