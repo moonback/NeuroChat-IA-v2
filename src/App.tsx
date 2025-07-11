@@ -22,6 +22,7 @@ import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 import { RagStatusPopup } from '@/components/RagStatusPopup';
 import { MemoryFeedback } from '@/components/MemoryFeedback';
+import { memoryDetectionService } from '@/services/memoryDetection';
 
 interface Message {
   id: string;
@@ -305,44 +306,59 @@ function App() {
     setMessages(prev => [...prev, ragMsg as any]);
   };
 
-  // Détection automatique d'informations à mémoriser
-  function detectAndMemorize(text: string) {
-    // Prénom
-    const nameMatch = text.match(/je m'appelle ([\w\- ]+)/i);
-    if (nameMatch) {
-      addFact(`Le prénom de l'utilisateur est ${nameMatch[1]}`);
+  // Détection automatique d'informations à mémoriser - VERSION OPTIMISÉE
+  async function detectAndMemorize(text: string) {
+    try {
+      // Analyse de sentiment et contexte
+      const sentiment = memoryDetectionService.analyzeSentiment(text);
+      
+      // Contexte de conversation (simplifié)
+      const context = {
+        previousMessages: messages.slice(-3).map(m => m.text),
+        currentTopic: sentiment.intention === 'confidence' ? 'personnel' : undefined,
+        userMood: sentiment.sentiment,
+        timeOfDay: new Date().getHours() < 12 ? 'matin' : new Date().getHours() < 18 ? 'après-midi' : 'soir'
+      };
+
+      // Détection hybride avec le service avancé
+      const detectedInfo = await memoryDetectionService.detectInformation(text, context);
+      
+      // Filtrage contre les informations existantes
+      const validInfo = detectedInfo.filter(info => {
+        const alreadyExists = memory.some(fact => 
+          fact.content.toLowerCase().includes(info.content.toLowerCase()) ||
+          info.content.toLowerCase().includes(fact.content.toLowerCase())
+        );
+        return !alreadyExists;
+      });
+
+      // Ajout à la mémoire avec feedback enrichi
+      for (const info of validInfo) {
+        addFact(info.content, info.category);
+        
+        // Emojis par catégorie
+        const categoryEmojis = {
+          identité: "👤", localisation: "📍", profession: "💼", préférences: "❤️",
+          dates: "📅", relations: "👥", habitudes: "🔄", santé: "🏥",
+          loisirs: "🎯", personnalité: "🧠"
+        };
+        
+        const emoji = categoryEmojis[info.category as keyof typeof categoryEmojis] || "💭";
+        const confidencePercent = Math.round(info.confidence * 100);
+        const sourceText = info.source === 'regex' ? 'Pattern' : 
+                          info.source === 'contextual' ? 'Contexte' : 'Sémantique';
+        
+        toast.success(`${emoji} Information ${info.category} mémorisée ! (${confidencePercent}% - ${sourceText})`, {
+          duration: 3000,
+          description: info.content.length > 50 ? info.content.substring(0, 50) + '...' : info.content
+        });
+      }
+
+      return validInfo.length > 0;
+    } catch (error) {
+      console.error('Erreur détection mémoire:', error);
+      return false;
     }
-    // Ville
-    const cityMatch = text.match(/j'habite (à|au|en|aux) ([\w\- ]+)/i);
-    if (cityMatch) {
-      addFact(`L'utilisateur habite ${cityMatch[2]}`);
-    }
-    // Plat préféré
-    const platMatch = text.match(/(mon plat préféré est|je préfère manger|j'adore manger) ([\w\- ]+)/i);
-    if (platMatch) {
-      addFact(`Le plat préféré de l'utilisateur est ${platMatch[2]}`);
-    }
-    // Métier
-    const jobMatch = text.match(/je suis (un |une |)([\w\- ]+)/i);
-    if (jobMatch && !/je suis (fatigué|content|heureux|triste|malade|prêt|prête|désolé|désolée|occupé|occupée|disponible|en forme|en retard|à l'heure|là|ici|ok|d'accord|prêt à|prête à)/i.test(text)) {
-      addFact(`Le métier de l'utilisateur est ${jobMatch[2]}`);
-    }
-    // Date de naissance
-    const birthMatch = text.match(/je suis né(e)? le ([0-9]{1,2} [a-zéû]+ [0-9]{4})/i);
-    if (birthMatch) {
-      addFact(`La date de naissance de l'utilisateur est ${birthMatch[2]}`);
-    }
-    // Animal préféré
-    const animalMatch = text.match(/(mon animal préféré est|j'adore les|je préfère les) ([\w\- ]+)/i);
-    if (animalMatch) {
-      addFact(`L'animal préféré de l'utilisateur est ${animalMatch[2]}`);
-    }
-    // Couleur préférée
-    const colorMatch = text.match(/(ma couleur préférée est|j'aime la couleur|je préfère la couleur) ([\w\- ]+)/i);
-    if (colorMatch) {
-      addFact(`La couleur préférée de l'utilisateur est ${colorMatch[2]}`);
-    }
-    // Autres patterns à enrichir selon besoin
   }
 
   const handleSendMessage = async (userMessage: string, imageFile?: File) => {
@@ -419,7 +435,7 @@ function App() {
         return; // On n'envoie pas à l'IA, c'est une commande locale
       }
     }
-    detectAndMemorize(userMessage);
+    await detectAndMemorize(userMessage);
     if (!isOnline) {
       toast.error('Pas de connexion Internet. Vérifie ta connexion réseau.');
       return;

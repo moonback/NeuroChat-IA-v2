@@ -4,15 +4,16 @@ export interface MemoryFact {
   id: string;
   content: string;
   date: string;
+  category?: string;
 }
 
 const LOCALSTORAGE_KEY = "gemini_memory";
 
 interface MemoryContextType {
   memory: MemoryFact[];
-  addFact: (content: string) => void;
+  addFact: (content: string, category?: string) => void;
   removeFact: (id: string) => void;
-  editFact: (id: string, newContent: string) => void;
+  editFact: (id: string, newContent: string, category?: string) => void;
 }
 
 const MemoryContext = createContext<MemoryContextType | undefined>(undefined);
@@ -31,10 +32,10 @@ export const MemoryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(memory));
   }, [memory]);
 
-  const addFact = useCallback((content: string) => {
+  const addFact = useCallback((content: string, category?: string) => {
     setMemory(prev => [
       ...prev,
-      { id: Date.now().toString(), content, date: new Date().toISOString() }
+      { id: Date.now().toString(), content, date: new Date().toISOString(), category }
     ]);
   }, []);
 
@@ -42,8 +43,8 @@ export const MemoryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setMemory(prev => prev.filter(f => f.id !== id));
   }, []);
 
-  const editFact = useCallback((id: string, newContent: string) => {
-    setMemory(prev => prev.map(f => f.id === id ? { ...f, content: newContent } : f));
+  const editFact = useCallback((id: string, newContent: string, category?: string) => {
+    setMemory(prev => prev.map(f => f.id === id ? { ...f, content: newContent, category } : f));
   }, []);
 
   return (
