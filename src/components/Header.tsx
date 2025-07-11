@@ -6,10 +6,11 @@ import { Tooltip as ReactTooltip } from 'react-tooltip';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import {
-  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, User, Brain, Shield, BookOpen, Sparkles
+  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, User, Brain, Shield, BookOpen, Sparkles, Search
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
+import { DeepResearchCompactToggle } from './DeepResearchToggle';
 
 // =====================
 // Constantes & Utilitaires
@@ -153,6 +154,8 @@ interface HeaderProps {
   modePrive: boolean;
   setModePrive: (v: boolean) => void;
   onOpenMemoryModal: () => void;
+  deepResearchConfig?: any;
+  onDeepResearchConfigChange?: (config: any) => void;
 }
 
 // =====================
@@ -178,6 +181,8 @@ export function Header({
   modePrive,
   setModePrive,
   onOpenMemoryModal,
+  deepResearchConfig,
+  onDeepResearchConfigChange,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
@@ -489,6 +494,17 @@ export function Header({
             </span>
             <span className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${ragEnabled ? 'bg-green-300' : 'bg-red-400'} animate-pulse`}></span>
           </Button>
+          
+          {/* Deep Research Toggle */}
+          {deepResearchConfig && onDeepResearchConfigChange && (
+            <div className="flex items-center">
+              <DeepResearchCompactToggle
+                config={deepResearchConfig}
+                onConfigChange={onDeepResearchConfigChange}
+                disabled={false}
+              />
+            </div>
+          )}
           
           {/* Sélecteur de personnalité amélioré */}
           <button

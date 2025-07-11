@@ -22,6 +22,12 @@ import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 import { RagStatusPopup } from '@/components/RagStatusPopup';
 import { MemoryFeedback } from '@/components/MemoryFeedback';
+import { useDeepResearch } from './hooks/useDeepResearch';
+import { DeepResearchCard } from './components/DeepResearchCard';
+import { DeepResearchIndicator } from './components/DeepResearchIndicator';
+import { DeepResearchSuggestion, useDeepResearchSuggestion } from './components/DeepResearchToggle';
+import { DeepResearchResult } from './types/deepResearch';
+import { isDeepResearchQuery } from './services/deepResearch';
 
 interface Message {
   id: string;
@@ -129,6 +135,13 @@ function App() {
     }
   }, [modePrive]);
 
+  // --- Deep Research ---
+  const deepResearch = useDeepResearch();
+  const [currentInput, setCurrentInput] = useState('');
+  const [showDeepResearchSuggestion, setShowDeepResearchSuggestion] = useState(false);
+  const shouldSuggestDeepResearch = useDeepResearchSuggestion(currentInput);
+  const [completedDeepResearches, setCompletedDeepResearches] = useState<DeepResearchResult[]>([]);
+
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
   const LOCALSTORAGE_CURRENT = 'gemini_current_discussion';
@@ -180,6 +193,38 @@ function App() {
   useEffect(() => {
     localStorage.setItem('gemini_presets', JSON.stringify(presets));
   }, [presets]);
+
+  // Effet pour les suggestions de Deep Research
+  useEffect(() => {
+    if (shouldSuggestDeepResearch && !deepResearch.isDeepResearchEnabled && currentInput.length > 20) {
+      setShowDeepResearchSuggestion(true);
+    } else {
+      setShowDeepResearchSuggestion(false);
+    }
+  }, [shouldSuggestDeepResearch, deepResearch.isDeepResearchEnabled, currentInput]);
+
+  // Effet pour surveiller les recherches terminées
+  useEffect(() => {
+    deepResearch.activeResearches.forEach(research => {
+      if (research.status === 'completed' && !completedDeepResearches.find(r => r.id === research.id)) {
+        setCompletedDeepResearches(prev => [...prev, research]);
+        
+        // Ajouter les résultats aux messages
+        const resultMessage: Message = {
+          id: `deep_research_${research.id}`,
+          text: `🔍 **Recherche Approfondie Terminée**\n\n**Sujet:** ${research.originalQuery}\n\n**Résumé:** ${research.executiveSummary}\n\n**Conclusions clés:**\n${research.keyFindings.map(f => `• ${f}`).join('\n')}\n\n**Confiance:** ${Math.round(research.confidenceScore * 100)}%`,
+          isUser: false,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, resultMessage]);
+        
+        if (!muted) {
+          speak('Recherche approfondie terminée avec succès.');
+        }
+      }
+    });
+  }, [deepResearch.activeResearches, completedDeepResearches, muted, speak]);
 
   // Sauvegarder une discussion dans l'historique (sans doublons consécutifs)
   const saveDiscussionToHistory = (discussion: Message[]) => {
@@ -346,6 +391,21 @@ function App() {
   }
 
   const handleSendMessage = async (userMessage: string, imageFile?: File) => {
+    // Détecter si le Deep Research est approprié et activé
+    if (deepResearch.isDeepResearchEnabled && isDeepResearchQuery(userMessage)) {
+      try {
+        await deepResearch.startResearch(userMessage);
+        addMessage(`🔍 Recherche approfondie démarrée pour : "${userMessage}"`, false);
+        if (!muted) {
+          speak('Recherche approfondie démarrée. Veuillez patienter pendant que j\'analyse votre question.');
+        }
+        return;
+      } catch (error) {
+        console.error('Erreur lors du démarrage de la recherche approfondie:', error);
+        addMessage('Erreur lors du démarrage de la recherche approfondie. Passage au mode de chat normal.', false);
+      }
+    }
+
     // Commande spéciale : ajout manuel à la mémoire via le chat
     const memoryCommand = userMessage.match(/^(enregistre dans la mémoire|ajoute à la mémoire|mémorise) *: *(.+)/i);
     if (memoryCommand) {
@@ -736,6 +796,40 @@ function App() {
     return maxSim > semanticThreshold;
   };
 
+  // Gestionnaires Deep Research
+  const handleDeepResearchStart = async (query: string) => {
+    try {
+      await deepResearch.startResearch(query);
+      setShowDeepResearchSuggestion(false);
+      addMessage(`🔍 Recherche approfondie démarrée pour : "${query}"`, false);
+      if (!muted) {
+        speak('Recherche approfondie démarrée.');
+      }
+    } catch (error) {
+      console.error('Erreur Deep Research:', error);
+      toast.error('Erreur lors du démarrage de la recherche approfondie.');
+    }
+  };
+
+  const handleDeepResearchStop = (resultId: string) => {
+    deepResearch.stopResearch(resultId);
+    toast.info('Recherche approfondie arrêtée.');
+  };
+
+  const handleDeepResearchRestart = (query: string) => {
+    handleDeepResearchStart(query);
+  };
+
+  const handleActivateDeepResearch = () => {
+    deepResearch.updateConfig({ enabled: true });
+    setShowDeepResearchSuggestion(false);
+    handleDeepResearchStart(currentInput);
+  };
+
+  const handleDismissDeepResearchSuggestion = () => {
+    setShowDeepResearchSuggestion(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Menu historique des discussions */}
@@ -772,6 +866,8 @@ function App() {
           modePrive={modePrive}
           setModePrive={setModePrive}
           onOpenMemoryModal={() => setShowMemoryModal(true)}
+          deepResearchConfig={deepResearch.config}
+          onDeepResearchConfigChange={deepResearch.updateConfig}
         />
 
         {/* Indicateur visuel du mode privé SOUS le header, centré */}
@@ -817,6 +913,38 @@ function App() {
         {/* Enhanced Chat Interface */}
         <Card className="flex-1 flex flex-col shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl overflow-hidden ring-1 ring-white/20 dark:ring-slate-700/20 relative">
           <div className="flex-1 overflow-y-auto pb-20"> {/* Ajout du padding-bottom pour l'input */}
+            {/* Suggestion Deep Research */}
+            {showDeepResearchSuggestion && (
+              <div className="p-3">
+                <DeepResearchSuggestion
+                  onActivate={handleActivateDeepResearch}
+                  onDismiss={handleDismissDeepResearchSuggestion}
+                  query={currentInput}
+                />
+              </div>
+            )}
+            
+            {/* Indicateurs Deep Research actifs */}
+            {deepResearch.activeResearches.map(research => (
+              <div key={research.id} className="p-3">
+                <DeepResearchIndicator
+                  result={research}
+                  onStop={() => handleDeepResearchStop(research.id)}
+                />
+              </div>
+            ))}
+            
+            {/* Résultats Deep Research terminés */}
+            {completedDeepResearches.map(research => (
+              <div key={research.id} className="p-3">
+                <DeepResearchCard
+                  result={research}
+                  onStopResearch={handleDeepResearchStop}
+                  onRestartResearch={handleDeepResearchRestart}
+                />
+              </div>
+            ))}
+            
             <ChatContainer
               messages={messages}
               isLoading={isLoading}
@@ -832,7 +960,11 @@ function App() {
 
       {/* Zone de saisie fixée en bas de l'écran */}
       <div className="fixed bottom-0 left-0 w-full z-50 bg-white/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-700 px-2 pt-2 pb-2 backdrop-blur-xl">
-        <VoiceInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+        <VoiceInput 
+          onSendMessage={handleSendMessage} 
+          isLoading={isLoading} 
+          onInputChange={setCurrentInput}
+        />
         <MemoryFeedback loading={semanticLoading} score={semanticScore} />
       </div>
 

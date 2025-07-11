@@ -8,11 +8,12 @@ import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 interface VoiceInputProps {
   onSendMessage: (message: string, imageFile?: File) => void;
   isLoading: boolean;
+  onInputChange?: (input: string) => void;
 }
 
 const EMOJIS = ['😀','😂','😍','😎','🥳','😢','😡','👍','🙏','👏','🤔','😅','😇','😱','🎉','❤️','🔥','💡','🤖','🙌'];
 
-export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
+export function VoiceInput({ onSendMessage, isLoading, onInputChange }: VoiceInputProps) {
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -53,6 +54,13 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
       inputRef.current?.focus();
     }
   }, []);
+
+  // Notifier les changements d'input
+  useEffect(() => {
+    if (onInputChange) {
+      onInputChange(inputValue);
+    }
+  }, [inputValue, onInputChange]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
