@@ -92,8 +92,8 @@ export class ContextualDetectionService {
       }
     }
 
-    return changes.sort((a, b) => this.patterns.find(p => p.type === a.type)?.priority || 0 - 
-                                   this.patterns.find(p => p.type === b.type)?.priority || 0);
+    return changes.sort((a, b) => (this.patterns.find(p => p.type === a.type)?.priority || 0) - 
+                                   (this.patterns.find(p => p.type === b.type)?.priority || 0));
   }
 
   /**
