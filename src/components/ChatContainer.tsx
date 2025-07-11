@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
-import { Sparkles, ArrowDown, MessageCircle, Mic, Zap, Brain, Clock, Info, ExternalLink } from 'lucide-react'; // Added Info, ExternalLink
+import { Sparkles, ArrowDown, MessageCircle, Mic, Zap, Brain, Clock, Info, ExternalLink, Shield, Wand2 } from 'lucide-react'; // Added Info, ExternalLink
 import { TypingIndicator } from './TypingIndicator';
 import { cn } from '@/lib/utils'; // Assuming cn utility is available for Tailwind class merging
 
@@ -80,137 +80,149 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
 
   return (
     <div
-      className={
-        "flex-1 relative bg-gradient-to-br from-slate-50/50 via-white to-blue-50/30 dark:from-slate-900/50 dark:via-slate-900 dark:to-slate-800/30 " +
-        (modePrive ? " animate-prive-glow ring-4 ring-red-400/60 shadow-2xl shadow-red-400/30" : "")
-      }
+      className={cn(
+        "flex-1 relative bg-gradient-to-br from-slate-50/80 via-white/90 to-blue-50/60 dark:from-slate-900/80 dark:via-slate-900/90 dark:to-slate-800/60 backdrop-blur-xl",
+        modePrive && "ring-2 ring-red-400/40 shadow-2xl shadow-red-400/20 bg-gradient-to-br from-red-50/20 via-white/90 to-purple-50/30 dark:from-red-950/20 dark:via-slate-900/90 dark:to-purple-950/30"
+      )}
       style={{
         minHeight: '0',
         height: '100%',
         maxHeight: '100vh',
-        // Sur mobile, occupe tout l'écran sans scroll inutile
       }}
     >
       {modePrive && (
-        <div className="absolute top-3 right-3 z-30 px-3 py-1 rounded-full bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-800 text-white font-bold text-xs shadow-lg animate-bouncePrivé border-2 border-white/40 select-none pointer-events-none">
-          <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' className='inline align-middle mr-1'>
-            <rect x='5' y='11' width='14' height='9' rx='2' className='fill-white/20'/>
-            <path d='M12 17v-2' className='stroke-white'/>
-            <path d='M7 11V7a5 5 0 0110 0v4' className='stroke-white'/>
-          </svg>
-          Privé
+        <div className="absolute top-4 right-4 z-30 group">
+          <div className="px-4 py-2 rounded-2xl bg-gradient-to-r from-red-500/90 via-red-600/90 to-red-700/90 text-white font-bold text-xs shadow-2xl animate-in slide-in-from-top-2 duration-300 border border-white/20 backdrop-blur-xl hover:scale-105 transition-all duration-200 cursor-pointer select-none">
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Shield className="w-4 h-4 animate-pulse" />
+                <div className="absolute inset-0 bg-white/20 rounded-full animate-ping" />
+              </div>
+              <span className="tracking-wide">Mode Privé</span>
+              <div className="w-2 h-2 bg-white/80 rounded-full animate-pulse" />
+            </div>
+          </div>
         </div>
       )}
+      
       <ScrollArea
-        className="flex-1 h-full overflow-y-auto p-1 sm:p-3 pb-20" // pb-32 pour laisser la place à l'input sticky
+        className="flex-1 h-full overflow-y-auto p-2 sm:p-4 pb-24 custom-scrollbar"
         ref={scrollAreaRef}
         onScrollCapture={handleScroll}
         style={{
           minHeight: 0,
-          maxHeight: 'calc(100vh - 110px)', // Ajuste selon la hauteur du header/footer sur mobile
+          maxHeight: 'calc(100vh - 120px)',
         }}
       >
-        <div className="space-y-2 sm:space-y-3 min-h-[calc(60vh)] sm:min-h-0">
-          {/* Conditional rendering for hero section or chat content */}
+        <div className="space-y-3 sm:space-y-4 min-h-[calc(60vh)] sm:min-h-0">
+          {/* Hero sections améliorées */}
           {messages.length === 0 ? (
             modePrive ? (
-              <div className="flex flex-col items-center justify-center min-h-[60vh] sm:min-h-[320px] text-center px-2 mb-3 animate-fadeIn">
-                {/* Hero: Secure shield, minimal, pro */}
-                <div className="relative mb-5 animate-fadeIn" style={{ animationDelay: "0.1s" }}>
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-2xl flex items-center justify-center shadow-xl border-2 border-white/20 dark:border-slate-800/60 backdrop-blur-xl relative">
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-400/20 via-indigo-400/10 to-emerald-300/10 blur pointer-events-none"></div>
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#shield-gradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white drop-shadow z-10 animate-popIn">
-                      <defs>
-                        <linearGradient id="shield-gradient" x1="0" y1="0" x2="1" y2="1">
-                          <stop offset="0%" stopColor="#60a5fa" />
-                          <stop offset="60%" stopColor="#6366f1" />
-                          <stop offset="100%" stopColor="#a21caf" />
-                        </linearGradient>
-                      </defs>
-                      <path d="M12 3l7 4v5c0 5-3.5 9-7 9s-7-4-7-9V7l7-4z" className="fill-white/10" />
-                      <path d="M9.5 12.5l2 2 3-3" className="stroke-emerald-300 animate-pulse" />
-                    </svg>
-                  </div>
-                  <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-white/40 dark:bg-slate-900/40 backdrop-blur border border-blue-300/30 dark:border-blue-700/30 shadow text-blue-900 dark:text-blue-100 font-bold text-xs select-none animate-bouncePrivé tracking-wide" style={{boxShadow:'0 2px 12px 0 rgba(99,102,241,0.10)'}}>Confidentiel</div>
-                </div>
-                <div className="max-w-md mx-auto w-full">
-                  <p className="text-blue-900 dark:text-blue-100 text-xs sm:text-sm leading-relaxed mb-4 font-medium animate-fadeIn" style={{ animationDelay: "0.2s" }}>
-                    <span className="font-semibold">Confidentialité totale.</span> Vos messages sont <span className="underline decoration-emerald-400">jamais sauvegardés</span>, <span className="underline decoration-blue-400">effacés à la fermeture</span>, <span className="underline decoration-slate-400">chiffrés localement</span>.
-                  </p>
-                  <div className="p-3 bg-white/70 dark:bg-slate-900/60 rounded-xl border border-blue-200/40 dark:border-blue-700/30 backdrop-blur shadow-inner animate-fadeIn transition-all duration-300 hover:scale-105 hover:shadow-indigo-400/20 hover:ring-2 hover:ring-indigo-400/30 group cursor-pointer" style={{ animationDelay: '0.4s' }}>
-                    <div className="flex items-center justify-center gap-2 mb-1">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="url(#shield-gradient2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400 drop-shadow animate-popIn">
-                        <defs>
-                          <linearGradient id="shield-gradient2" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor="#60a5fa" />
-                            <stop offset="60%" stopColor="#6366f1" />
-                            <stop offset="100%" stopColor="#a21caf" />
-                          </linearGradient>
-                        </defs>
-                        <path d="M12 3l7 4v5c0 5-3.5 9-7 9s-7-4-7-9V7l7-4z" className="fill-white/10" />
-                        <path d="M9.5 12.5l2 2 3-3" className="stroke-emerald-200 animate-pulse" />
-                      </svg>
-                      <span className="text-xs font-semibold text-blue-900 dark:text-blue-100 tracking-wide flex items-center gap-2">
-                        Démarrez une discussion privée
-                        <span className="ml-2 px-2 py-0.5 rounded-full bg-white/40 dark:bg-slate-900/40 border border-blue-200/30 dark:border-blue-700/30 text-blue-900 dark:text-blue-100 text-[10px] font-bold shadow animate-bouncePrivé select-none">Confidentiel</span>
-                      </span>
+              <div className="flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[400px] text-center px-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
+                {/* Hero privé amélioré */}
+                <div className="relative mb-8 group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl blur-2xl animate-pulse" />
+                  <div className="relative w-24 h-24 bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-3xl flex items-center justify-center shadow-2xl shadow-red-500/30 border-2 border-white/30 dark:border-slate-800/60 backdrop-blur-xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                    <Shield className="w-12 h-12 text-white drop-shadow-lg animate-pulse" />
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full border-2 border-white flex items-center justify-center animate-bounce">
+                      <div className="w-2 h-2 bg-white rounded-full" />
                     </div>
-                    <p className="text-[11px] text-blue-800 dark:text-blue-200/90 mt-1 font-medium">
-                      Messages <span className="underline decoration-emerald-400">éphémères</span>, <span className="underline decoration-blue-400">jamais stockés</span>, <span className="underline decoration-slate-400">protégés localement</span>.
+                  </div>
+                </div>
+                
+                <div className="max-w-lg mx-auto space-y-6">
+                  <div className="space-y-2">
+                    <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">
+                      Session Confidentielle
+                    </h2>
+                    <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
+                      Vos conversations sont <span className="font-semibold text-emerald-600 dark:text-emerald-400">totalement privées</span> et <span className="font-semibold text-blue-600 dark:text-blue-400">automatiquement effacées</span>
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {[
+                      { icon: Shield, title: "Chiffrement", desc: "Messages protégés", color: "from-red-500 to-red-600" },
+                      { icon: Zap, title: "Éphémère", desc: "Auto-suppression", color: "from-purple-500 to-purple-600" },
+                      { icon: Brain, title: "Privé", desc: "Aucun stockage", color: "from-blue-500 to-blue-600" }
+                    ].map((feature, idx) => (
+                      <div 
+                        key={feature.title}
+                        className="group p-4 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-white/60 dark:border-slate-700/60 backdrop-blur-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 animate-in slide-in-from-bottom-4"
+                        style={{ animationDelay: `${idx * 100}ms` }}
+                      >
+                        <div className={`w-10 h-10 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:rotate-12 transition-transform duration-300`}>
+                          <feature.icon className="w-5 h-5 text-white" />
+                        </div>
+                        <h3 className="font-semibold text-sm text-slate-800 dark:text-slate-200 mb-1">{feature.title}</h3>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">{feature.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="p-4 bg-gradient-to-r from-red-50/80 via-purple-50/80 to-blue-50/80 dark:from-red-950/30 dark:via-purple-950/30 dark:to-blue-950/30 rounded-2xl border border-red-200/50 dark:border-red-800/50 backdrop-blur-sm">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Sparkles className="w-5 h-5 text-red-500 animate-pulse" />
+                      <span className="text-sm font-semibold text-red-700 dark:text-red-300">Commencez en toute confidentialité</span>
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      Cette session ne laissera aucune trace sur votre appareil
                     </p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col pt-10 items-center justify-center min-h-[60vh] sm:min-h-[300px] text-center px-2 mb-3">
-                {/* Hero section concise, pro */}
-                <div className="relative mb-4 group">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl transition-all duration-500 group-hover:scale-105 group-hover:rotate-2">
-                    <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center shadow animate-pulse">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></div>
+              <div className="flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[400px] text-center px-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
+                {/* Hero normal amélioré */}
+                <div className="relative mb-8 group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-purple-500/20 rounded-3xl blur-2xl animate-pulse" />
+                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 border-2 border-white/30 dark:border-slate-800/60">
+                    <MessageCircle className="w-10 h-10 sm:w-12 sm:h-12 text-white drop-shadow-lg" />
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full border-2 border-white flex items-center justify-center animate-bounce">
+                      <div className="w-2 h-2 bg-white rounded-full animate-ping" />
+                    </div>
                   </div>
                 </div>
-                <div className="max-w-md mx-auto">
-                  <h3 className="text-xl font-bold mb-1 bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 dark:from-slate-200 dark:via-slate-300 dark:to-slate-400 bg-clip-text text-transparent">
-                    Bienvenue sur NeuroChat
-                  </h3>
-                  <p className="text-muted-foreground max-w-md mx-auto text-xs sm:text-sm leading-relaxed mb-3">
-                    L'IA conversationnelle nouvelle génération : voix, texte, réponses instantanées.
-                  </p>
-                  {/* Features concise */}
-                  <div className="grid grid-cols-3 gap-2 w-full max-w-md mb-3">
-                    <div className="group p-2 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 rounded-lg border border-blue-200/40 dark:border-blue-700/20 hover:shadow transition-all duration-200 hover:scale-105">
-                      <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded flex items-center justify-center mb-1 mx-auto">
-                        <Brain className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="text-[11px] font-semibold text-blue-900 dark:text-blue-100">IA avancée</div>
-                    </div>
-                    <div className="group p-2 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/20 rounded-lg border border-emerald-200/40 dark:border-emerald-700/20 hover:shadow transition-all duration-200 hover:scale-105">
-                      <div className="w-6 h-6 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded flex items-center justify-center mb-1 mx-auto">
-                        <Mic className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="text-[11px] font-semibold text-emerald-900 dark:text-emerald-100">Voix</div>
-                    </div>
-                    <div className="group p-2 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/20 rounded-lg border border-purple-200/40 dark:border-purple-700/20 hover:shadow transition-all duration-200 hover:scale-105">
-                      <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-purple-600 rounded flex items-center justify-center mb-1 mx-auto">
-                        <Zap className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="text-[11px] font-semibold text-purple-900 dark:text-purple-100">Instantané</div>
-                    </div>
+                
+                <div className="max-w-2xl mx-auto space-y-6">
+                  <div className="space-y-3">
+                    <h2 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
+                      Bienvenue sur NeuroChat
+                    </h2>
+                    <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-lg leading-relaxed max-w-xl mx-auto">
+                      L'IA conversationnelle nouvelle génération avec support vocal, visuel et recherche documentaire avancée
+                    </p>
                   </div>
-                  {/* Call to action */}
-                  <div className="p-3 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-700/50 rounded-xl border border-slate-200/40 dark:border-slate-600/40 backdrop-blur-sm">
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse" />
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                        Prêt à commencer ?
-                      </span>
-                      <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse [animation-delay:0.5s]" />
+                  
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                    {[
+                      { icon: Brain, title: "IA Avancée", desc: "Réponses intelligentes", color: "from-blue-500 to-blue-600" },
+                      { icon: Mic, title: "Vocal", desc: "Dictée & écoute", color: "from-emerald-500 to-green-600" },
+                      { icon: Zap, title: "Instantané", desc: "Réponses rapides", color: "from-purple-500 to-purple-600" },
+                      { icon: Wand2, title: "Magique", desc: "Expérience fluide", color: "from-indigo-500 to-indigo-600" }
+                    ].map((feature, idx) => (
+                      <div 
+                        key={feature.title}
+                        className="group p-3 sm:p-4 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-white/60 dark:border-slate-700/60 backdrop-blur-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 animate-in slide-in-from-bottom-4"
+                        style={{ animationDelay: `${idx * 100}ms` }}
+                      >
+                        <div className={`w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-2 mx-auto group-hover:rotate-12 transition-transform duration-300`}>
+                          <feature.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                        </div>
+                        <h3 className="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200 mb-1">{feature.title}</h3>
+                        <p className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400">{feature.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="p-4 sm:p-6 bg-gradient-to-r from-blue-50/80 via-indigo-50/80 to-purple-50/80 dark:from-blue-950/30 dark:via-indigo-950/30 dark:to-purple-950/30 rounded-2xl border border-blue-200/50 dark:border-blue-800/50 backdrop-blur-sm hover:scale-105 transition-transform duration-300 group cursor-pointer">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Sparkles className="w-5 h-5 text-yellow-500 animate-pulse group-hover:rotate-12 transition-transform duration-300" />
+                      <span className="text-sm sm:text-base font-semibold text-blue-700 dark:text-blue-300">Prêt à commencer ?</span>
+                      <Sparkles className="w-5 h-5 text-yellow-500 animate-pulse group-hover:rotate-12 transition-transform duration-300" style={{ animationDelay: '0.5s' }} />
                     </div>
-                    <p className="text-[11px] text-muted-foreground/80">
-                      Écrivez un message ou cliquez sur le micro.
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                      Écrivez votre message, utilisez la voix ou envoyez une image
                     </p>
                   </div>
                 </div>
@@ -218,70 +230,95 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
             )
           ) : (
             <>
-              {/* Chat Header */}
-              <div className="sticky top-0 z-10 flex items-center justify-between py-2 mb-2 border-b border-slate-200/50 dark:border-slate-700/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-md px-2 mx-0 shadow-sm">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-md">
-                    <MessageCircle className="w-3.5 h-3.5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      {messages.filter(msg => !(msg as RagContextMessage).isRagContext).length} message{messages.length !== 1 ? 's' : ''}
+              {/* Chat Header amélioré */}
+              <div className="sticky top-0 z-10 mb-4 animate-in slide-in-from-top-2 duration-500">
+                <div className="flex items-center justify-between p-3 sm:p-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-slate-800/60 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="relative">
+                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
+                        <MessageCircle className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
                     </div>
-                    <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-                      <Clock className="w-2.5 h-2.5" />
-                      Conversation active
+                    <div>
+                      <div className="text-sm sm:text-base font-semibold text-slate-700 dark:text-slate-300">
+                        {messages.filter(msg => !(msg as RagContextMessage).isRagContext).length} message{messages.length !== 1 ? 's' : ''}
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        <span>Conversation active</span>
+                      </div>
                     </div>
                   </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all duration-200 hover:scale-110"
+                  >
+                    <Info className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                  </Button>
                 </div>
-                {/* Info button for overall chat context/settings if needed */}
-                <Button variant="ghost" size="icon" className="h-7 w-7 min-w-0">
-                  <Info className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-                </Button>
               </div>
 
-              {/* Message Mapping */}
+              {/* Messages avec animations améliorées */}
               {messages.map((message, index) => {
                 if ((message as RagContextMessage).isRagContext && index === messages.length - 1) {
                   const rag = message as RagContextMessage;
                   const passagesToShow = showAllPassages[rag.id] ? rag.passages : rag.passages.slice(0, 3);
                   return (
-                    <div key={rag.id} className="animate-fadeIn my-2 px-1">
-                      <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-400 dark:border-blue-500 rounded-xl p-3 shadow-sm">
-                        <div className="font-semibold text-blue-800 dark:text-blue-200 text-sm flex items-center gap-2 mb-2">
-                          <Brain className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                          Passages de la base de connaissances
+                    <div key={rag.id} className="animate-in slide-in-from-left-4 fade-in-0 duration-500 my-3">
+                      <div className="bg-gradient-to-r from-blue-50/80 via-indigo-50/80 to-blue-50/80 dark:from-blue-950/40 dark:via-indigo-950/40 dark:to-blue-950/40 border-l-4 border-blue-500 dark:border-blue-400 rounded-2xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm border border-blue-200/50 dark:border-blue-800/50">
+                        <div className="font-semibold text-blue-800 dark:text-blue-200 text-sm sm:text-base flex items-center gap-2 mb-3">
+                          <div className="w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center">
+                            <Brain className="w-4 h-4 text-white" />
+                          </div>
+                          <span>Base de connaissances</span>
+                          <div className="ml-auto px-2 py-1 bg-blue-500/20 rounded-full text-xs">
+                            {rag.passages.length} passage{rag.passages.length > 1 ? 's' : ''}
+                          </div>
                         </div>
-                        <ol className="list-decimal pl-4 space-y-2 text-sm">
-                          {passagesToShow.map((p) => (
-                            <li key={p.id} className="relative group">
-                              <span className="font-bold text-blue-900 dark:text-blue-100">{p.titre} : </span>
-                              <span className="text-blue-900 dark:text-blue-100 bg-blue-100/60 dark:bg-blue-800/40 rounded px-1 py-0.5 leading-tight">
-                                {p.contenu.length > 150 && !showAllPassages[rag.id] ? p.contenu.slice(0, 150) + '…' : p.contenu}
-                              </span>
-                              {p.sourceUrl && (
-                                <a
-                                  href={p.sourceUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="ml-2 text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                                  title="Voir la source"
-                                >
-                                  <ExternalLink className="w-3 h-3 mr-0.5" /> Source
-                                </a>
-                              )}
-                            </li>
+                        <div className="space-y-3">
+                          {passagesToShow.map((p, idx) => (
+                            <div 
+                              key={p.id} 
+                              className="group p-3 bg-white/70 dark:bg-slate-800/70 rounded-xl border border-blue-200/30 dark:border-blue-800/30 hover:shadow-md transition-all duration-200 animate-in slide-in-from-left-2"
+                              style={{ animationDelay: `${idx * 100}ms` }}
+                            >
+                              <div className="flex items-start gap-2">
+                                <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <span className="text-xs font-bold text-blue-600 dark:text-blue-400">{idx + 1}</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-sm mb-1">{p.titre}</h4>
+                                  <p className="text-blue-800 dark:text-blue-200 text-sm leading-relaxed">
+                                    {p.contenu.length > 150 && !showAllPassages[rag.id] ? p.contenu.slice(0, 150) + '…' : p.contenu}
+                                  </p>
+                                  {p.sourceUrl && (
+                                    <a
+                                      href={p.sourceUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 mt-2 text-blue-600 dark:text-blue-400 hover:underline text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-105"
+                                      title="Voir la source"
+                                    >
+                                      <ExternalLink className="w-3 h-3" />
+                                      <span>Source</span>
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
                           ))}
-                        </ol>
+                        </div>
                         {rag.passages.length > 3 && (
                           <Button
-                            variant="link"
+                            variant="ghost"
                             size="sm"
-                            className="text-xs text-blue-600 dark:text-blue-400 hover:no-underline mt-3"
+                            className="mt-4 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-xl transition-all duration-200 hover:scale-105"
                             onClick={() => togglePassagesVisibility(rag.id)}
                           >
-                            {showAllPassages[rag.id] ? 'Réduire les passages' : `Afficher les ${rag.passages.length} passages`}
-                            <ArrowDown className={cn("ml-1 h-3 w-3 transition-transform duration-300", showAllPassages[rag.id] && "rotate-180")} />
+                            {showAllPassages[rag.id] ? 'Réduire les passages' : `Voir les ${rag.passages.length} passages`}
+                            <ArrowDown className={cn("ml-2 h-4 w-4 transition-transform duration-300", showAllPassages[rag.id] && "rotate-180")} />
                           </Button>
                         )}
                       </div>
@@ -290,15 +327,23 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                 } else if (!(message as RagContextMessage).isRagContext) {
                   const msg = message as Message;
                   return (
-                    <div key={msg.id} className="flex items-center gap-2 min-w-0">
+                    <div 
+                      key={msg.id} 
+                      className={cn(
+                        "flex items-center gap-3 min-w-0 animate-in slide-in-from-bottom-2 fade-in-0 duration-300",
+                        `animate-delay-${Math.min(index * 50, 500)}`
+                      )}
+                    >
                       {selectMode && (
-                        <input
-                          type="checkbox"
-                          checked={selectedMessageIds.includes(msg.id)}
-                          onChange={() => onSelectMessage && onSelectMessage(msg.id)}
-                          className="accent-blue-600 w-4 h-4 mt-2"
-                          title="Sélectionner ce message"
-                        />
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            checked={selectedMessageIds.includes(msg.id)}
+                            onChange={() => onSelectMessage && onSelectMessage(msg.id)}
+                            className="w-4 h-4 accent-blue-600 rounded border-2 border-blue-300 focus:ring-2 focus:ring-blue-400/50 transition-all duration-200"
+                            title="Sélectionner ce message"
+                          />
+                        </div>
                       )}
                       <MessageBubble
                         message={msg.text}
@@ -316,28 +361,29 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                   return null;
                 }
               })}
-              {/* Typing Indicator */}
+              
+              {/* Typing Indicator amélioré */}
               {isLoading && (
-                <div className="flex justify-start animate-fadeIn ml-2 sm:ml-3 mb-4"> {/* Margin réduite pour mobile */}
-                  <TypingIndicator />
+                <div className="flex justify-start animate-in slide-in-from-left-4 fade-in-0 duration-300 ml-3 mb-4">
+                  <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-2xl p-4 shadow-lg border border-white/60 dark:border-slate-800/60">
+                    <TypingIndicator />
+                  </div>
                 </div>
               )}
               <div ref={messagesEndRef} />
             </>
           )}
-          {/* Scroll to bottom button */}
+          
+          {/* Scroll to bottom button amélioré */}
           {showScrollButton && (
             <Button
               onClick={scrollToBottom}
               size="icon"
-              className="fixed sm:absolute bottom-20 sm:bottom-3 right-3 h-9 w-9 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 animate-fadeIn hover:scale-110 group z-20"
-              aria-label="Scroll to bottom"
-              style={{
-                // Sur mobile, place le bouton au-dessus du clavier virtuel
-                bottom: 'max(20px, env(safe-area-inset-bottom, 20px))',
-              }}
+              className="fixed bottom-24 right-4 h-12 w-12 rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 hover:from-blue-600 hover:via-indigo-600 hover:to-purple-700 text-white shadow-2xl hover:shadow-blue-500/40 transition-all duration-300 animate-in slide-in-from-bottom-4 hover:scale-110 group z-30 border-2 border-white/20"
+              aria-label="Retour en bas"
             >
-              <ArrowDown className="h-4 w-4 group-hover:animate-bounce" />
+              <ArrowDown className="h-5 w-5 group-hover:animate-bounce drop-shadow-sm" />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400/20 to-purple-400/20 blur animate-pulse" />
             </Button>
           )}
         </div>
