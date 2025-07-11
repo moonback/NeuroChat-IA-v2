@@ -73,10 +73,41 @@ export default {
             height: '0',
           },
         },
+        'slideDown': {
+          from: {
+            opacity: '0',
+            transform: 'translateY(-20px)',
+          },
+          to: {
+            opacity: '1',
+            transform: 'translateY(0)',
+          },
+        },
+        'slideUp': {
+          from: {
+            opacity: '1',
+            transform: 'translateY(0)',
+          },
+          to: {
+            opacity: '0',
+            transform: 'translateY(-20px)',
+          },
+        },
+        'shrink': {
+          from: {
+            width: '100%',
+          },
+          to: {
+            width: '0%',
+          },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'slideDown': 'slideDown 0.3s ease-out',
+        'slideUp': 'slideUp 0.3s ease-out',
+        'shrink': 'shrink linear',
       },
     },
   },

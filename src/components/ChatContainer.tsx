@@ -90,20 +90,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
         maxHeight: '100vh',
       }}
     >
-      {modePrive && (
-        <div className="absolute top-4 right-4 z-30 group">
-          <div className="px-4 py-2 rounded-2xl bg-gradient-to-r from-red-500/90 via-red-600/90 to-red-700/90 text-white font-bold text-xs shadow-2xl animate-in slide-in-from-top-2 duration-300 border border-white/20 backdrop-blur-xl hover:scale-105 transition-all duration-200 cursor-pointer select-none">
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Shield className="w-4 h-4 animate-pulse" />
-                <div className="absolute inset-0 bg-white/20 rounded-full animate-ping" />
-              </div>
-              <span className="tracking-wide">Mode Privé</span>
-              <div className="w-2 h-2 bg-white/80 rounded-full animate-pulse" />
-            </div>
-          </div>
-        </div>
-      )}
+      
       
       <ScrollArea
         className="flex-1 h-full overflow-y-auto p-2 sm:p-4 pb-24 custom-scrollbar"
@@ -119,16 +106,6 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
           {messages.length === 0 ? (
             modePrive ? (
               <div className="flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[400px] text-center px-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
-                {/* Hero privé amélioré */}
-                <div className="relative mb-8 group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl blur-2xl animate-pulse" />
-                  <div className="relative w-24 h-24 bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-3xl flex items-center justify-center shadow-2xl shadow-red-500/30 border-2 border-white/30 dark:border-slate-800/60 backdrop-blur-xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                    <Shield className="w-12 h-12 text-white drop-shadow-lg animate-pulse" />
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full border-2 border-white flex items-center justify-center animate-bounce">
-                      <div className="w-2 h-2 bg-white rounded-full" />
-                    </div>
-                  </div>
-                </div>
                 
                 <div className="max-w-lg mx-auto space-y-6">
                   <div className="space-y-2">
@@ -173,16 +150,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[400px] text-center px-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
-                {/* Hero normal amélioré */}
-                <div className="relative mb-8 group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-purple-500/20 rounded-3xl blur-2xl animate-pulse" />
-                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 border-2 border-white/30 dark:border-slate-800/60">
-                    <MessageCircle className="w-10 h-10 sm:w-12 sm:h-12 text-white drop-shadow-lg" />
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full border-2 border-white flex items-center justify-center animate-bounce">
-                      <div className="w-2 h-2 bg-white rounded-full animate-ping" />
-                    </div>
-                  </div>
-                </div>
+                
                 
                 <div className="max-w-2xl mx-auto space-y-6">
                   <div className="space-y-3">
