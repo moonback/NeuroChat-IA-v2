@@ -17,6 +17,7 @@ import { useMemory } from "@/hooks/useMemory";
 import { MemoryModal } from '@/components/MemoryModal';
 import { pipeline } from "@xenova/transformers";
 import { GeminiSettingsDrawer } from '@/components/GeminiSettingsDrawer';
+import { getPersonalityById, getDefaultPersonality } from '@/config/personalities';
 
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
@@ -94,8 +95,8 @@ function App() {
   
   const [showTTSSettings, setShowTTSSettings] = useState(false);
   
-  // Ajout du state pour la personnalité IA (par défaut : humoristique)
-  const [selectedPersonality, setSelectedPersonality] = useState('formel');
+  // Ajout du state pour la personnalité IA (par défaut : selon configuration)
+  const [selectedPersonality, setSelectedPersonality] = useState(getDefaultPersonality().id);
   // Ajout du state pour le mode vocal automatique
   const [modeVocalAuto, setModeVocalAuto] = useState(false);
   // Ajout du state pour la modale de gestion des documents RAG
@@ -270,27 +271,14 @@ function App() {
 
  
 
-  const getSystemPrompt = (personality: string) => {
-    let personalityAddition = '';
-    switch (personality) {
-      case 'formel':
-        personalityAddition = "Adopte un ton très poli, formel et précis. Utilise un langage soutenu et reste toujours claire, concise et directe.";
-        break;
-      case 'amical':
-        personalityAddition = "Sois chaleureuse, empathique et amicale. Tutoie l'utilisateur, utilise un ton convivial et bienveillant. Sois encourageante, rassurante et propose des suggestions utiles.";
-        break;
-      case 'expert':
-        personalityAddition = "Sois experte, rigoureuse et pédagogique. Explique les concepts de façon claire, détaillée et structurée, en t'adaptant au niveau de l'utilisateur.";
-        break;
-      case 'humoristique':
-        personalityAddition = "Ajoute une touche d'humour ou une blague subtile à chaque réponse, tout en restant utile et pertinente.";
-        break;
-      default:
-        personalityAddition = "";
-        break;
+  const getSystemPrompt = (personalityId: string) => {
+    const personality = getPersonalityById(personalityId);
+    if (!personality) {
+      return SYSTEM_PROMPT;
     }
+    
     // On combine le prompt système de base avec l'ajout lié à la personnalité
-    return SYSTEM_PROMPT + (personalityAddition ? " " + personalityAddition : "");
+    return SYSTEM_PROMPT + " " + personality.systemPromptAddition;
   };
 
   const addRagContextMessage = (passages: { id: number; titre: string; contenu: string }[]) => {
