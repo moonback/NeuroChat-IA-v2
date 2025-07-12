@@ -11,13 +11,13 @@ import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { searchDocuments } from '@/services/ragSearch';
 import { RagDocsModal } from '@/components/RagDocsModal';
 import { HistoryModal, DiscussionWithCategory } from '@/components/HistoryModal';
-import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
+
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
 import { useMemory } from "@/hooks/useMemory";
 import { MemoryModal } from '@/components/MemoryModal';
 import { pipeline } from "@xenova/transformers";
 import { GeminiSettingsDrawer } from '@/components/GeminiSettingsDrawer';
-import { MessageSelectionBar } from '@/components/MessageSelectionBar';
+
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 
@@ -814,46 +814,25 @@ function App() {
           modePrive={modePrive}
           setModePrive={setModePrive}
           onOpenMemoryModal={() => setShowMemoryModal(true)}
+          selectMode={selectMode}
+          onToggleSelectMode={handleToggleSelectMode}
+          selectedCount={selectedMessageIds.length}
+          totalCount={messages.filter((m: any) => !m.isRagContext).length}
+          onSelectAll={() => {
+            const allIds = messages.filter((m: any) => !m.isRagContext).map((m: any) => m.id);
+            setSelectedMessageIds(allIds);
+          }}
+          onDeselectAll={() => setSelectedMessageIds([])}
+          onRequestDelete={() => setShowConfirmDeleteMultiple(true)}
+          showConfirmDelete={showConfirmDeleteMultiple}
+          setShowConfirmDelete={setShowConfirmDeleteMultiple}
+          onDeleteConfirmed={handleDeleteMultipleMessages}
         />
 
         {/* Indicateur visuel du mode privé SOUS le header, centré */}
         <PrivateModeBanner visible={modePrive} />
 
-        {/* Boutons de sélection et suppression groupée */}
-        {/* Les boutons de sélection/groupée ne sont visibles que si une conversation est active */}
-        {messages.length > 0 && (
-          <MessageSelectionBar
-            selectMode={selectMode}
-            onToggleSelectMode={handleToggleSelectMode}
-            selectedCount={selectedMessageIds.length}
-            totalCount={messages.filter((m: any) => !m.isRagContext).length}
-            onSelectAll={() => {
-              const allIds = messages.filter((m: any) => !m.isRagContext).map((m: any) => m.id);
-              setSelectedMessageIds(allIds);
-            }}
-            onDeselectAll={() => setSelectedMessageIds([])}
-            onRequestDelete={() => setShowConfirmDeleteMultiple(true)}
-            showConfirmDelete={showConfirmDeleteMultiple}
-            setShowConfirmDelete={setShowConfirmDeleteMultiple}
-            onDeleteConfirmed={handleDeleteMultipleMessages}
-          />
-        )}
 
-        {/* Confirmation globale suppression multiple */}
-        <AlertDialog open={showConfirmDeleteMultiple} onOpenChange={setShowConfirmDeleteMultiple}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Supprimer {selectedMessageIds.length} message{selectedMessageIds.length > 1 ? 's' : ''} ?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Cette action est irréversible. Les messages sélectionnés seront définitivement supprimés de la conversation et de l'historique.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Annuler</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteMultipleMessages}>Supprimer</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
 
         {/* Enhanced Chat Interface */}
         <Card className="flex-1 flex flex-col shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl overflow-hidden ring-1 ring-white/20 dark:ring-slate-700/20 relative">

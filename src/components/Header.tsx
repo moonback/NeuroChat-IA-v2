@@ -6,10 +6,11 @@ import { Tooltip as ReactTooltip } from 'react-tooltip';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import {
-  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, User, Brain, Shield, BookOpen, Sparkles
+  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, User, Brain, Shield, BookOpen, Sparkles, CheckSquare, Square, Trash2
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
 // =====================
 // Constantes & Utilitaires
@@ -153,6 +154,17 @@ interface HeaderProps {
   modePrive: boolean;
   setModePrive: (v: boolean) => void;
   onOpenMemoryModal: () => void;
+  // Props pour la sélection de messages
+  selectMode: boolean;
+  onToggleSelectMode: () => void;
+  selectedCount: number;
+  totalCount: number;
+  onSelectAll: () => void;
+  onDeselectAll: () => void;
+  onRequestDelete: () => void;
+  showConfirmDelete: boolean;
+  setShowConfirmDelete: (open: boolean) => void;
+  onDeleteConfirmed: () => void;
 }
 
 // =====================
@@ -178,6 +190,16 @@ export function Header({
   modePrive,
   setModePrive,
   onOpenMemoryModal,
+  selectMode,
+  onToggleSelectMode,
+  selectedCount,
+  totalCount,
+  onSelectAll,
+  onDeselectAll,
+  onRequestDelete,
+  showConfirmDelete,
+  setShowConfirmDelete,
+  onDeleteConfirmed,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
@@ -403,6 +425,55 @@ export function Header({
             <BookOpen className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
           </Button>
         </div>
+
+        {/* Groupe : Sélection de messages */}
+        {hasActiveConversation && (
+          <>
+            <div className="w-px h-8 bg-gradient-to-b from-transparent via-slate-300/50 to-transparent mx-2 hidden sm:block" />
+            <div className="flex items-center gap-1 bg-white/70 dark:bg-slate-800/70 rounded-2xl px-2 py-1.5 shadow-sm shadow-blue-100/20 dark:shadow-blue-900/10 backdrop-blur-xl hover:shadow-md hover:shadow-blue-200/30 dark:hover:shadow-blue-900/20 transition-all duration-300 border border-slate-200/50 dark:border-slate-700/50 ring-1 ring-blue-200/20 dark:ring-blue-900/10 hover:ring-blue-300/30 dark:hover:ring-blue-800/30">
+              <Button
+                variant={selectMode ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={onToggleSelectMode}
+                className="w-10 h-10 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 group transition-all duration-200 hover:scale-110 focus:ring-2 focus:ring-blue-400/50 focus:ring-offset-1"
+                title={selectMode ? 'Annuler la sélection' : 'Sélectionner des messages'}
+                aria-label={selectMode ? 'Annuler la sélection' : 'Sélectionner des messages'}
+              >
+                {selectMode ? (
+                  <CheckSquare className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+                ) : (
+                  <Square className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-blue-500 group-hover:scale-110 transition-all duration-200" />
+                )}
+              </Button>
+              
+              {selectMode && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={selectedCount === totalCount ? onDeselectAll : onSelectAll}
+                  className="w-10 h-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700/50 group transition-all duration-200 hover:scale-110 focus:ring-2 focus:ring-slate-400/50 focus:ring-offset-1"
+                  title={selectedCount === totalCount ? 'Tout désélectionner' : 'Tout sélectionner'}
+                  aria-label={selectedCount === totalCount ? 'Tout désélectionner' : 'Tout sélectionner'}
+                >
+                  <CheckSquare className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-blue-500 group-hover:scale-110 transition-all duration-200" />
+                </Button>
+              )}
+              
+              {selectMode && selectedCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onRequestDelete}
+                  className="w-10 h-10 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/50 group transition-all duration-200 hover:scale-110 focus:ring-2 focus:ring-red-400/50 focus:ring-offset-1"
+                  title={`Supprimer ${selectedCount} message${selectedCount > 1 ? 's' : ''}`}
+                  aria-label={`Supprimer ${selectedCount} message${selectedCount > 1 ? 's' : ''}`}
+                >
+                  <Trash2 className="w-5 h-5 text-red-500 group-hover:scale-110 transition-transform duration-200" />
+                </Button>
+              )}
+            </div>
+          </>
+        )}
 
         {/* Séparateur visuel amélioré */}
         <div className="w-px h-8 bg-gradient-to-b from-transparent via-slate-300/50 to-transparent mx-2 hidden sm:block" />
@@ -700,10 +771,81 @@ export function Header({
                   <span className="ml-auto text-xs text-blue-600 dark:text-blue-400 font-medium">Personnalité</span>
                 </Button>
               </div>
+              
+              {/* Groupe 4 : Sélection de messages */}
+              {hasActiveConversation && (
+                <>
+                  {/* Séparateur */}
+                  <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-700 to-transparent" />
+                  
+                  <div className="flex flex-col gap-3">
+                    <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Sélection de messages</h3>
+                    <Button 
+                      variant={selectMode ? 'secondary' : 'ghost'} 
+                      size="lg" 
+                      className="w-full flex items-center gap-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 font-medium text-base justify-start h-12" 
+                      onClick={() => { onToggleSelectMode(); closeMobileMenu(); }}
+                    >
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${selectMode ? 'bg-blue-100 dark:bg-blue-900/50' : 'bg-slate-100 dark:bg-slate-700'}`}>
+                        {selectMode ? (
+                          <CheckSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        ) : (
+                          <Square className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                        )}
+                      </div>
+                      <span>{selectMode ? 'Annuler la sélection' : 'Sélectionner des messages'}</span>
+                    </Button>
+                    
+                    {selectMode && (
+                      <Button 
+                        variant="ghost" 
+                        size="lg" 
+                        className="w-full flex items-center gap-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 text-blue-900 dark:text-blue-100 font-medium text-base justify-start h-12" 
+                        onClick={() => { selectedCount === totalCount ? onDeselectAll() : onSelectAll(); closeMobileMenu(); }}
+                      >
+                        <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                          <CheckSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <span>{selectedCount === totalCount ? 'Tout désélectionner' : 'Tout sélectionner'}</span>
+                      </Button>
+                    )}
+                    
+                    {selectMode && selectedCount > 0 && (
+                      <Button 
+                        variant="ghost" 
+                        size="lg" 
+                        className="w-full flex items-center gap-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 text-red-900 dark:text-red-100 font-medium text-base justify-start h-12" 
+                        onClick={() => { onRequestDelete(); closeMobileMenu(); }}
+                      >
+                        <div className="w-8 h-8 rounded-xl bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                          <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+                        </div>
+                        <span>Supprimer la sélection ({selectedCount})</span>
+                      </Button>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* AlertDialog pour la confirmation de suppression */}
+      <AlertDialog open={showConfirmDelete} onOpenChange={setShowConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer {selectedCount} message{selectedCount > 1 ? 's' : ''} ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Les messages sélectionnés seront définitivement supprimés de la conversation et de l'historique.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={onDeleteConfirmed}>Supprimer</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <ReactTooltip id="header-tooltip" place="bottom" className="!bg-slate-900 !text-white !text-xs !px-2 !py-1 !rounded-lg !shadow-lg" />
       <ReactTooltip id="gemini-summary-tooltip" place="bottom" className="!bg-purple-900 !text-white !text-xs !px-2 !py-1 !rounded-lg !shadow-lg" />
