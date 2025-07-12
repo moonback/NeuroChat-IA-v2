@@ -66,7 +66,6 @@ export function Header({
   onOpenTTSSettings,
   onOpenRagDocs,
   selectedPersonality,
-  onChangePersonality,
   onOpenPersonalitySelector,
   modeVocalAuto,
   setModeVocalAuto,

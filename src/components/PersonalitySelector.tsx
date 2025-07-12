@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { X, Sparkles, ChevronDown, Filter, Search, Star, Heart, Zap, Shuffle } from 'lucide-react';
+import { X, Sparkles, ChevronDown, Filter, Search, Star, Shuffle } from 'lucide-react';
 import { personalities, personalityCategories, getPersonalityById, Personality } from '@/config/personalities';
 
 // =====================
@@ -229,7 +229,7 @@ export const PersonalitySelector: React.FC<PersonalitySelectorProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showDetails, setShowDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [, setFavorites] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState<'name' | 'category'>('name');
   
   const currentPersonality = getPersonalityById(selectedPersonality);

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
-import { Sparkles, ArrowDown, MessageCircle, Mic, Zap, Brain, Clock, Info, ExternalLink, Shield, Wand2, X } from 'lucide-react'; // Added Info, ExternalLink, X
+import { ArrowDown, MessageCircle, Mic, Zap, Brain, Clock, Info, ExternalLink, Shield, Wand2, X } from 'lucide-react'; // Added Info, ExternalLink, X
 import { TypingIndicator } from './TypingIndicator';
 import { cn } from '@/lib/utils'; // Assuming cn utility is available for Tailwind class merging
 
