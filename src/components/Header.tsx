@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
-import { PersonalitySelector, PersonalityTrigger } from '@/components/PersonalitySelector';
+import { PersonalityTrigger } from '@/components/PersonalitySelector';
 
 // =====================
 // Constantes & Utilitaires
@@ -29,6 +29,7 @@ interface HeaderProps {
   onOpenRagDocs: () => void;
   selectedPersonality: string;
   onChangePersonality: (value: string) => void;
+  onOpenPersonalitySelector: () => void;
   stop: () => void;
   modeVocalAuto: boolean;
   setModeVocalAuto: (v: boolean) => void;
@@ -66,6 +67,7 @@ export function Header({
   onOpenRagDocs,
   selectedPersonality,
   onChangePersonality,
+  onOpenPersonalitySelector,
   modeVocalAuto,
   setModeVocalAuto,
   hasActiveConversation,
@@ -90,7 +92,6 @@ export function Header({
   const [isOnline, setIsOnline] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [showPersonalityModal, setShowPersonalityModal] = useState(false);
 
   // Effet bip mode privé avec feedback tactile
   useEffect(() => {
@@ -275,7 +276,7 @@ export function Header({
             {/* Personnalité IA */}
             <PersonalityTrigger
               selectedPersonality={selectedPersonality}
-              onClick={() => setShowPersonalityModal(true)}
+              onClick={onOpenPersonalitySelector}
             />
 
             {/* Mode privé */}
@@ -379,7 +380,7 @@ export function Header({
               </div>
 
               {/* Options toujours visibles */}
-              <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { setShowPersonalityModal(true); setShowMobileMenu(false); }}>
+              <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onOpenPersonalitySelector(); setShowMobileMenu(false); }}>
                 <PersonalityTrigger
                   selectedPersonality={selectedPersonality}
                   onClick={() => {}}
@@ -418,13 +419,7 @@ export function Header({
         </DialogContent>
       </Dialog>
 
-      {/* Modal personnalité */}
-      <PersonalitySelector
-        open={showPersonalityModal}
-        onClose={() => setShowPersonalityModal(false)}
-        selectedPersonality={selectedPersonality}
-        onPersonalityChange={onChangePersonality}
-      />
+
 
       {/* AlertDialog pour la confirmation de suppression */}
       <AlertDialog open={showConfirmDelete} onOpenChange={setShowConfirmDelete}>

@@ -18,6 +18,7 @@ import { MemoryModal } from '@/components/MemoryModal';
 import { pipeline } from "@xenova/transformers";
 import { GeminiSettingsDrawer } from '@/components/GeminiSettingsDrawer';
 import { getPersonalityById, getDefaultPersonality } from '@/config/personalities';
+import { PersonalitySelector } from '@/components/PersonalitySelector';
 
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
@@ -97,6 +98,7 @@ function App() {
   
   // Ajout du state pour la personnalité IA (par défaut : selon configuration)
   const [selectedPersonality, setSelectedPersonality] = useState(getDefaultPersonality().id);
+  const [showPersonalitySelector, setShowPersonalitySelector] = useState(false);
   // Ajout du state pour le mode vocal automatique
   const [modeVocalAuto, setModeVocalAuto] = useState(false);
   // Ajout du state pour la modale de gestion des documents RAG
@@ -853,6 +855,7 @@ function App() {
           onOpenRagDocs={() => setShowRagDocs(true)}
           selectedPersonality={selectedPersonality}
           onChangePersonality={setSelectedPersonality}
+          onOpenPersonalitySelector={() => setShowPersonalitySelector(true)}
           stop={stop}
           modeVocalAuto={modeVocalAuto}
           setModeVocalAuto={setModeVocalAuto}
@@ -958,6 +961,14 @@ function App() {
         semanticThreshold={semanticThreshold}
         setSemanticThreshold={setSemanticThreshold}
         semanticLoading={semanticLoading}
+      />
+
+      {/* Modal personnalité - rendu au niveau racine */}
+      <PersonalitySelector
+        open={showPersonalitySelector}
+        onClose={() => setShowPersonalitySelector(false)}
+        selectedPersonality={selectedPersonality}
+        onPersonalityChange={setSelectedPersonality}
       />
     </div>
   );
