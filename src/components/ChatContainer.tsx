@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
-import { Sparkles, ArrowDown, MessageCircle, Mic, Zap, Brain, Clock, Info, ExternalLink, Shield, Wand2 } from 'lucide-react'; // Added Info, ExternalLink
+import { Sparkles, ArrowDown, MessageCircle, Mic, Zap, Brain, Clock, Info, ExternalLink, Shield, Wand2, X } from 'lucide-react'; // Added Info, ExternalLink, X
 import { TypingIndicator } from './TypingIndicator';
 import { cn } from '@/lib/utils'; // Assuming cn utility is available for Tailwind class merging
 
@@ -49,6 +49,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(true);
   const [showAllPassages, setShowAllPassages] = useState<{ [id: string]: boolean }>({});
+  const [showChatInfo, setShowChatInfo] = useState(false);
 
   // Effect to scroll to bottom when new messages arrive or loading state changes, but only if near bottom
   useEffect(() => {
@@ -76,6 +77,16 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
   // Handler for toggling RAG passage visibility
   const togglePassagesVisibility = useCallback((id: string) => {
     setShowAllPassages(prev => ({ ...prev, [id]: !prev[id] }));
+  }, []);
+
+  // Handler for showing chat info
+  const handleShowChatInfo = useCallback(() => {
+    setShowChatInfo(true);
+  }, []);
+
+  // Handler for closing chat info
+  const handleCloseChatInfo = useCallback(() => {
+    setShowChatInfo(false);
   }, []);
 
   return (
@@ -205,6 +216,8 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all duration-200"
+                    onClick={handleShowChatInfo}
+                    title="Informations sur la conversation"
                   >
                     <Info className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                   </Button>
@@ -339,6 +352,101 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
           )}
         </div>
       </ScrollArea>
+
+      {/* Modal d'informations sur la conversation */}
+      {showChatInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden animate-in zoom-in-95 duration-300">
+            {/* Header */}
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                    <Info className="w-4 h-4 text-white" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    Informations de la conversation
+                  </h2>
+                </div>
+                <button 
+                  onClick={handleCloseChatInfo}
+                  className="p-2 text-slate-400 hover:text-red-500 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Contenu */}
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {messages.filter(msg => !(msg as RagContextMessage).isRagContext).length}
+                  </div>
+                  <div className="text-sm text-slate-600 dark:text-slate-400">Messages</div>
+                </div>
+                <div className="text-center p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
+                  <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                    {messages.filter(msg => (msg as RagContextMessage).isRagContext).length}
+                  </div>
+                  <div className="text-sm text-slate-600 dark:text-slate-400">Contexte RAG</div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                  <span className="text-sm text-slate-600 dark:text-slate-400">Messages utilisateur</span>
+                  <span className="font-medium text-slate-900 dark:text-slate-100">
+                    {messages.filter(msg => !(msg as RagContextMessage).isRagContext && (msg as Message).isUser).length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                  <span className="text-sm text-slate-600 dark:text-slate-400">Réponses IA</span>
+                  <span className="font-medium text-slate-900 dark:text-slate-100">
+                    {messages.filter(msg => !(msg as RagContextMessage).isRagContext && !(msg as Message).isUser).length}
+                  </span>
+                </div>
+                {messages.length > 0 && (
+                  <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">Démarré le</span>
+                    <span className="font-medium text-slate-900 dark:text-slate-100">
+                      {messages.find(msg => !(msg as RagContextMessage).isRagContext)?.timestamp.toLocaleString('fr-FR', { 
+                        day: '2-digit', 
+                        month: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {modePrive && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                  <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
+                    <Shield className="w-4 h-4" />
+                    <span className="text-sm font-medium">Mode privé activé</span>
+                  </div>
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                    Cette conversation sera automatiquement supprimée
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+              <button
+                onClick={handleCloseChatInfo}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
