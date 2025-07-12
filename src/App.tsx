@@ -95,7 +95,7 @@ function App() {
   const [showTTSSettings, setShowTTSSettings] = useState(false);
   
   // Ajout du state pour la personnalité IA (par défaut : humoristique)
-  const [selectedPersonality, setSelectedPersonality] = useState('humoristique');
+  const [selectedPersonality, setSelectedPersonality] = useState('formel');
   // Ajout du state pour le mode vocal automatique
   const [modeVocalAuto, setModeVocalAuto] = useState(false);
   // Ajout du state pour la modale de gestion des documents RAG
@@ -499,14 +499,17 @@ function App() {
           setIsAISpeaking(false);
           console.log('[Vocal Mode] IA a fini de parler - préparation redémarrage microphone');
           
-          if (modeVocalAuto && !muted) {
+          // Utiliser les références pour éviter les valeurs obsolètes
+          if (modeVocalAutoRef.current && !muted) {
             playBip();
             // Ajouter une pause de sécurité avant de redémarrer l'écoute
             setTimeout(() => {
-              // Vérifications supplémentaires avant de redémarrer
-              if (modeVocalAuto && !muted && !listeningAuto && !isAISpeaking) {
+              // Vérifications supplémentaires avec les références actuelles
+              if (modeVocalAutoRef.current && !muted && !listeningAuto && !isAISpeakingRef.current) {
                 console.log('[Vocal Mode] Redémarrage du microphone après pause de sécurité');
                 startAuto();
+              } else {
+                console.log('[Vocal Mode] Redémarrage annulé - mode vocal désactivé manuellement');
               }
             }, 2000); // 2 secondes de pause pour être sûr que le TTS s'est arrêté
           }
