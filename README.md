@@ -2,11 +2,18 @@
 
 > Application de chat IA moderne et intuitive avec personnalités multiples, reconnaissance vocale et analyse sémantique
 
+<div align="center">
+
+![NeuroChat Platform](./public/neurochat-screenshot.png)
+*Interface moderne de NeuroChat avec mode vocal automatique et personnalités IA*
+
+</div>
+
 **NeuroChat** révolutionne votre façon d'interagir avec l'intelligence artificielle en combinant chat textuel, reconnaissance vocale, analyse d'images et personnalités IA dans une interface élégante et responsive. Choisissez parmi 12 personnalités différentes et communiquez naturellement avec l'IA !
 
 ## ✨ Fonctionnalités principales
 
-### 🎭 **Système de personnalités IA (NOUVEAU !)**
+### 🎭 **Système de personnalités IA**
 - **12 personnalités uniques** réparties en 4 catégories :
   - **Professionnel** : Formel, Expert, Consultant
   - **Social** : Amical, Motivateur, Coach, Décontracté
@@ -29,6 +36,7 @@
 - **Mémoire utilisateur** : l'IA se souvient de vos préférences
 - **Auto-détection d'informations** personnelles pour personnalisation
 - **Sélection multiple** de messages avec suppression groupée
+- **Modal d'informations** : statistiques de conversation détaillées
 
 ### 📚 **RAG (Recherche Augmentée)**
 - **Gestion de documents** : PDF, TXT, MD, DOCX, CSV
@@ -41,18 +49,22 @@
 - **Chiffrement** des données sensibles
 - **Auto-suppression** à la fermeture
 - **Indicateurs visuels** du mode sécurisé
+- **Banner de notification** pour le mode privé
 
 ### ⚙️ **Configuration avancée**
 - **Hyperparamètres Gemini** : température, topK, topP, tokens
 - **Réglages TTS complets** : export/import des paramètres
 - **Thème clair/sombre** avec basculement instantané
 - **Interface responsive** optimisée mobile/desktop
+- **Indicateur vocal déplaçable** et redimensionnable
 
 ### 📊 **Gestion des données**
 - **Historique complet** avec recherche et tri
 - **Renommage** des conversations
 - **Export/import** des réglages
 - **Stockage local sécurisé**
+- **Vue compacte/détaillée** de l'historique
+- **Suppression groupée** des conversations
 
 ---
 
@@ -99,6 +111,7 @@
 2. Parlez naturellement - l'IA écoute en continu
 3. L'indicateur flottant montre l'état (écoute/analyse/réponse)
 4. Déplacez l'indicateur où vous voulez sur l'écran
+5. Réduisez/agrandissez l'indicateur selon vos besoins
 
 ### 📱 **Envoi d'images**
 - Cliquez sur l'icône trombone 📎 dans la zone de saisie
@@ -109,12 +122,19 @@
 - Activez le bouclier dans le header
 - Vos messages ne sont pas sauvegardés
 - Tout est effacé à la fermeture
+- Banner de notification pour rappel
 
 ### 📚 **Utiliser le RAG**
 1. Activez le mode RAG (icône cerveau)
 2. Ajoutez vos documents via "Documents RAG"
 3. Posez des questions sur vos documents
 4. L'IA utilise automatiquement le contexte
+
+### ℹ️ **Informations de conversation**
+- Cliquez sur l'icône ℹ️ dans l'en-tête du chat
+- Consultez les statistiques détaillées
+- Voyez le nombre de messages, contexte RAG, etc.
+- Vérifiez la date de début de conversation
 
 ---
 
@@ -156,7 +176,8 @@ src/
 │   ├── HistoryModal.tsx        # Gestion historique
 │   ├── RagDocsModal.tsx        # Gestion documents RAG
 │   ├── MemoryModal.tsx         # Gestion mémoire utilisateur
-│   └── TTSSettingsModal.tsx    # Réglages synthèse vocale
+│   ├── TTSSettingsModal.tsx    # Réglages synthèse vocale
+│   └── PrivateModeBanner.tsx   # Banner mode privé
 ├── config/              # Configuration
 │   └── personalities.ts # Définition des personnalités
 ├── hooks/               # Hooks React personnalisés
@@ -246,6 +267,12 @@ npm run dev
 - ✅ Essayez avec des documents plus courts
 - ✅ Réactivez le mode RAG si nécessaire
 
+### **❌ L'indicateur vocal ne répond pas**
+- ✅ Vérifiez que le mode vocal auto est activé
+- ✅ Testez sans mode privé activé
+- ✅ Repositionnez l'indicateur si nécessaire
+- ✅ Rechargez la page pour réinitialiser
+
 ---
 
 ## 🔧 Scripts de développement
@@ -331,6 +358,26 @@ git push origin feature/ma-nouvelle-fonctionnalite
 
 ---
 
+## 📸 Captures d'écran
+
+### Interface principale
+![NeuroChat Interface](./public/neurochat-main.png)
+*Interface principale avec chat et personnalités*
+
+### Mode vocal automatique
+![Mode Vocal](./public/neurochat-vocal.png)
+*Indicateur vocal flottant en action*
+
+### Sélection de personnalités
+![Personnalités](./public/neurochat-personalities.png)
+*12 personnalités IA disponibles*
+
+### Mode privé
+![Mode Privé](./public/neurochat-private.png)
+*Interface sécurisée en mode privé*
+
+---
+
 ## 🙏 Remerciements
 
 Un grand merci aux projets open source qui rendent NeuroChat possible :
@@ -363,7 +410,7 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 
 **NeuroChat** - L'avenir de la conversation avec l'IA 🚀
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![React](https://img.shields.io/badge/react-18.3.1-blue.svg)
 ![TypeScript](https://img.shields.io/badge/typescript-5.5.3-blue.svg)
