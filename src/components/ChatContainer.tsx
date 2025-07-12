@@ -137,15 +137,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                     ))}
                   </div>
                   
-                  <div className="p-4 bg-gradient-to-r from-red-50/80 via-purple-50/80 to-blue-50/80 dark:from-red-950/30 dark:via-purple-950/30 dark:to-blue-950/30 rounded-2xl border border-red-200/50 dark:border-red-800/50 backdrop-blur-sm">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <Sparkles className="w-5 h-5 text-red-500 animate-pulse" />
-                      <span className="text-sm font-semibold text-red-700 dark:text-red-300">Commencez en toute confidentialité</span>
-                    </div>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">
-                      Cette session ne laissera aucune trace sur votre appareil
-                    </p>
-                  </div>
+                  
                 </div>
               </div>
             ) : (
@@ -183,16 +175,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                     ))}
                   </div>
                   
-                  <div className="p-4 sm:p-6 bg-gradient-to-r from-blue-50/80 via-indigo-50/80 to-purple-50/80 dark:from-blue-950/30 dark:via-indigo-950/30 dark:to-purple-950/30 rounded-2xl border border-blue-200/50 dark:border-blue-800/50 backdrop-blur-sm hover:scale-105 transition-transform duration-300 group cursor-pointer">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <Sparkles className="w-5 h-5 text-yellow-500 animate-pulse group-hover:rotate-12 transition-transform duration-300" />
-                      <span className="text-sm sm:text-base font-semibold text-blue-700 dark:text-blue-300">Prêt à commencer ?</span>
-                      <Sparkles className="w-5 h-5 text-yellow-500 animate-pulse group-hover:rotate-12 transition-transform duration-300" style={{ animationDelay: '0.5s' }} />
-                    </div>
-                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-                      Écrivez votre message, utilisez la voix ou envoyez une image
-                    </p>
-                  </div>
+                  
                 </div>
               </div>
             )
