@@ -50,17 +50,6 @@ const personalities = [
   },
 ];
 
-function geminiConfigSummary(config: any) {
-  if (!config) return '';
-  return [
-    `Temp: ${config.temperature ?? 0.7}`,
-    `topK: ${config.topK ?? 40}`,
-    `topP: ${config.topP ?? 0.95}`,
-    `maxTokens: ${config.maxOutputTokens ?? 4096}`,
-    `stopSeq: ${(config.stopSequences && config.stopSequences.length > 0) ? config.stopSequences.join(',') : '-'}`,
-    `cand: ${config.candidateCount ?? 1}`
-  ].join(' | ');
-}
 
 // =====================
 // Composants internes
@@ -184,7 +173,6 @@ export function Header({
   ragEnabled,
   setRagEnabled,
   onOpenGeminiSettings,
-  geminiConfig,
   modePrive,
   setModePrive,
   onOpenMemoryModal,
