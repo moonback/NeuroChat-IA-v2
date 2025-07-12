@@ -20,7 +20,7 @@ import { GeminiSettingsDrawer } from '@/components/GeminiSettingsDrawer';
 import { MessageSelectionBar } from '@/components/MessageSelectionBar';
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
-import { RagStatusPopup } from '@/components/RagStatusPopup';
+
 import { MemoryFeedback } from '@/components/MemoryFeedback';
 
 interface Message {
@@ -106,9 +106,7 @@ function App() {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedMessageIds, setSelectedMessageIds] = useState<string[]>([]);
   const [showConfirmDeleteMultiple, setShowConfirmDeleteMultiple] = useState(false);
-  // Ajout du state pour activer/désactiver le RAG
-  const [showRagActivated, setShowRagActivated] = useState(false);
-  const [showRagDeactivated, setShowRagDeactivated] = useState(false);
+
   // Hyperparamètres Gemini
   const [geminiConfig, setGeminiConfig] = useState<GeminiGenerationConfig>({
     temperature: 0.7,
@@ -719,18 +717,7 @@ function App() {
     setShowConfirmDeleteMultiple(false);
   };
 
-  // Afficher un popup animé quand le RAG s'active ou se désactive
-  useEffect(() => {
-    if (ragEnabled) {
-      setShowRagActivated(true);
-      const timeout = setTimeout(() => setShowRagActivated(false), 2000);
-      return () => clearTimeout(timeout);
-    } else {
-      setShowRagDeactivated(true);
-      const timeout = setTimeout(() => setShowRagDeactivated(false), 2000);
-      return () => clearTimeout(timeout);
-    }
-  }, [ragEnabled]);
+
 
   // Handler pour modifier un hyperparamètre Gemini
   const handleGeminiConfigChange = (key: keyof GeminiGenerationConfig, value: any) => {
@@ -820,7 +807,6 @@ function App() {
 
         {/* Indicateur visuel du mode privé SOUS le header, centré */}
         <PrivateModeBanner visible={modePrive} />
-        <RagStatusPopup activated={showRagActivated} deactivated={showRagDeactivated} />
 
         {/* Boutons de sélection et suppression groupée */}
         {/* Les boutons de sélection/groupée ne sont visibles que si une conversation est active */}
