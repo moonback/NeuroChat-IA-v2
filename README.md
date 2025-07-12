@@ -1,106 +1,80 @@
 # 🧠 NeuroChat
 
-> Une application React moderne et intuitive pour converser avec l'IA Gemini Pro de Google
+> Application de chat IA moderne et intuitive avec personnalités multiples, reconnaissance vocale et analyse sémantique
 
-**NeuroChat** révolutionne votre façon d'interagir avec l'intelligence artificielle en combinant chat textuel, reconnaissance vocale et analyse d'images dans une interface élégante et responsive. Que vous préfériez taper, parler ou montrer, NeuroChat s'adapte à votre style de communication.
+**NeuroChat** révolutionne votre façon d'interagir avec l'intelligence artificielle en combinant chat textuel, reconnaissance vocale, analyse d'images et personnalités IA dans une interface élégante et responsive. Choisissez parmi 12 personnalités différentes et communiquez naturellement avec l'IA !
 
-## 🎯 Pourquoi NeuroChat ?
+## ✨ Fonctionnalités principales
 
-- **🎪 Multimodal** : Texte, voix, images - communiquez comme vous le souhaitez
-- **🎭 Personnalisable** : Choisissez la personnalité de votre IA (formel, amical, expert, humoristique)
-- **🚀 Moderne** : Interface fluide avec animations et design responsive
-- **🔒 Sécurisé** : Vos données restent privées, aucun stockage serveur
-- **📱 Universel** : Fonctionne parfaitement sur mobile et desktop
+### 🎭 **Système de personnalités IA (NOUVEAU !)**
+- **12 personnalités uniques** réparties en 4 catégories :
+  - **Professionnel** : Formel, Expert, Consultant
+  - **Social** : Amical, Motivateur, Coach, Décontracté
+  - **Créatif** : Humoristique, Créatif, Artiste, Gamer
+  - **Expert** : Professeur
+- **Interface de sélection moderne** avec filtres par catégorie
+- **Aperçu détaillé** avec traits de personnalité et descriptions
+- **Changement en temps réel** du style de communication
 
----
+### 🗣️ **Communication vocale avancée**
+- **Mode vocal automatique** : conversation continue mains-libres
+- **Reconnaissance vocale** en français (Web Speech API)
+- **Synthèse vocale** personnalisable (vitesse, tonalité, volume)
+- **Indicateur vocal flottant** avec transcription en temps réel
+- **Contrôles audio intuitifs** (mute/unmute rapide)
 
-## ✨ Fonctionnalités
+### 💬 **Chat intelligent et intuitif**
+- **Interface conversationnelle** fluide avec animations
+- **Support d'images** : analyse IA complète de vos images
+- **Mémoire utilisateur** : l'IA se souvient de vos préférences
+- **Auto-détection d'informations** personnelles pour personnalisation
+- **Sélection multiple** de messages avec suppression groupée
 
-### 🆕 Nouvelles fonctionnalités déployées
-#### 🛡️ Mode privé / conversation éphémère
-- **Mode privé/éphémère** : Activez un mode où aucune donnée n’est sauvegardée localement, pour des conversations confidentielles.
-- **Effacement automatique** : Les messages sont supprimés à la fermeture ou au rafraîchissement de la page.
-- **Indicateur visuel** : Icône de bouclier animée dans l’interface pour signaler l’activation du mode privé.
-- **Activation/désactivation rapide** : Basculez facilement entre mode normal et mode privé depuis la barre supérieure.
+### 📚 **RAG (Recherche Augmentée)**
+- **Gestion de documents** : PDF, TXT, MD, DOCX, CSV
+- **Recherche sémantique** avec analyse d'embeddings
+- **Glisser-déposer** pour l'ajout de documents
+- **Activation/désactivation** dynamique du mode RAG
 
-#### 🔥 Hyperparamètres Gemini personnalisables
-- **Réglages avancés** : Ajustez la température, topK, topP, maxOutputTokens, stopSequences et candidateCount directement depuis l’interface.
-- **Réinitialisation rapide** des paramètres aux valeurs par défaut.
-- **Interface moderne** pour une configuration fine du comportement du modèle Gemini.
+### 🛡️ **Mode privé et sécurité**
+- **Mode éphémère** : aucune sauvegarde locale
+- **Chiffrement** des données sensibles
+- **Auto-suppression** à la fermeture
+- **Indicateurs visuels** du mode sécurisé
 
-#### 🗂️ Gestion améliorée de l’historique
-- **Suppression groupée** de messages et de discussions via sélection multiple.
-- **Renommage** instantané des discussions.
-- **Recherche et tri** avancés dans l’historique.
+### ⚙️ **Configuration avancée**
+- **Hyperparamètres Gemini** : température, topK, topP, tokens
+- **Réglages TTS complets** : export/import des paramètres
+- **Thème clair/sombre** avec basculement instantané
+- **Interface responsive** optimisée mobile/desktop
 
-#### 📚 RAG (Recherche Augmentée par les Documents)
-- **Activation/désactivation dynamique** du mode RAG.
-- **Popup animé** lors de l’activation/désactivation.
-- **Gestion des documents** enrichie : ajout, renommage, suppression groupée, aperçu, drag & drop.
-
-#### 🎤 Mode vocal automatique
-- **Activation d’un mode conversation continue** : l’IA écoute et répond sans intervention manuelle.
-- **Indicateur visuel** du mode vocal actif.
-
-#### 🧹 Divers
-- **Correction de bugs** et amélioration de la stabilité.
-- **Optimisation de l’interface** pour une expérience plus fluide.
-
-### 🗣️ Communication vocale
-- **Reconnaissance vocale** avancée (Web Speech API)
-- **Synthèse vocale** personnalisable (voix, vitesse, tonalité)
-- **Contrôles audio** intuitifs (mute/unmute rapide)
-
-### 💬 Chat intelligent
-- **Interface conversationnelle** fluide avec bulles animées
-- **Auto-scroll** et timestamps pour une navigation facile
-- **Actions rapides** : copier, liker, nouvelle discussion
-
-### 🖼️ Analyse d'images
-- **Envoi d'images** par glisser-déposer ou sélection
-- **Analyse IA** complète de vos images
-- **Affichage intégré** dans l'historique des conversations
-
-### 🎭 Personnalité IA
-- **4 modes** : Formel, Amical, Expert, Humoristique
-- **Adaptation automatique** du style de réponse
-- **Changement à la volée** selon vos besoins
-
-### 📚 Gestion avancée
+### 📊 **Gestion des données**
 - **Historique complet** avec recherche et tri
 - **Renommage** des conversations
-- **Suppression groupée** avec sélection multiple
-- **RAG (Recherche Augmentée)** pour interroger vos documents PDF/textes
-
-### 🎨 Expérience utilisateur
-- **Thème clair/sombre** avec basculement instantané
-- **Design responsive** optimisé pour tous les écrans
-- **Suggestions rapides** pour démarrer la conversation
+- **Export/import** des réglages
+- **Stockage local sécurisé**
 
 ---
 
 ## 🚀 Installation
 
 ### Prérequis
-- **Node.js** 18 ou supérieur
+- **Node.js** 18+ ou supérieur
 - **Clé API Google Gemini** ([Obtenir gratuitement](https://makersuite.google.com/app/apikey))
 
-### Configuration en 3 étapes
+### Installation en 3 étapes
 
-1. **Cloner et installer**
+1. **Cloner et installer les dépendances**
    ```bash
    git clone https://github.com/votre-username/neurochat.git
    cd neurochat
    npm install
    ```
 
-2. **Configurer l'API**
+2. **Configurer l'API Gemini**
    ```bash
-   cp .env.local.example .env.local
-   ```
-   Éditez `.env.local` :
-   ```env
-   VITE_GEMINI_API_KEY=votre_clé_api_gemini
+   # Créer le fichier de configuration
+   echo "VITE_GEMINI_API_KEY=votre_clé_api_gemini" > .env.local
    ```
 
 3. **Lancer l'application**
@@ -114,20 +88,33 @@
 
 ## 📖 Guide d'utilisation
 
-### 💬 Première conversation
-1. Tapez votre message ou cliquez sur le **micro** pour parler
-2. Sélectionnez la **personnalité IA** dans le menu du haut
-3. Envoyez une **image** en cliquant sur l'icône trombone 📎
+### 🎭 **Choisir une personnalité**
+1. Cliquez sur le bouton de personnalité dans le header
+2. Parcourez les 4 catégories ou utilisez "Toutes"
+3. Activez "Afficher les détails" pour voir les traits
+4. Sélectionnez votre personnalité préférée
 
-### 🎛️ Personnalisation
-- **Thème** : Basculez entre clair/sombre d'un clic
-- **Voix** : Ajustez vitesse, tonalité et volume dans les réglages TTS
-- **Personnalité** : Changez le style de réponse de l'IA instantanément
+### 🎤 **Mode vocal automatique**
+1. Activez le mode vocal dans le header
+2. Parlez naturellement - l'IA écoute en continu
+3. L'indicateur flottant montre l'état (écoute/analyse/réponse)
+4. Déplacez l'indicateur où vous voulez sur l'écran
 
-### 📚 Gestion des conversations
-- **Historique** : Accédez à toutes vos discussions passées
-- **Renommage** : Donnez des noms personnalisés à vos conversations
-- **Suppression** : Sélectionnez et supprimez plusieurs discussions en une fois
+### 📱 **Envoi d'images**
+- Cliquez sur l'icône trombone 📎 dans la zone de saisie
+- Glissez-déposez une image directement
+- Formats supportés : JPG, PNG, GIF, WebP
+
+### 🔒 **Mode privé**
+- Activez le bouclier dans le header
+- Vos messages ne sont pas sauvegardés
+- Tout est effacé à la fermeture
+
+### 📚 **Utiliser le RAG**
+1. Activez le mode RAG (icône cerveau)
+2. Ajoutez vos documents via "Documents RAG"
+3. Posez des questions sur vos documents
+4. L'IA utilise automatiquement le contexte
 
 ---
 
@@ -136,131 +123,211 @@
 | Catégorie | Technologies |
 |-----------|-------------|
 | **Frontend** | React 18, TypeScript, Vite |
-| **UI/UX** | Tailwind CSS, shadcn/ui, Lucide React |
+| **UI/UX** | Tailwind CSS, Radix UI, Lucide React |
 | **IA** | Google Gemini Pro API |
 | **Audio** | Web Speech API (reconnaissance & synthèse) |
+| **ML Local** | @xenova/transformers (embeddings) |
+| **Données** | LocalStorage, IndexedDB |
+
+### Dépendances principales
+```json
+{
+  "react": "^18.3.1",
+  "@xenova/transformers": "^2.17.2",
+  "lucide-react": "^0.446.0",
+  "sonner": "^1.5.0",
+  "tailwindcss": "^3.4.13"
+}
+```
+
+---
+
+## 📂 Architecture du projet
+
+```
+src/
+├── components/           # Composants React
+│   ├── ui/              # Composants UI génériques (Radix)
+│   ├── PersonalitySelector.tsx  # Sélecteur de personnalités
+│   ├── ChatContainer.tsx        # Zone de conversation
+│   ├── VoiceInput.tsx          # Saisie vocale/texte
+│   ├── VocalModeIndicator.tsx  # Indicateur vocal flottant
+│   ├── Header.tsx              # Navigation et actions
+│   ├── HistoryModal.tsx        # Gestion historique
+│   ├── RagDocsModal.tsx        # Gestion documents RAG
+│   ├── MemoryModal.tsx         # Gestion mémoire utilisateur
+│   └── TTSSettingsModal.tsx    # Réglages synthèse vocale
+├── config/              # Configuration
+│   └── personalities.ts # Définition des personnalités
+├── hooks/               # Hooks React personnalisés
+│   ├── useMemory.ts     # Gestion mémoire utilisateur
+│   ├── useSpeechSynthesis.ts # Synthèse vocale
+│   ├── useSpeechRecognition.ts # Reconnaissance vocale
+│   └── useTheme.ts      # Gestion thème
+├── services/            # Services API et utilitaires
+│   ├── geminiApi.ts     # API Google Gemini
+│   ├── geminiSystemPrompt.ts # Prompts système
+│   └── ragSearch.ts     # Recherche documentaire
+└── lib/                 # Utilitaires
+    └── utils.ts         # Fonctions helpers
+```
 
 ---
 
 ## 📱 Compatibilité
 
 ### Reconnaissance vocale
-- ✅ Chrome (toutes versions)
-- ✅ Edge (toutes versions)
-- ✅ Safari (iOS 14+, macOS 12+)
-- ❌ Firefox (limitation du navigateur)
+- ✅ **Chrome** (toutes versions) - Recommandé
+- ✅ **Edge** (toutes versions)
+- ✅ **Safari** (iOS 14+, macOS 12+)
+- ❌ **Firefox** (limitation du navigateur)
 
 ### Synthèse vocale
-- ✅ Tous les navigateurs modernes
-- ✅ Support mobile complet
+- ✅ **Tous les navigateurs modernes**
+- ✅ **Support mobile complet**
+- ✅ **Voix système disponibles**
+
+### Fonctionnalités avancées
+- ✅ **Web Workers** pour les embeddings
+- ✅ **File API** pour les documents
+- ✅ **LocalStorage** pour la persistance
+
+---
+
+## 🔒 Sécurité et confidentialité
+
+### 🛡️ **Mesures de sécurité**
+- **Clé API locale** : stockée uniquement dans votre navigateur
+- **Chiffrement** des données sensibles en localStorage
+- **Validation** des entrées utilisateur
+- **Filtres de sécurité** activés sur l'API Gemini
+- **Mode privé** : zéro persistance des données
+
+### 🔐 **Confidentialité**
+- **Stockage local uniquement** : vos données restent sur votre appareil
+- **Pas de serveur tiers** : communication directe avec Google
+- **Suppression facile** : effacez tout depuis l'interface
+- **Transparence** : code source ouvert et auditable
+
+---
+
+## 🚨 Dépannage
+
+### **❌ "API key not found"**
+```bash
+# Vérifiez votre fichier .env.local
+cat .env.local
+# Doit contenir : VITE_GEMINI_API_KEY=votre_clé
+
+# Relancez le serveur
+npm run dev
+```
+
+### **❌ Reconnaissance vocale ne fonctionne pas**
+- ✅ Utilisez Chrome ou Edge (recommandé)
+- ✅ Vérifiez les permissions microphone
+- ✅ Testez sur HTTPS en production
+- ✅ Vérifiez que le micro n'est pas utilisé ailleurs
+
+### **❌ Synthèse vocale muette**
+- ✅ Vérifiez le volume système et navigateur
+- ✅ Testez avec le bouton "Test" dans les réglages TTS
+- ✅ Changez de voix dans les paramètres
+- ✅ Réinitialisez les paramètres TTS si nécessaire
+
+### **❌ Personnalités ne se chargent pas**
+- ✅ Vérifiez la console pour les erreurs
+- ✅ Rechargez la page
+- ✅ Videz le cache navigateur si nécessaire
+
+### **❌ RAG ne trouve pas de documents**
+- ✅ Vérifiez que les documents sont bien importés
+- ✅ Utilisez des mots-clés précis
+- ✅ Essayez avec des documents plus courts
+- ✅ Réactivez le mode RAG si nécessaire
 
 ---
 
 ## 🔧 Scripts de développement
 
 ```bash
-# Développement
-npm run dev          # Serveur de développement avec hot-reload
-
-# Production
-npm run build        # Build optimisé pour production
-npm run preview      # Prévisualisation du build
-
-# Qualité
-npm run lint         # Analyse du code
-npm run type-check   # Vérification TypeScript
-```
-
----
-
-## 📂 Architecture
-
-```
-src/
-├── components/           # Composants React réutilisables
-│   ├── ui/              # Composants UI génériques (Button, Card...)
-│   ├── Header.tsx       # Barre de navigation et actions
-│   ├── ChatContainer.tsx # Zone de conversation principale
-│   ├── VoiceInput.tsx   # Gestion de l'entrée vocale
-│   └── ImageUpload.tsx  # Composant d'envoi d'images
-├── hooks/               # Hooks React personnalisés
-│   ├── useTheme.ts      # Gestion du thème clair/sombre
-│   ├── useSpeechSynthesis.ts # Synthèse vocale
-│   └── useLocalStorage.ts    # Persistance locale
-├── services/            # Services externes
-│   ├── gemini.ts        # API Google Gemini
-│   └── storage.ts       # Gestion du stockage local
-├── types/               # Définitions TypeScript
-└── utils/               # Fonctions utilitaires
-```
-
----
-
-## 🔒 Sécurité et confidentialité
-
-### 🛡️ Mesures de sécurité
-- **Clé API locale** : Jamais transmise ailleurs que vers l'API Google
-- **Filtres de sécurité** activés sur l'API Gemini
-- **Validation des entrées** côté client
-- **Pas de tracking** ou d'analytics intrusifs
-
-### 🔐 Confidentialité
-- **Stockage local uniquement** : Vos conversations restent sur votre appareil
-- **Pas de serveur tiers** : Communication directe avec l'API Google
-- **Suppression facile** : Effacez vos données quand vous voulez
-
----
-
-## 🚨 Résolution de problèmes
-
-### Problèmes courants
-
-**❌ "API key not found"**
-```bash
-# Vérifiez votre fichier .env.local
-cat .env.local
-# Relancez le serveur de développement
+# Développement avec hot-reload
 npm run dev
+
+# Build optimisé pour production
+npm run build
+
+# Prévisualisation du build
+npm run preview
+
+# Analyse du code (ESLint)
+npm run lint
+
+# Vérification TypeScript
+npx tsc --noEmit
 ```
-
-**❌ Reconnaissance vocale ne fonctionne pas**
-- Utilisez Chrome ou Edge
-- Vérifiez les permissions microphone
-- Testez sur HTTPS en production
-
-**❌ Pas de synthèse vocale**
-- Vérifiez le volume système
-- Testez avec le bouton "Tester la voix" dans les réglages
-- Réinitialisez les paramètres TTS si nécessaire
-
-**❌ Images non supportées**
-- Formats supportés : JPG, PNG, GIF, WebP
-- Taille maximale : 10MB
-- Vérifiez votre connexion internet
 
 ---
 
 ## 🤝 Contribution
 
-Les contributions sont les bienvenues ! Consultez notre [guide de contribution](CONTRIBUTING.md) pour commencer.
+Les contributions sont les bienvenues ! Voici comment contribuer :
 
-### Étapes pour contribuer
-1. **Fork** le projet
-2. **Créez** une branche pour votre fonctionnalité
-3. **Commitez** vos changements
-4. **Poussez** vers la branche
-5. **Ouvrez** une Pull Request
+### 1. **Préparer l'environnement**
+```bash
+git clone https://github.com/votre-username/neurochat.git
+cd neurochat
+npm install
+```
+
+### 2. **Créer une branche**
+```bash
+git checkout -b feature/ma-nouvelle-fonctionnalite
+```
+
+### 3. **Développer et tester**
+```bash
+npm run dev
+# Développez votre fonctionnalité
+npm run lint
+```
+
+### 4. **Proposer vos changements**
+```bash
+git add .
+git commit -m "feat: ajouter ma nouvelle fonctionnalité"
+git push origin feature/ma-nouvelle-fonctionnalite
+```
+
+### 5. **Créer une Pull Request**
+- Décrivez clairement vos changements
+- Ajoutez des captures d'écran si pertinent
+- Mentionnez les issues liées
 
 ---
 
 ## 📈 Roadmap
 
-- [ ] **Support de plus de langues** (reconnaissance vocale)
-- [ ] **Plugins** pour étendre les fonctionnalités
-- [ ] **Thèmes personnalisés** avec éditeur intégré
-- [ ] **Export** des conversations (PDF, Markdown)
-- [ ] **Mode hors ligne** avec IA locale
-- [ ] **Collaboration** temps réel
+### 🎯 **Prochaines fonctionnalités**
+- [ ] **Personnalités personnalisées** : créez vos propres personnalités
+- [ ] **Plugins** : système extensible pour nouvelles fonctionnalités
+- [ ] **Collaboration** : partage de conversations en temps réel
+- [ ] **Export avancé** : PDF, Markdown, Word
+- [ ] **Traduction automatique** : support multilingue
+- [ ] **IA locale** : support de modèles locaux (Llama, etc.)
+
+### 🔧 **Améliorations techniques**
+- [ ] **PWA** : installation comme application native
+- [ ] **Sync cloud** : sauvegarde optionnelle chiffrée
+- [ ] **Performance** : optimisations WebAssembly
+- [ ] **Tests** : couverture complète E2E
+- [ ] **Docker** : containerisation pour déploiement
+
+### 🎨 **UX/UI**
+- [ ] **Thèmes personnalisés** : éditeur visuel
+- [ ] **Animations avancées** : transitions fluides
+- [ ] **Accessibilité** : support complet WCAG 2.1
+- [ ] **Raccourcis clavier** : navigation rapide
 
 ---
 
@@ -269,10 +336,12 @@ Les contributions sont les bienvenues ! Consultez notre [guide de contribution](
 Un grand merci aux projets open source qui rendent NeuroChat possible :
 
 - **[Google Gemini Pro](https://ai.google.dev/)** - L'intelligence artificielle qui alimente les conversations
-- **[shadcn/ui](https://ui.shadcn.com/)** - Composants UI élégants et accessibles
-- **[Lucide](https://lucide.dev/)** - Icônes modernes et cohérentes
+- **[Radix UI](https://radix-ui.com/)** - Composants accessibles et primitives UI
+- **[Lucide React](https://lucide.dev/)** - Icônes modernes et cohérentes
 - **[Tailwind CSS](https://tailwindcss.com/)** - Framework CSS utilitaire
 - **[Vite](https://vitejs.dev/)** - Outil de build ultra-rapide
+- **[Xenova/transformers](https://huggingface.co/docs/transformers.js/)** - ML dans le navigateur
+- **[React](https://reactjs.org/)** - Bibliothèque UI moderne
 
 ---
 
@@ -282,20 +351,21 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 
 ---
 
-## 🌟 Vous aimez NeuroChat ?
+## 📞 Support
 
-- ⭐ **Star** le projet sur GitHub
-- 🐛 **Signalez** les bugs dans les issues
-- 💡 **Partagez** vos idées d'amélioration
-- 📢 **Parlez-en** autour de vous
+- 🐛 **Bugs** : [Ouvrir une issue](https://github.com/votre-username/neurochat/issues)
+- 💡 **Suggestions** : [Discussions](https://github.com/votre-username/neurochat/discussions)
+- 📧 **Contact** : votre.email@example.com
 
 ---
 
 <div align="center">
-  <p>Développé avec ❤️ par [Votre nom]</p>
-  <p>
-    <a href="https://github.com/votre-username/neurochat">GitHub</a> •
-    <a href="https://neurochat-demo.vercel.app">Démo live</a> •
-    <a href="mailto:contact@neurochat.dev">Contact</a>
-  </p>
+
+**NeuroChat** - L'avenir de la conversation avec l'IA 🚀
+
+![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![React](https://img.shields.io/badge/react-18.3.1-blue.svg)
+![TypeScript](https://img.shields.io/badge/typescript-5.5.3-blue.svg)
+
 </div>
