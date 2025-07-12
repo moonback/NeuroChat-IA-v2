@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { History, X, Search, MessageCircle, Users, CalendarDays, Trash2, CheckSquare, Square, Grid3X3, List, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { History, X, Search, MessageCircle, Users, Trash2, CheckSquare, Square, Grid3X3, List, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Discussion } from '@/hooks/useDiscussions';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';

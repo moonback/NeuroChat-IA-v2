@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Volume2, VolumeX, Clock, GripVertical, Minimize2, Maximize2, X } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX, Clock, GripVertical, Minimize2, Maximize2 } from 'lucide-react';
 
 interface VocalModeIndicatorProps {
   visible: boolean;

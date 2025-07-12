@@ -608,7 +608,6 @@ function App() {
   // Hook reconnaissance vocale (mode vocal auto)
   const {
     listening: listeningAuto,
-    transcript: transcriptAuto,
     start: startAuto,
     stop: stopAuto,
     reset: resetAuto,
