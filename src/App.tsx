@@ -18,6 +18,7 @@ import { MemoryModal } from '@/components/MemoryModal';
 import { pipeline } from "@xenova/transformers";
 import { GeminiSettingsDrawer } from '@/components/GeminiSettingsDrawer';
 import { getPersonalityById, getDefaultPersonality } from '@/config/personalities';
+import { useCustomPersonalities } from '@/hooks/useCustomPersonalities';
 
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
@@ -271,14 +272,18 @@ function App() {
 
  
 
+  const { customPersonalities } = useCustomPersonalities();
+  
   const getSystemPrompt = (personalityId: string) => {
-    const personality = getPersonalityById(personalityId);
+    const personality = getPersonalityById(personalityId, customPersonalities);
+    
     if (!personality) {
-      return SYSTEM_PROMPT;
+      // Fallback vers la personnalité par défaut si non trouvée
+      const defaultPersonality = getDefaultPersonality();
+      return `${SYSTEM_PROMPT}\n\n${defaultPersonality.systemPromptAddition}`;
     }
     
-    // On combine le prompt système de base avec l'ajout lié à la personnalité
-    return SYSTEM_PROMPT + " " + personality.systemPromptAddition;
+    return `${SYSTEM_PROMPT}\n\n${personality.systemPromptAddition}`;
   };
 
   const addRagContextMessage = (passages: { id: number; titre: string; contenu: string }[]) => {

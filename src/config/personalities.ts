@@ -1,4 +1,5 @@
 import { User, Brain, Heart, Zap, Coffee, Sparkles, BookOpen, Users, Target, Lightbulb, Music, Gamepad2 } from 'lucide-react';
+import { CustomPersonality, getIconComponent } from '@/hooks/useCustomPersonalities';
 
 export interface Personality {
   id: string;
@@ -11,6 +12,9 @@ export interface Personality {
   systemPromptAddition: string;
   category: 'professionnel' | 'social' | 'creatif' | 'expert';
   traits: string[];
+  isCustom?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const personalities: Personality[] = [
@@ -187,17 +191,96 @@ export const personalityCategories = {
     label: 'Expert',
     description: 'Personnalités techniques et spécialisées',
     color: 'from-purple-500 to-indigo-500'
+  },
+  personnalise: {
+    label: 'Personnalisé',
+    description: 'Vos personnalités créées sur mesure',
+    color: 'from-violet-500 to-purple-500'
   }
 };
 
-export const getPersonalityById = (id: string): Personality | undefined => {
-  return personalities.find(p => p.id === id);
+// Convertir une personnalité personnalisée en personnalité standard
+export const convertCustomPersonality = (customPersonality: CustomPersonality): Personality => {
+  return {
+    id: customPersonality.id,
+    label: customPersonality.label,
+    icon: getIconComponent(customPersonality.iconName),
+    color: customPersonality.color,
+    bg: customPersonality.bg,
+    description: customPersonality.description,
+    detailedDescription: customPersonality.detailedDescription,
+    systemPromptAddition: customPersonality.systemPromptAddition,
+    category: customPersonality.category,
+    traits: customPersonality.traits,
+    isCustom: true,
+    createdAt: customPersonality.createdAt,
+    updatedAt: customPersonality.updatedAt,
+  };
 };
 
-export const getPersonalitiesByCategory = (category: string): Personality[] => {
-  return personalities.filter(p => p.category === category);
+// Obtenir toutes les personnalités (prédéfinies + personnalisées)
+export const getAllPersonalities = (customPersonalities: CustomPersonality[] = []): Personality[] => {
+  const convertedCustom = customPersonalities.map(convertCustomPersonality);
+  return [...personalities, ...convertedCustom];
 };
 
+// Obtenir une personnalité par ID (prédéfinie ou personnalisée)
+export const getPersonalityById = (id: string, customPersonalities: CustomPersonality[] = []): Personality | undefined => {
+  // Chercher d'abord dans les personnalités prédéfinies
+  const predefined = personalities.find(p => p.id === id);
+  if (predefined) return predefined;
+
+  // Chercher dans les personnalités personnalisées
+  const custom = customPersonalities.find(p => p.id === id);
+  if (custom) return convertCustomPersonality(custom);
+
+  return undefined;
+};
+
+// Obtenir les personnalités par catégorie (incluant les personnalisées)
+export const getPersonalitiesByCategory = (category: string, customPersonalities: CustomPersonality[] = []): Personality[] => {
+  const allPersonalities = getAllPersonalities(customPersonalities);
+  return allPersonalities.filter(p => p.category === category);
+};
+
+// Obtenir les personnalités personnalisées uniquement
+export const getCustomPersonalitiesByCategory = (category: string, customPersonalities: CustomPersonality[] = []): Personality[] => {
+  return customPersonalities
+    .filter(p => p.category === category)
+    .map(convertCustomPersonality);
+};
+
+// Obtenir la personnalité par défaut
 export const getDefaultPersonality = (): Personality => {
-  return personalities.find(p => p.id === 'formel') || personalities[0];
+  return personalities[0]; // Retourne toujours une personnalité prédéfinie
+};
+
+// Vérifier si une personnalité est personnalisée
+export const isCustomPersonality = (personalityId: string): boolean => {
+  return personalityId.startsWith('custom-');
+};
+
+// Obtenir toutes les catégories avec leurs personnalités
+export const getPersonalitiesGroupedByCategory = (customPersonalities: CustomPersonality[] = []) => {
+  const grouped: Record<string, Personality[]> = {};
+  
+  Object.keys(personalityCategories).forEach(category => {
+    grouped[category] = getPersonalitiesByCategory(category, customPersonalities);
+  });
+  
+  return grouped;
+};
+
+// Statistiques des personnalités
+export const getPersonalityStats = (customPersonalities: CustomPersonality[] = []) => {
+  const total = personalities.length + customPersonalities.length;
+  const custom = customPersonalities.length;
+  const predefined = personalities.length;
+  
+  return {
+    total,
+    custom,
+    predefined,
+    categories: Object.keys(personalityCategories).length,
+  };
 }; 
