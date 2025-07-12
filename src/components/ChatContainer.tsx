@@ -182,31 +182,31 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
           ) : (
             <>
               {/* Chat Header amélioré */}
-              <div className="sticky top-0 z-10 mb-4 animate-in slide-in-from-top-2 duration-500">
-                <div className="flex items-center justify-between p-3 sm:p-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-slate-800/60 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <div className="flex items-center gap-3 min-w-0">
+              <div className="sticky top-0 z-10 mb-2 animate-in slide-in-from-top-2 duration-500">
+                <div className="flex items-center justify-between p-2.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-xl border border-white/60 dark:border-slate-800/60 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <div className="flex items-center gap-2 min-w-0">
                     <div className="relative">
-                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
-                        <MessageCircle className="w-4 h-4 text-white" />
+                      <div className="w-7 h-7 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-md">
+                        <MessageCircle className="w-3.5 h-3.5 text-white" />
                       </div>
-                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
+                      <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
                     </div>
-                    <div>
-                      <div className="text-sm sm:text-base font-semibold text-slate-700 dark:text-slate-300">
+                    <div className="flex items-center gap-3">
+                      <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
                         {messages.filter(msg => !(msg as RagContextMessage).isRagContext).length} message{messages.length !== 1 ? 's' : ''}
                       </div>
                       <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        <span>Conversation active</span>
+                        <span>Active</span>
                       </div>
                     </div>
                   </div>
                   <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all duration-200 hover:scale-110"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all duration-200"
                   >
-                    <Info className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                    <Info className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                   </Button>
                 </div>
               </div>
