@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
@@ -11,16 +11,17 @@ import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { searchDocuments } from '@/services/ragSearch';
 import { RagDocsModal } from '@/components/RagDocsModal';
 import { HistoryModal, DiscussionWithCategory } from '@/components/HistoryModal';
-import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
+
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
 import { useMemory } from "@/hooks/useMemory";
 import { MemoryModal } from '@/components/MemoryModal';
 import { pipeline } from "@xenova/transformers";
 import { GeminiSettingsDrawer } from '@/components/GeminiSettingsDrawer';
-import { MessageSelectionBar } from '@/components/MessageSelectionBar';
+import { getPersonalityById, getDefaultPersonality } from '@/config/personalities';
+
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
-import { RagStatusPopup } from '@/components/RagStatusPopup';
+
 import { MemoryFeedback } from '@/components/MemoryFeedback';
 
 interface Message {
@@ -94,8 +95,8 @@ function App() {
   
   const [showTTSSettings, setShowTTSSettings] = useState(false);
   
-  // Ajout du state pour la personnalité IA (par défaut : humoristique)
-  const [selectedPersonality, setSelectedPersonality] = useState('humoristique');
+  // Ajout du state pour la personnalité IA (par défaut : selon configuration)
+  const [selectedPersonality, setSelectedPersonality] = useState(getDefaultPersonality().id);
   // Ajout du state pour le mode vocal automatique
   const [modeVocalAuto, setModeVocalAuto] = useState(false);
   // Ajout du state pour la modale de gestion des documents RAG
@@ -106,9 +107,7 @@ function App() {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedMessageIds, setSelectedMessageIds] = useState<string[]>([]);
   const [showConfirmDeleteMultiple, setShowConfirmDeleteMultiple] = useState(false);
-  // Ajout du state pour activer/désactiver le RAG
-  const [showRagActivated, setShowRagActivated] = useState(false);
-  const [showRagDeactivated, setShowRagDeactivated] = useState(false);
+
   // Hyperparamètres Gemini
   const [geminiConfig, setGeminiConfig] = useState<GeminiGenerationConfig>({
     temperature: 0.7,
@@ -272,27 +271,14 @@ function App() {
 
  
 
-  const getSystemPrompt = (personality: string) => {
-    let personalityAddition = '';
-    switch (personality) {
-      case 'formel':
-        personalityAddition = "Adopte un ton très poli, formel et précis. Utilise un langage soutenu et reste toujours claire, concise et directe.";
-        break;
-      case 'amical':
-        personalityAddition = "Sois chaleureuse, empathique et amicale. Tutoie l'utilisateur, utilise un ton convivial et bienveillant. Sois encourageante, rassurante et propose des suggestions utiles.";
-        break;
-      case 'expert':
-        personalityAddition = "Sois experte, rigoureuse et pédagogique. Explique les concepts de façon claire, détaillée et structurée, en t'adaptant au niveau de l'utilisateur.";
-        break;
-      case 'humoristique':
-        personalityAddition = "Ajoute une touche d'humour ou une blague subtile à chaque réponse, tout en restant utile et pertinente.";
-        break;
-      default:
-        personalityAddition = "";
-        break;
+  const getSystemPrompt = (personalityId: string) => {
+    const personality = getPersonalityById(personalityId);
+    if (!personality) {
+      return SYSTEM_PROMPT;
     }
+    
     // On combine le prompt système de base avec l'ajout lié à la personnalité
-    return SYSTEM_PROMPT + (personalityAddition ? " " + personalityAddition : "");
+    return SYSTEM_PROMPT + " " + personality.systemPromptAddition;
   };
 
   const addRagContextMessage = (passages: { id: number; titre: string; contenu: string }[]) => {
@@ -346,6 +332,18 @@ function App() {
   }
 
   const handleSendMessage = async (userMessage: string, imageFile?: File) => {
+    // Arrêter immédiatement la reconnaissance vocale pour éviter qu'elle capte le TTS
+    if (modeVocalAuto && listeningAuto) {
+      stopAuto();
+      resetAuto();
+      // Nettoyer le timeout si il existe
+      if (autoVoiceTimeout) {
+        clearTimeout(autoVoiceTimeout);
+        setAutoVoiceTimeout(null);
+      }
+      setTempTranscriptAuto('');
+    }
+    
     // Commande spéciale : ajout manuel à la mémoire via le chat
     const memoryCommand = userMessage.match(/^(enregistre dans la mémoire|ajoute à la mémoire|mémorise) *: *(.+)/i);
     if (memoryCommand) {
@@ -449,13 +447,24 @@ function App() {
         });
         ragContext += '\n';
       }
+      // Injection de la date et heure actuelle
+      const now = new Date();
+      const dateTimeInfo = `INFORMATIONS TEMPORELLES :\nDate et heure actuelles : ${now.toLocaleDateString('fr-FR', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })}\n\n`;
+
       // Injection de la mémoire dans le prompt système
       const memorySummary = memory.length
         ? `Contexte utilisateur à mémoriser et à utiliser dans toutes tes réponses :\n${memory.map(f => "- " + f.content).join("\n")}\n\nTu dois toujours utiliser ces informations pour personnaliser tes réponses, même si l'utilisateur ne les mentionne pas.\n`
         : "";
       // LOG mémoire injectée
       // console.log('[Mémoire utilisateur injectée]', memorySummary);
-      const prompt = `${getSystemPrompt(selectedPersonality)}\n${memorySummary}${ragEnabled ? ragContext : ""}Question utilisateur : ${userMessage}`;
+      const prompt = `${getSystemPrompt(selectedPersonality)}\n${dateTimeInfo}${memorySummary}${ragEnabled ? ragContext : ""}Question utilisateur : ${userMessage}`;
       // LOG prompt final
       // console.log('[Prompt envoyé à Gemini]', prompt);
       const response = await sendMessageToGemini(
@@ -467,11 +476,30 @@ function App() {
       // LOG réponse Gemini
       // console.log('[Réponse Gemini]', response);
       addMessage(response, false);
+      
+      // Indiquer que l'IA commence à parler
+      setIsAISpeaking(true);
+      console.log('[Vocal Mode] IA commence à parler - microphone coupé');
+      
       speak(response, {
         onEnd: () => {
-          if (modeVocalAuto && !muted) {
+          // Indiquer que l'IA a fini de parler
+          setIsAISpeaking(false);
+          console.log('[Vocal Mode] IA a fini de parler - préparation redémarrage microphone');
+          
+          // Utiliser les références pour éviter les valeurs obsolètes
+          if (modeVocalAutoRef.current && !muted) {
             playBip();
-            startAuto();
+            // Ajouter une pause de sécurité avant de redémarrer l'écoute
+            setTimeout(() => {
+              // Vérifications supplémentaires avec les références actuelles
+              if (modeVocalAutoRef.current && !muted && !listeningAuto && !isAISpeakingRef.current) {
+                console.log('[Vocal Mode] Redémarrage du microphone après pause de sécurité');
+                startAuto();
+              } else {
+                console.log('[Vocal Mode] Redémarrage annulé - mode vocal désactivé manuellement');
+              }
+            }, 2000); // 2 secondes de pause pour être sûr que le TTS s'est arrêté
           }
         }
       });
@@ -561,6 +589,22 @@ function App() {
 
 
 
+  // État pour gérer le délai d'attente du mode vocal auto
+  const [autoVoiceTimeout, setAutoVoiceTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [tempTranscriptAuto, setTempTranscriptAuto] = useState('');
+  const [isAISpeaking, setIsAISpeaking] = useState(false);
+  const isAISpeakingRef = useRef(false);
+  const modeVocalAutoRef = useRef(false);
+  
+  // Mettre à jour les références quand les états changent
+  useEffect(() => {
+    isAISpeakingRef.current = isAISpeaking;
+  }, [isAISpeaking]);
+  
+  useEffect(() => {
+    modeVocalAutoRef.current = modeVocalAuto;
+  }, [modeVocalAuto]);
+
   // Hook reconnaissance vocale (mode vocal auto)
   const {
     listening: listeningAuto,
@@ -571,14 +615,36 @@ function App() {
   } = useSpeechRecognition({
     interimResults: true,
     lang: 'fr-FR',
-    continuous: false,
-    onResult: (/* finalText */) => {
-      // Rien ici, on attend la fin
+    continuous: true, // Mode continu pour ne pas s'arrêter pendant les pauses
+    onResult: (finalText) => {
+      // Ne traiter que si le mode vocal auto est actif et l'IA ne parle pas
+      if (modeVocalAutoRef.current && !isAISpeakingRef.current) {
+        setTempTranscriptAuto(finalText);
+        
+        // Annuler le timeout précédent
+        if (autoVoiceTimeout) {
+          clearTimeout(autoVoiceTimeout);
+        }
+        
+        // Créer un nouveau timeout de 3 secondes
+        const timeout = setTimeout(() => {
+          if (finalText && finalText.trim().length > 0 && !isAISpeakingRef.current && modeVocalAutoRef.current) {
+            console.log('[Vocal Mode] Envoi automatique du message:', finalText.trim());
+            handleSendMessage(finalText.trim());
+            setTempTranscriptAuto('');
+            resetAuto();
+          } else if (isAISpeakingRef.current) {
+            console.log('[Vocal Mode] Message ignoré car IA en train de parler');
+          }
+        }, 3000); // 3 secondes d'attente après la dernière parole
+        
+        setAutoVoiceTimeout(timeout);
+      }
     },
     onEnd: (finalText) => {
-      if (modeVocalAuto && finalText && finalText.trim().length > 0) {
-        handleSendMessage(finalText.trim());
-        resetAuto();
+      // Ne plus envoyer automatiquement ici - c'est géré par le timeout
+      if (modeVocalAutoRef.current && finalText && !isAISpeakingRef.current) {
+        setTempTranscriptAuto(finalText);
       }
     },
   });
@@ -593,7 +659,7 @@ function App() {
   // Effet : démarrer/arrêter la reco vocale auto selon le mode
   useEffect(() => {
     if (modeVocalAuto) {
-      if (!listeningAuto && isSupportedAuto) {
+      if (!listeningAuto && isSupportedAuto && !isAISpeaking) {
         playBip();
         startAuto();
       }
@@ -602,9 +668,31 @@ function App() {
         stopAuto();
         resetAuto();
       }
+      // Nettoyer le timeout quand on désactive le mode
+      if (autoVoiceTimeout) {
+        clearTimeout(autoVoiceTimeout);
+        setAutoVoiceTimeout(null);
+      }
+      setTempTranscriptAuto('');
+      setIsAISpeaking(false); // Nettoyer l'état de l'IA qui parle
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modeVocalAuto]);
+  }, [modeVocalAuto, isAISpeaking]);
+
+  // Effet : arrêter immédiatement la reconnaissance vocale quand l'IA commence à parler
+  useEffect(() => {
+    if (isAISpeaking && listeningAuto) {
+      console.log('[Vocal Mode] Arrêt du microphone car IA en train de parler');
+      stopAuto();
+      resetAuto();
+      // Nettoyer le timeout
+      if (autoVoiceTimeout) {
+        clearTimeout(autoVoiceTimeout);
+        setAutoVoiceTimeout(null);
+      }
+      setTempTranscriptAuto('');
+    }
+  }, [isAISpeaking]); // Simplifier les dépendances
 
   // Si l'utilisateur mute ou stop la voix, désactive le mode vocal auto
   useEffect(() => {
@@ -612,6 +700,12 @@ function App() {
       setModeVocalAuto(false);
       stopAuto();
       resetAuto();
+      // Nettoyer le timeout
+      if (autoVoiceTimeout) {
+        clearTimeout(autoVoiceTimeout);
+        setAutoVoiceTimeout(null);
+      }
+      setTempTranscriptAuto('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [muted]);
@@ -684,18 +778,7 @@ function App() {
     setShowConfirmDeleteMultiple(false);
   };
 
-  // Afficher un popup animé quand le RAG s'active ou se désactive
-  useEffect(() => {
-    if (ragEnabled) {
-      setShowRagActivated(true);
-      const timeout = setTimeout(() => setShowRagActivated(false), 2000);
-      return () => clearTimeout(timeout);
-    } else {
-      setShowRagDeactivated(true);
-      const timeout = setTimeout(() => setShowRagDeactivated(false), 2000);
-      return () => clearTimeout(timeout);
-    }
-  }, [ragEnabled]);
+
 
   // Handler pour modifier un hyperparamètre Gemini
   const handleGeminiConfigChange = (key: keyof GeminiGenerationConfig, value: any) => {
@@ -736,6 +819,15 @@ function App() {
     return maxSim > semanticThreshold;
   };
 
+  // Nettoyer le timeout à la fermeture du composant
+  useEffect(() => {
+    return () => {
+      if (autoVoiceTimeout) {
+        clearTimeout(autoVoiceTimeout);
+      }
+    };
+  }, [autoVoiceTimeout]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Menu historique des discussions */}
@@ -772,47 +864,25 @@ function App() {
           modePrive={modePrive}
           setModePrive={setModePrive}
           onOpenMemoryModal={() => setShowMemoryModal(true)}
+          selectMode={selectMode}
+          onToggleSelectMode={handleToggleSelectMode}
+          selectedCount={selectedMessageIds.length}
+          totalCount={messages.filter((m: any) => !m.isRagContext).length}
+          onSelectAll={() => {
+            const allIds = messages.filter((m: any) => !m.isRagContext).map((m: any) => m.id);
+            setSelectedMessageIds(allIds);
+          }}
+          onDeselectAll={() => setSelectedMessageIds([])}
+          onRequestDelete={() => setShowConfirmDeleteMultiple(true)}
+          showConfirmDelete={showConfirmDeleteMultiple}
+          setShowConfirmDelete={setShowConfirmDeleteMultiple}
+          onDeleteConfirmed={handleDeleteMultipleMessages}
         />
 
         {/* Indicateur visuel du mode privé SOUS le header, centré */}
         <PrivateModeBanner visible={modePrive} />
-        <RagStatusPopup activated={showRagActivated} deactivated={showRagDeactivated} />
 
-        {/* Boutons de sélection et suppression groupée */}
-        {/* Les boutons de sélection/groupée ne sont visibles que si une conversation est active */}
-        {messages.length > 0 && (
-          <MessageSelectionBar
-            selectMode={selectMode}
-            onToggleSelectMode={handleToggleSelectMode}
-            selectedCount={selectedMessageIds.length}
-            totalCount={messages.filter((m: any) => !m.isRagContext).length}
-            onSelectAll={() => {
-              const allIds = messages.filter((m: any) => !m.isRagContext).map((m: any) => m.id);
-              setSelectedMessageIds(allIds);
-            }}
-            onDeselectAll={() => setSelectedMessageIds([])}
-            onRequestDelete={() => setShowConfirmDeleteMultiple(true)}
-            showConfirmDelete={showConfirmDeleteMultiple}
-            setShowConfirmDelete={setShowConfirmDeleteMultiple}
-            onDeleteConfirmed={handleDeleteMultipleMessages}
-          />
-        )}
 
-        {/* Confirmation globale suppression multiple */}
-        <AlertDialog open={showConfirmDeleteMultiple} onOpenChange={setShowConfirmDeleteMultiple}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Supprimer {selectedMessageIds.length} message{selectedMessageIds.length > 1 ? 's' : ''} ?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Cette action est irréversible. Les messages sélectionnés seront définitivement supprimés de la conversation et de l'historique.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Annuler</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteMultipleMessages}>Supprimer</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
 
         {/* Enhanced Chat Interface */}
         <Card className="flex-1 flex flex-col shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl overflow-hidden ring-1 ring-white/20 dark:ring-slate-700/20 relative">
@@ -855,7 +925,14 @@ function App() {
         deleteSettings={deleteSettings}
       />
 
-      <VocalModeIndicator visible={modeVocalAuto} />
+      <VocalModeIndicator 
+        visible={modeVocalAuto} 
+        listening={listeningAuto}
+        transcript={tempTranscriptAuto}
+        muted={muted}
+        timeoutActive={autoVoiceTimeout !== null}
+        isAISpeaking={isAISpeaking}
+      />
 
       
 
