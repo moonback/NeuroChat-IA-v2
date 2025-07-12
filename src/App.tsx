@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
@@ -344,6 +344,18 @@ function App() {
   }
 
   const handleSendMessage = async (userMessage: string, imageFile?: File) => {
+    // Arrêter immédiatement la reconnaissance vocale pour éviter qu'elle capte le TTS
+    if (modeVocalAuto && listeningAuto) {
+      stopAuto();
+      resetAuto();
+      // Nettoyer le timeout si il existe
+      if (autoVoiceTimeout) {
+        clearTimeout(autoVoiceTimeout);
+        setAutoVoiceTimeout(null);
+      }
+      setTempTranscriptAuto('');
+    }
+    
     // Commande spéciale : ajout manuel à la mémoire via le chat
     const memoryCommand = userMessage.match(/^(enregistre dans la mémoire|ajoute à la mémoire|mémorise) *: *(.+)/i);
     if (memoryCommand) {
@@ -476,11 +488,27 @@ function App() {
       // LOG réponse Gemini
       // console.log('[Réponse Gemini]', response);
       addMessage(response, false);
+      
+      // Indiquer que l'IA commence à parler
+      setIsAISpeaking(true);
+      console.log('[Vocal Mode] IA commence à parler - microphone coupé');
+      
       speak(response, {
         onEnd: () => {
+          // Indiquer que l'IA a fini de parler
+          setIsAISpeaking(false);
+          console.log('[Vocal Mode] IA a fini de parler - préparation redémarrage microphone');
+          
           if (modeVocalAuto && !muted) {
             playBip();
-            startAuto();
+            // Ajouter une pause de sécurité avant de redémarrer l'écoute
+            setTimeout(() => {
+              // Vérifications supplémentaires avant de redémarrer
+              if (modeVocalAuto && !muted && !listeningAuto && !isAISpeaking) {
+                console.log('[Vocal Mode] Redémarrage du microphone après pause de sécurité');
+                startAuto();
+              }
+            }, 2000); // 2 secondes de pause pour être sûr que le TTS s'est arrêté
           }
         }
       });
@@ -573,6 +601,18 @@ function App() {
   // État pour gérer le délai d'attente du mode vocal auto
   const [autoVoiceTimeout, setAutoVoiceTimeout] = useState<NodeJS.Timeout | null>(null);
   const [tempTranscriptAuto, setTempTranscriptAuto] = useState('');
+  const [isAISpeaking, setIsAISpeaking] = useState(false);
+  const isAISpeakingRef = useRef(false);
+  const modeVocalAutoRef = useRef(false);
+  
+  // Mettre à jour les références quand les états changent
+  useEffect(() => {
+    isAISpeakingRef.current = isAISpeaking;
+  }, [isAISpeaking]);
+  
+  useEffect(() => {
+    modeVocalAutoRef.current = modeVocalAuto;
+  }, [modeVocalAuto]);
 
   // Hook reconnaissance vocale (mode vocal auto)
   const {
@@ -587,7 +627,8 @@ function App() {
     lang: 'fr-FR',
     continuous: true, // Mode continu pour ne pas s'arrêter pendant les pauses
     onResult: (finalText) => {
-      if (modeVocalAuto) {
+      // Ne traiter que si le mode vocal auto est actif et l'IA ne parle pas
+      if (modeVocalAutoRef.current && !isAISpeakingRef.current) {
         setTempTranscriptAuto(finalText);
         
         // Annuler le timeout précédent
@@ -597,10 +638,13 @@ function App() {
         
         // Créer un nouveau timeout de 3 secondes
         const timeout = setTimeout(() => {
-          if (finalText && finalText.trim().length > 0) {
+          if (finalText && finalText.trim().length > 0 && !isAISpeakingRef.current && modeVocalAutoRef.current) {
+            console.log('[Vocal Mode] Envoi automatique du message:', finalText.trim());
             handleSendMessage(finalText.trim());
             setTempTranscriptAuto('');
             resetAuto();
+          } else if (isAISpeakingRef.current) {
+            console.log('[Vocal Mode] Message ignoré car IA en train de parler');
           }
         }, 3000); // 3 secondes d'attente après la dernière parole
         
@@ -609,7 +653,7 @@ function App() {
     },
     onEnd: (finalText) => {
       // Ne plus envoyer automatiquement ici - c'est géré par le timeout
-      if (modeVocalAuto && finalText) {
+      if (modeVocalAutoRef.current && finalText && !isAISpeakingRef.current) {
         setTempTranscriptAuto(finalText);
       }
     },
@@ -625,7 +669,7 @@ function App() {
   // Effet : démarrer/arrêter la reco vocale auto selon le mode
   useEffect(() => {
     if (modeVocalAuto) {
-      if (!listeningAuto && isSupportedAuto) {
+      if (!listeningAuto && isSupportedAuto && !isAISpeaking) {
         playBip();
         startAuto();
       }
@@ -640,9 +684,25 @@ function App() {
         setAutoVoiceTimeout(null);
       }
       setTempTranscriptAuto('');
+      setIsAISpeaking(false); // Nettoyer l'état de l'IA qui parle
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modeVocalAuto]);
+  }, [modeVocalAuto, isAISpeaking]);
+
+  // Effet : arrêter immédiatement la reconnaissance vocale quand l'IA commence à parler
+  useEffect(() => {
+    if (isAISpeaking && listeningAuto) {
+      console.log('[Vocal Mode] Arrêt du microphone car IA en train de parler');
+      stopAuto();
+      resetAuto();
+      // Nettoyer le timeout
+      if (autoVoiceTimeout) {
+        clearTimeout(autoVoiceTimeout);
+        setAutoVoiceTimeout(null);
+      }
+      setTempTranscriptAuto('');
+    }
+  }, [isAISpeaking]); // Simplifier les dépendances
 
   // Si l'utilisateur mute ou stop la voix, désactive le mode vocal auto
   useEffect(() => {
@@ -881,6 +941,7 @@ function App() {
         transcript={tempTranscriptAuto}
         muted={muted}
         timeoutActive={autoVoiceTimeout !== null}
+        isAISpeaking={isAISpeaking}
       />
 
       

@@ -7,6 +7,7 @@ interface VocalModeIndicatorProps {
   transcript?: string;
   muted?: boolean;
   timeoutActive?: boolean;
+  isAISpeaking?: boolean;
 }
 
 export const VocalModeIndicator: React.FC<VocalModeIndicatorProps> = ({ 
@@ -14,7 +15,8 @@ export const VocalModeIndicator: React.FC<VocalModeIndicatorProps> = ({
   listening = false, 
   transcript = '', 
   muted = false,
-  timeoutActive = false 
+  timeoutActive = false,
+  isAISpeaking = false 
 }) => {
   if (!visible) return null;
 
@@ -25,14 +27,20 @@ export const VocalModeIndicator: React.FC<VocalModeIndicatorProps> = ({
           {/* Header avec statut */}
           <div className="flex items-center gap-3">
             <div className="relative">
-              {listening ? (
+              {isAISpeaking ? (
+                <MicOff className="w-6 h-6 text-red-300" />
+              ) : listening ? (
                 <Mic className="w-6 h-6 text-white animate-pulse" />
               ) : (
                 <MicOff className="w-6 h-6 text-white/70" />
               )}
               
-              {listening && (
+              {listening && !isAISpeaking && (
                 <div className="absolute -inset-2 bg-white/30 rounded-full animate-ping" />
+              )}
+              
+              {isAISpeaking && (
+                <div className="absolute -inset-2 bg-red-400/30 rounded-full animate-pulse" />
               )}
             </div>
             
@@ -41,7 +49,7 @@ export const VocalModeIndicator: React.FC<VocalModeIndicatorProps> = ({
                 Mode Vocal Automatique
               </span>
               <span className="text-sm text-white/80">
-                {listening ? '🎤 Écoute active' : '⏸️ En pause'}
+                {isAISpeaking ? '🤖 IA en cours de réponse' : listening ? '🎤 Écoute active' : '⏸️ En pause'}
               </span>
             </div>
             
@@ -75,7 +83,9 @@ export const VocalModeIndicator: React.FC<VocalModeIndicatorProps> = ({
           
           {/* Instructions */}
           <div className="text-xs text-white/70 text-center">
-            {listening ? (
+            {isAISpeaking ? (
+              "🤖 L'IA répond... L'écoute reprendra automatiquement après la réponse"
+            ) : listening ? (
               timeoutActive ? (
                 "✨ Analyse dans 3 secondes... Continuez à parler pour prolonger"
               ) : (
