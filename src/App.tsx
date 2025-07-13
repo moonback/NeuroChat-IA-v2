@@ -15,6 +15,7 @@ import { HistoryModal, DiscussionWithCategory } from '@/components/HistoryModal'
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
 import { useMemory } from "@/hooks/useMemory";
 import { MemoryModal } from '@/components/MemoryModal';
+import { EnhancedMemoryModal } from '@/components/EnhancedMemoryModal';
 import { pipeline } from "@xenova/transformers";
 import { GeminiSettingsDrawer } from '@/components/GeminiSettingsDrawer';
 import { getPersonalityById, getDefaultPersonality } from '@/config/personalities';
@@ -24,6 +25,7 @@ import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 
 import { MemoryFeedback } from '@/components/MemoryFeedback';
+import { memoryService } from '@/services/memoryService';
 
 interface Message {
   id: string;
@@ -293,8 +295,43 @@ function App() {
     setMessages(prev => [...prev, ragMsg as any]);
   };
 
-  // Détection automatique d'informations à mémoriser
-  function detectAndMemorize(text: string) {
+  // Détection automatique d'informations à mémoriser (améliorée)
+  async function detectAndMemorize(text: string) {
+    try {
+      // Utiliser le nouveau service pour détecter les informations
+      const result = await memoryService.processText(text, semanticThreshold);
+      
+      // Ajouter les faits détectés automatiquement
+      for (const fact of result.autoDetectedFacts) {
+        addFact(fact.content);
+        console.log(`[Mémoire] Ajout automatique: ${fact.content} (${fact.category}, confiance: ${(fact.confidence * 100).toFixed(1)}%)`);
+      }
+      
+      // Si aucun fait automatique mais analyse sémantique positive
+      if (result.autoDetectedFacts.length === 0 && result.semanticAnalysis.isRelevant) {
+        console.log(`[Mémoire] Information potentiellement pertinente détectée: "${text}" (confiance: ${(result.semanticAnalysis.confidence * 100).toFixed(1)}%, catégorie: ${result.semanticAnalysis.suggestedCategory})`);
+        
+        // Optionnel: ajouter automatiquement si confiance élevée
+        if (result.semanticAnalysis.confidence > 0.85) {
+          addFact(text);
+          console.log(`[Mémoire] Ajout automatique (sémantique): ${text}`);
+        }
+      }
+      
+      // Afficher les recommandations en mode debug
+      if (result.recommendations.length > 0) {
+        console.log(`[Mémoire] Recommandations:`, result.recommendations);
+      }
+      
+    } catch (error) {
+      console.error('Erreur lors de la détection automatique:', error);
+      // Fallback vers l'ancien système en cas d'erreur
+      detectAndMemorizeFallback(text);
+    }
+  }
+
+  // Système de fallback (ancienne méthode simplifiée)
+  function detectAndMemorizeFallback(text: string) {
     // Prénom
     const nameMatch = text.match(/je m'appelle ([\w\- ]+)/i);
     if (nameMatch) {
@@ -315,22 +352,6 @@ function App() {
     if (jobMatch && !/je suis (fatigué|content|heureux|triste|malade|prêt|prête|désolé|désolée|occupé|occupée|disponible|en forme|en retard|à l'heure|là|ici|ok|d'accord|prêt à|prête à)/i.test(text)) {
       addFact(`Le métier de l'utilisateur est ${jobMatch[2]}`);
     }
-    // Date de naissance
-    const birthMatch = text.match(/je suis né(e)? le ([0-9]{1,2} [a-zéû]+ [0-9]{4})/i);
-    if (birthMatch) {
-      addFact(`La date de naissance de l'utilisateur est ${birthMatch[2]}`);
-    }
-    // Animal préféré
-    const animalMatch = text.match(/(mon animal préféré est|j'adore les|je préfère les) ([\w\- ]+)/i);
-    if (animalMatch) {
-      addFact(`L'animal préféré de l'utilisateur est ${animalMatch[2]}`);
-    }
-    // Couleur préférée
-    const colorMatch = text.match(/(ma couleur préférée est|j'aime la couleur|je préfère la couleur) ([\w\- ]+)/i);
-    if (colorMatch) {
-      addFact(`La couleur préférée de l'utilisateur est ${colorMatch[2]}`);
-    }
-    // Autres patterns à enrichir selon besoin
   }
 
   const handleSendMessage = async (userMessage: string, imageFile?: File) => {
@@ -346,77 +367,57 @@ function App() {
       setTempTranscriptAuto('');
     }
     
-    // Commande spéciale : ajout manuel à la mémoire via le chat
+    // Commande spéciale : ajout manuel à la mémoire via le chat (améliorée)
     const memoryCommand = userMessage.match(/^(enregistre dans la mémoire|ajoute à la mémoire|mémorise) *: *(.+)/i);
     if (memoryCommand) {
       const info = memoryCommand[2].trim();
       if (info) {
-        // Patterns intelligents et détection par mots-clés (rapide)
-        const patterns = [
-          // Prénom
-          { regex: /je m'appelle ([\w\- ]+)/i, label: "prénom" },
-          { regex: /mon prénom est ([\w\- ]+)/i, label: "prénom" },
-          { regex: /on m'appelle ([\w\- ]+)/i, label: "prénom" },
-          // Ville
-          { regex: /j'habite (à|au|en|aux)? ?([\w\- ]+)/i, label: "ville" },
-          { regex: /je vis (à|au|en|aux)? ?([\w\- ]+)/i, label: "ville" },
-          { regex: /je suis (à|au|en|aux)? ?([\w\- ]+)/i, label: "ville" },
-          { regex: /ma ville est ([\w\- ]+)/i, label: "ville" },
-          // Préférences générales
-          { regex: /je préfère ([\w\- ]+)/i, label: "préférence" },
-          { regex: /j'adore ([\w\- ]+)/i, label: "préférence" },
-          { regex: /je n'aime pas ([\w\- ]+)/i, label: "préférence négative" },
-          { regex: /mon (plat|animal|sport|film|livre|couleur|hobby|pays) préféré(e)? (est|sont)? ([\w\- ]+)/i, label: "préférence" },
-          { regex: /ma (couleur|passion|activité) préférée (est|sont)? ([\w\- ]+)/i, label: "préférence" },
-          // Métier
-          { regex: /je travaille comme ([\w\- ]+)/i, label: "métier" },
-          { regex: /mon métier est ([\w\- ]+)/i, label: "métier" },
-          { regex: /je suis (un |une |)([\w\- ]+)/i, label: "métier" },
-          // Date de naissance
-          { regex: /je suis né(e)? le ([0-9]{1,2} [a-zéû]+ [0-9]{4})/i, label: "date de naissance" },
-          { regex: /ma date de naissance est le? ([0-9]{1,2} [a-zéû]+ [0-9]{4})/i, label: "date de naissance" },
-          { regex: /je fête mon anniversaire le ([0-9]{1,2} [a-zéû]+ [0-9]{4})/i, label: "date de naissance" },
-          // Autres infos
-          { regex: /mon animal préféré est ([\w\- ]+)/i, label: "animal préféré" },
-          { regex: /ma couleur préférée est ([\w\- ]+)/i, label: "couleur préférée" },
-          { regex: /mon sport favori est ([\w\- ]+)/i, label: "sport favori" },
-          { regex: /ma passion est ([\w\- ]+)/i, label: "passion" },
-        ];
-        let pertinent = false;
-        for (const p of patterns) {
-          if (p.regex.test(info)) {
-            pertinent = true;
-            break;
-          }
-        }
-        // Fallback : détection par mots-clés sémantiques
-        if (!pertinent) {
-          const keywords = [
-            "prénom", "nom", "ville", "habite", "vis", "travaille", "métier", "préféré", "préférée", "préférés", "préférées",
-            "animal", "couleur", "sport", "passion", "date de naissance", "anniversaire", "plat", "hobby", "pays", "activité"
-          ];
-          const lowerInfo = info.toLowerCase();
-          if (keywords.some(kw => lowerInfo.includes(kw))) {
-            pertinent = true;
-          }
-        }
-        // Si toujours pas pertinent, on tente l'analyse sémantique locale
-        if (!pertinent) {
+        try {
           setSemanticLoading(true);
-          addMessage("Analyse sémantique en cours...", false);
-          pertinent = await isPersonalInfoSemantic(info);
+          addMessage("Analyse de l'information en cours...", false);
+          
+          // Utiliser le nouveau service pour valider l'information
+          const validation = await memoryService.validateManualInformation(info, semanticThreshold);
+          
           setSemanticLoading(false);
-        }
-        if (pertinent) {
+          
+          if (validation.isValid && validation.suggestedFact) {
+            addFact(validation.suggestedFact.content);
+            
+            const confidenceText = `(${(validation.analysis.confidence * 100).toFixed(1)}% de confiance)`;
+            const categoryText = validation.suggestedFact.category !== 'autre' 
+              ? ` - Catégorie: ${validation.suggestedFact.category}`
+              : '';
+            
+            addMessage(`Information pertinente ajoutée à la mémoire ! ${confidenceText}${categoryText}`, false);
+            toast.success("Information pertinente ajoutée à la mémoire !");
+            
+            // Afficher les matches les plus proches en console pour debug
+            if (validation.analysis.topMatches.length > 0) {
+              console.log(`[Mémoire] Matches les plus proches:`, validation.analysis.topMatches.slice(0, 3));
+            }
+          } else {
+            const confidenceText = `(${(validation.analysis.confidence * 100).toFixed(1)}% de confiance)`;
+            addMessage(`Information non pertinente, non ajoutée à la mémoire. ${confidenceText}`, false);
+            toast.info("Information non pertinente, non ajoutée à la mémoire.");
+            
+            // Suggérer des améliorations
+            if (validation.analysis.topMatches.length > 0) {
+              const topMatch = validation.analysis.topMatches[0];
+              console.log(`[Mémoire] Suggestion: essayez quelque chose comme "${topMatch.example}"`);
+            }
+          }
+          
+          setSemanticScore(null);
+          return; // On n'envoie pas à l'IA, c'est une commande locale
+        } catch (error) {
+          setSemanticLoading(false);
+          console.error('Erreur lors de la validation manuelle:', error);
+          addMessage("Erreur lors de l'analyse. Information ajoutée par défaut.", false);
           addFact(info);
-          addMessage(`Information pertinente ajoutée à la mémoire !${semanticScore !== null ? ` (score : ${(semanticScore * 100).toFixed(1)}%)` : ''}`, false);
-          toast.success("Information pertinente ajoutée à la mémoire !");
-        } else {
-          addMessage(`Information non pertinente, non ajoutée à la mémoire.${semanticScore !== null ? ` (score : ${(semanticScore * 100).toFixed(1)}%)` : ''}`, false);
-          toast.info("Information non pertinente, non ajoutée à la mémoire.");
+          toast.warning("Erreur d'analyse - Information ajoutée par défaut");
+          return;
         }
-        setSemanticScore(null);
-        return; // On n'envoie pas à l'IA, c'est une commande locale
       }
     }
     detectAndMemorize(userMessage);
@@ -953,7 +954,7 @@ function App() {
         DEFAULTS={DEFAULTS}
       />
 
-      <MemoryModal
+      <EnhancedMemoryModal
         open={showMemoryModal}
         onClose={() => setShowMemoryModal(false)}
         examples={examples}
