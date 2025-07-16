@@ -6,7 +6,7 @@ import { Tooltip as ReactTooltip } from 'react-tooltip';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import {
-  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, Trash2, Menu, X
+  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, Trash2, Menu, X, Calendar
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
@@ -27,6 +27,7 @@ interface HeaderProps {
   onOpenHistory: () => void;
   onOpenTTSSettings: () => void;
   onOpenRagDocs: () => void;
+  onOpenICalViewer: () => void;
   selectedPersonality: string;
   onChangePersonality: (value: string) => void;
   onOpenPersonalitySelector: () => void;
@@ -65,6 +66,7 @@ export function Header({
   onOpenHistory,
   onOpenTTSSettings,
   onOpenRagDocs,
+  onOpenICalViewer,
   selectedPersonality,
   onOpenPersonalitySelector,
   modeVocalAuto,
@@ -300,6 +302,17 @@ export function Header({
               <Brain className="w-4 h-4" />
             </Button>
 
+            {/* Visualiseur iCal */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onOpenICalViewer}
+              className="h-9 w-9 p-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title="Visualiser agenda iCal"
+            >
+              <Calendar className="w-4 h-4" />
+            </Button>
+
             {/* Bouton Menu pour autres options */}
             <Button
               variant="ghost"
@@ -373,6 +386,11 @@ export function Header({
                 <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { setRagEnabled(!ragEnabled); setShowMobileMenu(false); }}>
                   <Brain className="w-4 h-4 mr-3" />
                   {ragEnabled ? 'Désactiver RAG' : 'Activer RAG'}
+                </Button>
+                
+                <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onOpenICalViewer(); setShowMobileMenu(false); }}>
+                  <Calendar className="w-4 h-4 mr-3" />
+                  Visualiser agenda iCal
                 </Button>
                 
                 <div className="border-t border-slate-200 dark:border-slate-800 my-3" />

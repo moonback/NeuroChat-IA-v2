@@ -24,6 +24,9 @@ import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 
 import { MemoryFeedback } from '@/components/MemoryFeedback';
+import { useProactiveSuggestions } from "./hooks/useProactiveSuggestions";
+import { ICalViewerModal } from '@/components/ICalViewerModal';
+import { AgendaProvider, useAgenda } from './hooks/AgendaContext';
 
 interface Message {
   id: string;
@@ -66,7 +69,7 @@ function cosineSimilarity(a: number[], b: number[]) {
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-function App() {
+function AppContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -105,6 +108,8 @@ function App() {
   const [showRagDocs, setShowRagDocs] = useState(false);
   // Ajout du state pour activer/désactiver le RAG
   const [ragEnabled, setRagEnabled] = useState(false);
+  // Ajout du state pour la modale de visualisation iCal
+  const [showICalViewer, setShowICalViewer] = useState(false);
   // --- Sélection multiple de messages pour suppression groupée ---
   const [selectMode, setSelectMode] = useState(false);
   const [selectedMessageIds, setSelectedMessageIds] = useState<string[]>([]);
@@ -466,7 +471,16 @@ function App() {
         : "";
       // LOG mémoire injectée
       // console.log('[Mémoire utilisateur injectée]', memorySummary);
-      const prompt = `${getSystemPrompt(selectedPersonality)}\n${dateTimeInfo}${memorySummary}${ragEnabled ? ragContext : ""}Question utilisateur : ${userMessage}`;
+        const { events: agendaEvents } = useAgenda();
+  let agendaContext = '';
+  if (agendaEvents && agendaEvents.length > 0) {
+    agendaContext = 'AGENDA UTILISATEUR :\n';
+    agendaEvents.slice(0, 10).forEach(ev => {
+      agendaContext += `- ${ev.summary} le ${ev.start.toLocaleDateString('fr-FR')} à ${ev.location || 'lieu inconnu'}\n`;
+    });
+    agendaContext += '\n';
+  }
+      const prompt = `${getSystemPrompt(selectedPersonality)}\n${dateTimeInfo}${memorySummary}${agendaContext}${ragEnabled ? ragContext : ""}Question utilisateur : ${userMessage}`;
       // LOG prompt final
       // console.log('[Prompt envoyé à Gemini]', prompt);
       const response = await sendMessageToGemini(
@@ -830,6 +844,8 @@ function App() {
     };
   }, [autoVoiceTimeout]);
 
+  const suggestions = useProactiveSuggestions(messages);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Menu historique des discussions */}
@@ -853,6 +869,7 @@ function App() {
           onOpenHistory={handleOpenHistory}
           onOpenTTSSettings={() => setShowTTSSettings(true)}
           onOpenRagDocs={() => setShowRagDocs(true)}
+          onOpenICalViewer={() => setShowICalViewer(true)}
           selectedPersonality={selectedPersonality}
           onChangePersonality={setSelectedPersonality}
           onOpenPersonalitySelector={() => setShowPersonalitySelector(true)}
@@ -885,7 +902,63 @@ function App() {
         {/* Indicateur visuel du mode privé SOUS le header, centré */}
         <PrivateModeBanner visible={modePrive} />
 
-
+        {/* Affichage des suggestions proactives */}
+        {suggestions.length > 0 && (
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            padding: '1rem',
+            borderRadius: '1rem',
+            margin: '1rem auto',
+            maxWidth: 800,
+            display: 'flex',
+            gap: '0.75rem',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+            border: '1px solid rgba(255,255,255,0.2)',
+          }}>
+            <div style={{
+              width: '100%',
+              textAlign: 'center',
+              color: 'white',
+              fontSize: '0.9rem',
+              marginBottom: '0.5rem',
+              fontWeight: 500,
+            }}>
+              💡 Suggestions pour toi
+            </div>
+            {suggestions.map((s, i) => (
+              <button
+                key={i}
+                style={{
+                  background: 'rgba(255,255,255,0.9)',
+                  border: 'none',
+                  borderRadius: '0.75rem',
+                  padding: '0.6rem 1.2rem',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  transition: 'all 0.2s',
+                  color: '#4a5568',
+                  fontSize: '0.9rem',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                }}
+                onClick={() => handleSendMessage(s)}
+                onMouseOver={e => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,1)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.9)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                }}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Enhanced Chat Interface */}
         <Card className="flex-1 flex flex-col shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl overflow-hidden ring-1 ring-white/20 dark:ring-slate-700/20 relative">
@@ -970,8 +1043,20 @@ function App() {
         selectedPersonality={selectedPersonality}
         onPersonalityChange={setSelectedPersonality}
       />
+
+      {/* Modal de visualisation iCal */}
+      <ICalViewerModal
+        open={showICalViewer}
+        onClose={() => setShowICalViewer(false)}
+      />
     </div>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <AgendaProvider>
+      <AppContent />
+    </AgendaProvider>
+  );
+}
