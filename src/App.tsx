@@ -275,7 +275,7 @@ function AppContent() {
   };
 
   const { memory, addFact } = useMemory();
-  const { events: agendaEvents } = useAgenda();
+  const { events: agendaEvents, addEvent, updateEvent, deleteEvent, getEventById } = useAgenda();
 
   // Log pour vérifier le chargement de l'agenda
   useEffect(() => {
@@ -285,6 +285,96 @@ function AppContent() {
       console.log('[App] Aucun événement d\'agenda trouvé');
     }
   }, [agendaEvents]);
+
+  // Fonction pour traiter les commandes d'agenda dans la réponse du chatbot
+  const processAgendaCommands = async (response: string): Promise<string> => {
+    let processedResponse = response;
+    
+    // Traiter les commandes d'ajout d'événement
+    const addEventMatches = response.match(/\[AJOUTER_EVENT\](\{[^}]+\})/g);
+    if (addEventMatches) {
+      for (const match of addEventMatches) {
+        try {
+          const jsonStr = match.replace('[AJOUTER_EVENT]', '');
+          const eventData = JSON.parse(jsonStr);
+          
+          // Convertir les dates string en Date
+          const newEvent = {
+            ...eventData,
+            start: new Date(eventData.start),
+            end: new Date(eventData.end),
+            isAllDay: eventData.isAllDay || false,
+          };
+          
+          const eventId = addEvent(newEvent);
+          console.log('[Agenda] Événement ajouté:', eventId, newEvent.summary);
+          
+          // Remplacer la commande par une confirmation
+          processedResponse = processedResponse.replace(match, `✅ Événement "${newEvent.summary}" ajouté à l'agenda`);
+        } catch (error) {
+          console.error('[Agenda] Erreur lors de l\'ajout d\'événement:', error);
+          processedResponse = processedResponse.replace(match, '❌ Erreur lors de l\'ajout de l\'événement');
+        }
+      }
+    }
+    
+    // Traiter les commandes de modification d'événement
+    const updateEventMatches = response.match(/\[MODIFIER_EVENT\](\{[^}]+\})/g);
+    if (updateEventMatches) {
+      for (const match of updateEventMatches) {
+        try {
+          const jsonStr = match.replace('[MODIFIER_EVENT]', '');
+          const updateData = JSON.parse(jsonStr);
+          
+          const updates: any = {};
+          if (updateData.summary) updates.summary = updateData.summary;
+          if (updateData.start) updates.start = new Date(updateData.start);
+          if (updateData.end) updates.end = new Date(updateData.end);
+          if (updateData.location) updates.location = updateData.location;
+          if (updateData.description) updates.description = updateData.description;
+          if (updateData.isAllDay !== undefined) updates.isAllDay = updateData.isAllDay;
+          
+          const success = updateEvent(updateData.id, updates);
+          if (success) {
+            const event = getEventById(updateData.id);
+            console.log('[Agenda] Événement modifié:', updateData.id, event?.summary);
+            processedResponse = processedResponse.replace(match, `✅ Événement "${event?.summary}" modifié`);
+          } else {
+            processedResponse = processedResponse.replace(match, '❌ Événement non trouvé');
+          }
+        } catch (error) {
+          console.error('[Agenda] Erreur lors de la modification d\'événement:', error);
+          processedResponse = processedResponse.replace(match, '❌ Erreur lors de la modification de l\'événement');
+        }
+      }
+    }
+    
+    // Traiter les commandes de suppression d'événement
+    const deleteEventMatches = response.match(/\[SUPPRIMER_EVENT\](\{[^}]+\})/g);
+    if (deleteEventMatches) {
+      for (const match of deleteEventMatches) {
+        try {
+          const jsonStr = match.replace('[SUPPRIMER_EVENT]', '');
+          const deleteData = JSON.parse(jsonStr);
+          
+          const event = getEventById(deleteData.id);
+          const success = deleteEvent(deleteData.id);
+          
+          if (success && event) {
+            console.log('[Agenda] Événement supprimé:', deleteData.id, event.summary);
+            processedResponse = processedResponse.replace(match, `✅ Événement "${event.summary}" supprimé de l'agenda`);
+          } else {
+            processedResponse = processedResponse.replace(match, '❌ Événement non trouvé');
+          }
+        } catch (error) {
+          console.error('[Agenda] Erreur lors de la suppression d\'événement:', error);
+          processedResponse = processedResponse.replace(match, '❌ Erreur lors de la suppression de l\'événement');
+        }
+      }
+    }
+    
+    return processedResponse;
+  };
 
  
 
@@ -501,9 +591,14 @@ function AppContent() {
             : ev.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
           const locationStr = ev.location ? ` à ${ev.location}` : '';
           const descriptionStr = ev.description ? ` - ${ev.description}` : '';
-          agendaContext += `- ${ev.summary} le ${dateStr} à ${timeStr}${locationStr}${descriptionStr}\n`;
+          agendaContext += `- [ID:${ev.id}] ${ev.summary} le ${dateStr} à ${timeStr}${locationStr}${descriptionStr}\n`;
         });
         agendaContext += `\nTotal : ${sortedEvents.length} événement(s) dans l'agenda.\n\n`;
+        agendaContext += 'INSTRUCTIONS POUR LA GESTION DE L\'AGENDA :\n';
+        agendaContext += '- Pour ajouter un événement, utilise : [AJOUTER_EVENT]{"summary":"Titre","start":"2024-01-15T14:00:00","end":"2024-01-15T15:00:00","location":"Lieu","description":"Description"}\n';
+        agendaContext += '- Pour modifier un événement, utilise : [MODIFIER_EVENT]{"id":"event_id","summary":"Nouveau titre"}\n';
+        agendaContext += '- Pour supprimer un événement, utilise : [SUPPRIMER_EVENT]{"id":"event_id"}\n';
+        agendaContext += '- Les IDs des événements sont affichés entre crochets [ID:xxx]\n\n';
       }
       const prompt = `${getSystemPrompt(selectedPersonality)}\n${dateTimeInfo}${memorySummary}${agendaContext}${ragEnabled ? ragContext : ""}Question utilisateur : ${userMessage}`;
       // LOG prompt final
@@ -523,7 +618,11 @@ function AppContent() {
       );
       // LOG réponse Gemini
       // console.log('[Réponse Gemini]', response);
-      addMessage(response, false);
+      
+      // Traiter les commandes d'agenda dans la réponse
+      const processedResponse = await processAgendaCommands(response);
+      
+      addMessage(processedResponse, false);
       
       // Indiquer que l'IA commence à parler
       setIsAISpeaking(true);
