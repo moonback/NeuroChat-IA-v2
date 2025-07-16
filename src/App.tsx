@@ -275,6 +275,16 @@ function AppContent() {
   };
 
   const { memory, addFact } = useMemory();
+  const { events: agendaEvents } = useAgenda();
+
+  // Log pour vérifier le chargement de l'agenda
+  useEffect(() => {
+    if (agendaEvents && agendaEvents.length > 0) {
+      console.log('[App] Agenda chargé avec', agendaEvents.length, 'événements');
+    } else {
+      console.log('[App] Aucun événement d\'agenda trouvé');
+    }
+  }, [agendaEvents]);
 
  
 
@@ -471,18 +481,40 @@ function AppContent() {
         : "";
       // LOG mémoire injectée
       // console.log('[Mémoire utilisateur injectée]', memorySummary);
-        const { events: agendaEvents } = useAgenda();
-  let agendaContext = '';
-  if (agendaEvents && agendaEvents.length > 0) {
-    agendaContext = 'AGENDA UTILISATEUR :\n';
-    agendaEvents.slice(0, 10).forEach(ev => {
-      agendaContext += `- ${ev.summary} le ${ev.start.toLocaleDateString('fr-FR')} à ${ev.location || 'lieu inconnu'}\n`;
-    });
-    agendaContext += '\n';
-  }
+      
+      // Injection de l'agenda dans le prompt système
+      let agendaContext = '';
+      if (agendaEvents && agendaEvents.length > 0) {
+        agendaContext = 'AGENDA UTILISATEUR (TOUS LES ÉVÉNEMENTS) :\n';
+        // Trier les événements par date (du plus proche au plus lointain)
+        const sortedEvents = [...agendaEvents].sort((a, b) => a.start.getTime() - b.start.getTime());
+        // Inclure TOUS les événements, pas seulement 10
+        sortedEvents.forEach(ev => {
+          const dateStr = ev.start.toLocaleDateString('fr-FR', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          });
+          const timeStr = ev.isAllDay 
+            ? 'Toute la journée' 
+            : ev.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+          const locationStr = ev.location ? ` à ${ev.location}` : '';
+          const descriptionStr = ev.description ? ` - ${ev.description}` : '';
+          agendaContext += `- ${ev.summary} le ${dateStr} à ${timeStr}${locationStr}${descriptionStr}\n`;
+        });
+        agendaContext += `\nTotal : ${sortedEvents.length} événement(s) dans l'agenda.\n\n`;
+      }
       const prompt = `${getSystemPrompt(selectedPersonality)}\n${dateTimeInfo}${memorySummary}${agendaContext}${ragEnabled ? ragContext : ""}Question utilisateur : ${userMessage}`;
       // LOG prompt final
       // console.log('[Prompt envoyé à Gemini]', prompt);
+      // LOG agenda injecté
+      if (agendaEvents && agendaEvents.length > 0) {
+        console.log('[Agenda injecté dans le prompt]', agendaEvents.length, 'événements');
+        console.log('[Détail agenda]', agendaContext);
+      } else {
+        console.log('[Agenda] Aucun événement trouvé');
+      }
       const response = await sendMessageToGemini(
         filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
         imageFile ? [imageFile] : undefined,
