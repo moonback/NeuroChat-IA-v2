@@ -99,7 +99,7 @@ export function useWebXR(options: UseWebXROptions = {}) {
   }, []);
 
   // Fonction de rendu pour chaque frame
-  const onFrame = useCallback((time: number, frame: any) => {
+  const onFrame = useCallback((_time: number, frame: any) => {
     frameRef.current = frame;
     
     if (frame) {
