@@ -53,9 +53,9 @@ export function useWebXR(options: UseWebXROptions = {}) {
     }
 
     try {
-      const session = await navigator.xr.requestSession('immersive-vr', {
-        optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking', 'layers'],
-        requiredFeatures: ['local']
+      const session = await navigator.xr!.requestSession('immersive-vr', {
+        optionalFeatures: ['local-floor', 'bounded-floor'],
+        requiredFeatures: []
       });
 
       sessionRef.current = session;

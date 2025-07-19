@@ -237,7 +237,13 @@ export const VRScene: React.FC<VRSceneProps> = ({
       const success = await startSession();
       if (!success) {
         console.error('Impossible de démarrer la session VR');
+        // Fallback : mode VR simulé pour les tests
+        setIsVRMode(true);
       }
+    } else {
+      // Mode VR simulé si WebXR n'est pas supporté
+      console.log('WebXR non supporté, activation du mode VR simulé');
+      setIsVRMode(true);
     }
   };
 
@@ -256,10 +262,9 @@ export const VRScene: React.FC<VRSceneProps> = ({
         <div className="absolute top-4 right-4 z-10">
           <button
             onClick={handleStartVR}
-            disabled={!isSupported}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            {isSupported ? 'Démarrer VR' : 'VR non supporté'}
+            {isSupported ? 'Démarrer VR' : 'Mode VR Simulé'}
           </button>
         </div>
       )}
@@ -278,7 +283,28 @@ export const VRScene: React.FC<VRSceneProps> = ({
       {/* Indicateur de statut VR */}
       {isVRMode && (
         <div className="absolute top-4 left-4 z-10 bg-black bg-opacity-50 text-white px-3 py-1 rounded">
-          Mode VR actif
+          {isSessionActive ? 'Mode VR actif' : 'Mode VR simulé'}
+        </div>
+      )}
+
+      {/* Contrôles de test pour le mode VR simulé */}
+      {isVRMode && !isSessionActive && (
+        <div className="absolute bottom-4 left-4 z-10">
+          <div className="bg-black bg-opacity-50 text-white p-3 rounded">
+            <div className="text-sm mb-2">Contrôles de test :</div>
+            <button
+              onClick={() => onSendMessage('Test message VR')}
+              className="px-3 py-1 bg-blue-600 text-white rounded text-xs mr-2"
+            >
+              Envoyer test
+            </button>
+            <button
+              onClick={() => onSendMessage('Bonjour en VR')}
+              className="px-3 py-1 bg-green-600 text-white rounded text-xs"
+            >
+              Salutation
+            </button>
+          </div>
         </div>
       )}
     </div>
