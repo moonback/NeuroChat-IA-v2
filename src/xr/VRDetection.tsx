@@ -6,7 +6,6 @@ interface VRDetectionProps {
 
 export const VRDetection: React.FC<VRDetectionProps> = ({ onVRSupported }) => {
   const [isChecking, setIsChecking] = useState(true);
-  const [isSupported, setIsSupported] = useState(false);
 
   useEffect(() => {
     const checkVRSupport = async () => {
@@ -14,15 +13,12 @@ export const VRDetection: React.FC<VRDetectionProps> = ({ onVRSupported }) => {
         // Vérifier si WebXR est disponible
         if ('xr' in navigator && navigator.xr) {
           const supported = await navigator.xr.isSessionSupported('immersive-vr');
-          setIsSupported(supported);
           onVRSupported(supported);
         } else {
-          setIsSupported(false);
           onVRSupported(false);
         }
       } catch (error) {
         console.log('WebXR non supporté:', error);
-        setIsSupported(false);
         onVRSupported(false);
       } finally {
         setIsChecking(false);
