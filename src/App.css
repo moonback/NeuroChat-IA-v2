@@ -30,3 +30,397 @@
   0%, 50% { opacity: 1; }
   51%, 100% { opacity: 0; }
 }
+
+/* Styles VR */
+.vr-scene-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  background: #000;
+}
+
+.vr-mode {
+  overflow: hidden;
+  cursor: none;
+}
+
+.vr-mode * {
+  cursor: none !important;
+}
+
+/* Styles pour les éléments VR */
+.vr-avatar {
+  transition: all 0.3s ease;
+}
+
+.vr-avatar:hover {
+  transform: scale(1.1);
+}
+
+.vr-controller {
+  transition: all 0.2s ease;
+}
+
+.vr-controller:hover {
+  transform: scale(1.05);
+}
+
+.chat-interface {
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+}
+
+.input-interface {
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.gesture-button {
+  transition: all 0.2s ease;
+  border-radius: 5px;
+}
+
+.gesture-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+.vr-hand {
+  transition: all 0.3s ease;
+}
+
+.vr-hand:hover {
+  transform: scale(1.1);
+}
+
+/* Animations VR */
+@keyframes vrPulse {
+  0% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0.5; transform: scale(1); }
+}
+
+.vr-pulse {
+  animation: vrPulse 2s infinite;
+}
+
+/* Styles pour les messages VR */
+.vr-message {
+  border-radius: 8px;
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+.vr-message:hover {
+  transform: scale(1.02);
+}
+
+/* Curseur VR personnalisé */
+.vr-cursor {
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.8) 0%, rgba(59, 130, 246, 0.4) 50%, transparent 100%);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 10000;
+  transition: all 0.1s ease;
+}
+
+/* Styles pour les contrôleurs VR */
+.vr-controller-left {
+  background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+}
+
+.vr-controller-right {
+  background: linear-gradient(45deg, #10b981, #059669);
+}
+
+/* Effet de particules VR */
+.vr-particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #3b82f6;
+  border-radius: 50%;
+  animation: vrFloat 3s infinite linear;
+}
+
+@keyframes vrFloat {
+  0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+}
+
+/* Styles pour l'avatar VR */
+.avatar-glow {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+  animation: avatarGlow 2s infinite alternate;
+}
+
+@keyframes avatarGlow {
+  0% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); }
+  100% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); }
+}
+
+/* Styles pour les gestes VR */
+.gesture-indicator {
+  background: rgba(59, 130, 246, 0.2);
+  border: 2px solid rgba(59, 130, 246, 0.5);
+  border-radius: 50%;
+  animation: gesturePulse 1s infinite;
+}
+
+@keyframes gesturePulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Styles pour le mode VR immersif */
+.vr-immersive {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+  z-index: 9998;
+}
+
+/* Styles pour les boutons VR */
+.vr-button {
+  background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  padding: 12px 24px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.vr-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+}
+
+.vr-button:active {
+  transform: scale(0.95);
+}
+
+/* Styles pour les interfaces VR */
+.vr-interface {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+/* Styles pour les messages VR */
+.vr-message-user {
+  background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+  color: white;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 8px 0;
+  max-width: 80%;
+  word-wrap: break-word;
+}
+
+.vr-message-ai {
+  background: linear-gradient(45deg, #10b981, #059669);
+  color: white;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 8px 0;
+  max-width: 80%;
+  word-wrap: break-word;
+}
+
+/* Styles pour les indicateurs VR */
+.vr-status-indicator {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 12px;
+  color: white;
+  font-size: 14px;
+  z-index: 10001;
+}
+
+.vr-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+  animation: statusPulse 2s infinite;
+}
+
+@keyframes statusPulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+/* Styles pour les contrôleurs de mouvement */
+.movement-controls {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 10001;
+}
+
+.movement-button {
+  width: 50px;
+  height: 50px;
+  background: rgba(59, 130, 246, 0.8);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.movement-button:hover {
+  background: rgba(59, 130, 246, 1);
+  transform: scale(1.1);
+}
+
+.movement-button:active {
+  transform: scale(0.9);
+}
+
+/* Styles pour les instructions VR */
+.vr-instructions {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 24px;
+  color: white;
+  text-align: center;
+  z-index: 10002;
+  max-width: 400px;
+}
+
+.vr-instructions h3 {
+  margin-bottom: 16px;
+  color: #3b82f6;
+}
+
+.vr-instructions ul {
+  text-align: left;
+  margin: 16px 0;
+}
+
+.vr-instructions li {
+  margin: 8px 0;
+  padding-left: 16px;
+}
+
+/* Styles pour les effets visuels VR */
+.vr-lens-flare {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 9997;
+}
+
+/* Styles pour les transitions VR */
+.vr-transition {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.vr-fade-in {
+  animation: vrFadeIn 0.5s ease-out;
+}
+
+@keyframes vrFadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.vr-fade-out {
+  animation: vrFadeOut 0.5s ease-in;
+}
+
+@keyframes vrFadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.9); }
+}
+
+/* Styles pour les notifications VR */
+.vr-notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 12px 20px;
+  color: white;
+  font-size: 14px;
+  z-index: 10003;
+  animation: vrSlideDown 0.3s ease-out;
+}
+
+@keyframes vrSlideDown {
+  from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+/* Styles pour les indicateurs de performance VR */
+.vr-performance {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: white;
+  font-size: 12px;
+  z-index: 10001;
+}
+
+.vr-performance-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.vr-performance-good {
+  background: #10b981;
+}
+
+.vr-performance-warning {
+  background: #f59e0b;
+}
+
+.vr-performance-poor {
+  background: #ef4444;
+}
