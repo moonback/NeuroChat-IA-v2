@@ -1,6 +1,5 @@
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Wifi, Mic, Volume2, Eye, Hand } from 'lucide-react';
+import { Hand } from 'lucide-react';
 
 interface VRStatusIndicatorProps {
   isVRMode: boolean;
