@@ -24,7 +24,7 @@ import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 
 import { MemoryFeedback } from '@/components/MemoryFeedback';
-import { VRDemoScene } from '@/components/VRDemoScene';
+import { VRChatScene } from '@/components/VRChatScene';
 import { useVRMode } from '@/hooks/useVRMode';
 
 interface Message {
@@ -844,7 +844,7 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Mode VR */}
       {isVRMode ? (
-        <VRDemoScene
+        <VRChatScene
           messages={messages}
           onSendMessage={handleSendMessage}
           isLoading={isLoading}

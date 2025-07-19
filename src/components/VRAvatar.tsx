@@ -20,7 +20,7 @@ export const VRAvatar: React.FC<VRAvatarProps> = ({
 }) => {
   const avatarRef = useRef<any>(null);
   const [] = useState('neutral');
-  const [] = useState(false);
+  const [, setIsHovered] = useState(false);
 
   // Expressions selon la personnalité
   const getAvatarStyle = () => {
@@ -110,6 +110,15 @@ export const VRAvatar: React.FC<VRAvatarProps> = ({
       animation={expressionAnimation}
       click={onAvatarClick}
       class="vr-avatar"
+      mouseenter={() => setIsHovered(true)}
+      mouseleave={() => setIsHovered(false)}
+      animation__hover={{
+        property: 'scale',
+        from: scale,
+        to: `${parseFloat(scale.split(' ')[0]) * 1.1} ${parseFloat(scale.split(' ')[1]) * 1.1} ${parseFloat(scale.split(' ')[2]) * 1.1}`,
+        startEvents: 'mouseenter',
+        pauseEvents: 'mouseleave'
+      }}
     >
       {/* Effet de particules quand l'IA parle */}
       {getParticleEffect()}

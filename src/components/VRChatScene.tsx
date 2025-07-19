@@ -4,9 +4,18 @@ import { VRAvatar } from './VRAvatar';
 import { VRGestureIndicator } from './VRGestureIndicator';
 import { VRControllerGestures } from './VRControllerGestures';
 import { VRHands } from './VRHands';
+import { VRInstructions } from './VRInstructions';
+import { VRStatusIndicator } from './VRStatusIndicator';
 import { useVRGestures } from '@/hooks/useVRGestures';
 import 'aframe';
 import 'aframe-extras';
+
+// Déclaration globale pour A-Frame
+declare global {
+  interface Window {
+    AFRAME: any;
+  }
+}
 
 interface Message {
   id: string;
@@ -35,6 +44,7 @@ export const VRChatScene: React.FC<VRChatSceneProps> = ({
 }) => {
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(true);
   const sceneRef = useRef<any>(null);
   
   // Hook pour les gestes VR
@@ -42,8 +52,26 @@ export const VRChatScene: React.FC<VRChatSceneProps> = ({
 
   useEffect(() => {
     // Initialiser A-Frame si nécessaire
-    if (typeof window !== 'undefined' && !(window as any).AFRAME) {
-      console.log('A-Frame non détecté, chargement...');
+    if (typeof window !== 'undefined') {
+      if (!window.AFRAME) {
+        console.log('A-Frame non détecté, chargement...');
+        // Attendre que A-Frame soit chargé
+        const checkAFrame = () => {
+          if (window.AFRAME) {
+            console.log('A-Frame chargé avec succès');
+            // Initialiser les composants VR
+            if (window.AFRAME.registerComponent) {
+              // Enregistrer des composants personnalisés si nécessaire
+              console.log('Composants A-Frame disponibles');
+            }
+          } else {
+            setTimeout(checkAFrame, 100);
+          }
+        };
+        checkAFrame();
+      } else {
+        console.log('A-Frame déjà chargé');
+      }
     }
   }, []);
 
@@ -100,23 +128,39 @@ export const VRChatScene: React.FC<VRChatSceneProps> = ({
 
   return (
     <div className="vr-scene-container">
+      {/* Instructions VR */}
+      <VRInstructions
+        visible={showInstructions}
+        onClose={() => setShowInstructions(false)}
+      />
+
+      {/* Indicateur de statut VR */}
+      <VRStatusIndicator
+        isVRMode={true}
+        isAISpeaking={isAISpeaking}
+        isLoading={isLoading}
+        gestureState={gestureState}
+      />
+      
       <Scene
         ref={sceneRef}
         embedded
         vr-mode-ui="enabled: true"
-        renderer="antialias: true; colorManagement: true"
+        renderer="antialias: true; colorManagement: true; highRefreshRate: true"
         background="color: #1a1a1a"
         environment="preset: forest; groundTexture: none; groundColor: #2a2a2a; skyType: atmosphere; skyColor: #1a1a1a"
         fog="type: exponential; color: #1a1a1a; density: 0.01"
+        inspector="url: https://cdn.jsdelivr.net/gh/aframevr/aframe-inspector@master/dist/aframe-inspector.min.js"
       >
         {/* Caméra VR */}
         <Entity
           id="camera"
           position="0 1.6 0"
           camera
-          look-controls
-          wasd-controls
-          cursor="rayOrigin: mouse"
+          look-controls="reverseMouseDrag: false; mouseSensitivity: 0.5"
+          wasd-controls="enabled: true; fly: false"
+          cursor="rayOrigin: mouse; fuse: false"
+          vr-controls="hand: left"
         >
           {/* Curseur pour interagir */}
           <Entity
@@ -127,6 +171,43 @@ export const VRChatScene: React.FC<VRChatSceneProps> = ({
             animation__click="property: scale; startEvents: click; easing: easeInCubic; dur: 150; from: 0.1 0.1 0.1; to: 1 1 1"
             animation__fusing="property: scale; startEvents: fusing; easing: easeInCubic; dur: 1500; from: 1 1 1; to: 0.1 0.1 0.1"
             animation__mouseleave="property: scale; startEvents: mouseleave; easing: easeInCubic; dur: 500; to: 1 1 1"
+          />
+        </Entity>
+
+        {/* Contrôleurs VR */}
+        <Entity
+          id="leftController"
+          position="-0.3 1.4 -0.5"
+          geometry="primitive: box; width: 0.05; height: 0.2; depth: 0.05"
+          material="color: #3b82f6; transparent: true; opacity: 0.8"
+          vr-controls="hand: left"
+          class="vr-controller"
+        >
+          {/* Bouton de déclenchement */}
+          <Entity
+            position="0 0.1 0.03"
+            geometry="primitive: sphere; radius: 0.01"
+            material="color: #ef4444"
+            class="trigger-button"
+            click={() => handleGestureAction('point')}
+          />
+        </Entity>
+
+        <Entity
+          id="rightController"
+          position="0.3 1.4 -0.5"
+          geometry="primitive: box; width: 0.05; height: 0.2; depth: 0.05"
+          material="color: #10b981; transparent: true; opacity: 0.8"
+          vr-controls="hand: right"
+          class="vr-controller"
+        >
+          {/* Bouton de déclenchement */}
+          <Entity
+            position="0 0.1 0.03"
+            geometry="primitive: sphere; radius: 0.01"
+            material="color: #ef4444"
+            class="trigger-button"
+            click={() => handleGestureAction('grab')}
           />
         </Entity>
 
@@ -309,6 +390,28 @@ export const VRChatScene: React.FC<VRChatSceneProps> = ({
           }}
           class="exit-button"
           click={onExitVR}
+          animation__hover={{
+            property: 'scale',
+            from: '1 1 1',
+            to: '1.2 1.2 1.2',
+            startEvents: 'mouseenter',
+            pauseEvents: 'mouseleave'
+          }}
+        />
+
+        {/* Bouton d'aide VR */}
+        <Entity
+          position="-1.5 1.5 -1"
+          geometry="primitive: plane; width: 0.3; height: 0.3"
+          material="color: #3b82f6; transparent: true"
+          text={{
+            value: '?',
+            color: 'white',
+            width: 0.2,
+            align: 'center'
+          }}
+          class="help-button"
+          click={() => setShowInstructions(true)}
           animation__hover={{
             property: 'scale',
             from: '1 1 1',

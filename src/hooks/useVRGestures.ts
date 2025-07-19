@@ -54,6 +54,8 @@ export const useVRGestures = (): UseVRGesturesReturn => {
     const handleControllerEvent = (event: any) => {
       const { type } = event;
       
+      console.log('Événement contrôleur VR:', type);
+      
       switch (type) {
         case 'triggerdown':
           onGestureDetected('isPointing');
@@ -77,6 +79,32 @@ export const useVRGestures = (): UseVRGesturesReturn => {
       }
     };
 
+    // Gestionnaire pour les événements de clavier (simulation)
+    const handleKeyPress = (event: KeyboardEvent) => {
+      console.log('Touche pressée:', event.key);
+      
+      switch (event.key.toLowerCase()) {
+        case '1':
+          onGestureDetected('isPointing');
+          break;
+        case '2':
+          onGestureDetected('isGrabbing');
+          break;
+        case '3':
+          onGestureDetected('isThumbsUp');
+          break;
+        case '4':
+          onGestureDetected('isThumbsDown');
+          break;
+        case '5':
+          onGestureDetected('isWaving');
+          break;
+        case '6':
+          onGestureDetected('isClapping');
+          break;
+      }
+    };
+
     // Ajouter les écouteurs d'événements
     const controllers = detectControllers();
     controllers.forEach(controller => {
@@ -88,6 +116,9 @@ export const useVRGestures = (): UseVRGesturesReturn => {
       controller.addEventListener('abuttondown', handleControllerEvent);
       controller.addEventListener('bbuttondown', handleControllerEvent);
     });
+
+    // Ajouter l'écouteur de clavier pour la simulation
+    document.addEventListener('keydown', handleKeyPress);
 
     // Gestionnaire pour les gestes de main (WebXR Hand Tracking)
     const handleHandGesture = (event: any) => {
@@ -148,6 +179,7 @@ export const useVRGestures = (): UseVRGesturesReturn => {
       
       document.removeEventListener('hand-gesture', handleHandGesture);
       document.removeEventListener('head-movement', handleHeadMovement);
+      document.removeEventListener('keydown', handleKeyPress);
     };
   }, [onGestureDetected]);
 
