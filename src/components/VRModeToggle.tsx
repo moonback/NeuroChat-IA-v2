@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { VRScene } from './VRScene';
 import { VRAnimations } from './VRAnimations';
 import { 
   Monitor, 
-  MonitorOff, 
-  MessageCircle, 
-  Settings, 
   Info,
   Headphones,
   Mic,
