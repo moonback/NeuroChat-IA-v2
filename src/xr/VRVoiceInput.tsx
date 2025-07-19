@@ -108,16 +108,16 @@ export const VRVoiceInput: React.FC<VRVoiceInputProps> = ({
           ref={voicePanelRef}
           className="absolute bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-auto"
         >
-          <div className="bg-black bg-opacity-80 text-white p-4 rounded-lg backdrop-blur-sm">
-            <div className="flex items-center space-x-4">
+          <div className="bg-black bg-opacity-80 text-white p-6 rounded-2xl backdrop-blur-xl border border-white/20 shadow-2xl">
+            <div className="flex items-center space-x-6">
               {/* Bouton microphone */}
               <button
                 onClick={isListening ? handleStopVoice : handleStartVoice}
                 disabled={isLoading || !speechSupported}
-                className={`p-3 rounded-full transition-all duration-200 ${
+                className={`p-4 rounded-full transition-all duration-300 shadow-lg ${
                   isListening
-                    ? 'bg-red-500 hover:bg-red-600 animate-pulse'
-                    : 'bg-blue-500 hover:bg-blue-600'
+                    ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 animate-pulse'
+                    : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
                 } ${isLoading || !speechSupported ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <svg
@@ -146,20 +146,20 @@ export const VRVoiceInput: React.FC<VRVoiceInputProps> = ({
 
               {/* Indicateur de statut */}
               <div className="flex-1">
-                <div className="text-sm font-medium">
-                  {isListening ? 'Écoute en cours...' : 'Appuyez pour parler'}
+                <div className="text-lg font-semibold mb-2">
+                  {isListening ? '🎤 Écoute en cours...' : '🎙️ Appuyez pour parler'}
                 </div>
                 {transcript && (
-                  <div className="text-xs text-gray-300 mt-1 max-w-xs truncate">
-                    {transcript}
+                  <div className="text-sm text-gray-300 mt-2 max-w-xs bg-white/10 p-2 rounded-lg">
+                    💬 {transcript}
                   </div>
                 )}
               </div>
 
               {/* Indicateur de compatibilité */}
               {!speechSupported && (
-                <div className="text-xs text-red-400">
-                  Reconnaissance vocale non supportée
+                <div className="text-sm text-red-400 bg-red-500/20 p-2 rounded-lg">
+                  ⚠️ Reconnaissance vocale non supportée
                 </div>
               )}
             </div>
@@ -170,10 +170,10 @@ export const VRVoiceInput: React.FC<VRVoiceInputProps> = ({
       {/* Indicateur de chargement */}
       {isLoading && (
         <div className="absolute top-8 left-1/2 transform -translate-x-1/2">
-          <div className="bg-black bg-opacity-80 text-white px-4 py-2 rounded-lg">
-            <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              <span className="text-sm">IA en train de réfléchir...</span>
+          <div className="bg-black bg-opacity-80 text-white px-6 py-3 rounded-xl backdrop-blur-sm border border-white/20 shadow-lg">
+            <div className="flex items-center space-x-3">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              <span className="text-sm font-medium">🤖 IA en train de réfléchir...</span>
             </div>
           </div>
         </div>

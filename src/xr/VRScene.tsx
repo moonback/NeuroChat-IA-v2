@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { VRMessage, VRSceneConfig, VRUISettings } from './types';
 import { useWebXR } from './useWebXR';
@@ -66,6 +66,9 @@ export const VRScene: React.FC<VRSceneProps> = ({
     scene.background = new THREE.Color(config.backgroundColor);
     sceneRef.current = scene;
 
+    // Ajouter un effet de brouillard pour la profondeur
+    scene.fog = new THREE.Fog(config.backgroundColor, 5, 50);
+
     // Créer la caméra
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 1.6, 0); // Hauteur moyenne des yeux
@@ -100,14 +103,15 @@ export const VRScene: React.FC<VRSceneProps> = ({
     directionalLight.castShadow = true;
     scene.add(directionalLight);
 
-    // Créer l'avatar IA (sphère pulsante)
+    // Créer l'avatar IA (sphère pulsante avec effet holographique)
     const avatarGeometry = new THREE.SphereGeometry(0.3, 32, 32);
     const avatarMaterial = new THREE.MeshPhongMaterial({
       color: isLoading ? '#ff6b6b' : '#4ecdc4',
       transparent: true,
-      opacity: 0.8,
+      opacity: 0.9,
       emissive: isLoading ? '#ff6b6b' : '#4ecdc4',
-      emissiveIntensity: 0.2
+      emissiveIntensity: 0.3,
+      shininess: 100
     });
     const avatar = new THREE.Mesh(avatarGeometry, avatarMaterial);
     avatar.position.set(0, 1.6, -uiSettings.avatarScale);
@@ -115,6 +119,49 @@ export const VRScene: React.FC<VRSceneProps> = ({
     avatar.receiveShadow = true;
     avatarMeshRef.current = avatar;
     scene.add(avatar);
+
+    // Ajouter un anneau holographique autour de l'avatar
+    const ringGeometry = new THREE.RingGeometry(0.4, 0.5, 32);
+    const ringMaterial = new THREE.MeshBasicMaterial({
+      color: isLoading ? '#ff6b6b' : '#4ecdc4',
+      transparent: true,
+      opacity: 0.4,
+      side: THREE.DoubleSide
+    });
+    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+    ring.position.set(0, 1.6, -uiSettings.avatarScale);
+    ring.rotation.x = Math.PI / 2;
+    scene.add(ring);
+
+    // Ajouter des particules flottantes autour de l'avatar
+    const particleCount = 50;
+    const particles = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+
+    for (let i = 0; i < particleCount; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 4;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 4;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 4;
+
+      colors[i * 3] = isLoading ? 1 : 0.3;
+      colors[i * 3 + 1] = isLoading ? 0.4 : 0.8;
+      colors[i * 3 + 2] = isLoading ? 0.4 : 0.8;
+    }
+
+    particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    particles.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const particleMaterial = new THREE.PointsMaterial({
+      size: 0.05,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.6
+    });
+
+    const particleSystem = new THREE.Points(particles, particleMaterial);
+    particleSystem.position.set(0, 1.6, -uiSettings.avatarScale);
+    scene.add(particleSystem);
 
     // Animation de pulsation pour l'avatar
     const animateAvatar = () => {
@@ -129,17 +176,28 @@ export const VRScene: React.FC<VRSceneProps> = ({
       }
     };
 
-    // Créer le panneau de saisie
-    const panelGeometry = new THREE.PlaneGeometry(2, 1);
+    // Créer le panneau de saisie avec effet holographique
+    const panelGeometry = new THREE.PlaneGeometry(2.5, 1.2);
     const panelMaterial = new THREE.MeshBasicMaterial({
       color: '#ffffff',
       transparent: true,
-      opacity: 0.1
+      opacity: 0.15
     });
     const inputPanel = new THREE.Mesh(panelGeometry, panelMaterial);
     inputPanel.position.set(0, 0.5, uiSettings.panelDistance);
     inputPanelRef.current = inputPanel;
     scene.add(inputPanel);
+
+    // Ajouter une bordure holographique au panneau
+    const borderGeometry = new THREE.EdgesGeometry(panelGeometry);
+    const borderMaterial = new THREE.LineBasicMaterial({
+      color: '#4ecdc4',
+      transparent: true,
+      opacity: 0.6
+    });
+    const border = new THREE.LineSegments(borderGeometry, borderMaterial);
+    border.position.set(0, 0.5, uiSettings.panelDistance);
+    scene.add(border);
 
     // Fonction de rendu
     const animate = () => {
@@ -182,23 +240,40 @@ export const VRScene: React.FC<VRSceneProps> = ({
 
     // Créer les nouveaux messages
     messages.filter(msg => msg.text && msg.text.trim()).forEach((message, index) => {
-      // Créer un canvas pour le texte
+      // Créer un canvas pour le texte avec design moderne
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d')!;
-      canvas.width = 512;
-      canvas.height = 128;
+      canvas.width = 1024;
+      canvas.height = 256;
       
-      // Configurer le contexte
-      context.fillStyle = message.isUser ? '#4ecdc4' : '#ff6b6b';
+      // Créer un dégradé de fond
+      const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+      if (message.isUser) {
+        gradient.addColorStop(0, '#4ecdc4');
+        gradient.addColorStop(1, '#44a08d');
+      } else {
+        gradient.addColorStop(0, '#ff6b6b');
+        gradient.addColorStop(1, '#ee5a52');
+      }
+      context.fillStyle = gradient;
       context.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Ajouter le texte
+      // Ajouter un effet de bordure
+      context.strokeStyle = message.isUser ? '#ffffff' : '#ffffff';
+      context.lineWidth = 4;
+      context.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+      
+      // Ajouter le texte avec ombre
+      context.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      context.shadowBlur = 4;
+      context.shadowOffsetX = 2;
+      context.shadowOffsetY = 2;
       context.fillStyle = '#ffffff';
-      context.font = '24px Arial';
+      context.font = 'bold 32px Arial';
       context.textAlign = 'center';
       context.textBaseline = 'middle';
       
-      // Wrapper le texte
+      // Wrapper le texte avec meilleure gestion
       const words = message.text.split(' ');
       const lines: string[] = [];
       let currentLine = '';
@@ -206,7 +281,7 @@ export const VRScene: React.FC<VRSceneProps> = ({
       words.forEach(word => {
         const testLine = currentLine + word + ' ';
         const metrics = context.measureText(testLine);
-        if (metrics.width > canvas.width - 40) {
+        if (metrics.width > canvas.width - 80) {
           lines.push(currentLine);
           currentLine = word + ' ';
         } else {
@@ -215,37 +290,48 @@ export const VRScene: React.FC<VRSceneProps> = ({
       });
       lines.push(currentLine);
       
-      // Dessiner le texte
+      // Dessiner le texte avec espacement amélioré
       lines.forEach((line, lineIndex) => {
-        context.fillText(line.trim(), canvas.width / 2, (canvas.height / 2) + (lineIndex - lines.length / 2) * 30);
+        context.fillText(line.trim(), canvas.width / 2, (canvas.height / 2) + (lineIndex - lines.length / 2) * 40);
       });
+      
+      // Ajouter un indicateur de type de message
+      const indicator = message.isUser ? '👤' : '🤖';
+      context.font = '24px Arial';
+      context.fillText(indicator, 50, 50);
       
       // Créer la texture
       const texture = new THREE.CanvasTexture(canvas);
       texture.needsUpdate = true;
       
-      // Créer la géométrie et le matériau
-      const messageGeometry = new THREE.PlaneGeometry(2, 0.5);
+      // Créer la géométrie et le matériau avec effet holographique
+      const messageGeometry = new THREE.PlaneGeometry(3, 0.8);
       const messageMaterial = new THREE.MeshBasicMaterial({
         map: texture,
         transparent: true,
-        opacity: 0.9,
+        opacity: 0.95,
         side: THREE.DoubleSide
       });
       
       const messageMesh = new THREE.Mesh(messageGeometry, messageMaterial);
       
-      // Positionner les messages en cercle autour de l'utilisateur
+      // Positionner les messages en cercle avec effet de profondeur
       const angle = (index / messages.length) * Math.PI * 2;
-      const radius = uiSettings.messageDistance;
+      const radius = uiSettings.messageDistance + (index * 0.2); // Espacement progressif
+      const height = 1.6 + Math.sin(angle * 2) * 0.3; // Variation de hauteur
       messageMesh.position.set(
         Math.cos(angle) * radius,
-        1.6,
+        height,
         Math.sin(angle) * radius
       );
       
-      // Orienter vers l'utilisateur
+      // Orienter vers l'utilisateur avec légère inclinaison
       messageMesh.lookAt(cameraRef.current!.position);
+      messageMesh.rotateY(Math.sin(angle) * 0.1);
+      
+      // Ajouter une animation de flottement
+      const time = Date.now() * 0.001;
+      messageMesh.position.y += Math.sin(time + index) * 0.05;
       
       sceneRef.current!.add(messageMesh);
       messageMeshesRef.current.push(messageMesh);
@@ -308,9 +394,9 @@ export const VRScene: React.FC<VRSceneProps> = ({
         <div className="absolute top-4 right-4 z-10">
           <button
             onClick={handleStartVR}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-xl hover:from-purple-600 hover:to-blue-700 transition-all duration-300 shadow-lg font-medium"
           >
-            {isSupported ? 'Démarrer VR' : 'Mode VR Simulé'}
+            {isSupported ? '🥽 Démarrer VR' : '🎮 Mode VR Simulé'}
           </button>
         </div>
       )}
@@ -319,39 +405,47 @@ export const VRScene: React.FC<VRSceneProps> = ({
         <div className="absolute top-4 right-4 z-10">
           <button
             onClick={handleExitVR}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-lg font-medium"
           >
-            Quitter VR
+            ❌ Quitter VR
           </button>
         </div>
       )}
       
       {/* Indicateur de statut VR */}
       {isVRMode && (
-        <div className="absolute top-4 left-4 z-10 bg-black bg-opacity-50 text-white px-3 py-1 rounded">
-          {isSessionActive ? 'Mode VR actif' : 'Mode VR simulé'}
+        <div className="absolute top-4 left-4 z-10 bg-black bg-opacity-70 text-white px-4 py-2 rounded-xl backdrop-blur-sm border border-white/20">
+          <div className="flex items-center gap-2">
+            <div className={`w-3 h-3 rounded-full ${isSessionActive ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`}></div>
+            <span className="font-medium">
+              {isSessionActive ? '🥽 Mode VR Actif' : '🎮 Mode VR Simulé'}
+            </span>
+          </div>
         </div>
       )}
 
       {/* Contrôles de test pour le mode VR simulé */}
       {isVRMode && !isSessionActive && (
         <div className="absolute bottom-4 left-4 z-10">
-          <div className="bg-black bg-opacity-50 text-white p-3 rounded">
-            <div className="text-sm mb-2">Contrôles de test :</div>
-            <button
-              onClick={() => onSendMessage('Test message VR')}
-              className="px-3 py-1 bg-blue-600 text-white rounded text-xs mr-2"
-            >
-              Envoyer test
-            </button>
-            <button
-              onClick={() => onSendMessage('Bonjour en VR')}
-              className="px-3 py-1 bg-green-600 text-white rounded text-xs"
-            >
-              Salutation
-            </button>
-            <div className="text-xs mt-2 text-gray-300">
-              Messages affichés : {messages.filter(m => m.text && m.text.trim()).length}
+          <div className="bg-black bg-opacity-70 text-white p-4 rounded-xl backdrop-blur-sm border border-white/20">
+            <div className="text-sm mb-3 font-semibold">🎮 Contrôles VR :</div>
+            <div className="flex gap-2 mb-3">
+              <button
+                onClick={() => onSendMessage('Test message VR')}
+                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg"
+              >
+                🚀 Envoyer test
+              </button>
+              <button
+                onClick={() => onSendMessage('Bonjour en VR')}
+                className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg text-sm hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg"
+              >
+                👋 Salutation
+              </button>
+            </div>
+            <div className="flex items-center justify-between text-xs text-gray-300">
+              <span>📊 Messages : {messages.filter(m => m.text && m.text.trim()).length}</span>
+              <span>🎯 Mode : Simulé</span>
             </div>
           </div>
         </div>

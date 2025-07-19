@@ -122,15 +122,15 @@ function App() {
   const [showVRSettings, setShowVRSettings] = useState(false);
   const [isVRSupported, setIsVRSupported] = useState(false);
   const [vrSceneConfig, setVrSceneConfig] = useState<VRSceneConfig>({
-    backgroundColor: '#000011',
-    ambientLight: { intensity: 0.3, color: '#ffffff' },
-    directionalLight: { intensity: 0.8, color: '#ffffff', position: { x: 0, y: 10, z: 5 } }
+    backgroundColor: '#0a0a1a',
+    ambientLight: { intensity: 0.4, color: '#4ecdc4' },
+    directionalLight: { intensity: 1.2, color: '#ffffff', position: { x: 0, y: 15, z: 8 } }
   });
   const [vrUISettings, setVrUISettings] = useState<VRUISettings>({
-    messageDistance: 3,
-    messageScale: 1,
-    avatarScale: 1.5,
-    panelDistance: 2,
+    messageDistance: 4,
+    messageScale: 1.2,
+    avatarScale: 2,
+    panelDistance: 3,
     controllerSensitivity: 1
   });
   const [vrAudioConfig, setVrAudioConfig] = useState<VRAudioConfig>({
