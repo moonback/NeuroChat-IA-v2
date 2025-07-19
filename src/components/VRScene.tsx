@@ -64,16 +64,34 @@ export function VRScene({
   useEffect(() => {
     // Vérifier le support VR
     const checkVRSupport = async () => {
-      if ('xr' in navigator && navigator.xr) {
-        try {
-          const supported = await navigator.xr.isSessionSupported('immersive-vr');
-          setIsVRSupported(supported);
-        } catch (error) {
-          console.warn('Erreur lors de la vérification du support VR:', error);
-          setIsVRSupported(false);
+      try {
+        if ('xr' in navigator && navigator.xr) {
+          // Vérifier le support VR immersif
+          try {
+            const immersiveSupported = await navigator.xr.isSessionSupported('immersive-vr');
+            setIsVRSupported(immersiveSupported);
+            console.log('Support VR immersif:', immersiveSupported);
+          } catch (error) {
+            console.warn('Erreur lors de la vérification du support VR immersif:', error);
+            
+            // Vérifier le support inline comme fallback
+            try {
+              const inlineSupported = await navigator.xr.isSessionSupported('inline');
+              setIsVRSupported(inlineSupported);
+              console.log('Support VR inline:', inlineSupported);
+            } catch (inlineError) {
+              console.warn('Erreur lors de la vérification du support VR inline:', inlineError);
+              setIsVRSupported(false);
+            }
+          }
+        } else {
+          // Fallback pour les navigateurs sans support WebXR
+          console.log('WebXR non disponible, utilisation du mode simulé');
+          setIsVRSupported(true);
         }
-      } else {
-        // Fallback pour les navigateurs sans support WebXR
+      } catch (error) {
+        console.warn('Erreur générale lors de la vérification VR:', error);
+        // En cas d'erreur, permettre le mode simulé
         setIsVRSupported(true);
       }
     };
@@ -147,19 +165,47 @@ export function VRScene({
     try {
       const scene = sceneRef.current;
       
-      // Méthode 1: Utiliser l'API WebXR directement
+      // Méthode 1: Utiliser l'API WebXR directement (avec gestion d'erreur améliorée)
       if ('xr' in navigator && navigator.xr) {
-        const isSupported = await navigator.xr.isSessionSupported('immersive-vr');
-        if (isSupported) {
-          try {
-            const session = await navigator.xr.requestSession('immersive-vr', {
-              optionalFeatures: ['local-floor', 'bounded-floor']
-            });
-            console.log('Session VR créée via WebXR');
-            return;
-          } catch (sessionError) {
-            console.warn('Erreur lors de la création de session VR:', sessionError);
+        try {
+          const isSupported = await navigator.xr.isSessionSupported('immersive-vr');
+          if (isSupported) {
+            try {
+              // Essayer d'abord avec les fonctionnalités optionnelles
+              const session = await navigator.xr.requestSession('immersive-vr', {
+                optionalFeatures: ['local-floor', 'bounded-floor']
+              });
+              console.log('Session VR créée via WebXR avec fonctionnalités avancées');
+              
+              session.addEventListener('end', () => {
+                console.log('Session VR terminée');
+                setIsVRActive(false);
+              });
+              
+              return;
+            } catch (advancedSessionError) {
+              console.warn('Session avancée non supportée, essai session basique:', advancedSessionError);
+              
+              // Essayer avec une session basique
+              try {
+                const basicSession = await navigator.xr.requestSession('immersive-vr');
+                console.log('Session VR créée via WebXR (basique)');
+                
+                basicSession.addEventListener('end', () => {
+                  console.log('Session VR terminée');
+                  setIsVRActive(false);
+                });
+                
+                return;
+              } catch (basicSessionError) {
+                console.warn('Session VR basique non supportée:', basicSessionError);
+              }
+            }
+          } else {
+            console.log('VR non supporté par ce dispositif');
           }
+        } catch (xrError) {
+          console.warn('Erreur lors de la vérification WebXR:', xrError);
         }
       }
       
@@ -174,8 +220,20 @@ export function VRScene({
         }
       }
       
-      // Méthode 3: Simuler le mode VR (fallback)
-      console.log('Utilisation du mode VR simulé');
+      // Méthode 3: Utiliser le mode VR simulé d'A-Frame
+      try {
+        if (scene && (scene as any).renderer) {
+          // Forcer le mode VR simulé
+          console.log('Activation du mode VR simulé');
+          setIsVRActive(true);
+          return;
+        }
+      } catch (simulationError) {
+        console.warn('Erreur lors de la simulation VR:', simulationError);
+      }
+      
+      // Méthode 4: Fallback final - mode VR simulé
+      console.log('Utilisation du mode VR simulé (fallback)');
       setIsVRActive(true);
       
     } catch (error) {
@@ -208,10 +266,9 @@ export function VRScene({
         <a-scene
           vr-mode-ui="enabled: true"
           embedded
-          arjs="sourceType: webcam; debugUIEnabled: false;"
-          renderer="logarithmicDepthBuffer: true;"
-          antialias="true"
+          renderer="antialias: true; logarithmicDepthBuffer: true;"
           color="0.1 0.1 0.1"
+          raycaster="objects: [data-raycastable]"
         >
           {/* Environnement */}
           <a-assets>
@@ -408,6 +465,7 @@ export function VRScene({
               radius="0.1"
               height="0.1"
               color={isListening ? "#EF4444" : "#6B7280"}
+              data-raycastable
               class="clickable"
               onClick={handleMicToggle}
             ></a-cylinder>
@@ -425,6 +483,7 @@ export function VRScene({
               radius="0.1"
               height="0.1"
               color={isMuted ? "#EF4444" : "#6B7280"}
+              data-raycastable
               class="clickable"
               onClick={onToggleMute}
             ></a-cylinder>
@@ -442,6 +501,7 @@ export function VRScene({
               radius="0.1"
               height="0.1"
               color="#EF4444"
+              data-raycastable
               class="clickable"
               onClick={onExitVR}
             ></a-cylinder>
