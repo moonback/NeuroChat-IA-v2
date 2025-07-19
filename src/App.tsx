@@ -22,8 +22,9 @@ import { PersonalitySelector } from '@/components/PersonalitySelector';
 
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
-
 import { MemoryFeedback } from '@/components/MemoryFeedback';
+import { VRScene } from '@/components/VRScene';
+import { VRModeToggle } from '@/components/VRModeToggle';
 
 interface Message {
   id: string;
@@ -129,6 +130,9 @@ function App() {
       // toast.warning('Mode privé activé : les messages ne seront pas sauvegardés et seront effacés à la fermeture.');
     }
   }, [modePrive]);
+
+  // --- Mode VR ---
+  const [isVRMode, setIsVRMode] = useState(false);
 
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
@@ -787,6 +791,10 @@ function App() {
     setGeminiConfig(cfg => ({ ...cfg, [key]: value }));
   };
 
+  const handleToggleVRMode = () => {
+    setIsVRMode(!isVRMode);
+  };
+
   const [showMemoryModal, setShowMemoryModal] = useState(false);
   // Exemples d'informations personnelles pertinentes (état modifiable)
   const [examples, setExamples] = useState<string[]>([
@@ -829,6 +837,18 @@ function App() {
       }
     };
   }, [autoVoiceTimeout]);
+
+  // Si en mode VR, afficher la scène VR
+  if (isVRMode) {
+    return (
+      <VRScene
+        messages={messages}
+        onSendMessage={handleSendMessage}
+        isLoading={isLoading}
+        selectedPersonality={selectedPersonality}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
@@ -880,6 +900,8 @@ function App() {
           showConfirmDelete={showConfirmDeleteMultiple}
           setShowConfirmDelete={setShowConfirmDeleteMultiple}
           onDeleteConfirmed={handleDeleteMultipleMessages}
+          isVRMode={isVRMode}
+          onToggleVRMode={handleToggleVRMode}
         />
 
         {/* Indicateur visuel du mode privé SOUS le header, centré */}

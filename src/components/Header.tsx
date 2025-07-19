@@ -6,7 +6,7 @@ import { Tooltip as ReactTooltip } from 'react-tooltip';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import {
-  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, Trash2, Menu, X
+  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, Trash2, Menu, X, Headset
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
@@ -52,6 +52,9 @@ interface HeaderProps {
   showConfirmDelete: boolean;
   setShowConfirmDelete: (open: boolean) => void;
   onDeleteConfirmed: () => void;
+  // Props pour le mode VR
+  isVRMode?: boolean;
+  onToggleVRMode?: () => void;
 }
 
 // =====================
@@ -86,6 +89,8 @@ export function Header({
   showConfirmDelete,
   setShowConfirmDelete,
   onDeleteConfirmed,
+  isVRMode = false,
+  onToggleVRMode,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
@@ -299,6 +304,19 @@ export function Header({
             >
               <Brain className="w-4 h-4" />
             </Button>
+
+            {/* Mode VR */}
+            {onToggleVRMode && (
+              <Button
+                variant={isVRMode ? "default" : "ghost"}
+                size="sm"
+                onClick={onToggleVRMode}
+                className="h-9 w-9 p-0 transition-colors"
+                title="Mode VR"
+              >
+                <Headset className="w-4 h-4" />
+              </Button>
+            )}
 
             {/* Bouton Menu pour autres options */}
             <Button
