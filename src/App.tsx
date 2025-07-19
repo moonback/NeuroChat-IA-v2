@@ -22,8 +22,10 @@ import { PersonalitySelector } from '@/components/PersonalitySelector';
 
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
+import { VRModeToggle } from '@/components/VRModeToggle';
 
 import { MemoryFeedback } from '@/components/MemoryFeedback';
+import './components/VRStyles.css';
 
 interface Message {
   id: string;
@@ -937,7 +939,32 @@ function App() {
         isAISpeaking={isAISpeaking}
       />
 
-      
+      {/* Mode VR */}
+      <VRModeToggle
+        messages={messages}
+        onSendMessage={handleSendMessage}
+        isLoading={isLoading}
+        isListening={listeningAuto}
+        onStartListening={() => {
+          if (modeVocalAuto) {
+            startAuto();
+          }
+        }}
+        onStopListening={() => {
+          if (modeVocalAuto) {
+            stopAuto();
+          }
+        }}
+        isMuted={muted}
+        onToggleMute={() => {
+          if (muted) {
+            unmute();
+          } else {
+            mute();
+          }
+        }}
+        isSpeaking={isAISpeaking}
+      />
 
       {/* Modale de gestion des documents RAG */}
       <RagDocsModal open={showRagDocs} onClose={() => setShowRagDocs(false)} />
