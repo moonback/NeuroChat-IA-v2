@@ -24,7 +24,6 @@ import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 import { MemoryFeedback } from '@/components/MemoryFeedback';
 import { VRScene } from '@/components/VRScene';
-import { VRModeToggle } from '@/components/VRModeToggle';
 
 interface Message {
   id: string;

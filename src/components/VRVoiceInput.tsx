@@ -3,14 +3,12 @@ import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 
 interface VRVoiceInputProps {
   onSendMessage: (message: string) => void;
-  isListening: boolean;
   onStartListening: () => void;
   onStopListening: () => void;
 }
 
 export const VRVoiceInput: React.FC<VRVoiceInputProps> = ({
   onSendMessage,
-  isListening,
   onStartListening,
   onStopListening
 }) => {
@@ -19,7 +17,6 @@ export const VRVoiceInput: React.FC<VRVoiceInputProps> = ({
 
   const {
     listening: speechListening,
-    transcript: speechTranscript,
     start,
     stop,
     reset
