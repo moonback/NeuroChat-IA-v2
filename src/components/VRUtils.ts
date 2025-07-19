@@ -194,7 +194,7 @@ export class VRPerformanceOptimizer {
   /**
    * Ajuste la qualité graphique selon les performances
    */
-  adjustQuality(renderer: THREE.WebGLRenderer, scene: THREE.Scene): void {
+  adjustQuality(renderer: THREE.WebGLRenderer): void {
     const fps = this.getCurrentFPS();
     
     if (fps < 30) {
