@@ -24,6 +24,10 @@ import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 
 import { MemoryFeedback } from '@/components/MemoryFeedback';
+import { VRChatScene } from '@/components/VRChatScene';
+import { VRDemoScene } from '@/components/VRDemoScene';
+import { VRModeToggle } from '@/components/VRModeToggle';
+import { useVRMode } from '@/hooks/useVRMode';
 
 interface Message {
   id: string;
@@ -129,6 +133,15 @@ function App() {
       // toast.warning('Mode privé activé : les messages ne seront pas sauvegardés et seront effacés à la fermeture.');
     }
   }, [modePrive]);
+
+  // --- Mode VR ---
+  const {
+    isVRMode,
+    isVRSupported,
+    enterVR,
+    exitVR,
+    toggleVR
+  } = useVRMode();
 
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
@@ -832,18 +845,29 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
-      {/* Menu historique des discussions */}
-      <HistoryModal
-        open={showHistory}
-        onClose={handleCloseHistory}
-        history={historyList}
-        onLoad={handleLoadDiscussion}
-        onDelete={handleDeleteDiscussion}
-        onRename={handleRenameDiscussion}
-        onDeleteMultiple={handleDeleteMultipleDiscussions}
-      />
+      {/* Mode VR */}
+      {isVRMode ? (
+        <VRDemoScene
+          messages={messages}
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+          selectedPersonality={selectedPersonality}
+          onExitVR={exitVR}
+        />
+      ) : (
+        <>
+          {/* Menu historique des discussions */}
+          <HistoryModal
+            open={showHistory}
+            onClose={handleCloseHistory}
+            history={historyList}
+            onLoad={handleLoadDiscussion}
+            onDelete={handleDeleteDiscussion}
+            onRename={handleRenameDiscussion}
+            onDeleteMultiple={handleDeleteMultipleDiscussions}
+          />
 
-      <div className="w-full max-w-12xl h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] flex flex-col relative z-10">
+          <div className="w-full max-w-12xl h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] flex flex-col relative z-10">
         {/* Header compact performant */}
         <Header
           muted={muted}
@@ -880,6 +904,9 @@ function App() {
           showConfirmDelete={showConfirmDeleteMultiple}
           setShowConfirmDelete={setShowConfirmDeleteMultiple}
           onDeleteConfirmed={handleDeleteMultipleMessages}
+          isVRMode={isVRMode}
+          onToggleVR={toggleVR}
+          isVRSupported={isVRSupported}
         />
 
         {/* Indicateur visuel du mode privé SOUS le header, centré */}
@@ -903,73 +930,73 @@ function App() {
         </Card>
       </div>
 
-      {/* Zone de saisie fixée en bas de l'écran */}
-      <div className="fixed bottom-0 left-0 w-full z-50 bg-white/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-700 px-2 pt-2 pb-2 backdrop-blur-xl">
-        <VoiceInput onSendMessage={handleSendMessage} isLoading={isLoading} />
-        <MemoryFeedback loading={semanticLoading} score={semanticScore} />
-      </div>
+          {/* Zone de saisie fixée en bas de l'écran */}
+          <div className="fixed bottom-0 left-0 w-full z-50 bg-white/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-700 px-2 pt-2 pb-2 backdrop-blur-xl">
+            <VoiceInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+            <MemoryFeedback loading={semanticLoading} score={semanticScore} />
+          </div>
 
-      <TTSSettingsModal
-        open={showTTSSettings}
-        onClose={() => setShowTTSSettings(false)}
-        rate={rate}
-        setRate={setRate}
-        pitch={pitch}
-        setPitch={setPitch}
-        volume={volume}
-        setVolume={setVolume}
-        voiceURI={voiceURI}
-        setVoiceURI={setVoiceURI}
-        availableVoices={availableVoices}
-        testVoice={testVoice}
-        resetSettings={handleResetSettings}
-        exportSettings={exportSettings}
-        importSettings={importSettings}
-        deleteSettings={deleteSettings}
-      />
+          <TTSSettingsModal
+            open={showTTSSettings}
+            onClose={() => setShowTTSSettings(false)}
+            rate={rate}
+            setRate={setRate}
+            pitch={pitch}
+            setPitch={setPitch}
+            volume={volume}
+            setVolume={setVolume}
+            voiceURI={voiceURI}
+            setVoiceURI={setVoiceURI}
+            availableVoices={availableVoices}
+            testVoice={testVoice}
+            resetSettings={handleResetSettings}
+            exportSettings={exportSettings}
+            importSettings={importSettings}
+            deleteSettings={deleteSettings}
+          />
 
-      <VocalModeIndicator 
-        visible={modeVocalAuto} 
-        listening={listeningAuto}
-        transcript={tempTranscriptAuto}
-        muted={muted}
-        timeoutActive={autoVoiceTimeout !== null}
-        isAISpeaking={isAISpeaking}
-      />
+          <VocalModeIndicator 
+            visible={modeVocalAuto} 
+            listening={listeningAuto}
+            transcript={tempTranscriptAuto}
+            muted={muted}
+            timeoutActive={autoVoiceTimeout !== null}
+            isAISpeaking={isAISpeaking}
+          />
 
-      
+          {/* Modale de gestion des documents RAG */}
+          <RagDocsModal open={showRagDocs} onClose={() => setShowRagDocs(false)} />
 
-      {/* Modale de gestion des documents RAG */}
-      <RagDocsModal open={showRagDocs} onClose={() => setShowRagDocs(false)} />
+          {/* Modale latérale compacte pour les réglages Gemini */}
+          <GeminiSettingsDrawer
+            open={showGeminiSettings}
+            onOpenChange={setShowGeminiSettings}
+            geminiConfig={geminiConfig}
+            onConfigChange={handleGeminiConfigChange}
+            onReset={() => setGeminiConfig(DEFAULTS)}
+            onClose={() => setShowGeminiSettings(false)}
+            DEFAULTS={DEFAULTS}
+          />
 
-      {/* Modale latérale compacte pour les réglages Gemini */}
-      <GeminiSettingsDrawer
-        open={showGeminiSettings}
-        onOpenChange={setShowGeminiSettings}
-        geminiConfig={geminiConfig}
-        onConfigChange={handleGeminiConfigChange}
-        onReset={() => setGeminiConfig(DEFAULTS)}
-        onClose={() => setShowGeminiSettings(false)}
-        DEFAULTS={DEFAULTS}
-      />
+          <MemoryModal
+            open={showMemoryModal}
+            onClose={() => setShowMemoryModal(false)}
+            examples={examples}
+            setExamples={setExamples}
+            semanticThreshold={semanticThreshold}
+            setSemanticThreshold={setSemanticThreshold}
+            semanticLoading={semanticLoading}
+          />
 
-      <MemoryModal
-        open={showMemoryModal}
-        onClose={() => setShowMemoryModal(false)}
-        examples={examples}
-        setExamples={setExamples}
-        semanticThreshold={semanticThreshold}
-        setSemanticThreshold={setSemanticThreshold}
-        semanticLoading={semanticLoading}
-      />
-
-      {/* Modal personnalité - rendu au niveau racine */}
-      <PersonalitySelector
-        open={showPersonalitySelector}
-        onClose={() => setShowPersonalitySelector(false)}
-        selectedPersonality={selectedPersonality}
-        onPersonalityChange={setSelectedPersonality}
-      />
+          {/* Modal personnalité - rendu au niveau racine */}
+          <PersonalitySelector
+            open={showPersonalitySelector}
+            onClose={() => setShowPersonalitySelector(false)}
+            selectedPersonality={selectedPersonality}
+            onPersonalityChange={setSelectedPersonality}
+          />
+        </>
+      )}
     </div>
   );
 }

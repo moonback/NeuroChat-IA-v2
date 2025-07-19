@@ -6,7 +6,7 @@ import { Tooltip as ReactTooltip } from 'react-tooltip';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import {
-  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, Trash2, Menu, X
+  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, Trash2, Menu, X, Headphones
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
@@ -52,6 +52,10 @@ interface HeaderProps {
   showConfirmDelete: boolean;
   setShowConfirmDelete: (open: boolean) => void;
   onDeleteConfirmed: () => void;
+  // Props pour le mode VR
+  isVRMode?: boolean;
+  onToggleVR?: () => void;
+  isVRSupported?: boolean;
 }
 
 // =====================
@@ -86,6 +90,9 @@ export function Header({
   showConfirmDelete,
   setShowConfirmDelete,
   onDeleteConfirmed,
+  isVRMode = false,
+  onToggleVR,
+  isVRSupported = false,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
@@ -300,6 +307,19 @@ export function Header({
               <Brain className="w-4 h-4" />
             </Button>
 
+            {/* Mode VR */}
+            {isVRSupported && onToggleVR && (
+              <Button
+                variant={isVRMode ? "default" : "ghost"}
+                size="sm"
+                onClick={onToggleVR}
+                className="h-9 w-9 p-0 transition-colors"
+                title={isVRMode ? "Quitter le mode VR" : "Activer le mode VR"}
+              >
+                <Headphones className="w-4 h-4" />
+              </Button>
+            )}
+
             {/* Bouton Menu pour autres options */}
             <Button
               variant="ghost"
@@ -374,6 +394,13 @@ export function Header({
                   <Brain className="w-4 h-4 mr-3" />
                   {ragEnabled ? 'Désactiver RAG' : 'Activer RAG'}
                 </Button>
+                
+                {isVRSupported && onToggleVR && (
+                  <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onToggleVR(); setShowMobileMenu(false); }}>
+                    <Headphones className="w-4 h-4 mr-3" />
+                    {isVRMode ? 'Quitter le mode VR' : 'Activer le mode VR'}
+                  </Button>
+                )}
                 
                 <div className="border-t border-slate-200 dark:border-slate-800 my-3" />
               </div>
