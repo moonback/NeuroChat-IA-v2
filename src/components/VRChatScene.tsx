@@ -1,5 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Entity, Scene } from 'aframe-react';
+import { VRAvatar } from './VRAvatar';
+import { VRGestureIndicator } from './VRGestureIndicator';
+import { VRControllerGestures } from './VRControllerGestures';
+import { VRHands } from './VRHands';
+import { useVRGestures } from '@/hooks/useVRGestures';
 import 'aframe';
 import 'aframe-extras';
 
@@ -17,17 +22,23 @@ interface VRChatSceneProps {
   isLoading: boolean;
   selectedPersonality: string;
   onExitVR: () => void;
+  isAISpeaking?: boolean;
 }
 
 export const VRChatScene: React.FC<VRChatSceneProps> = ({
   messages,
   onSendMessage,
   isLoading,
-  onExitVR
+  selectedPersonality,
+  onExitVR,
+  isAISpeaking = false
 }) => {
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
   const sceneRef = useRef<any>(null);
+  
+  // Hook pour les gestes VR
+  const { gestureState } = useVRGestures();
 
   useEffect(() => {
     // Initialiser A-Frame si nécessaire
@@ -46,6 +57,40 @@ export const VRChatScene: React.FC<VRChatSceneProps> = ({
   const handleVoiceInput = () => {
     setIsListening(!isListening);
     // Ici vous pouvez intégrer la reconnaissance vocale
+  };
+
+  const handleAvatarClick = () => {
+    // Interaction avec l'avatar
+    console.log('Avatar clicked!');
+  };
+
+  const handleGestureAction = (gesture: string) => {
+    switch (gesture) {
+      case 'thumbsUp':
+      case 'isThumbsUp':
+        onSendMessage('👍 Je suis d\'accord !');
+        break;
+      case 'thumbsDown':
+      case 'isThumbsDown':
+        onSendMessage('👎 Je ne suis pas d\'accord.');
+        break;
+      case 'wave':
+      case 'isWaving':
+        onSendMessage('👋 Salut !');
+        break;
+      case 'clap':
+      case 'isClapping':
+        onSendMessage('👏 Bravo !');
+        break;
+      case 'point':
+      case 'isPointing':
+        onSendMessage('👆 Je pointe vers quelque chose d\'intéressant !');
+        break;
+      case 'grab':
+      case 'isGrabbing':
+        onSendMessage('✊ Je saisis cette idée !');
+        break;
+    }
   };
 
   const getMessageColor = (isUser: boolean) => {
@@ -218,6 +263,38 @@ export const VRChatScene: React.FC<VRChatSceneProps> = ({
             } : {}}
           />
         </Entity>
+
+        {/* Avatar de l'IA */}
+        <VRAvatar
+          personality={selectedPersonality}
+          isSpeaking={isAISpeaking}
+          isThinking={isLoading}
+          position="0 1.5 -3"
+          scale="1.5 1.5 1.5"
+          onAvatarClick={handleAvatarClick}
+        />
+
+        {/* Indicateur de gestes */}
+        <VRGestureIndicator
+          gestureState={gestureState}
+          position="0 2.5 -2"
+        />
+
+        {/* Contrôleurs de gestes */}
+        <VRControllerGestures
+          onGestureTrigger={handleGestureAction}
+          position="0 0.5 -1"
+        />
+
+        {/* Mains virtuelles */}
+        <VRHands
+          leftHandPosition="-0.5 1.2 -1"
+          rightHandPosition="0.5 1.2 -1"
+          isLeftHandVisible={gestureState.isPointing || gestureState.isGrabbing}
+          isRightHandVisible={gestureState.isThumbsUp || gestureState.isThumbsDown || gestureState.isWaving}
+          leftHandGesture={gestureState.isPointing ? 'point' : gestureState.isGrabbing ? 'grab' : 'neutral'}
+          rightHandGesture={gestureState.isThumbsUp ? 'thumbsUp' : gestureState.isThumbsDown ? 'thumbsDown' : gestureState.isWaving ? 'wave' : 'neutral'}
+        />
 
         {/* Bouton de sortie VR */}
         <Entity

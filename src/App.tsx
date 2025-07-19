@@ -850,6 +850,7 @@ function App() {
           isLoading={isLoading}
           selectedPersonality={selectedPersonality}
           onExitVR={exitVR}
+          isAISpeaking={isAISpeaking}
         />
       ) : (
         <>

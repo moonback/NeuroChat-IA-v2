@@ -18,6 +18,7 @@ interface VRDemoSceneProps {
   isLoading: boolean;
   selectedPersonality: string;
   onExitVR: () => void;
+  isAISpeaking?: boolean;
 }
 
 export const VRDemoScene: React.FC<VRDemoSceneProps> = ({
@@ -25,7 +26,8 @@ export const VRDemoScene: React.FC<VRDemoSceneProps> = ({
   onSendMessage,
   isLoading,
   selectedPersonality,
-  onExitVR
+  onExitVR,
+  isAISpeaking = false
 }) => {
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -176,8 +178,10 @@ export const VRDemoScene: React.FC<VRDemoSceneProps> = ({
             <span className="text-sm">Audio</span>
           </div>
           <div className="flex items-center gap-2 text-purple-200">
-            <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-            <span className="text-sm">IA Connectée</span>
+            <div className={`w-2 h-2 rounded-full animate-pulse ${isAISpeaking ? 'bg-red-500' : isLoading ? 'bg-yellow-500' : 'bg-purple-500'}`}></div>
+            <span className="text-sm">
+              {isAISpeaking ? 'IA Parle' : isLoading ? 'IA Réfléchit' : 'IA Connectée'}
+            </span>
           </div>
         </div>
       </div>
