@@ -13,6 +13,7 @@ export function VRAnimations({ isListening, isLoading, isSpeaking }: VRAnimation
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const avatarRef = useRef<THREE.Group | null>(null);
   const animationRef = useRef<number | null>(null);
+  const indicatorRef = useRef<THREE.Mesh | null>(null);
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -93,6 +94,7 @@ export function VRAnimations({ isListening, isLoading, isSpeaking }: VRAnimation
     const indicator = new THREE.Mesh(indicatorGeometry, indicatorMaterial);
     indicator.position.y = 1.5;
     avatar.add(indicator);
+    indicatorRef.current = indicator;
 
     scene.add(avatar);
 
@@ -152,6 +154,7 @@ export function VRAnimations({ isListening, isLoading, isSpeaking }: VRAnimation
 
     window.addEventListener('resize', handleResize);
 
+    // Nettoyage
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
@@ -166,23 +169,15 @@ export function VRAnimations({ isListening, isLoading, isSpeaking }: VRAnimation
 
   // Mettre à jour les animations selon l'état
   useEffect(() => {
-    if (avatarRef.current) {
-      const indicator = avatarRef.current.children.find(child => 
-        child instanceof THREE.Mesh && 
-        child.geometry instanceof THREE.SphereGeometry && 
-        child.geometry.parameters.radius === 0.05
-      ) as THREE.Mesh;
-
-      if (indicator && indicator.material instanceof THREE.MeshBasicMaterial) {
-        if (isListening) {
-          indicator.material.color.setHex(0xEF4444);
-        } else if (isLoading) {
-          indicator.material.color.setHex(0x10B981);
-        } else if (isSpeaking) {
-          indicator.material.color.setHex(0x3B82F6);
-        } else {
-          indicator.material.color.setHex(0x6B7280);
-        }
+    if (indicatorRef.current && indicatorRef.current.material instanceof THREE.MeshBasicMaterial) {
+      if (isListening) {
+        indicatorRef.current.material.color.setHex(0xEF4444);
+      } else if (isLoading) {
+        indicatorRef.current.material.color.setHex(0x10B981);
+      } else if (isSpeaking) {
+        indicatorRef.current.material.color.setHex(0x3B82F6);
+      } else {
+        indicatorRef.current.material.color.setHex(0x6B7280);
       }
     }
   }, [isListening, isLoading, isSpeaking]);

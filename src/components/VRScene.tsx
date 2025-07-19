@@ -6,21 +6,21 @@ import { Mic, MicOff, MessageCircle, X, Volume2, VolumeX } from 'lucide-react';
 // Types pour A-Frame
 declare global {
   interface Window {
-    AFRAME?: any;
+    AFRAME?: unknown;
   }
   
   namespace JSX {
     interface IntrinsicElements {
-      'a-scene': any;
-      'a-assets': any;
-      'a-mixin': any;
-      'a-sky': any;
-      'a-plane': any;
-      'a-entity': any;
-      'a-cylinder': any;
-      'a-sphere': any;
-      'a-text': any;
-      'a-camera': any;
+      'a-scene': Record<string, unknown>;
+      'a-assets': Record<string, unknown>;
+      'a-mixin': Record<string, unknown>;
+      'a-sky': Record<string, unknown>;
+      'a-plane': Record<string, unknown>;
+      'a-entity': Record<string, unknown>;
+      'a-cylinder': Record<string, unknown>;
+      'a-sphere': Record<string, unknown>;
+      'a-text': Record<string, unknown>;
+      'a-camera': Record<string, unknown>;
     }
   }
 }
@@ -62,8 +62,13 @@ export function VRScene({
     // Vérifier le support VR
     const checkVRSupport = async () => {
       if ('xr' in navigator && navigator.xr) {
-        const supported = await navigator.xr.isSessionSupported('immersive-vr');
-        setIsVRSupported(supported);
+        try {
+          const supported = await navigator.xr.isSessionSupported('immersive-vr');
+          setIsVRSupported(supported);
+        } catch (error) {
+          console.warn('Erreur lors de la vérification du support VR:', error);
+          setIsVRSupported(false);
+        }
       }
     };
     checkVRSupport();
@@ -81,17 +86,21 @@ export function VRScene({
     }
   }, []);
 
-  const handleVREnter = () => {
+  const handleVREnter = async () => {
     setIsVRActive(true);
     // Activer le mode VR
     if (vrSceneRef.current && 'xr' in navigator && navigator.xr) {
-      const scene = vrSceneRef.current.querySelector('a-scene');
-      if (scene) {
-        navigator.xr.requestSession('immersive-vr').then((session) => {
+      try {
+        const scene = vrSceneRef.current.querySelector('a-scene');
+        if (scene) {
+          const session = await navigator.xr.requestSession('immersive-vr');
           session.addEventListener('end', () => {
             setIsVRActive(false);
           });
-        });
+        }
+      } catch (error) {
+        console.error('Erreur lors de l\'entrée en VR:', error);
+        setIsVRActive(false);
       }
     }
   };
@@ -100,6 +109,14 @@ export function VRScene({
     if (currentMessage.trim()) {
       onSendMessage(currentMessage);
       setCurrentMessage('');
+    }
+  };
+
+  const handleMicToggle = () => {
+    if (isListening) {
+      onStopListening();
+    } else {
+      onStartListening();
     }
   };
 
@@ -224,7 +241,7 @@ export function VRScene({
               height="0.1"
               color={isListening ? "#EF4444" : "#6B7280"}
               class="clickable"
-              onClick={() => isListening ? onStopListening() : onStartListening()}
+              onClick={handleMicToggle}
             ></a-cylinder>
             <a-text
               position="-0.5 0.2 0"
@@ -312,7 +329,7 @@ export function VRScene({
 
               <div className="flex gap-2">
                 <Button
-                  onClick={isListening ? onStopListening : onStartListening}
+                  onClick={handleMicToggle}
                   variant={isListening ? "destructive" : "outline"}
                   size="sm"
                 >
