@@ -6,7 +6,7 @@ import { Tooltip as ReactTooltip } from 'react-tooltip';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import {
-  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, Trash2, Menu, X
+  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, Trash2, Menu, X, Cube
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
@@ -40,6 +40,8 @@ interface HeaderProps {
   geminiConfig?: any;
   modePrive: boolean;
   setModePrive: (v: boolean) => void;
+  vrMode: boolean;
+  onToggleVr: () => void;
   onOpenMemoryModal: () => void;
   // Props pour la sélection de messages
   selectMode: boolean;
@@ -75,6 +77,8 @@ export function Header({
   onOpenGeminiSettings,
   modePrive,
   setModePrive,
+  vrMode,
+  onToggleVr,
   onOpenMemoryModal,
   selectMode,
   onToggleSelectMode,
@@ -270,6 +274,16 @@ export function Header({
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
 
+            <Button
+              variant={vrMode ? 'default' : 'ghost'}
+              size="sm"
+              onClick={onToggleVr}
+              className="h-9 w-9 p-0 transition-colors"
+              title="Mode VR"
+            >
+              <Cube className="w-4 h-4" />
+            </Button>
+
             <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
 
             {/* Personnalité IA */}
@@ -412,6 +426,11 @@ export function Header({
               <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { toggleTheme(); setShowMobileMenu(false); }}>
                 {theme === 'dark' ? <Sun className="w-4 h-4 mr-3" /> : <Moon className="w-4 h-4 mr-3" />}
                 {theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+              </Button>
+
+              <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onToggleVr(); setShowMobileMenu(false); }}>
+                <Cube className="w-4 h-4 mr-3" />
+                {vrMode ? 'Quitter VR' : 'Mode VR'}
               </Button>
             </div>
           </div>
