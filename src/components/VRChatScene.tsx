@@ -23,7 +23,6 @@ export const VRChatScene: React.FC<VRChatSceneProps> = ({
   messages,
   onSendMessage,
   isLoading,
-  selectedPersonality,
   onExitVR
 }) => {
   const [inputText, setInputText] = useState('');
@@ -53,10 +52,6 @@ export const VRChatScene: React.FC<VRChatSceneProps> = ({
     return isUser ? '#3b82f6' : '#10b981';
   };
 
-  const getMessagePosition = (index: number, isUser: boolean) => {
-    const y = 2 - (index * 0.3);
-    return `${isUser ? 1.5 : -1.5} ${y} -3`;
-  };
 
   return (
     <div className="vr-scene-container">

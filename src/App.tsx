@@ -24,9 +24,7 @@ import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 
 import { MemoryFeedback } from '@/components/MemoryFeedback';
-import { VRChatScene } from '@/components/VRChatScene';
 import { VRDemoScene } from '@/components/VRDemoScene';
-import { VRModeToggle } from '@/components/VRModeToggle';
 import { useVRMode } from '@/hooks/useVRMode';
 
 interface Message {
@@ -138,7 +136,6 @@ function App() {
   const {
     isVRMode,
     isVRSupported,
-    enterVR,
     exitVR,
     toggleVR
   } = useVRMode();
