@@ -25,6 +25,13 @@ import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 
 import { MemoryFeedback } from '@/components/MemoryFeedback';
 
+// Import des composants VR
+import { VRScene } from '@/xr/VRScene';
+import { VRVoiceInput } from '@/xr/VRVoiceInput';
+import { VRSettings } from '@/xr/VRSettings';
+import { VRDetection } from '@/xr/VRDetection';
+import { VRMessage, VRSceneConfig, VRUISettings, VRAudioConfig } from '@/xr/types';
+
 interface Message {
   id: string;
   text: string;
@@ -109,6 +116,29 @@ function App() {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedMessageIds, setSelectedMessageIds] = useState<string[]>([]);
   const [showConfirmDeleteMultiple, setShowConfirmDeleteMultiple] = useState(false);
+
+  // États VR
+  const [isVRMode, setIsVRMode] = useState(false);
+  const [showVRSettings, setShowVRSettings] = useState(false);
+  const [isVRSupported, setIsVRSupported] = useState(false);
+  const [vrSceneConfig, setVrSceneConfig] = useState<VRSceneConfig>({
+    backgroundColor: '#000011',
+    ambientLight: { intensity: 0.3, color: '#ffffff' },
+    directionalLight: { intensity: 0.8, color: '#ffffff', position: { x: 0, y: 10, z: 5 } }
+  });
+  const [vrUISettings, setVrUISettings] = useState<VRUISettings>({
+    messageDistance: 3,
+    messageScale: 1,
+    avatarScale: 1.5,
+    panelDistance: 2,
+    controllerSensitivity: 1
+  });
+  const [vrAudioConfig, setVrAudioConfig] = useState<VRAudioConfig>({
+    enabled: true,
+    volume: 0.7,
+    spatialAudio: true,
+    feedbackSounds: true
+  });
 
   // Hyperparamètres Gemini
   const [geminiConfig, setGeminiConfig] = useState<GeminiGenerationConfig>({
@@ -821,6 +851,23 @@ function App() {
     return maxSim > semanticThreshold;
   };
 
+  // Convertir les messages en format VR
+  const convertMessagesToVR = (): VRMessage[] => {
+    return messages.map(msg => ({
+      id: msg.id,
+      text: msg.text,
+      isUser: msg.isUser,
+      timestamp: msg.timestamp,
+      position: { x: 0, y: 1.6, z: -2 },
+      scale: { x: 1, y: 1, z: 1 }
+    }));
+  };
+
+  // Gestionnaire pour quitter le mode VR
+  const handleExitVR = () => {
+    setIsVRMode(false);
+  };
+
   // Nettoyer le timeout à la fermeture du composant
   useEffect(() => {
     return () => {
@@ -829,6 +876,28 @@ function App() {
       }
     };
   }, [autoVoiceTimeout]);
+
+  // Mode VR
+  if (isVRMode) {
+    return (
+      <div className="w-full h-screen">
+        <VRScene
+          messages={convertMessagesToVR()}
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+          config={vrSceneConfig}
+          uiSettings={vrUISettings}
+          onExitVR={handleExitVR}
+        />
+        <VRVoiceInput
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+          controllers={[]} // Sera mis à jour par le hook WebXR
+          isVRMode={isVRMode}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
@@ -880,6 +949,8 @@ function App() {
           showConfirmDelete={showConfirmDeleteMultiple}
           setShowConfirmDelete={setShowConfirmDeleteMultiple}
           onDeleteConfirmed={handleDeleteMultipleMessages}
+          onToggleVR={() => setIsVRMode(true)}
+          isVRSupported={isVRSupported}
         />
 
         {/* Indicateur visuel du mode privé SOUS le header, centré */}
@@ -970,6 +1041,21 @@ function App() {
         selectedPersonality={selectedPersonality}
         onPersonalityChange={setSelectedPersonality}
       />
+
+      {/* Paramètres VR */}
+      <VRSettings
+        open={showVRSettings}
+        onClose={() => setShowVRSettings(false)}
+        sceneConfig={vrSceneConfig}
+        uiSettings={vrUISettings}
+        audioConfig={vrAudioConfig}
+        onSceneConfigChange={setVrSceneConfig}
+        onUISettingsChange={setVrUISettings}
+        onAudioConfigChange={setVrAudioConfig}
+      />
+
+      {/* Détection VR */}
+      <VRDetection onVRSupported={setIsVRSupported} />
     </div>
   );
 }

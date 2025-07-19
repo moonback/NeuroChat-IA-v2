@@ -52,6 +52,9 @@ interface HeaderProps {
   showConfirmDelete: boolean;
   setShowConfirmDelete: (open: boolean) => void;
   onDeleteConfirmed: () => void;
+  // Props pour VR
+  onToggleVR?: () => void;
+  isVRSupported?: boolean;
 }
 
 // =====================
@@ -86,6 +89,8 @@ export function Header({
   showConfirmDelete,
   setShowConfirmDelete,
   onDeleteConfirmed,
+  onToggleVR,
+  isVRSupported = false,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
@@ -299,6 +304,21 @@ export function Header({
             >
               <Brain className="w-4 h-4" />
             </Button>
+
+            {/* VR */}
+            {isVRSupported && onToggleVR && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onToggleVR}
+                className="h-9 w-9 p-0 transition-colors hover:bg-purple-50 dark:hover:bg-purple-950/50"
+                title="Mode VR"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </Button>
+            )}
 
             {/* Bouton Menu pour autres options */}
             <Button
