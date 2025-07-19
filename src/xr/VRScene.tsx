@@ -171,6 +171,8 @@ export const VRScene: React.FC<VRSceneProps> = ({
   // Mettre à jour les messages en VR
   useEffect(() => {
     if (!sceneRef.current || !cameraRef.current) return;
+    
+    console.log('Messages VR reçus:', messages.map(m => ({ id: m.id, text: m.text, isUser: m.isUser })));
 
     // Supprimer les anciens messages
     messageMeshesRef.current.forEach(mesh => {
@@ -179,12 +181,56 @@ export const VRScene: React.FC<VRSceneProps> = ({
     messageMeshesRef.current = [];
 
     // Créer les nouveaux messages
-    messages.forEach((message, index) => {
+    messages.filter(msg => msg.text && msg.text.trim()).forEach((message, index) => {
+      // Créer un canvas pour le texte
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d')!;
+      canvas.width = 512;
+      canvas.height = 128;
+      
+      // Configurer le contexte
+      context.fillStyle = message.isUser ? '#4ecdc4' : '#ff6b6b';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Ajouter le texte
+      context.fillStyle = '#ffffff';
+      context.font = '24px Arial';
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      
+      // Wrapper le texte
+      const words = message.text.split(' ');
+      const lines: string[] = [];
+      let currentLine = '';
+      
+      words.forEach(word => {
+        const testLine = currentLine + word + ' ';
+        const metrics = context.measureText(testLine);
+        if (metrics.width > canvas.width - 40) {
+          lines.push(currentLine);
+          currentLine = word + ' ';
+        } else {
+          currentLine = testLine;
+        }
+      });
+      lines.push(currentLine);
+      
+      // Dessiner le texte
+      lines.forEach((line, lineIndex) => {
+        context.fillText(line.trim(), canvas.width / 2, (canvas.height / 2) + (lineIndex - lines.length / 2) * 30);
+      });
+      
+      // Créer la texture
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.needsUpdate = true;
+      
+      // Créer la géométrie et le matériau
       const messageGeometry = new THREE.PlaneGeometry(2, 0.5);
       const messageMaterial = new THREE.MeshBasicMaterial({
-        color: message.isUser ? '#4ecdc4' : '#ff6b6b',
+        map: texture,
         transparent: true,
-        opacity: 0.9
+        opacity: 0.9,
+        side: THREE.DoubleSide
       });
       
       const messageMesh = new THREE.Mesh(messageGeometry, messageMaterial);
@@ -304,6 +350,9 @@ export const VRScene: React.FC<VRSceneProps> = ({
             >
               Salutation
             </button>
+            <div className="text-xs mt-2 text-gray-300">
+              Messages affichés : {messages.filter(m => m.text && m.text.trim()).length}
+            </div>
           </div>
         </div>
       )}
