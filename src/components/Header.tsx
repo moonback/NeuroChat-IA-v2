@@ -11,6 +11,7 @@ import {
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { PersonalityTrigger } from '@/components/PersonalitySelector';
+import { WebXRButton } from '@/components/WebXRButton';
 
 // =====================
 // Constantes & Utilitaires
@@ -52,6 +53,9 @@ interface HeaderProps {
   showConfirmDelete: boolean;
   setShowConfirmDelete: (open: boolean) => void;
   onDeleteConfirmed: () => void;
+  // Props WebXR
+  onWebXRSessionStart?: (mode: 'vr' | 'ar' | 'mixed-reality') => void;
+  onWebXRSessionEnd?: () => void;
 }
 
 // =====================
@@ -86,6 +90,8 @@ export function Header({
   showConfirmDelete,
   setShowConfirmDelete,
   onDeleteConfirmed,
+  onWebXRSessionStart,
+  onWebXRSessionEnd,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
@@ -237,6 +243,14 @@ export function Header({
             )}
 
             <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
+
+            {/* WebXR Button */}
+            {onWebXRSessionStart && onWebXRSessionEnd && (
+              <WebXRButton
+                onSessionStart={onWebXRSessionStart}
+                onSessionEnd={onWebXRSessionEnd}
+              />
+            )}
 
             {/* Contrôles vocaux */}
             <Button

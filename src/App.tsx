@@ -22,6 +22,8 @@ import { PersonalitySelector } from '@/components/PersonalitySelector';
 
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
+import { WebXRButton } from '@/components/WebXRButton';
+import { WebXRChatContainer } from '@/components/WebXRChatContainer';
 
 import { MemoryFeedback } from '@/components/MemoryFeedback';
 
@@ -123,6 +125,11 @@ function App() {
 
   // --- Mode privé/éphémère ---
   const [modePrive, setModePrive] = useState(false);
+  
+  // --- Mode WebXR/Réalité Mixte ---
+  const [webXRMode, setWebXRMode] = useState<'normal' | 'vr' | 'ar' | 'mixed-reality'>('normal');
+  const [showWebXRButton, setShowWebXRButton] = useState(false);
+  
   // Affichage d'un toast d'avertissement lors de l'activation
   useEffect(() => {
     if (modePrive) {
@@ -830,6 +837,28 @@ function App() {
     };
   }, [autoVoiceTimeout]);
 
+  // Gestionnaires WebXR
+  const handleWebXRSessionStart = (mode: 'vr' | 'ar' | 'mixed-reality') => {
+    setWebXRMode(mode);
+    toast.success(`Mode ${mode} activé ! Profitez de votre expérience immersive.`);
+  };
+
+  const handleWebXRSessionEnd = () => {
+    setWebXRMode('normal');
+    toast.info('Retour au mode normal');
+  };
+
+  // Si on est en mode WebXR, afficher l'interface WebXR
+  if (webXRMode !== 'normal') {
+    return (
+      <WebXRChatContainer
+        messages={messages}
+        onSendMessage={handleSendMessage}
+        isLoading={isLoading}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Menu historique des discussions */}
@@ -880,6 +909,8 @@ function App() {
           showConfirmDelete={showConfirmDeleteMultiple}
           setShowConfirmDelete={setShowConfirmDeleteMultiple}
           onDeleteConfirmed={handleDeleteMultipleMessages}
+          onWebXRSessionStart={handleWebXRSessionStart}
+          onWebXRSessionEnd={handleWebXRSessionEnd}
         />
 
         {/* Indicateur visuel du mode privé SOUS le header, centré */}
