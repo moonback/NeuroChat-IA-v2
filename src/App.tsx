@@ -22,7 +22,6 @@ import { PersonalitySelector } from '@/components/PersonalitySelector';
 
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
-import { WebXRButton } from '@/components/WebXRButton';
 import { WebXRChatContainer } from '@/components/WebXRChatContainer';
 
 import { MemoryFeedback } from '@/components/MemoryFeedback';
