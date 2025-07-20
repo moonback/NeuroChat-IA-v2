@@ -73,7 +73,6 @@ const MixedRealityChatInterface: React.FC<WebXRChatContainerProps> = ({
   isLoading 
 }) => {
   const { session } = useXR();
-  const [inputText, setInputText] = useState('');
   const [showVirtualKeyboard, setShowVirtualKeyboard] = useState(false);
 
   // Initialiser la détection de plans WebXR
