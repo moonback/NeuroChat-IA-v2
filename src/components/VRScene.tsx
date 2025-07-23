@@ -4,19 +4,28 @@ import { XR, VRButton, createXRStore } from "@react-three/xr";
 import { Box, Text, Plane } from "@react-three/drei";
 
 // Affiche un message sur un panneau 3D
-function MessagePanel({ text, y }: { text: string; y: number }) {
+function MessagePanel({ text, y, isUser }: { text: string; y: number; isUser: boolean }) {
+  // Couleur selon l'auteur
+  const bgColor = isUser ? '#2563eb' : '#111827';
+  const textColor = isUser ? '#fff' : '#fbbf24';
   return (
     <group position={[0, y, -2]}>
-      <Plane args={[1.8, 0.25]}>
-        <meshStandardMaterial color="#222" transparent opacity={0.7} />
+      <Plane args={[1.8, 0.28]}>
+        <meshStandardMaterial color={bgColor} transparent opacity={0.85} />
+      </Plane>
+      {/* Bord arrondi et ombre (simulée par un plan plus large et flou) */}
+      <Plane args={[1.9, 0.32]} position={[0, 0, -0.01]}>
+        <meshStandardMaterial color="#000" transparent opacity={0.18} />
       </Plane>
       <Text
         position={[0, 0, 0.01]}
-        fontSize={0.12}
-        color="#fff"
+        fontSize={0.13}
+        color={textColor}
         anchorX="center"
         anchorY="middle"
-        maxWidth={1.7}
+        maxWidth={1.6}
+        outlineColor="#000"
+        outlineWidth={0.008}
       >
         {text}
       </Text>
@@ -78,11 +87,11 @@ export default function VRScene({ messages = [], onDictate, transcript = '', isD
           <pointLight position={[10, 10, 10]} />
           {/* Affichage des messages */}
           {lastMessages.map((msg, i) => (
-            <MessagePanel key={msg.id} text={(msg.isUser ? '👤 ' : '🤖 ') + msg.text} y={1.3 - 0.3 * (lastMessages.length - 1 - i)} />
+            <MessagePanel key={msg.id} text={(msg.isUser ? '👤 ' : '🤖 ') + msg.text} y={1.3 - 0.3 * (lastMessages.length - 1 - i)} isUser={msg.isUser} />
           ))}
           {/* Affichage de la dictée en cours */}
           {isDictating && transcript && (
-            <MessagePanel text={"🗣️ " + transcript} y={0.5} />
+            <MessagePanel text={"🗣️ " + transcript} y={0.5} isUser={true} />
           )}
           {/* Micro 3D */}
           <MicroButton3D onClick={onDictate || (() => {})} isDictating={isDictating} />
