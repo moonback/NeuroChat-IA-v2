@@ -24,6 +24,7 @@ import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 
 import { MemoryFeedback } from '@/components/MemoryFeedback';
+import VRScene from './components/VRScene';
 
 interface Message {
   id: string;
@@ -830,8 +831,25 @@ function App() {
     };
   }, [autoVoiceTimeout]);
 
+  const [showVR, setShowVR] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
+      {/* Bouton pour activer le mode VR */}
+      <button onClick={() => setShowVR(true)} style={{position: 'fixed', top: 10, right: 10, zIndex: 10000, padding: '10px 20px', fontSize: '1.2em', borderRadius: '8px', background: '#ff9800', color: 'white', border: 'none', cursor: 'pointer'}}>Activer le mode VR</button>
+      {/* Affichage de la scène VR en plein écran si activée */}
+      {showVR && (
+        <div style={{position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, background: 'black'}}>
+          <button onClick={() => setShowVR(false)} style={{position: 'absolute', top: 20, left: 20, zIndex: 10001, padding: '8px 16px', fontSize: '1em', borderRadius: '8px', background: '#e53935', color: 'white', border: 'none', cursor: 'pointer'}}>Quitter VR</button>
+          <VRScene 
+            messages={messages}
+            onDictate={() => setModeVocalAuto(true)}
+            transcript={tempTranscriptAuto}
+            isDictating={modeVocalAuto}
+            onSend={(text) => handleSendMessage(text)}
+          />
+        </div>
+      )}
       {/* Menu historique des discussions */}
       <HistoryModal
         open={showHistory}
