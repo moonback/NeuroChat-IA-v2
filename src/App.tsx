@@ -23,6 +23,8 @@ import { PersonalitySelector } from '@/components/PersonalitySelector';
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 
+import { VrApp } from '@/xr';
+
 import { MemoryFeedback } from '@/components/MemoryFeedback';
 
 interface Message {
@@ -123,6 +125,7 @@ function App() {
 
   // --- Mode privé/éphémère ---
   const [modePrive, setModePrive] = useState(false);
+  const [vrMode, setVrMode] = useState(false);
   // Affichage d'un toast d'avertissement lors de l'activation
   useEffect(() => {
     if (modePrive) {
@@ -866,6 +869,8 @@ function App() {
           geminiConfig={geminiConfig}
           modePrive={modePrive}
           setModePrive={setModePrive}
+          vrMode={vrMode}
+          onToggleVr={() => setVrMode(v => !v)}
           onOpenMemoryModal={() => setShowMemoryModal(true)}
           selectMode={selectMode}
           onToggleSelectMode={handleToggleSelectMode}
@@ -969,6 +974,13 @@ function App() {
         onClose={() => setShowPersonalitySelector(false)}
         selectedPersonality={selectedPersonality}
         onPersonalityChange={setSelectedPersonality}
+      />
+
+      <VrApp
+        open={vrMode}
+        onClose={() => setVrMode(false)}
+        messages={messages}
+        onSendMessage={handleSendMessage}
       />
     </div>
   );
