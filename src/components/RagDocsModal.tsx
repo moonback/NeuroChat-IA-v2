@@ -2,10 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Trash2, UploadCloud, Eye, Pencil, Check, X as XIcon, FileText, FileSpreadsheet, FileCode2, FileType2, File, FilePlus2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-// @ts-ignore
-import * as pdfjsLib from 'pdfjs-dist/build/pdf';
-import mammoth from 'mammoth';
-import Papa from 'papaparse';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 
@@ -97,6 +93,9 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
     }
     if (ext === 'pdf') {
       try {
+        const pdfModule: any = await import('pdfjs-dist/build/pdf');
+        const pdfjsLib = pdfModule?.default ?? pdfModule;
+        // @ts-ignore
         pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.mjs';
         const arrayBuffer = await file.arrayBuffer();
         // @ts-ignore
@@ -172,6 +171,8 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
     if (ext === 'docx') {
       try {
         const arrayBuffer = await file.arrayBuffer();
+        const mammothModule: any = await import('mammoth');
+        const mammoth = mammothModule?.default ?? mammothModule;
         const result = await mammoth.extractRawText({ arrayBuffer });
         return result.value;
       } catch (e) {
@@ -181,6 +182,8 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
     if (ext === 'csv') {
       try {
         const text = await file.text();
+        const papaModule: any = await import('papaparse');
+        const Papa = papaModule?.default ?? papaModule;
         const parsed = Papa.parse(text);
         return parsed.data.map((row: any) => row.join(' ')).join('\n');
       } catch (e) {
