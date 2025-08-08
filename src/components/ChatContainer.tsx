@@ -118,6 +118,8 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
             modePrive ? (
               <div className="flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[400px] text-center px-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
                 
+                {/* Avatar retiré */}
+                
                 <div className="max-w-lg mx-auto space-y-6">
                   <div className="space-y-2">
                     <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">
@@ -154,6 +156,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
             ) : (
               <div className="flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[400px] text-center px-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
                 
+                {/* Avatar retiré */}
                 
                 <div className="max-w-2xl mx-auto space-y-6">
                   <div className="space-y-3">
@@ -192,16 +195,11 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
             )
           ) : (
             <>
-              {/* Chat Header amélioré */}
+              {/* Chat Header avec Avatar 3D */}
               <div className="sticky top-0 z-10 mb-2 animate-in slide-in-from-top-2 duration-500">
                 <div className="flex items-center justify-between p-2.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-xl border border-white/60 dark:border-slate-800/60 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="relative">
-                      <div className="w-7 h-7 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-md">
-                        <MessageCircle className="w-3.5 h-3.5 text-white" />
-                      </div>
-                      <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
-                    </div>
+                  <div className="flex items-center gap-3 min-w-0">
+                    {/* Avatar retiré */}
                     <div className="flex items-center gap-3">
                       <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
                         {messages.filter(msg => !(msg as RagContextMessage).isRagContext).length} message{messages.length !== 1 ? 's' : ''}
