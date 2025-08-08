@@ -185,6 +185,8 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
                 <img
                   src={imageUrl}
                   alt="Image envoyée"
+                  loading="lazy"
+                  decoding="async"
                   className="max-w-xs max-h-52 rounded-xl border-2 border-white/20 dark:border-slate-600/30 shadow-lg transition-transform duration-300 hover:scale-[1.02]"
                   style={{ objectFit: 'contain' }}
                 />

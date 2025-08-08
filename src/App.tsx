@@ -1,24 +1,25 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Card } from '@/components/ui/card';
 import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
 import { sendMessageToGemini, GeminiGenerationConfig } from '@/services/geminiApi';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { toast } from 'sonner';
-import { TTSSettingsModal } from '@/components/TTSSettingsModal';
+// Lazy-loaded components pour réduire le bundle initial
+const TTSSettingsModalLazy = lazy(() => import('@/components/TTSSettingsModal').then(m => ({ default: m.TTSSettingsModal })));
 import { Header } from '@/components/Header';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { searchDocuments } from '@/services/ragSearch';
-import { RagDocsModal } from '@/components/RagDocsModal';
-import { HistoryModal, DiscussionWithCategory } from '@/components/HistoryModal';
+const RagDocsModalLazy = lazy(() => import('@/components/RagDocsModal').then(m => ({ default: m.RagDocsModal })));
+const HistoryModalLazy = lazy(() => import('@/components/HistoryModal').then(m => ({ default: m.HistoryModal })));
+import type { DiscussionWithCategory } from '@/components/HistoryModal';
 
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
 import { useMemory } from "@/hooks/useMemory";
-import { MemoryModal } from '@/components/MemoryModal';
-import { pipeline } from "@xenova/transformers";
-import { GeminiSettingsDrawer } from '@/components/GeminiSettingsDrawer';
+const MemoryModalLazy = lazy(() => import('@/components/MemoryModal').then(m => ({ default: m.MemoryModal })));
+const GeminiSettingsDrawerLazy = lazy(() => import('@/components/GeminiSettingsDrawer').then(m => ({ default: m.GeminiSettingsDrawer })));
 import { getPersonalityById, getDefaultPersonality } from '@/config/personalities';
-import { PersonalitySelector } from '@/components/PersonalitySelector';
+const PersonalitySelectorLazy = lazy(() => import('@/components/PersonalitySelector').then(m => ({ default: m.PersonalitySelector })));
 
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
@@ -46,14 +47,21 @@ type RagContextMessage = {
   timestamp: Date;
 };
 
-// Initialisation du pipeline d'embeddings (hors composant)
+// Initialisation du pipeline d'embeddings (hors composant) via import dynamique
 let embedderPromise: Promise<any> | null = null;
 function getEmbedder() {
   if (!embedderPromise) {
-    embedderPromise = pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+    embedderPromise = (async () => {
+      const mod = await import('@xenova/transformers');
+      const pl = (mod as any).pipeline as typeof import('@xenova/transformers').pipeline;
+      return pl('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+    })();
   }
   return embedderPromise;
 }
+
+// Clé de cache pour les embeddings des exemples
+const EXAMPLE_EMBEDDINGS_LS_KEY = 'memory_example_embeddings_v1';
 
 // Fonction utilitaire pour la similarité cosinus
 function cosineSimilarity(a: number[], b: number[]) {
@@ -810,13 +818,82 @@ function App() {
   const [semanticLoading, setSemanticLoading] = useState(false);
   const [semanticScore, setSemanticScore] = useState<number | null>(null);
 
+  // Cache en mémoire des embeddings d'exemples { texteExemple: embedding }
+  const exampleEmbeddingsRef = useRef<Record<string, number[]>>({});
+
+  // Charger le cache depuis localStorage et préchauffer l'embedder en idle
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(EXAMPLE_EMBEDDINGS_LS_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && typeof parsed === 'object') {
+          exampleEmbeddingsRef.current = parsed;
+        }
+      }
+    } catch {}
+    const idle = (window as any).requestIdleCallback || ((cb: Function) => setTimeout(cb as any, 300));
+    idle(() => {
+      // Préchargement silencieux du modèle
+      getEmbedder().catch(() => {});
+    });
+  }, []);
+
+  // Sauvegarde du cache d'embeddings en localStorage (debounced léger)
+  const persistExampleEmbeddings = useRef<number | null>(null);
+  function saveExampleEmbeddingsDebounced() {
+    if (persistExampleEmbeddings.current) {
+      window.clearTimeout(persistExampleEmbeddings.current);
+    }
+    persistExampleEmbeddings.current = window.setTimeout(() => {
+      try {
+        localStorage.setItem(EXAMPLE_EMBEDDINGS_LS_KEY, JSON.stringify(exampleEmbeddingsRef.current));
+      } catch {}
+    }, 250);
+  }
+
+  // Pré-calculer en arrière-plan les embeddings manquants pour les exemples
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const missing = examples.filter((ex) => !exampleEmbeddingsRef.current[ex]);
+      if (missing.length === 0) return;
+      try {
+        const embedder = await getEmbedder();
+        for (const ex of missing) {
+          if (cancelled) return;
+          // Évite de monopoliser le thread: laisser respirer l'UI entre items
+          await new Promise((res) => setTimeout(res, 0));
+          const res: number[][] = await embedder(ex);
+          exampleEmbeddingsRef.current[ex] = res[0];
+        }
+        saveExampleEmbeddingsDebounced();
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [examples]);
+
   // Fonction asynchrone pour juger la pertinence sémantique (utilise les exemples et seuil du state)
   const isPersonalInfoSemantic = async (text: string): Promise<boolean> => {
     const embedder = await getEmbedder();
-    const [inputEmbedding] = await embedder(text);
-    const exampleEmbeddingsLocal = await Promise.all(examples.map((e: string) => embedder(e).then((res: number[][]) => res[0])));
-    const similaritiesLocal = exampleEmbeddingsLocal.map((ex: number[]) => cosineSimilarity(inputEmbedding, ex));
-    const maxSim = Math.max(...similaritiesLocal);
+    const resIn: number[][] = await embedder(text);
+    const inputEmbedding = resIn[0];
+
+    // Récupérer les embeddings des exemples depuis le cache, calculer ceux manquants à la volée
+    const exampleEmbeddings: number[][] = [];
+    for (const ex of examples) {
+      let emb = exampleEmbeddingsRef.current[ex];
+      if (!emb) {
+        const resEx: number[][] = await embedder(ex);
+        emb = resEx[0];
+        exampleEmbeddingsRef.current[ex] = emb;
+      }
+      exampleEmbeddings.push(emb);
+    }
+    saveExampleEmbeddingsDebounced();
+
+    const similaritiesLocal = exampleEmbeddings.map((ex) => cosineSimilarity(inputEmbedding, ex));
+    const maxSim = similaritiesLocal.length ? Math.max(...similaritiesLocal) : 0;
     setSemanticScore(maxSim);
     return maxSim > semanticThreshold;
   };
@@ -833,15 +910,17 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Menu historique des discussions */}
-      <HistoryModal
-        open={showHistory}
-        onClose={handleCloseHistory}
-        history={historyList}
-        onLoad={handleLoadDiscussion}
-        onDelete={handleDeleteDiscussion}
-        onRename={handleRenameDiscussion}
-        onDeleteMultiple={handleDeleteMultipleDiscussions}
-      />
+      <Suspense fallback={null}>
+        <HistoryModalLazy
+          open={showHistory}
+          onClose={handleCloseHistory}
+          history={historyList}
+          onLoad={handleLoadDiscussion}
+          onDelete={handleDeleteDiscussion}
+          onRename={handleRenameDiscussion}
+          onDeleteMultiple={handleDeleteMultipleDiscussions}
+        />
+      </Suspense>
 
       <div className="w-full max-w-12xl h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] flex flex-col relative z-10">
         {/* Header compact performant */}
@@ -909,24 +988,26 @@ function App() {
         <MemoryFeedback loading={semanticLoading} score={semanticScore} />
       </div>
 
-      <TTSSettingsModal
-        open={showTTSSettings}
-        onClose={() => setShowTTSSettings(false)}
-        rate={rate}
-        setRate={setRate}
-        pitch={pitch}
-        setPitch={setPitch}
-        volume={volume}
-        setVolume={setVolume}
-        voiceURI={voiceURI}
-        setVoiceURI={setVoiceURI}
-        availableVoices={availableVoices}
-        testVoice={testVoice}
-        resetSettings={handleResetSettings}
-        exportSettings={exportSettings}
-        importSettings={importSettings}
-        deleteSettings={deleteSettings}
-      />
+      <Suspense fallback={null}>
+        <TTSSettingsModalLazy
+          open={showTTSSettings}
+          onClose={() => setShowTTSSettings(false)}
+          rate={rate}
+          setRate={setRate}
+          pitch={pitch}
+          setPitch={setPitch}
+          volume={volume}
+          setVolume={setVolume}
+          voiceURI={voiceURI}
+          setVoiceURI={setVoiceURI}
+          availableVoices={availableVoices}
+          testVoice={testVoice}
+          resetSettings={handleResetSettings}
+          exportSettings={exportSettings}
+          importSettings={importSettings}
+          deleteSettings={deleteSettings}
+        />
+      </Suspense>
 
       <VocalModeIndicator 
         visible={modeVocalAuto} 
@@ -940,36 +1021,44 @@ function App() {
       
 
       {/* Modale de gestion des documents RAG */}
-      <RagDocsModal open={showRagDocs} onClose={() => setShowRagDocs(false)} />
+      <Suspense fallback={null}>
+        <RagDocsModalLazy open={showRagDocs} onClose={() => setShowRagDocs(false)} />
+      </Suspense>
 
       {/* Modale latérale compacte pour les réglages Gemini */}
-      <GeminiSettingsDrawer
-        open={showGeminiSettings}
-        onOpenChange={setShowGeminiSettings}
-        geminiConfig={geminiConfig}
-        onConfigChange={handleGeminiConfigChange}
-        onReset={() => setGeminiConfig(DEFAULTS)}
-        onClose={() => setShowGeminiSettings(false)}
-        DEFAULTS={DEFAULTS}
-      />
+      <Suspense fallback={null}>
+        <GeminiSettingsDrawerLazy
+          open={showGeminiSettings}
+          onOpenChange={setShowGeminiSettings}
+          geminiConfig={geminiConfig}
+          onConfigChange={handleGeminiConfigChange}
+          onReset={() => setGeminiConfig(DEFAULTS)}
+          onClose={() => setShowGeminiSettings(false)}
+          DEFAULTS={DEFAULTS}
+        />
+      </Suspense>
 
-      <MemoryModal
-        open={showMemoryModal}
-        onClose={() => setShowMemoryModal(false)}
-        examples={examples}
-        setExamples={setExamples}
-        semanticThreshold={semanticThreshold}
-        setSemanticThreshold={setSemanticThreshold}
-        semanticLoading={semanticLoading}
-      />
+      <Suspense fallback={null}>
+        <MemoryModalLazy
+          open={showMemoryModal}
+          onClose={() => setShowMemoryModal(false)}
+          examples={examples}
+          setExamples={setExamples}
+          semanticThreshold={semanticThreshold}
+          setSemanticThreshold={setSemanticThreshold}
+          semanticLoading={semanticLoading}
+        />
+      </Suspense>
 
       {/* Modal personnalité - rendu au niveau racine */}
-      <PersonalitySelector
-        open={showPersonalitySelector}
-        onClose={() => setShowPersonalitySelector(false)}
-        selectedPersonality={selectedPersonality}
-        onPersonalityChange={setSelectedPersonality}
-      />
+      <Suspense fallback={null}>
+        <PersonalitySelectorLazy
+          open={showPersonalitySelector}
+          onClose={() => setShowPersonalitySelector(false)}
+          selectedPersonality={selectedPersonality}
+          onPersonalityChange={setSelectedPersonality}
+        />
+      </Suspense>
     </div>
   );
 }
