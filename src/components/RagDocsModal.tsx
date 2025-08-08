@@ -93,7 +93,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
     }
     if (ext === 'pdf') {
       try {
-        const pdfModule: any = await import('pdfjs-dist/build/pdf');
+        const pdfModule: any = await import('pdfjs-dist');
         const pdfjsLib = pdfModule?.default ?? pdfModule;
         // @ts-ignore
         pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.mjs';
