@@ -60,6 +60,9 @@ function getEmbedder() {
   return embedderPromise;
 }
 
+// Clé de cache pour les embeddings des exemples
+const EXAMPLE_EMBEDDINGS_LS_KEY = 'memory_example_embeddings_v1';
+
 // Fonction utilitaire pour la similarité cosinus
 function cosineSimilarity(a: number[], b: number[]) {
   let dot = 0, normA = 0, normB = 0;
@@ -815,13 +818,82 @@ function App() {
   const [semanticLoading, setSemanticLoading] = useState(false);
   const [semanticScore, setSemanticScore] = useState<number | null>(null);
 
+  // Cache en mémoire des embeddings d'exemples { texteExemple: embedding }
+  const exampleEmbeddingsRef = useRef<Record<string, number[]>>({});
+
+  // Charger le cache depuis localStorage et préchauffer l'embedder en idle
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(EXAMPLE_EMBEDDINGS_LS_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && typeof parsed === 'object') {
+          exampleEmbeddingsRef.current = parsed;
+        }
+      }
+    } catch {}
+    const idle = (window as any).requestIdleCallback || ((cb: Function) => setTimeout(cb as any, 300));
+    idle(() => {
+      // Préchargement silencieux du modèle
+      getEmbedder().catch(() => {});
+    });
+  }, []);
+
+  // Sauvegarde du cache d'embeddings en localStorage (debounced léger)
+  const persistExampleEmbeddings = useRef<number | null>(null);
+  function saveExampleEmbeddingsDebounced() {
+    if (persistExampleEmbeddings.current) {
+      window.clearTimeout(persistExampleEmbeddings.current);
+    }
+    persistExampleEmbeddings.current = window.setTimeout(() => {
+      try {
+        localStorage.setItem(EXAMPLE_EMBEDDINGS_LS_KEY, JSON.stringify(exampleEmbeddingsRef.current));
+      } catch {}
+    }, 250);
+  }
+
+  // Pré-calculer en arrière-plan les embeddings manquants pour les exemples
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const missing = examples.filter((ex) => !exampleEmbeddingsRef.current[ex]);
+      if (missing.length === 0) return;
+      try {
+        const embedder = await getEmbedder();
+        for (const ex of missing) {
+          if (cancelled) return;
+          // Évite de monopoliser le thread: laisser respirer l'UI entre items
+          await new Promise((res) => setTimeout(res, 0));
+          const res: number[][] = await embedder(ex);
+          exampleEmbeddingsRef.current[ex] = res[0];
+        }
+        saveExampleEmbeddingsDebounced();
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [examples]);
+
   // Fonction asynchrone pour juger la pertinence sémantique (utilise les exemples et seuil du state)
   const isPersonalInfoSemantic = async (text: string): Promise<boolean> => {
     const embedder = await getEmbedder();
-    const [inputEmbedding] = await embedder(text);
-    const exampleEmbeddingsLocal = await Promise.all(examples.map((e: string) => embedder(e).then((res: number[][]) => res[0])));
-    const similaritiesLocal = exampleEmbeddingsLocal.map((ex: number[]) => cosineSimilarity(inputEmbedding, ex));
-    const maxSim = Math.max(...similaritiesLocal);
+    const resIn: number[][] = await embedder(text);
+    const inputEmbedding = resIn[0];
+
+    // Récupérer les embeddings des exemples depuis le cache, calculer ceux manquants à la volée
+    const exampleEmbeddings: number[][] = [];
+    for (const ex of examples) {
+      let emb = exampleEmbeddingsRef.current[ex];
+      if (!emb) {
+        const resEx: number[][] = await embedder(ex);
+        emb = resEx[0];
+        exampleEmbeddingsRef.current[ex] = emb;
+      }
+      exampleEmbeddings.push(emb);
+    }
+    saveExampleEmbeddingsDebounced();
+
+    const similaritiesLocal = exampleEmbeddings.map((ex) => cosineSimilarity(inputEmbedding, ex));
+    const maxSim = similaritiesLocal.length ? Math.max(...similaritiesLocal) : 0;
     setSemanticScore(maxSim);
     return maxSim > semanticThreshold;
   };
