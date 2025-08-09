@@ -207,8 +207,7 @@ body {
   }
 }
 
-.
-animate-fadeOut {
+.animate-fadeOut {
   animation: fadeOut 0.25s ease-in forwards;
 }
 
