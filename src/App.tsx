@@ -25,7 +25,7 @@ import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 
 import { MemoryFeedback } from '@/components/MemoryFeedback';
-import { ReasoningTimeline, type ReasoningStep } from '@/components/ReasoningTimeline';
+import { type ReasoningStep } from '@/components/ReasoningTimeline';
 
 interface Message {
   id: string;
@@ -1022,7 +1022,14 @@ function App() {
 
       {/* Zone de saisie fixée en bas de l'écran */}
       <div className="fixed bottom-0 left-0 w-full z-50 bg-white/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-700 px-2 pt-2 pb-2 backdrop-blur-xl">
-        <VoiceInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+        <VoiceInput
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+          reasoningVisible={reasoningVisible}
+          reasoningSteps={reasoningSteps}
+          reasoningLoading={isLoading}
+          reasoningSpeaking={isAISpeaking}
+        />
         <MemoryFeedback loading={semanticLoading} score={semanticScore} />
       </div>
 
@@ -1056,13 +1063,7 @@ function App() {
         isAISpeaking={isAISpeaking}
       />
 
-      <ReasoningTimeline
-        visible={reasoningVisible}
-        steps={reasoningSteps}
-        loading={isLoading}
-        speaking={isAISpeaking}
-        onClose={() => setReasoningVisible(false)}
-      />
+      {/* Suppression de l'overlay de timeline car affichage inline dans VoiceInput */}
       {/* Modale de gestion des documents RAG */}
       <Suspense fallback={null}>
         <RagDocsModalLazy open={showRagDocs} onClose={() => setShowRagDocs(false)} />
