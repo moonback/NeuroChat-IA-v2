@@ -195,6 +195,23 @@ body {
   }
 }
 
+/* Smooth fade out for removals */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.
+animate-fadeOut {
+  animation: fadeOut 0.25s ease-in forwards;
+}
+
 @keyframes bounce {
   0%, 100% {
     transform: translateY(-25%);

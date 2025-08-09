@@ -20,6 +20,21 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
+  // Pré-remplissage via un événement global (pour le bouton Répondre)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      try {
+        const detail = (e as CustomEvent<string>).detail;
+        if (typeof detail === 'string') {
+          setInputValue(detail);
+          inputRef.current?.focus();
+        }
+      } catch {}
+    };
+    document.addEventListener('voice-input:prefill', handler as EventListener);
+    return () => document.removeEventListener('voice-input:prefill', handler as EventListener);
+  }, []);
+
   // Reconnaissance vocale
   const {
     listening,

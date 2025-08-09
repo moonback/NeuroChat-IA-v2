@@ -49,6 +49,12 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
   const [isNearBottom, setIsNearBottom] = useState(true);
   const [showAllPassages, setShowAllPassages] = useState<{ [id: string]: boolean }>({});
   const [showChatInfo, setShowChatInfo] = useState(false);
+  const quickPrompts = [
+    "Peux-tu résumer notre dernière conversation ?",
+    "Donne-moi 3 idées d'activités ce week-end",
+    "Explique-moi ce texte simplement",
+    "Aide-moi à planifier ma journée",
+  ];
 
   // Recalculer la position bas de page via Virtuoso
   const handleAtBottomChange = useCallback((atBottom: boolean) => {
@@ -126,8 +132,18 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                       </div>
                     ))}
                   </div>
-                  
-                  
+                  {/* Suggestions rapides */}
+                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {quickPrompts.map((qp, idx) => (
+                      <button
+                        key={idx}
+                        className="text-left p-3 rounded-xl border bg-white/80 dark:bg-slate-800/80 border-white/60 dark:border-slate-700/60 hover:bg-white/95 dark:hover:bg-slate-800/95 transition-all duration-200 hover:shadow-md"
+                        onClick={() => onReplyToMessage && onReplyToMessage(qp)}
+                      >
+                        <span className="text-sm text-slate-700 dark:text-slate-200">{qp}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             ) : (
@@ -144,10 +160,18 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                       L'IA conversationnelle nouvelle génération avec support vocal, visuel et recherche documentaire avancée
                     </p>
                   </div>
-                  
-                  
-                  
-                  
+                  {/* Suggestions rapides */}
+                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {quickPrompts.map((qp, idx) => (
+                      <button
+                        key={idx}
+                        className="text-left p-3 rounded-xl border bg-white/80 dark:bg-slate-800/80 border-white/60 dark:border-slate-700/60 hover:bg-white/95 dark:hover:bg-slate-800/95 transition-all duration-200 hover:shadow-md"
+                        onClick={() => onReplyToMessage && onReplyToMessage(qp)}
+                      >
+                        <span className="text-sm text-slate-700 dark:text-slate-200">{qp}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )

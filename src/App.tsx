@@ -1006,6 +1006,11 @@ function App() {
               messages={messages}
               isLoading={isLoading}
               onDeleteMessage={handleDeleteMessage}
+            onReplyToMessage={(content: string) => {
+              try {
+                document.dispatchEvent(new CustomEvent('voice-input:prefill', { detail: String(content || '') }));
+              } catch {}
+            }}
               selectMode={selectMode}
               selectedMessageIds={selectedMessageIds}
               onSelectMessage={handleSelectMessage}
