@@ -1,27 +1,19 @@
 # 🧠 NeuroChat
 
-> Application de chat IA moderne et intuitive avec personnalités multiples, reconnaissance vocale et analyse sémantique
+> Application de chat IA moderne et intuitive avec reconnaissance vocale et analyse sémantique
 
 <div align="center">
 
 ![NeuroChat Platform](./public/neurochat-screenshot.png)
-*Interface moderne de NeuroChat avec mode vocal automatique et personnalités IA*
+*Interface moderne de NeuroChat avec mode vocal automatique*
 
 </div>
 
-**NeuroChat** révolutionne votre façon d'interagir avec l'intelligence artificielle en combinant chat textuel, reconnaissance vocale, analyse d'images et personnalités IA dans une interface élégante et responsive. Choisissez parmi 12 personnalités différentes et communiquez naturellement avec l'IA !
+**NeuroChat** révolutionne votre façon d'interagir avec l'intelligence artificielle en combinant chat textuel, reconnaissance vocale et analyse d'images dans une interface élégante et responsive.
 
 ## ✨ Fonctionnalités principales
 
-### 🎭 **Système de personnalités IA**
-- **12 personnalités uniques** réparties en 4 catégories :
-  - **Professionnel** : Formel, Expert, Consultant
-  - **Social** : Amical, Motivateur, Coach, Décontracté
-  - **Créatif** : Humoristique, Créatif, Artiste, Gamer
-  - **Expert** : Professeur
-- **Interface de sélection moderne** avec filtres par catégorie
-- **Aperçu détaillé** avec traits de personnalité et descriptions
-- **Changement en temps réel** du style de communication
+<!-- Système de personnalités retiré -->
 
 ### 🗣️ **Communication vocale avancée**
 - **Mode vocal automatique** : conversation continue mains-libres
@@ -100,11 +92,7 @@
 
 ## 📖 Guide d'utilisation
 
-### 🎭 **Choisir une personnalité**
-1. Cliquez sur le bouton de personnalité dans le header
-2. Parcourez les 4 catégories ou utilisez "Toutes"
-3. Activez "Afficher les détails" pour voir les traits
-4. Sélectionnez votre personnalité préférée
+<!-- Section personnalité retirée -->
 
 ### 🎤 **Mode vocal automatique**
 1. Activez le mode vocal dans le header
@@ -168,7 +156,7 @@
 src/
 ├── components/           # Composants React
 │   ├── ui/              # Composants UI génériques (Radix)
-│   ├── PersonalitySelector.tsx  # Sélecteur de personnalités
+│   ├── ChatContainer.tsx        # Zone de conversation
 │   ├── ChatContainer.tsx        # Zone de conversation
 │   ├── VoiceInput.tsx          # Saisie vocale/texte
 │   ├── VocalModeIndicator.tsx  # Indicateur vocal flottant
@@ -179,7 +167,7 @@ src/
 │   ├── TTSSettingsModal.tsx    # Réglages synthèse vocale
 │   └── PrivateModeBanner.tsx   # Banner mode privé
 ├── config/              # Configuration
-│   └── personalities.ts # Définition des personnalités
+│   └── (personnalités retirées)
 ├── hooks/               # Hooks React personnalisés
 │   ├── useMemory.ts     # Gestion mémoire utilisateur
 │   ├── useSpeechSynthesis.ts # Synthèse vocale
@@ -362,15 +350,13 @@ git push origin feature/ma-nouvelle-fonctionnalite
 
 ### Interface principale
 ![NeuroChat Interface](./public/neurochat-main.png)
-*Interface principale avec chat et personnalités*
+*Interface principale avec chat*
 
 ### Mode vocal automatique
 ![Mode Vocal](./public/neurochat-vocal.png)
 *Indicateur vocal flottant en action*
 
-### Sélection de personnalités
-![Personnalités](./public/neurochat-personalities.png)
-*12 personnalités IA disponibles*
+<!-- Captures personnalités retirées -->
 
 ### Mode privé
 ![Mode Privé](./public/neurochat-private.png)

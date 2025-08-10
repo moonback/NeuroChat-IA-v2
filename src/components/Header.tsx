@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
-import { PersonalityTrigger } from '@/components/PersonalitySelector';
+// Sélecteur de personnalité retiré
 
 // =====================
 // Constantes & Utilitaires
@@ -27,9 +27,7 @@ interface HeaderProps {
   onOpenHistory: () => void;
   onOpenTTSSettings: () => void;
   onOpenRagDocs: () => void;
-  selectedPersonality: string;
-  onChangePersonality: (value: string) => void;
-  onOpenPersonalitySelector: () => void;
+  // Personnalité retirée
   stop: () => void;
   modeVocalAuto: boolean;
   setModeVocalAuto: (v: boolean) => void;
@@ -65,8 +63,7 @@ export function Header({
   onOpenHistory,
   onOpenTTSSettings,
   onOpenRagDocs,
-  selectedPersonality,
-  onOpenPersonalitySelector,
+  
   modeVocalAuto,
   setModeVocalAuto,
   hasActiveConversation,
@@ -272,11 +269,7 @@ export function Header({
 
             <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
 
-            {/* Personnalité IA */}
-            <PersonalityTrigger
-              selectedPersonality={selectedPersonality}
-              onClick={onOpenPersonalitySelector}
-            />
+            {/* Personnalité IA retirée */}
 
             {/* Mode privé */}
             <Button
@@ -379,13 +372,7 @@ export function Header({
               </div>
 
               {/* Options toujours visibles */}
-              <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onOpenPersonalitySelector(); setShowMobileMenu(false); }}>
-                <PersonalityTrigger
-                  selectedPersonality={selectedPersonality}
-                  onClick={() => {}}
-                  className="!p-0 !h-auto !bg-transparent hover:!bg-transparent !justify-start"
-                />
-              </Button>
+              {/* Personnalité IA retirée du menu */}
 
               <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onOpenTTSSettings(); setShowMobileMenu(false); }}>
                 <Settings2 className="w-4 h-4 mr-3" />

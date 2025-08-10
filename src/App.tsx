@@ -18,8 +18,7 @@ import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
 import { useMemory } from "@/hooks/useMemory";
 const MemoryModalLazy = lazy(() => import('@/components/MemoryModal').then(m => ({ default: m.MemoryModal })));
 const GeminiSettingsDrawerLazy = lazy(() => import('@/components/GeminiSettingsDrawer').then(m => ({ default: m.GeminiSettingsDrawer })));
-import { getPersonalityById, getDefaultPersonality } from '@/config/personalities';
-const PersonalitySelectorLazy = lazy(() => import('@/components/PersonalitySelector').then(m => ({ default: m.PersonalitySelector })));
+// Retrait du sélecteur de personnalités
 
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
@@ -105,9 +104,7 @@ function App() {
   
   const [showTTSSettings, setShowTTSSettings] = useState(false);
   
-  // Ajout du state pour la personnalité IA (par défaut : selon configuration)
-  const [selectedPersonality, setSelectedPersonality] = useState(getDefaultPersonality().id);
-  const [showPersonalitySelector, setShowPersonalitySelector] = useState(false);
+  // Personnalités retirées
   // Ajout du state pour le mode vocal automatique
   const [modeVocalAuto, setModeVocalAuto] = useState(false);
   // Ajout du state pour la modale de gestion des documents RAG
@@ -285,15 +282,8 @@ function App() {
 
  
 
-  const getSystemPrompt = (personalityId: string) => {
-    const personality = getPersonalityById(personalityId);
-    if (!personality) {
-      return SYSTEM_PROMPT;
-    }
-    
-    // On combine le prompt système de base avec l'ajout lié à la personnalité
-    return SYSTEM_PROMPT + " " + personality.systemPromptAddition;
-  };
+  // Prompt système unique (personnalités retirées)
+  const getSystemPrompt = () => SYSTEM_PROMPT;
 
   const addRagContextMessage = (passages: { id: number; titre: string; contenu: string }[]) => {
     const ragMsg: RagContextMessage = {
@@ -498,7 +488,7 @@ function App() {
         : "";
       // LOG mémoire injectée
       // console.log('[Mémoire utilisateur injectée]', memorySummary);
-      const prompt = `${getSystemPrompt(selectedPersonality)}\n${dateTimeInfo}${memorySummary}${ragEnabled ? ragContext : ""}Question utilisateur : ${userMessage}`;
+      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memorySummary}${ragEnabled ? ragContext : ""}Question utilisateur : ${userMessage}`;
       const promptEnd = performance.now();
       setReasoningSteps(prev => prev.map(s => s.key === 'buildPrompt' ? ({ ...s, status: 'done', end: promptEnd, durationMs: Math.round(promptEnd - (s.start || promptStart)), detail: `${prompt.length} caractères` }) : s));
       // LOG prompt final
@@ -968,9 +958,7 @@ function App() {
           onOpenHistory={handleOpenHistory}
           onOpenTTSSettings={() => setShowTTSSettings(true)}
           onOpenRagDocs={() => setShowRagDocs(true)}
-          selectedPersonality={selectedPersonality}
-          onChangePersonality={setSelectedPersonality}
-          onOpenPersonalitySelector={() => setShowPersonalitySelector(true)}
+          
           stop={stop}
           modeVocalAuto={modeVocalAuto}
           setModeVocalAuto={setModeVocalAuto}
@@ -1097,15 +1085,7 @@ function App() {
         />
       </Suspense>
 
-      {/* Modal personnalité - rendu au niveau racine */}
-      <Suspense fallback={null}>
-        <PersonalitySelectorLazy
-          open={showPersonalitySelector}
-          onClose={() => setShowPersonalitySelector(false)}
-          selectedPersonality={selectedPersonality}
-          onPersonalityChange={setSelectedPersonality}
-        />
-      </Suspense>
+      
     </div>
   );
 }
