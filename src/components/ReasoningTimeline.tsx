@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, Loader2, XCircle, MinusCircle, Circle, Search, Braces, Network, Mic, X, Pin, PinOff, Clipboard } from 'lucide-react';
+import { CheckCircle2, Loader2, XCircle, MinusCircle, Circle, Search, Braces, Network, Mic, X, Pin, PinOff, Clipboard, List, Focus } from 'lucide-react';
 
 export type ReasoningStepKey = 'rag' | 'buildPrompt' | 'callLLM' | 'tts';
 
@@ -86,6 +86,10 @@ export const ReasoningTimeline: React.FC<ReasoningTimelineProps> = ({
   const [isPinned, setIsPinned] = useState<boolean>(defaultPinned);
   const [expandedKeys, setExpandedKeys] = useState<Set<ReasoningStepKey>>(new Set());
   const [lastCopiedKey, setLastCopiedKey] = useState<ReasoningStepKey | null>(null);
+  const [showAllSteps, setShowAllSteps] = useState<boolean>(false);
+  // Afficher uniquement l'étape en cours (running)
+  const runningSteps = useMemo(() => steps.filter((s) => s.status === 'running'), [steps]);
+  const renderSteps = showAllSteps ? steps : runningSteps.length > 0 ? runningSteps : [];
   const anyRunning = useMemo(() => steps.some((s) => s.status === 'running'), [steps]);
   const allDone = useMemo(
     () => steps.length > 0 && steps.every((s) => s.status === 'done' || s.status === 'skipped') && !loading && !speaking,
@@ -151,18 +155,29 @@ export const ReasoningTimeline: React.FC<ReasoningTimelineProps> = ({
             />
           </div>
         )}
-        <div className="mt-1 flex items-center gap-2">
-          <div className="text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">Raisonnement</div>
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-            {steps.map((step) => (
+        <div className="mt-1 flex items-center justify-center">
+          <button
+            type="button"
+            className="text-[10px] px-1.5 py-0.5 rounded text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800"
+            aria-label={showAllSteps ? "N'afficher que l'étape en cours" : 'Afficher toutes les étapes'}
+            onClick={() => setShowAllSteps((v) => !v)}
+          >
+            {showAllSteps ? 'Afficher en cours' : 'Afficher tout'}
+          </button>
+        </div>
+        <div className="mt-1 flex items-center justify-center gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar justify-center">
+            {renderSteps.map((step) => (
               <div key={step.key} className="flex items-center gap-1 text-[10px] text-slate-600 dark:text-slate-300" title={step.detail || step.label}>
                 <StatusIcon status={step.status} />
                 <StepIcon step={step} />
-                <span className="hidden sm:inline truncate max-w-[80px]">{step.label}</span>
+                <span className="hidden sm:inline truncate max-w-[120px]">{step.label}</span>
               </div>
             ))}
+            {renderSteps.length === 0 && !showAllSteps && (
+              <div className="text-[10px] text-slate-500 dark:text-slate-400">Aucune étape en cours</div>
+            )}
           </div>
-          <div className="ml-auto text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">{doneCount}/{steps.length}</div>
         </div>
       </div>
     );
@@ -190,6 +205,19 @@ export const ReasoningTimeline: React.FC<ReasoningTimelineProps> = ({
             <div className="text-[10px] text-slate-500 dark:text-slate-400">
               {anyRunning || loading || speaking ? 'Traitement…' : 'Terminé'}
             </div>
+            <button
+              type="button"
+              aria-label={showAllSteps ? "N'afficher que l'étape en cours" : 'Afficher toutes les étapes'}
+              className="inline-flex items-center justify-center rounded-md p-1 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+              onClick={() => setShowAllSteps((v) => !v)}
+              title={showAllSteps ? 'Vue: en cours' : 'Vue: toutes'}
+            >
+              {showAllSteps ? (
+                <Focus className="h-3.5 w-3.5" />
+              ) : (
+                <List className="h-3.5 w-3.5" />)
+              }
+            </button>
             {allowPin && (
               <button
                 type="button"
@@ -225,10 +253,10 @@ export const ReasoningTimeline: React.FC<ReasoningTimelineProps> = ({
           </div>
         )}
         <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[55vh] overflow-y-auto">
-          {steps.map((step) => (
+          {renderSteps.map((step) => (
             <div
               key={step.key}
-              className="px-3 py-2 flex items-center gap-2.5 select-none cursor-default"
+              className="px-3 py-2 flex items-center gap-2.5 select-none cursor-default mx-auto"
               role="button"
               tabIndex={0}
               aria-expanded={expandedKeys.has(step.key)}
@@ -255,11 +283,11 @@ export const ReasoningTimeline: React.FC<ReasoningTimelineProps> = ({
               <div className="mt-0">
                 <StatusIcon status={step.status} />
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 text-[13px] leading-5">
+              <div className="min-w-0">
+                <div className="flex items-center justify-center gap-2 text-[13px] leading-5">
                   <StepIcon step={step} />
                   <span className="text-slate-800 dark:text-slate-100 truncate">{step.label}</span>
-                  <div className="ml-auto flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5">
                     <span
                       className={
                         'inline-flex items-center rounded px-1.5 py-0.5 font-mono text-[10px] ' +
@@ -291,7 +319,7 @@ export const ReasoningTimeline: React.FC<ReasoningTimelineProps> = ({
                   </div>
                 </div>
                 {step.detail && (
-                  <div className="mt-0.5 text-[11px] text-slate-600 dark:text-slate-300 transition-all">
+                  <div className="mt-0.5 text-[11px] text-slate-600 dark:text-slate-300 transition-all text-center">
                     {expandedKeys.has(step.key) ? (
                       <div className="whitespace-pre-wrap break-words">{step.detail}</div>
                     ) : (
@@ -302,6 +330,9 @@ export const ReasoningTimeline: React.FC<ReasoningTimelineProps> = ({
               </div>
             </div>
           ))}
+          {renderSteps.length === 0 && !showAllSteps && (
+            <div className="px-3 py-6 text-center text-[12px] text-slate-500 dark:text-slate-400">Aucune étape en cours</div>
+          )}
         </div>
       </div>
     </div>
