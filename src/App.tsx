@@ -348,12 +348,15 @@ function App() {
   const handleSendMessage = async (userMessage: string, imageFile?: File) => {
     // Préparer la timeline de raisonnement
     setReasoningVisible(true);
-    setReasoningSteps([
-      { key: 'rag', label: 'Recherche contextuelle (RAG)', status: ragEnabled ? 'running' : 'skipped', start: ragEnabled ? performance.now() : undefined, detail: ragEnabled ? 'Analyse des documents…' : 'RAG désactivé' },
+    const initialSteps: ReasoningStep[] = [
+      ...(ragEnabled
+        ? [{ key: 'rag', label: 'Recherche contextuelle (RAG)', status: 'running', start: performance.now(), detail: 'Analyse des documents…' } as ReasoningStep]
+        : []),
       { key: 'buildPrompt', label: 'Construction du prompt', status: 'idle' },
       { key: 'callLLM', label: 'Appel du modèle', status: 'idle' },
       { key: 'tts', label: 'Synthèse vocale', status: 'idle' },
-    ]);
+    ];
+    setReasoningSteps(initialSteps);
 
     let ragStart = ragEnabled ? performance.now() : 0;
     let promptStart = 0;
