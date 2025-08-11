@@ -10,6 +10,7 @@ const TTSSettingsModalLazy = lazy(() => import('@/components/TTSSettingsModal').
 import { Header } from '@/components/Header';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { searchDocuments } from '@/services/ragSearch';
+import { getEmbedder, embedText, cosineSimilarityNormalized } from '@/services/embeddings';
 const RagDocsModalLazy = lazy(() => import('@/components/RagDocsModal').then(m => ({ default: m.RagDocsModal })));
 const HistoryModalLazy = lazy(() => import('@/components/HistoryModal').then(m => ({ default: m.HistoryModal })));
 import type { DiscussionWithCategory } from '@/components/HistoryModal';
@@ -47,32 +48,26 @@ type RagContextMessage = {
   timestamp: Date;
 };
 
-// Initialisation du pipeline d'embeddings (hors composant) via import dynamique
-let embedderPromise: Promise<any> | null = null;
-function getEmbedder() {
-  if (!embedderPromise) {
-    embedderPromise = (async () => {
-      const mod = await import('@xenova/transformers');
-      const pl = (mod as any).pipeline as typeof import('@xenova/transformers').pipeline;
-      return pl('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-    })();
-  }
-  return embedderPromise;
-}
-
 // Clé de cache pour les embeddings des exemples
 const EXAMPLE_EMBEDDINGS_LS_KEY = 'memory_example_embeddings_v1';
+const SEMANTIC_THRESHOLD_LS_KEY = 'semantic_threshold_v1';
 
-// Fonction utilitaire pour la similarité cosinus
-function cosineSimilarity(a: number[], b: number[]) {
-  let dot = 0, normA = 0, normB = 0;
-  for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
+// Debugging contrôlé par localStorage.setItem('debug_semantic','1')
+function semanticDebug(): boolean {
+  try {
+    return localStorage.getItem('debug_semantic') === '1';
+  } catch {
+    return false;
   }
-  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
+function sLog(...args: unknown[]) {
+  if (semanticDebug()) {
+    // eslint-disable-next-line no-console
+    console.log('[Semantic]', ...args);
+  }
+}
+
+// Similarité: vecteurs normalisés => cosinus = dot product
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -401,9 +396,11 @@ function App() {
           { regex: /ma passion est ([\w\- ]+)/i, label: "passion" },
         ];
         let pertinent = false;
+        sLog('Commande mémoire détectée. Texte:', info);
         for (const p of patterns) {
           if (p.regex.test(info)) {
             pertinent = true;
+            sLog('Correspondance pattern:', p.label, p.regex.toString());
             break;
           }
         }
@@ -414,22 +411,27 @@ function App() {
             "animal", "couleur", "sport", "passion", "date de naissance", "anniversaire", "plat", "hobby", "pays", "activité"
           ];
           const lowerInfo = info.toLowerCase();
-          if (keywords.some(kw => lowerInfo.includes(kw))) {
+          const kwHit = keywords.find(kw => lowerInfo.includes(kw));
+          if (kwHit) {
             pertinent = true;
+            sLog('Correspondance mot-clé:', kwHit);
           }
         }
         // Si toujours pas pertinent, on tente l'analyse sémantique locale
         if (!pertinent) {
           setSemanticLoading(true);
           addMessage("Analyse sémantique en cours...", false);
+          sLog('Analyse sémantique locale… seuil =', semanticThreshold, '| nb exemples =', examples.length);
           pertinent = await isPersonalInfoSemantic(info);
           setSemanticLoading(false);
         }
         if (pertinent) {
           addFact(info);
+          sLog('Ajout à la mémoire (pertinent):', info);
           addMessage(`Information pertinente ajoutée à la mémoire !${semanticScore !== null ? ` (score : ${(semanticScore * 100).toFixed(1)}%)` : ''}`, false);
           toast.success("Information pertinente ajoutée à la mémoire !");
         } else {
+          sLog('Non pertinent — non ajouté:', info);
           addMessage(`Information non pertinente, non ajoutée à la mémoire.${semanticScore !== null ? ` (score : ${(semanticScore * 100).toFixed(1)}%)` : ''}`, false);
           toast.info("Information non pertinente, non ajoutée à la mémoire.");
         }
@@ -824,25 +826,63 @@ function App() {
   const [showMemoryModal, setShowMemoryModal] = useState(false);
   // Exemples d'informations personnelles pertinentes (état modifiable)
   const [examples, setExamples] = useState<string[]>([
-    "Je m'appelle Lucie",
-    "Mon prénom est Paul",
-    "J'habite à Paris",
-    "Je vis à Marseille",
-    "Je préfère le thé au café",
-    "Je suis développeur",
-    "Ma couleur préférée est le bleu",
-    "Je suis né le 12 mars 1990",
-    "Mon sport favori est le tennis",
-    "Ma passion est la photographie",
-    "Mon animal préféré est le chat",
-    "Je travaille comme infirmière",
-    "Mon métier est enseignant"
+    "Je m'appelle Thomas et je suis directeur marketing",
+    "Mon prénom est Marie et je travaille dans la finance",
+    "J'habite à Lyon dans le 6ème arrondissement",
+    "Je vis à Bordeaux depuis 5 ans avec ma famille",
+    "Je suis allergique aux arachides et aux fruits de mer",
+    "Je suis développeur full-stack spécialisé en React",
+    "Ma couleur préférée est le vert émeraude",
+    "Je suis né le 15 avril 1988 à Nantes",
+    "Je pratique le yoga et la méditation quotidiennement",
+    "Ma passion est la cuisine gastronomique française",
+    "J'ai deux chats et un chien comme animaux de compagnie",
+    "Je travaille comme chirurgienne en neurologie",
+    "Notre entreprise compte 250 employés répartis sur 3 sites",
+    "Mon bureau se situe au 4ème étage de la tour Eiffel",
+    "Je prends mes vacances en août pour partir en Grèce",
+    "Mon plat préféré est le couscous aux légumes",
+    "Je parle couramment français, anglais et espagnol",
+    "J'ai fait mes études à HEC Paris en management",
+    "Je suis marié depuis 12 ans et j'ai 3 enfants",
+    "Mon salaire annuel est de 65000 euros brut",
+    "Je souffre d'asthme depuis mon enfance",
+    "Notre chiffre d'affaires a augmenté de 25% cette année",
+    "Je prends le TGV tous les lundis pour aller au bureau",
+    "Mon équipe est composée de 8 développeurs seniors",
+    "J'ai une intolérance au gluten et au lactose",
+    "Nous utilisons principalement AWS pour notre infrastructure",
+    "Je fais du télétravail 3 jours par semaine",
+    "Mon objectif est d'ouvrir ma propre entreprise en 2025",
+    "J'investis régulièrement en bourse et en cryptomonnaies",
+    "Notre startup a levé 2 millions d'euros l'an dernier"
   ]);
   // Seuil de similarité ajustable
   const [semanticThreshold, setSemanticThreshold] = useState(0.7);
   // Loader et feedback UX
   const [semanticLoading, setSemanticLoading] = useState(false);
   const [semanticScore, setSemanticScore] = useState<number | null>(null);
+  // Charger le seuil sémantique depuis localStorage au montage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SEMANTIC_THRESHOLD_LS_KEY);
+      if (raw) {
+        const parsed = parseFloat(raw);
+        if (!Number.isNaN(parsed)) {
+          // Clamp dans la plage autorisée du slider
+          const clamped = Math.min(0.95, Math.max(0.5, parsed));
+          setSemanticThreshold(clamped);
+        }
+      }
+    } catch {}
+  }, []);
+
+  // Persister le seuil sémantique à chaque modification
+  useEffect(() => {
+    try {
+      localStorage.setItem(SEMANTIC_THRESHOLD_LS_KEY, String(semanticThreshold));
+    } catch {}
+  }, [semanticThreshold]);
 
   // Cache en mémoire des embeddings d'exemples { texteExemple: embedding }
   const exampleEmbeddingsRef = useRef<Record<string, number[]>>({});
@@ -878,20 +918,20 @@ function App() {
     }, 250);
   }
 
-  // Pré-calculer en arrière-plan les embeddings manquants pour les exemples
+  // Pré-calculer en arrière-plan les embeddings manquants pour les exemples (normalisés)
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const missing = examples.filter((ex) => !exampleEmbeddingsRef.current[ex]);
       if (missing.length === 0) return;
       try {
-        const embedder = await getEmbedder();
+        sLog('Pré-calcul embeddings manquants (examples):', missing.length, missing);
         for (const ex of missing) {
           if (cancelled) return;
-          // Évite de monopoliser le thread: laisser respirer l'UI entre items
           await new Promise((res) => setTimeout(res, 0));
-          const res: number[][] = await embedder(ex);
-          exampleEmbeddingsRef.current[ex] = res[0];
+          const emb = await embedText(ex, true);
+          exampleEmbeddingsRef.current[ex] = Array.from(emb);
+          sLog('Exemple vectorisé (cache):', ex);
         }
         saveExampleEmbeddingsDebounced();
       } catch {}
@@ -901,27 +941,30 @@ function App() {
 
   // Fonction asynchrone pour juger la pertinence sémantique (utilise les exemples et seuil du state)
   const isPersonalInfoSemantic = async (text: string): Promise<boolean> => {
-    const embedder = await getEmbedder();
-    const resIn: number[][] = await embedder(text);
-    const inputEmbedding = resIn[0];
+    const inputEmbedding = await embedText(text, true);
+    sLog('Embedding entrée taille:', inputEmbedding.length, '| Texte:', text);
 
-    // Récupérer les embeddings des exemples depuis le cache, calculer ceux manquants à la volée
+    // Récupérer les embeddings des exemples depuis le cache, calculer ceux manquants à la volée (normalisés)
     const exampleEmbeddings: number[][] = [];
     for (const ex of examples) {
       let emb = exampleEmbeddingsRef.current[ex];
       if (!emb) {
-        const resEx: number[][] = await embedder(ex);
-        emb = resEx[0];
+        const exEmb = await embedText(ex, true);
+        emb = Array.from(exEmb);
         exampleEmbeddingsRef.current[ex] = emb;
+        sLog('Exemple manquant vectorisé à la volée:', ex);
       }
       exampleEmbeddings.push(emb);
     }
     saveExampleEmbeddingsDebounced();
 
-    const similaritiesLocal = exampleEmbeddings.map((ex) => cosineSimilarity(inputEmbedding, ex));
+    const similaritiesLocal = exampleEmbeddings.map((exEmb) => cosineSimilarityNormalized(inputEmbedding, exEmb));
+    sLog('Similarités (exemples):', similaritiesLocal.map((s) => Number(s.toFixed(3))));
     const maxSim = similaritiesLocal.length ? Math.max(...similaritiesLocal) : 0;
     setSemanticScore(maxSim);
-    return maxSim > semanticThreshold;
+    const decision = maxSim > semanticThreshold;
+    sLog('Score max =', Number(maxSim.toFixed(4)), '| Seuil =', semanticThreshold, '| Décision =', decision ? 'PERTINENT' : 'NON PERTINENT');
+    return decision;
   };
 
   // Nettoyer le timeout à la fermeture du composant

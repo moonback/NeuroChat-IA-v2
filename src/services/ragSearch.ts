@@ -1,5 +1,6 @@
 // Charger tous les fichiers .txt et .md du dossier rag_docs (Vite only)
 const modules = import.meta.glob('../data/rag_docs/*.{txt,md}', { as: 'raw', eager: true });
+import { embedText, cosineSimilarityNormalized } from './embeddings';
 
 function getAllDocuments() {
   const dossierDocs = Object.entries(modules).map(([path, contenu], idx) => {
@@ -19,30 +20,20 @@ function getAllDocuments() {
   return [...dossierDocs, ...userDocs];
 }
 
-let model: any = null;
-let documentEmbeddings: { [id: string]: number[] } = {};
+let model: any = null; // conservé pour compat mais plus utilisé directement ici
+let documentEmbeddings: { [id: string]: Float32Array } = {};
 
 // Fonction utilitaire pour la similarité cosinus
-function cosineSimilarity(a: number[], b: number[]): number {
-  const dot = a.reduce((sum, v, i) => sum + v * b[i], 0);
-  const normA = Math.sqrt(a.reduce((sum, v) => sum + v * v, 0));
-  const normB = Math.sqrt(b.reduce((sum, v) => sum + v * v, 0));
-  return dot / (normA * normB);
-}
+// Les vecteurs étant normalisés, la similarité cosinus est un dot product
 
 // Initialisation du modèle et des embeddings (asynchrone)
-async function loadModelAndEmbeddings(documents: any[]) {
-  if (!model) {
-    const { pipeline } = await import('@xenova/transformers');
-    model = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-  }
-  // Si la liste des documents a changé, on recalcule les embeddings
+async function ensureEmbeddings(documents: any[]) {
   const newDocs = documents.filter(doc => !documentEmbeddings[doc.id]);
   for (const doc of newDocs) {
-    const output = await model(doc.contenu, { pooling: 'mean', normalize: true });
-    documentEmbeddings[doc.id] = Array.from(output.data) as number[];
+    const emb = await embedText(doc.contenu, true);
+    documentEmbeddings[doc.id] = emb;
+    await new Promise(res => setTimeout(res, 0));
   }
-  // Nettoyer les embeddings obsolètes
   const docIds = documents.map(doc => doc.id);
   Object.keys(documentEmbeddings).forEach(id => {
     if (!docIds.includes(id)) delete documentEmbeddings[id];
@@ -59,14 +50,13 @@ export async function searchDocuments(query: string, maxResults = 3): Promise<an
   if (!query) return [];
   const documents = getAllDocuments();
   try {
-    await loadModelAndEmbeddings(documents);
-    // Générer l'embedding de la question
-    const output = await model(query, { pooling: 'mean', normalize: true });
-    const queryEmbedding = Array.from(output.data) as number[];
+    await ensureEmbeddings(documents);
+    // Générer l'embedding de la question (normalisé)
+    const queryEmbedding = await embedText(query, true);
     // Calculer la similarité cosinus avec chaque document
     const scored = documents.map((doc) => ({
       ...doc,
-      score: documentEmbeddings[doc.id] ? cosineSimilarity(queryEmbedding, documentEmbeddings[doc.id]) : 0,
+      score: documentEmbeddings[doc.id] ? cosineSimilarityNormalized(queryEmbedding, documentEmbeddings[doc.id]) : 0,
     }));
     return scored
       .sort((a, b) => b.score - a.score)

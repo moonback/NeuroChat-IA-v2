@@ -8,7 +8,7 @@ import { useTheme } from '@/hooks/useTheme';
 import {
   MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, Trash2, Menu, X
 } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 // Sélecteur de personnalité retiré
 
@@ -320,6 +320,10 @@ export function Header({
       {/* Menu mobile/options */}
       <Dialog open={showMobileMenu} onOpenChange={setShowMobileMenu}>
         <DialogContent className="max-w-sm mx-auto p-0 bg-white dark:bg-slate-950 rounded-2xl border shadow-xl">
+          {/* Titre accessible pour lecteurs d'écran */}
+          <DialogHeader className="sr-only">
+            <DialogTitle>Menu options</DialogTitle>
+          </DialogHeader>
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold">Options</h2>
