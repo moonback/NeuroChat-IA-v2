@@ -934,7 +934,7 @@ function App() {
   }, [autoVoiceTimeout]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center relative overflow-hidden responsive-container">
       {/* Menu historique des discussions */}
       <Suspense fallback={null}>
         <HistoryModalLazy
@@ -948,7 +948,7 @@ function App() {
         />
       </Suspense>
 
-      <div className="w-full max-w-12xl h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] flex flex-col relative z-10">
+      <div className="chat-layout w-full relative z-10">
         {/* Header compact performant */}
         <Header
           muted={muted}
@@ -988,11 +988,9 @@ function App() {
         {/* Indicateur visuel du mode privé SOUS le header, centré */}
         <PrivateModeBanner visible={modePrive} />
 
-
-
         {/* Enhanced Chat Interface */}
-        <Card className="flex-1 flex flex-col shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl overflow-hidden ring-1 ring-white/20 dark:ring-slate-700/20 relative">
-          <div className="flex-1 overflow-y-auto pb-20"> {/* Ajout du padding-bottom pour l'input */}
+        <Card className="modern-card flex-1 flex flex-col bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl overflow-hidden relative">
+          <div className="flex-1 overflow-y-auto pb-24 smooth-scroll custom-scrollbar"> {/* Padding augmenté pour l'input */}
             <ChatContainer
               messages={messages}
               isLoading={isLoading}
@@ -1012,16 +1010,18 @@ function App() {
       </div>
 
       {/* Zone de saisie fixée en bas de l'écran */}
-      <div className="fixed bottom-0 left-0 w-full z-50 bg-white/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-700 px-2 pt-2 pb-2 backdrop-blur-xl">
-        <VoiceInput
-          onSendMessage={handleSendMessage}
-          isLoading={isLoading}
-          reasoningVisible={reasoningVisible}
-          reasoningSteps={reasoningSteps}
-          reasoningLoading={isLoading}
-          reasoningSpeaking={isAISpeaking}
-        />
-        <MemoryFeedback loading={semanticLoading} score={semanticScore} />
+      <div className="fixed bottom-0 left-0 w-full z-50 input-area bg-white/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-3 backdrop-blur-xl shadow-lg">
+        <div className="max-w-[1440px] mx-auto w-full">
+          <VoiceInput
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
+            reasoningVisible={reasoningVisible}
+            reasoningSteps={reasoningSteps}
+            reasoningLoading={isLoading}
+            reasoningSpeaking={isAISpeaking}
+          />
+          <MemoryFeedback loading={semanticLoading} score={semanticScore} />
+        </div>
       </div>
 
       <Suspense fallback={null}>
