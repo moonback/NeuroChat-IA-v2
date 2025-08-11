@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
-import { ArrowDown, Zap, Brain, Clock, Info, ExternalLink, Shield, X } from 'lucide-react';
+import { ArrowDown, Zap, Brain, Clock, Info, ExternalLink, Shield, X, MessageCircle, Mic } from 'lucide-react';
 import { TypingIndicator } from './TypingIndicator';
 import { cn } from '@/lib/utils'; // Assuming cn utility is available for Tailwind class merging
 
