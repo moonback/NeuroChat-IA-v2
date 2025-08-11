@@ -99,13 +99,13 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
           {/* Hero sections améliorées */}
           {messages.length === 0 ? (
             modePrive ? (
-              <div className="flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[400px] text-center px-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
+              <div className="flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[400px] text-center px-4 animate-fadeIn">
                 
                 {/* Avatar retiré */}
                 
                 <div className="max-w-lg mx-auto space-y-6">
                   <div className="space-y-2">
-                    <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight animate-shimmer">
                       Session Confidentielle
                     </h2>
                     <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
@@ -113,7 +113,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                     </p>
                   </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                     {[
                       { icon: Shield, title: "Chiffrement", desc: "Messages protégés", color: "from-red-500 to-red-600" },
                       { icon: Zap, title: "Éphémère", desc: "Auto-suppression", color: "from-purple-500 to-purple-600" },
@@ -121,54 +121,78 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                     ].map((feature, idx) => (
                       <div 
                         key={feature.title}
-                        className="group p-4 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-white/60 dark:border-slate-700/60 backdrop-blur-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 animate-in slide-in-from-bottom-4"
+                        className="modern-card group p-3 sm:p-4 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-white/60 dark:border-slate-700/60 backdrop-blur-xl hover-lift animate-slideInFromBottom"
                         style={{ animationDelay: `${idx * 100}ms` }}
                       >
-                        <div className={`w-10 h-10 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:rotate-12 transition-transform duration-300`}>
-                          <feature.icon className="w-5 h-5 text-white" />
+                        <div className={`w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-2 sm:mb-3 mx-auto group-hover:rotate-12 transition-transform duration-300`}>
+                          <feature.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
-                        <h3 className="font-semibold text-sm text-slate-800 dark:text-slate-200 mb-1">{feature.title}</h3>
+                        <h3 className="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200 mb-1">{feature.title}</h3>
                         <p className="text-xs text-slate-600 dark:text-slate-400">{feature.desc}</p>
                       </div>
                     ))}
                   </div>
                   {/* Suggestions rapides */}
-                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                     {quickPrompts.map((qp, idx) => (
                       <button
                         key={idx}
-                        className="text-left p-3 rounded-xl border bg-white/80 dark:bg-slate-800/80 border-white/60 dark:border-slate-700/60 hover:bg-white/95 dark:hover:bg-slate-800/95 transition-all duration-200 hover:shadow-md"
+                        className="text-left p-2.5 sm:p-3 rounded-xl border bg-white/80 dark:bg-slate-800/80 border-white/60 dark:border-slate-700/60 hover:bg-white/95 dark:hover:bg-slate-800/95 transition-all duration-200 hover-lift animate-slideInFromBottom"
+                        style={{ animationDelay: `${300 + idx * 100}ms` }}
                         onClick={() => onReplyToMessage && onReplyToMessage(qp)}
                       >
-                        <span className="text-sm text-slate-700 dark:text-slate-200">{qp}</span>
+                        <span className="text-xs sm:text-sm text-slate-700 dark:text-slate-200">{qp}</span>
                       </button>
                     ))}
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[400px] text-center px-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
+              <div className="flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[400px] text-center px-4 animate-fadeIn">
                 
                 {/* Avatar retiré */}
                 
                 <div className="max-w-2xl mx-auto space-y-6">
                   <div className="space-y-3">
-                    <h2 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
+                    <h2 className="text-xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight animate-shimmer">
                       Bienvenue sur NeuroChat
                     </h2>
-                    <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-lg leading-relaxed max-w-xl mx-auto">
+                    <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base md:text-lg leading-relaxed max-w-xl mx-auto">
                       L'IA conversationnelle nouvelle génération avec support vocal, visuel et recherche documentaire avancée
                     </p>
                   </div>
+                  
+                  {/* Fonctionnalités */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-xl mx-auto">
+                    {[
+                      { icon: MessageCircle, title: "Chat IA", color: "from-blue-500 to-blue-600" },
+                      { icon: Mic, title: "Vocal", color: "from-indigo-500 to-indigo-600" },
+                      { icon: Brain, title: "RAG", color: "from-purple-500 to-purple-600" },
+                      { icon: Shield, title: "Privé", color: "from-violet-500 to-violet-600" }
+                    ].map((feature, idx) => (
+                      <div 
+                        key={feature.title}
+                        className="modern-card group p-2 sm:p-3 bg-white/80 dark:bg-slate-800/80 rounded-xl border border-white/60 dark:border-slate-700/60 backdrop-blur-xl hover-lift animate-slideInFromBottom"
+                        style={{ animationDelay: `${idx * 100}ms` }}
+                      >
+                        <div className={`w-8 h-8 bg-gradient-to-r ${feature.color} rounded-lg flex items-center justify-center mb-2 mx-auto group-hover:scale-110 transition-transform duration-300`}>
+                          <feature.icon className="w-4 h-4 text-white" />
+                        </div>
+                        <h3 className="font-medium text-xs text-slate-800 dark:text-slate-200">{feature.title}</h3>
+                      </div>
+                    ))}
+                  </div>
+                  
                   {/* Suggestions rapides */}
-                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                     {quickPrompts.map((qp, idx) => (
                       <button
                         key={idx}
-                        className="text-left p-3 rounded-xl border bg-white/80 dark:bg-slate-800/80 border-white/60 dark:border-slate-700/60 hover:bg-white/95 dark:hover:bg-slate-800/95 transition-all duration-200 hover:shadow-md"
+                        className="text-left p-2.5 sm:p-3 rounded-xl border bg-white/80 dark:bg-slate-800/80 border-white/60 dark:border-slate-700/60 hover:bg-white/95 dark:hover:bg-slate-800/95 transition-all duration-200 hover-lift animate-slideInFromBottom"
+                        style={{ animationDelay: `${400 + idx * 100}ms` }}
                         onClick={() => onReplyToMessage && onReplyToMessage(qp)}
                       >
-                        <span className="text-sm text-slate-700 dark:text-slate-200">{qp}</span>
+                        <span className="text-xs sm:text-sm text-slate-700 dark:text-slate-200">{qp}</span>
                       </button>
                     ))}
                   </div>
@@ -185,27 +209,27 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                 totalCount={messages.length + (isLoading ? 1 : 0)}
                 components={{
                   Header: () => (
-                    <div className="sticky top-0 z-10 mb-2 animate-in slide-in-from-top-2 duration-500">
-                      <div className="flex items-center justify-between p-2.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-xl border border-white/60 dark:border-slate-800/60 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="flex items-center gap-3">
-                            <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <div className="sticky top-0 z-10 mb-3 sm:mb-4 animate-slideInFromTop">
+                      <div className="modern-card flex items-center justify-between p-2 sm:p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-xl border border-white/60 dark:border-slate-800/60">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
                               {messages.filter(msg => !(msg as RagContextMessage).isRagContext).length} message{messages.length !== 1 ? 's' : ''}
                             </div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              <span>Active</span>
+                            <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-md">
+                              <Clock className="w-3 h-3 text-green-600 dark:text-green-400" />
+                              <span className="text-green-700 dark:text-green-300">Active</span>
                             </div>
                           </div>
                         </div>
                         <Button 
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all duration-200"
+                          className="h-7 w-7 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all duration-200 hover-lift"
                           onClick={handleShowChatInfo}
                           title="Informations sur la conversation"
                         >
-                          <Info className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                          <Info className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                         </Button>
                       </div>
                     </div>
@@ -327,11 +351,11 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
             <Button
               onClick={scrollToBottom}
               size="icon"
-              className="fixed bottom-24 right-4 h-12 w-12 rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 hover:from-blue-600 hover:via-indigo-600 hover:to-purple-700 text-white shadow-2xl hover:shadow-blue-500/40 transition-all duration-300 animate-in slide-in-from-bottom-4 hover:scale-110 group z-30 border-2 border-white/20"
+              className="fixed bottom-28 sm:bottom-24 right-4 h-10 w-10 sm:h-12 sm:w-12 rounded-full sm:rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 hover:from-blue-600 hover:via-indigo-600 hover:to-purple-700 text-white shadow-lg hover:shadow-blue-500/40 transition-all duration-300 animate-slideInFromBottom hover:scale-110 group z-30 border-2 border-white/20"
               aria-label="Retour en bas"
             >
-              <ArrowDown className="h-5 w-5 group-hover:animate-bounce drop-shadow-sm" />
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400/20 to-purple-400/20 blur animate-pulse" />
+              <ArrowDown className="h-4 w-4 sm:h-5 sm:w-5 group-hover:animate-bounce drop-shadow-sm" />
+              <div className="absolute inset-0 rounded-full sm:rounded-2xl bg-gradient-to-r from-blue-400/20 to-purple-400/20 blur animate-pulse" />
             </Button>
           )}
         </div>

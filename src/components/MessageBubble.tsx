@@ -116,7 +116,7 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
   return (
     <div
       className={cn(
-        "flex w-full mb-6 group relative",
+        "flex w-full mb-4 sm:mb-6 group relative",
         isUser ? "justify-end" : "justify-start",
         highlight === 'edit' && 'animate-pulse bg-yellow-100 dark:bg-yellow-900/30', // Highlight for edited message
         highlight === 'delete' && 'animate-fadeOut', // Animation for deleted message
@@ -130,25 +130,25 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
       )}
 
       <div className={cn(
-        "flex max-w-[90%] sm:max-w-[80%] lg:max-w-[70%] gap-3 sm:gap-4",
+        "flex max-w-[92%] sm:max-w-[85%] lg:max-w-[75%] gap-2 sm:gap-3",
         isUser ? "flex-row-reverse" : "flex-row"
       )}>
         {/* Avatar */}
         <div className={cn(
-          "relative flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 select-none items-center justify-center rounded-2xl shadow-lg transition-all duration-300 hover:scale-105",
+          "relative flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 select-none items-center justify-center rounded-xl sm:rounded-2xl shadow-md hover-lift",
           isUser
             ? "bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 text-white shadow-green-500/25"
             : "bg-gradient-to-br from-violet-500 via-blue-500 to-indigo-600 text-white shadow-blue-500/25"
         )}>
           {isUser ? (
-            <User className="h-5 w-5 sm:h-6 sm:w-6" />
+            <User className="h-4 w-4 sm:h-5 sm:w-5" />
           ) : (
-            <Bot className="h-5 w-5 sm:h-6 sm:w-6" />
+            <Bot className="h-4 w-4 sm:h-5 sm:w-5" />
           )}
 
           {/* Enhanced online indicator for AI */}
           {!isUser && (
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 shadow-lg">
+            <div className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-3 h-3 sm:w-4 sm:h-4 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm">
               <div className="w-full h-full bg-emerald-400 rounded-full animate-pulse"></div>
               <div className="absolute inset-0 bg-emerald-300 rounded-full animate-ping opacity-75"></div>
             </div>
@@ -156,65 +156,73 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
 
           {/* Sparkle effect for latest AI message */}
           {isLatest && !isUser && (
-            <div className="absolute -top-1 -right-1">
-              <Sparkles className="h-3 w-3 text-yellow-400 animate-pulse" />
+            <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1">
+              <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-yellow-400 animate-pulse" />
             </div>
           )}
         </div>
 
         {/* Message content */}
-        <div className="flex flex-col gap-2 flex-1">
+        <div className="flex flex-col gap-1.5 sm:gap-2 flex-1">
           <div className={cn(
-            "rounded-2xl px-4 sm:px-5 py-3 sm:py-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl border relative group/message",
+            "modern-card rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 backdrop-blur-sm transition-all duration-300 border relative group/message",
             isUser
-              ? "bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 text-white rounded-br-lg border-emerald-400/30 shadow-emerald-500/20"
-              : "bg-gradient-to-br from-white via-slate-50 to-gray-50 dark:from-slate-800 dark:via-slate-750 dark:to-slate-700 text-slate-800 dark:text-slate-200 rounded-bl-lg border-slate-200/50 dark:border-slate-600/30 shadow-slate-500/10",
-            isLatest && !isUser && "ring-2 ring-blue-300/50 dark:ring-blue-600/50 ring-opacity-60 shadow-blue-500/20"
+              ? "bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 text-white rounded-br-none border-emerald-400/30 shadow-emerald-500/20"
+              : "bg-gradient-to-br from-white via-slate-50 to-gray-50 dark:from-slate-800 dark:via-slate-750 dark:to-slate-700 text-slate-800 dark:text-slate-200 rounded-bl-none border-slate-200/50 dark:border-slate-600/30 shadow-slate-500/10",
+            isLatest && !isUser && "ring-1 ring-blue-300/50 dark:ring-blue-600/50 ring-opacity-60 shadow-blue-500/20"
           )}
             onDoubleClick={() => isUser && onEdit && handleEdit()} // Double-click to edit for user messages
           >
             {/* Subtle inner glow */}
             <div className={cn(
-              "absolute inset-0 rounded-2xl opacity-0 group-hover/message:opacity-100 transition-opacity duration-300",
+              "absolute inset-0 rounded-xl sm:rounded-2xl opacity-0 group-hover/message:opacity-100 transition-opacity duration-300",
               isUser ? "bg-gradient-to-br from-white/10 to-transparent" : "bg-gradient-to-br from-blue-500/5 to-purple-500/5"
             )} />
 
             {/* Image display with enhanced styling */}
             {imageUrl && (
-              <div className="relative mb-3 group">
+              <div className="relative mb-2 sm:mb-3 group">
                 <img
                   src={imageUrl}
                   alt="Image envoyée"
                   loading="lazy"
                   decoding="async"
-                  className="max-w-xs max-h-52 rounded-xl border-2 border-white/20 dark:border-slate-600/30 shadow-lg transition-transform duration-300 hover:scale-[1.02]"
+                  className="max-w-full sm:max-w-xs max-h-40 sm:max-h-52 rounded-lg sm:rounded-xl border border-white/20 dark:border-slate-600/30 shadow-md hover-lift"
                   style={{ objectFit: 'contain' }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent rounded-lg sm:rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
             )}
 
             {/* Message text or edit input */}
             {editing ? (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1.5 sm:gap-2">
                 <textarea
                   ref={editInputRef}
-                  className="w-full rounded-lg border px-2 py-1 text-sm text-slate-900 dark:text-slate-100 dark:bg-slate-700 resize-y min-h-[40px]"
+                  className="w-full rounded-lg border px-2 py-1.5 text-xs sm:text-sm text-slate-900 dark:text-slate-100 dark:bg-slate-700 resize-y min-h-[40px] sm:min-h-[60px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   value={editValue}
                   onChange={e => setEditValue(e.target.value)}
                   onKeyDown={handleEditKeyDown}
                   rows={2}
                 />
-                <div className="flex gap-2 mt-1">
+                <div className="flex gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
                   <Button
                     size="sm"
                     variant="secondary"
                     onClick={handleEditSave}
                     disabled={editValue.trim() === message.trim() || editValue.trim() === ''}
+                    className="h-7 sm:h-8 px-2 sm:px-3 text-xs rounded-md sm:rounded-lg hover-lift"
                   >
                     Valider
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={handleEditCancel}>Annuler</Button>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={handleEditCancel}
+                    className="h-7 sm:h-8 px-2 sm:px-3 text-xs rounded-md sm:rounded-lg hover-lift"
+                  >
+                    Annuler
+                  </Button>
                 </div>
                 {/* Edit confirmation dialog */}
                 <AlertDialog open={showConfirmEdit} onOpenChange={setShowConfirmEdit}>
@@ -242,9 +250,9 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
             )}
 
             {/* Enhanced timestamp and status */}
-            <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/10 dark:border-slate-600/20">
+            <div className="flex items-center justify-between mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-white/10 dark:border-slate-600/20">
               <p className={cn(
-                "text-xs font-medium opacity-70",
+                "text-[10px] sm:text-xs font-medium opacity-70",
                 isUser ? "text-white/80" : "text-slate-500 dark:text-slate-400"
               )}>
                 {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -252,9 +260,9 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
 
               {/* Enhanced message status for user messages */}
               {isUser && (
-                <div className="flex items-center gap-1">
-                  <CheckCheck className="w-3 h-3 text-white/70" />
-                  <span className="text-xs text-white/70 font-medium">Envoyé</span>
+                <div className="flex items-center gap-0.5 sm:gap-1">
+                  <CheckCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white/70" />
+                  <span className="text-[10px] sm:text-xs text-white/70 font-medium">Envoyé</span>
                 </div>
               )}
             </div>
@@ -263,7 +271,7 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
           {/* Enhanced action buttons */}
           {(showActions || isLiked !== null) && !editing && ( // Hide actions when in editing mode
             <div className={cn(
-              "flex items-center gap-1.5 transition-all duration-300 opacity-0 group-hover:opacity-100 transform translate-y-1 group-hover:translate-y-0",
+              "flex items-center gap-1 sm:gap-1.5 transition-all duration-300 opacity-0 group-hover:opacity-100 transform translate-y-1 group-hover:translate-y-0",
               isUser ? "justify-end" : "justify-start"
             )}>
               <Button
@@ -271,13 +279,13 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
                 size="sm"
                 onClick={copyToClipboard}
                 className={cn(
-                  "h-8 px-3 text-xs font-medium backdrop-blur-md border transition-all duration-200 hover:scale-105",
+                  "h-6 sm:h-8 px-2 sm:px-3 text-[10px] sm:text-xs font-medium backdrop-blur-md border rounded-md sm:rounded-lg transition-all duration-200 hover-lift",
                   copied
                     ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border-green-200 dark:border-green-700"
                     : "bg-white/60 dark:bg-slate-800/60 hover:bg-white/90 dark:hover:bg-slate-800/90 border-white/30 dark:border-slate-700/30"
                 )}
               >
-                {copied ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
+                {copied ? <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" /> : <Copy className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />}
                 {copied ? 'Copié!' : 'Copier'}
               </Button>
 
@@ -287,10 +295,10 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
                   variant="ghost"
                   size="sm"
                   onClick={handleEdit}
-                  className="h-8 w-8 p-0"
+                  className="h-6 w-6 sm:h-8 sm:w-8 p-0 rounded-md sm:rounded-lg hover-lift"
                   title="Modifier"
                 >
-                  <Edit className="w-4 h-4" />
+                  <Edit className="w-3 h-3 sm:w-4 sm:h-4 text-slate-500 dark:text-slate-400" />
                 </Button>
               )}
 
@@ -302,10 +310,10 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
                       variant="ghost"
                       size="sm"
                       onClick={() => setShowConfirmDelete(true)}
-                      className="h-8 w-8 p-0"
+                      className="h-6 w-6 sm:h-8 sm:w-8 p-0 rounded-md sm:rounded-lg hover-lift"
                       title="Supprimer"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 dark:text-red-400" />
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
