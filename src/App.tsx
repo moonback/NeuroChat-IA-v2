@@ -490,7 +490,9 @@ function App() {
         : "";
       // LOG mémoire injectée
       // console.log('[Mémoire utilisateur injectée]', memorySummary);
-      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memorySummary}${ragEnabled ? ragContext : ""}Question utilisateur : ${userMessage}`;
+      // Important: ne pas inclure à nouveau la question utilisateur dans le prompt système
+      // pour éviter qu'elle soit envoyée deux fois au modèle.
+      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memorySummary}${ragEnabled ? ragContext : ""}`;
       const promptEnd = performance.now();
       setReasoningSteps(prev => prev.map(s => s.key === 'buildPrompt' ? ({ ...s, status: 'done', end: promptEnd, durationMs: Math.round(promptEnd - (s.start || promptStart)), detail: `${prompt.length} caractères` }) : s));
       // LOG prompt final
