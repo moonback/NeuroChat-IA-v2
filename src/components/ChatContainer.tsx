@@ -49,6 +49,8 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
   const [isNearBottom, setIsNearBottom] = useState(true);
   const [showAllPassages, setShowAllPassages] = useState<{ [id: string]: boolean }>({});
   const [showChatInfo, setShowChatInfo] = useState(false);
+  // Mémorise l’instant du montage pour identifier les messages "anciens" rechargés
+  const mountedAtRef = useRef<number>(Date.now());
   const quickPrompts = [
     "Peux-tu résumer notre dernière conversation ?",
     "Donne-moi 3 idées d'activités ce week-end",
@@ -311,6 +313,14 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                         timestamp={msg.timestamp}
                         imageUrl={msg.imageUrl}
                         isLatest={index === messages.length - 1}
+                        // N'anime que si c'est le dernier message IA ET qu'il est postérieur au montage
+                        shouldAnimateTyping={
+                          !msg.isUser &&
+                          index === messages.length - 1 &&
+                          (msg.timestamp instanceof Date
+                            ? msg.timestamp.getTime() > mountedAtRef.current
+                            : new Date(msg.timestamp as unknown as string).getTime() > mountedAtRef.current)
+                        }
                         onEdit={onEditMessage ? (newText) => onEditMessage(msg.id, newText) : undefined}
                         onDelete={onDeleteMessage ? () => onDeleteMessage(msg.id) : undefined}
                         onReply={onReplyToMessage}

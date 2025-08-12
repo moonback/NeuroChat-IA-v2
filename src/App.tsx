@@ -93,6 +93,12 @@ function App() {
     importSettings,
     deleteSettings,
     stop,
+    prosodyDynamic,
+    setProsodyDynamic,
+    dynamicVolume,
+    setDynamicVolume,
+    segmentFade,
+    setSegmentFade,
   } = useSpeechSynthesis();
   const [showHistory, setShowHistory] = useState(false);
   const [historyList, setHistoryList] = useState<DiscussionWithCategory[]>([]);
@@ -640,6 +646,16 @@ function App() {
   useEffect(() => {
     isAISpeakingRef.current = isAISpeaking;
   }, [isAISpeaking]);
+
+  // Écoute globale pour interrompre la TTS si l'utilisateur déclenche un envoi ou tape Enter
+  useEffect(() => {
+    const stopTTS = () => {
+      try { stop(); } catch {}
+      setIsAISpeaking(false);
+    };
+    document.addEventListener('tts:stop', stopTTS as EventListener);
+    return () => document.removeEventListener('tts:stop', stopTTS as EventListener);
+  }, [stop]);
   
   useEffect(() => {
     modeVocalAutoRef.current = modeVocalAuto;
@@ -1087,6 +1103,12 @@ function App() {
           exportSettings={exportSettings}
           importSettings={importSettings}
           deleteSettings={deleteSettings}
+          prosodyDynamic={prosodyDynamic}
+          setProsodyDynamic={setProsodyDynamic}
+          dynamicVolume={dynamicVolume}
+          setDynamicVolume={setDynamicVolume}
+          segmentFade={segmentFade}
+          setSegmentFade={setSegmentFade}
         />
       </Suspense>
 

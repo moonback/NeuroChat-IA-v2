@@ -86,6 +86,10 @@ export function VoiceInput({ onSendMessage, isLoading, reasoningVisible = false,
     if (listening) {
       stop();
     }
+    // Notifier globalement (pour arrêter une éventuelle TTS en cours)
+    try {
+      document.dispatchEvent(new CustomEvent('tts:stop'));
+    } catch {}
     
     onSendMessage(valueToSend, selectedImage || undefined);
     setInputValue('');

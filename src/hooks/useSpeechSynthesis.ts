@@ -15,12 +15,112 @@ const DEFAULTS = {
   pitch: 1,
   volume: 1,
   voiceURI: '',
+  prosodyDynamic: true,
+  dynamicVolume: true,
+  segmentFade: true,
 };
 
 // Fonction utilitaire pour filtrer les caractères spéciaux
 function filtrerCaracteresSpeciaux(texte: string): string {
   // Garde lettres, chiffres, accents, espaces et ponctuation de base
   return texte.replace(/[^a-zA-Z0-9À-ÿ\s.,!?'-]/g, '');
+}
+
+// Découper le texte en segments avec pauses naturelles (phrases, paragraphes)
+function segmenterTextePourTTS(texte: string): { contenu: string; pauseMs: number }[] {
+  const segments: { contenu: string; pauseMs: number }[] = [];
+  // Normalise les retours à la ligne et supprime espaces inutiles
+  const normalized = texte.replace(/\s+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+
+  // Séparation par paragraphes (double saut de ligne)
+  const paragraphes = normalized.split(/\n{2,}/).map(t => t.trim()).filter(Boolean);
+
+  // Fun util: ajoute une phrase avec pause adaptée selon ponctuation de fin
+  const pushPhrase = (content: string) => {
+    const trimmed = content.trim();
+    if (!trimmed) return;
+    const last = trimmed[trimmed.length - 1] || '';
+    const base = 360; // pause de base inter-phrases (ms)
+    const extra = last === '.' ? 220 : last === '!' || last === '?' ? 280 : 0;
+    segments.push({ contenu: trimmed, pauseMs: base + extra });
+  };
+
+  // Découpage
+  paragraphes.forEach((para, pIdx) => {
+    // Protéger les abréviations courantes pour éviter des découpes trop agressives
+    const protectedPara = para.replace(/\b(p\.\s?ex|e\.g|i\.e|etc\.)/gi, (m) => m.replace(/\./g, '·'));
+    // Découpe en phrases sur ponctuation forte suivie d’espace
+    const phrases = protectedPara.split(/(?<=[.!?])\s+/).map(t => t.replace(/·/g, '.'));
+    phrases.map(p => p.trim()).filter(Boolean).forEach((phr) => {
+      // Sous-segmentation douce sur virgules et points-virgules
+      const morceaux = phr.split(/([,;:])\s*/).filter(Boolean);
+      if (morceaux.length <= 1) {
+        pushPhrase(phr);
+      } else {
+        // Reconstituer alternant texte et séparateurs
+        for (let i = 0; i < morceaux.length; i++) {
+          const part = morceaux[i];
+          // Séparateur = virgule/;/: induit une mini-pause
+          if (/^[,;:]$/.test(part)) {
+            // Mini-pause respiratoire
+            segments.push({ contenu: '', pauseMs: part === ',' ? 160 : 200 });
+          } else {
+            // Si le prochain token est une ponctuation faible, on l’ajoutera via la pause du token après
+            segments.push({ contenu: part, pauseMs: 0 });
+          }
+        }
+        // Harmoniser: regrouper consécutifs sans pause en une phrase, et laisser les mini-pauses intactes
+        const merged: { contenu: string; pauseMs: number }[] = [];
+        let buffer = '';
+        for (const seg of segments.splice(segments.length - morceaux.length, morceaux.length)) {
+          if (seg.contenu) {
+            buffer += (buffer ? ' ' : '') + seg.contenu;
+          } else {
+            if (buffer) {
+              merged.push({ contenu: buffer, pauseMs: seg.pauseMs });
+              buffer = '';
+            } else {
+              // pause seule
+              merged.push(seg);
+            }
+          }
+        }
+        if (buffer) merged.push({ contenu: buffer, pauseMs: 0 });
+        // Appliquer une pause de fin de phrase
+        if (merged.length > 0) merged[merged.length - 1].pauseMs = 360;
+        segments.push(...merged);
+      }
+    });
+    if (pIdx < paragraphes.length - 1) {
+      // Pause marquée entre paragraphes
+      segments.push({ contenu: '', pauseMs: 800 });
+    }
+  });
+
+  return segments.length > 0 ? segments : [{ contenu: texte, pauseMs: 0 }];
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+function computeProsodyAdjustments(content: string): { rateDelta: number; pitchDelta: number } {
+  if (!content || !content.trim()) return { rateDelta: 0, pitchDelta: 0 };
+  const trimmed = content.trim();
+  const last = trimmed[trimmed.length - 1] || '';
+  // Ajustements selon ponctuation de fin
+  if (last === '?') {
+    return { rateDelta: -0.05, pitchDelta: +0.12 };
+  }
+  if (last === '!') {
+    return { rateDelta: +0.06, pitchDelta: +0.1 };
+  }
+  if (last === ',') {
+    return { rateDelta: -0.02, pitchDelta: 0 };
+  }
+  // Ajustement léger selon longueur (phrases longues plus lentes)
+  const lengthFactor = clamp((trimmed.length - 80) / 200, -0.05, 0.08); // -0.05 à +0.08
+  return { rateDelta: -lengthFactor, pitchDelta: 0 };
 }
 
 export function useSpeechSynthesis() {
@@ -32,25 +132,31 @@ export function useSpeechSynthesis() {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [lang, setLang] = useState<'fr-FR' | 'en-US'>('fr-FR');
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const [prosodyDynamic, setProsodyDynamic] = useState<boolean>(DEFAULTS.prosodyDynamic);
+  const [dynamicVolume, setDynamicVolume] = useState<boolean>(DEFAULTS.dynamicVolume);
+  const [segmentFade, setSegmentFade] = useState<boolean>(DEFAULTS.segmentFade);
 
   // Charger les réglages depuis le localStorage au démarrage
   useEffect(() => {
     const saved = localStorage.getItem(LS_KEY);
     if (saved) {
       try {
-        const { rate, pitch, volume, voiceURI } = JSON.parse(saved);
+        const { rate, pitch, volume, voiceURI, prosodyDynamic, dynamicVolume, segmentFade } = JSON.parse(saved);
         if (typeof rate === 'number') setRate(rate);
         if (typeof pitch === 'number') setPitch(pitch);
         if (typeof volume === 'number') setVolume(volume);
         if (typeof voiceURI === 'string') setVoiceURI(voiceURI);
+        if (typeof prosodyDynamic === 'boolean') setProsodyDynamic(prosodyDynamic);
+        if (typeof dynamicVolume === 'boolean') setDynamicVolume(dynamicVolume);
+        if (typeof segmentFade === 'boolean') setSegmentFade(segmentFade);
       } catch {}
     }
   }, []);
 
   // Sauvegarder les réglages à chaque changement
   useEffect(() => {
-    localStorage.setItem(LS_KEY, JSON.stringify({ rate, pitch, volume, voiceURI }));
-  }, [rate, pitch, volume, voiceURI]);
+    localStorage.setItem(LS_KEY, JSON.stringify({ rate, pitch, volume, voiceURI, prosodyDynamic, dynamicVolume, segmentFade }));
+  }, [rate, pitch, volume, voiceURI, prosodyDynamic, dynamicVolume, segmentFade]);
 
   // Charger les voix disponibles
   useEffect(() => {
@@ -88,35 +194,71 @@ export function useSpeechSynthesis() {
   // Mettre à jour la langue courante à chaque speak
   const speak = useCallback((text: string, options: SpeechSynthesisOptions = {}) => {
     if (muted || !('speechSynthesis' in window)) return;
+    // Stop toute lecture en cours
     window.speechSynthesis.cancel();
-    // Nettoyer le texte avant la synthèse
+
+    // Nettoyer et découper en segments
     const texteNettoye = filtrerCaracteresSpeciaux(text);
-    const utterance = new window.SpeechSynthesisUtterance(texteNettoye);
-    utterance.rate = options.rate ?? rate;
-    utterance.pitch = options.pitch ?? pitch;
-    utterance.volume = options.volume ?? volume;
+    const segments = segmenterTextePourTTS(texteNettoye);
+
     const detectedLang = options.lang || detectLang(text);
     setLang(detectedLang as 'fr-FR' | 'en-US');
-    // Choix de la voix
-    let selectedVoice: SpeechSynthesisVoice | undefined = undefined;
-    if (options.voiceURI) {
-      selectedVoice = voices.find(v => v.voiceURI === options.voiceURI);
-    } else if (voiceURI) {
-      selectedVoice = voices.find(v => v.voiceURI === voiceURI);
-    }
-    if (!selectedVoice) {
-      selectedVoice = voices.find(v => v.lang === utterance.lang && v.name.toLowerCase().includes('google'))
-        || voices.find(v => v.lang === utterance.lang);
-    }
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-    }
-    utteranceRef.current = utterance;
-    // Ajout du callback onEnd
-    if (typeof options.onEnd === 'function') {
-      utterance.onend = options.onEnd;
-    }
-    window.speechSynthesis.speak(utterance);
+
+    // Préparer la voix sélectionnée (réutilisée pour chaque segment)
+    const pickVoice = (langPref: string): SpeechSynthesisVoice | undefined => {
+      if (options.voiceURI) return voices.find(v => v.voiceURI === options.voiceURI);
+      if (voiceURI) return voices.find(v => v.voiceURI === voiceURI);
+      return (
+        voices.find(v => v.lang === langPref && v.name.toLowerCase().includes('google')) ||
+        voices.find(v => v.lang === langPref)
+      );
+    };
+    const selectedVoice = pickVoice(detectedLang);
+
+    // Chaînage des segments avec micro-pauses
+    let index = 0;
+    const speakNext = () => {
+      if (index >= segments.length) {
+        if (typeof options.onEnd === 'function') options.onEnd();
+        return;
+      }
+      const { contenu, pauseMs } = segments[index++];
+      if (!contenu || contenu.trim() === '') {
+        // Juste une pause
+        setTimeout(speakNext, pauseMs);
+        return;
+      }
+      const utt = new window.SpeechSynthesisUtterance(contenu);
+      // Prosodie dynamique
+      const { rateDelta, pitchDelta } = prosodyDynamic ? computeProsodyAdjustments(contenu) : { rateDelta: 0, pitchDelta: 0 };
+      const baseRate = options.rate ?? rate;
+      const basePitch = options.pitch ?? pitch;
+      utt.rate = clamp(baseRate + rateDelta, 0.6, 1.5);
+      utt.pitch = clamp(basePitch + pitchDelta, 0.6, 2);
+      // Variation légère de volume sur ponctuation pour respiration
+      const last = contenu.trim().slice(-1);
+      const volDelta = dynamicVolume && /[,.!?]/.test(last) ? -0.06 : 0;
+      utt.volume = clamp((options.volume ?? volume) + volDelta, 0.2, 1);
+      utt.lang = detectedLang;
+      if (selectedVoice) utt.voice = selectedVoice;
+      utteranceRef.current = utt;
+      utt.onend = () => {
+        if (pauseMs > 0) {
+          // Smooth fade entre segments si activé
+          if (segmentFade) {
+            // Micro-décalage avant reprise
+            setTimeout(speakNext, Math.max(60, pauseMs - 40));
+          } else {
+            setTimeout(speakNext, pauseMs);
+          }
+        } else {
+          speakNext();
+        }
+      };
+      window.speechSynthesis.speak(utt);
+    };
+
+    speakNext();
   }, [muted, rate, pitch, volume, voiceURI, voices, detectLang]);
 
   const mute = useCallback(() => setMuted(true), []);
@@ -141,7 +283,7 @@ export function useSpeechSynthesis() {
 
   // Ajout des fonctions d'export/import/suppression
   const exportSettings = () => {
-    const data = { rate, pitch, volume, voiceURI };
+    const data = { rate, pitch, volume, voiceURI, prosodyDynamic, dynamicVolume, segmentFade };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     return url;
@@ -150,11 +292,14 @@ export function useSpeechSynthesis() {
   const importSettings = async (file: File): Promise<boolean> => {
     try {
       const text = await file.text();
-      const { rate, pitch, volume, voiceURI } = JSON.parse(text);
+      const { rate, pitch, volume, voiceURI, prosodyDynamic, dynamicVolume, segmentFade } = JSON.parse(text);
       if (typeof rate === 'number') setRate(rate);
       if (typeof pitch === 'number') setPitch(pitch);
       if (typeof volume === 'number') setVolume(volume);
       if (typeof voiceURI === 'string') setVoiceURI(voiceURI);
+      if (typeof prosodyDynamic === 'boolean') setProsodyDynamic(prosodyDynamic);
+      if (typeof dynamicVolume === 'boolean') setDynamicVolume(dynamicVolume);
+      if (typeof segmentFade === 'boolean') setSegmentFade(segmentFade);
       return true;
     } catch {
       return false;
@@ -167,6 +312,9 @@ export function useSpeechSynthesis() {
     setPitch(DEFAULTS.pitch);
     setVolume(DEFAULTS.volume);
     setVoiceURI(DEFAULTS.voiceURI);
+    setProsodyDynamic(DEFAULTS.prosodyDynamic);
+    setDynamicVolume(DEFAULTS.dynamicVolume);
+    setSegmentFade(DEFAULTS.segmentFade);
   };
 
   // Ajout de la fonction stop pour annuler la lecture TTS en cours
@@ -197,5 +345,11 @@ export function useSpeechSynthesis() {
     exportSettings,
     importSettings,
     deleteSettings,
+    prosodyDynamic,
+    setProsodyDynamic,
+    dynamicVolume,
+    setDynamicVolume,
+    segmentFade,
+    setSegmentFade,
   };
 }

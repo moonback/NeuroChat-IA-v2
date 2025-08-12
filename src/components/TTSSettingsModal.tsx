@@ -21,9 +21,16 @@ interface TTSSettingsModalProps {
   exportSettings: () => string;
   importSettings: (file: File) => Promise<boolean>;
   deleteSettings: () => void;
+  // Nouveaux réglages
+  prosodyDynamic?: boolean;
+  setProsodyDynamic?: (v: boolean) => void;
+  dynamicVolume?: boolean;
+  setDynamicVolume?: (v: boolean) => void;
+  segmentFade?: boolean;
+  setSegmentFade?: (v: boolean) => void;
 }
 
-export function TTSSettingsModal({ open, onClose, rate, setRate, pitch, setPitch, volume, setVolume, voiceURI, setVoiceURI, availableVoices, testVoice, resetSettings, exportSettings, importSettings, deleteSettings }: TTSSettingsModalProps) {
+export function TTSSettingsModal({ open, onClose, rate, setRate, pitch, setPitch, volume, setVolume, voiceURI, setVoiceURI, availableVoices, testVoice, resetSettings, exportSettings, importSettings, deleteSettings, prosodyDynamic = true, setProsodyDynamic, dynamicVolume = true, setDynamicVolume, segmentFade = true, setSegmentFade }: TTSSettingsModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const firstFieldRef = useRef<HTMLSelectElement>(null);
   const [isTesting, setIsTesting] = useState(false);
@@ -208,6 +215,30 @@ export function TTSSettingsModal({ open, onClose, rate, setRate, pitch, setPitch
               <span>Moyen</span>
               <span>Fort</span>
             </div>
+          </div>
+          {/* Prosodie dynamique */}
+          <div className="relative bg-gradient-to-br from-white/90 to-blue-50/60 dark:from-slate-900/80 dark:to-blue-950/40 rounded-2xl shadow-md border border-blue-100 dark:border-blue-900/30 p-4 flex flex-col gap-2 transition-all duration-200 hover:shadow-xl">
+            <div className="flex items-center justify-between">
+              <label className="font-semibold">Prosodie dynamique</label>
+              <input type="checkbox" checked={prosodyDynamic} onChange={e => setProsodyDynamic?.(e.target.checked)} />
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-400">Ajuste légèrement la vitesse et la tonalité selon la ponctuation.</p>
+          </div>
+          {/* Volume dynamique */}
+          <div className="relative bg-gradient-to-br from-white/90 to-blue-50/60 dark:from-slate-900/80 dark:to-blue-950/40 rounded-2xl shadow-md border border-blue-100 dark:border-blue-900/30 p-4 flex flex-col gap-2 transition-all duration-200 hover:shadow-xl">
+            <div className="flex items-center justify-between">
+              <label className="font-semibold">Volume dynamique</label>
+              <input type="checkbox" checked={dynamicVolume} onChange={e => setDynamicVolume?.(e.target.checked)} />
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-400">Baisse subtile du volume après certaines pauses pour un effet respiratoire.</p>
+          </div>
+          {/* Fondu entre segments */}
+          <div className="relative bg-gradient-to-br from-white/90 to-blue-50/60 dark:from-slate-900/80 dark:to-blue-950/40 rounded-2xl shadow-md border border-blue-100 dark:border-blue-900/30 p-4 flex flex-col gap-2 transition-all duration-200 hover:shadow-xl">
+            <div className="flex items-center justify-between">
+              <label className="font-semibold">Transitions douces</label>
+              <input type="checkbox" checked={segmentFade} onChange={e => setSegmentFade?.(e.target.checked)} />
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-400">Ajoute un léger décalage avant reprise pour lisser les enchaînements.</p>
           </div>
         </div>
         {/* Animation d'onde lors du test de la voix, boutons, etc. */}

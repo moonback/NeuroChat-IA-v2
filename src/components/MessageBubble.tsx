@@ -14,9 +14,10 @@ interface MessageBubbleProps {
   onEdit?: (newText: string) => void; // Added onEdit prop
   onDelete?: () => void; // Added onDelete prop
   onReply?: (messageContent: string) => void; // Added onReply prop, passing message content
+  shouldAnimateTyping?: boolean; // N'animer que les messages IA vraiment nouveaux
 }
 
-export function MessageBubble({ message, isUser, timestamp, isLatest = false, imageUrl, onEdit, onDelete, onReply }: MessageBubbleProps) {
+export function MessageBubble({ message, isUser, timestamp, isLatest = false, imageUrl, onEdit, onDelete, onReply, shouldAnimateTyping = false }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
   const [isLiked, setIsLiked] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
@@ -25,6 +26,9 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
   const [showConfirmDelete, setShowConfirmDelete] = useState(false); // State for delete confirmation dialog
   const [showConfirmEdit, setShowConfirmEdit] = useState(false); // State for edit confirmation dialog
   const [highlight, setHighlight] = useState<'edit' | 'delete' | null>(null); // State for visual highlight after action
+  // Animation dactylographie pour messages IA
+  const [animatedText, setAnimatedText] = useState<string>(isUser ? message : '');
+  const typingIntervalRef = useRef<number | null>(null);
 
   const editInputRef = useRef<HTMLTextAreaElement>(null); // Ref for the textarea in edit mode
 
@@ -46,6 +50,44 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
       return () => clearTimeout(timeout);
     }
   }, [highlight]);
+
+  // Effet: dactylographie côté IA pour humaniser l'affichage (uniquement si shouldAnimateTyping)
+  useEffect(() => {
+    if (isUser || !shouldAnimateTyping) {
+      setAnimatedText(message);
+      return;
+    }
+    // Redémarre l'animation à chaque nouveau message IA
+    if (typingIntervalRef.current) {
+      window.clearInterval(typingIntervalRef.current);
+      typingIntervalRef.current = null;
+    }
+    setAnimatedText('');
+    let i = 0;
+    const baseDelay = 16; // base rapide
+    const variance = 60; // irrégularité
+    const textToType = message;
+    const typeNext = () => {
+      if (i >= textToType.length) return;
+      // Ajoute quelques caractères à la fois pour rester fluide
+      const chunk = Math.random() < 0.85 ? 2 : 1;
+      const next = textToType.slice(0, Math.min(i + chunk, textToType.length));
+      setAnimatedText(next);
+      i = next.length;
+      const char = textToType[i - 1] || '';
+      // Pauses plus longues sur ponctuation
+      const extra = /[.,!?)/]/.test(char) ? 120 : /[:;\-]/.test(char) ? 60 : 0;
+      const delay = baseDelay + Math.random() * variance + extra;
+      typingIntervalRef.current = window.setTimeout(typeNext, delay) as unknown as number;
+    };
+    typingIntervalRef.current = window.setTimeout(typeNext, 60) as unknown as number;
+    return () => {
+      if (typingIntervalRef.current) {
+        window.clearTimeout(typingIntervalRef.current);
+        typingIntervalRef.current = null;
+      }
+    };
+  }, [message, isUser, shouldAnimateTyping]);
 
   // --- Handlers (Memoized with useCallback for performance) ---
 
@@ -237,7 +279,7 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
               </div>
             ) : (
               <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words font-medium">
-                {message}
+                {isUser || !shouldAnimateTyping ? message : animatedText}
               </p>
             )}
 
