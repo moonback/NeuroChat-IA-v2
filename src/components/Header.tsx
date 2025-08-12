@@ -136,7 +136,7 @@ export function Header({
                 </div>
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                <h1 className="text-[1.35rem] sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-slate-900/90 to-slate-600/80 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
                   NeuroChat
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -145,37 +145,48 @@ export function Header({
               </div>
             </div>
 
-            {/* Indicateurs de statut */}
+            {/* Indicateurs de statut - icônes seules sur desktop avec tooltip */}
             <div className="hidden lg:flex items-center gap-2">
               {modePrive && (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50">
+                <div
+                  className="w-6 h-6 rounded-full bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50 flex items-center justify-center shadow-sm"
+                  data-tooltip-id="header-tooltip"
+                  data-tooltip-content="Mode privé activé"
+                >
                   <Shield className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-                  <span className="text-xs font-medium text-red-700 dark:text-red-300">Privé</span>
                 </div>
               )}
               {ragEnabled && (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800/50">
+                <div
+                  className="w-6 h-6 rounded-full bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800/50 flex items-center justify-center shadow-sm"
+                  data-tooltip-id="header-tooltip"
+                  data-tooltip-content="RAG actif"
+                >
                   <Brain className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
-                  <span className="text-xs font-medium text-green-700 dark:text-green-300">RAG</span>
                 </div>
               )}
               {modeVocalAuto && (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50">
+                <div
+                  className="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50 flex items-center justify-center shadow-sm"
+                  data-tooltip-id="header-tooltip"
+                  data-tooltip-content="Mode vocal automatique"
+                >
                   <Mic className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                  <span className="text-xs font-medium text-blue-700 dark:text-blue-300">Auto</span>
                 </div>
               )}
             </div>
           </div>
 
           {/* Actions principales - Desktop */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-2">
             {/* Bouton Nouvelle discussion */}
             <Button
               variant="ghost"
               size="sm"
               onClick={onNewDiscussion}
-              className="h-9 px-3 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              data-tooltip-id="header-tooltip"
+              data-tooltip-content="Nouvelle discussion"
+              className="h-9 px-3 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-[1.03] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
             >
               <PlusCircle className="w-4 h-4 mr-2" />
               Nouveau
@@ -186,7 +197,9 @@ export function Header({
               variant="ghost"
               size="sm"
               onClick={onOpenHistory}
-              className="h-9 px-3 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              data-tooltip-id="header-tooltip"
+              data-tooltip-content="Voir l'historique"
+              className="h-9 px-3 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-[1.03] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
             >
               <History className="w-4 h-4 mr-2" />
               Historique
@@ -197,21 +210,26 @@ export function Header({
               variant="ghost"
               size="sm"
               onClick={onOpenMemory}
-              className="h-9 px-3 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              data-tooltip-id="header-tooltip"
+              data-tooltip-content="Ouvrir la mémoire"
+              className="h-9 px-3 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-[1.03] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
             >
               <Brain className="w-4 h-4 mr-2" />
               Mémoire
             </Button>
 
+            
+
             {/* Sélection de messages - Si conversation active */}
             {hasActiveConversation && (
               <>
-                <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
                 <Button
                   variant={selectMode ? "default" : "ghost"}
                   size="sm"
                   onClick={onToggleSelectMode}
-                  className="h-9 px-3 text-sm font-medium transition-colors"
+                  data-tooltip-id="header-tooltip"
+                  data-tooltip-content={selectMode ? 'Quitter la sélection' : 'Sélectionner des messages'}
+                  className="h-9 px-3 text-sm font-medium transition-all hover:scale-[1.03] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
                 >
                   {selectMode ? <CheckSquare className="w-4 h-4 mr-2" /> : <Square className="w-4 h-4 mr-2" />}
                   {selectMode ? 'Annuler' : 'Sélectionner'}
@@ -223,7 +241,9 @@ export function Header({
                       variant="ghost"
                       size="sm"
                       onClick={selectedCount === totalCount ? onDeselectAll : onSelectAll}
-                      className="h-9 px-3 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                      data-tooltip-id="header-tooltip"
+                      data-tooltip-content={selectedCount === totalCount ? 'Tout désélectionner' : 'Tout sélectionner'}
+                      className="h-9 px-3 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-[1.03] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
                     >
                       {selectedCount === totalCount ? 'Désélectionner tout' : 'Tout sélectionner'}
                     </Button>
@@ -233,7 +253,9 @@ export function Header({
                         variant="destructive"
                         size="sm"
                         onClick={onRequestDelete}
-                        className="h-9 px-3 text-sm font-medium"
+                        data-tooltip-id="header-tooltip"
+                        data-tooltip-content={`Supprimer ${selectedCount} message${selectedCount > 1 ? 's' : ''}`}
+                        className="h-9 px-3 text-sm font-medium transition-all hover:scale-[1.03] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
                         Supprimer ({selectedCount})
@@ -244,76 +266,97 @@ export function Header({
               </>
             )}
 
-            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
+            
 
-            {/* Contrôles vocaux */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={muted ? onUnmute : onMute}
-              className={`h-9 w-9 p-0 transition-colors ${muted ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50' : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-950/50'}`}
-              title={muted ? 'Activer audio' : 'Désactiver audio'}
-            >
-              {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-            </Button>
+            {/* Contrôles vocaux - bloc icônes */}
+            <div className="flex items-center gap-1 rounded-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-1 shadow-sm">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={muted ? onUnmute : onMute}
+                aria-pressed={!muted}
+                data-tooltip-id="header-tooltip"
+                data-tooltip-content={muted ? 'Activer audio' : 'Désactiver audio'}
+                className={`h-8 w-8 p-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 ${
+                  muted
+                    ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50'
+                    : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-950/50 animate-pulse'
+                }`}
+              >
+                {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+              </Button>
 
-            <Button
-              variant={modeVocalAuto ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setModeVocalAuto(!modeVocalAuto)}
-              className="h-9 w-9 p-0 transition-colors"
-              title="Mode vocal automatique"
-            >
-              <Mic className="w-4 h-4" />
-            </Button>
+              <Button
+                variant={modeVocalAuto ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setModeVocalAuto(!modeVocalAuto)}
+                aria-pressed={modeVocalAuto}
+                data-tooltip-id="header-tooltip"
+                data-tooltip-content="Mode vocal automatique"
+                className={`h-8 w-8 p-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 ${
+                  modeVocalAuto ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 ring-1 ring-blue-400/30 animate-pulse' : ''
+                }`}
+              >
+                <Mic className="w-4 h-4" />
+              </Button>
+            </div>
 
-            {/* Thème */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleTheme}
-              className="h-9 w-9 p-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="Changer le thème"
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </Button>
+            
 
-            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
+            {/* Modes IA - bloc icônes secondaires */}
+            <div className="flex items-center gap-1 rounded-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-1 shadow-sm">
+              <Button
+                variant={modePrive ? 'destructive' : 'ghost'}
+                size="sm"
+                onClick={() => setModePrive(!modePrive)}
+                aria-pressed={modePrive}
+                data-tooltip-id="header-tooltip"
+                data-tooltip-content="Mode privé"
+                className="h-8 w-8 p-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
+              >
+                <Shield className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={ragEnabled ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setRagEnabled(!ragEnabled)}
+                aria-pressed={ragEnabled}
+                data-tooltip-id="header-tooltip"
+                data-tooltip-content="Recherche documentaire (RAG)"
+                className="h-8 w-8 p-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
+              >
+                <Brain className="w-4 h-4" />
+              </Button>
+            </div>
 
-            {/* Personnalité IA retirée */}
+            
 
-            {/* Mode privé */}
-            <Button
-              variant={modePrive ? "destructive" : "ghost"}
-              size="sm"
-              onClick={() => setModePrive(!modePrive)}
-              className="h-9 w-9 p-0 transition-colors"
-              title="Mode privé"
-            >
-              <Shield className="w-4 h-4" />
-            </Button>
+            {/* Réglages - bloc icônes */}
+            <div className="flex items-center gap-1 rounded-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-1 shadow-sm">
+              {/* Thème */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleTheme}
+                data-tooltip-id="header-tooltip"
+                data-tooltip-content={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+                className="h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
+              >
+                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </Button>
 
-            {/* RAG */}
-            <Button
-              variant={ragEnabled ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setRagEnabled(!ragEnabled)}
-              className="h-9 w-9 p-0 transition-colors"
-              title="Recherche documentaire"
-            >
-              <Brain className="w-4 h-4" />
-            </Button>
-
-            {/* Bouton Menu pour autres options */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowMobileMenu(true)}
-              className="h-9 w-9 p-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="Plus d'options"
-            >
-              <Settings2 className="w-4 h-4" />
-            </Button>
+              {/* Bouton Menu pour autres options */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowMobileMenu(true)}
+                data-tooltip-id="header-tooltip"
+                data-tooltip-content="Plus d'options"
+                className="h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
+              >
+                <Settings2 className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Menu mobile button */}
@@ -321,7 +364,7 @@ export function Header({
             variant="ghost"
             size="sm"
             onClick={() => setShowMobileMenu(true)}
-            className="md:hidden h-9 w-9 p-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="md:hidden h-9 w-9 p-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
           >
             <Menu className="w-5 h-5" />
           </Button>
