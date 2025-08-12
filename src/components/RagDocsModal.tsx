@@ -74,6 +74,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [openImportModal, setOpenImportModal] = useState(false);
   // Sélection multiple pour suppression
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   // Ajout de l'état pour le modal
@@ -420,27 +421,19 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Import Section */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {/* File Upload Card */}
-            <Card className="relative overflow-hidden border-2 border-dashed transition-all duration-200 hover:border-blue-400 dark:hover:border-blue-500"
-                  style={{
-                    borderColor: dragOver ? '#3b82f6' : undefined,
-                    backgroundColor: dragOver ? 'rgba(59, 130, 246, 0.05)' : undefined
-                  }}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}>
+          {/* Import Section (ouverture via modal) */}
+          <div className="grid grid-cols-1 gap-6">
+            <Card className="overflow-hidden">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Upload className="w-5 h-5 text-blue-500" />
                   Import de fichiers
                 </CardTitle>
                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Glissez-déposez vos fichiers ou cliquez pour parcourir
+                  Cliquez pour ouvrir une fenêtre dédiée à l’import de fichiers.
                 </p>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex flex-wrap gap-2 text-xs">
                   <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">TXT</span>
                   <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">MD</span>
@@ -450,33 +443,15 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
                   <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded">HTML</span>
                 </div>
                 <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                  onClick={() => setOpenImportModal(true)}
+                  className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
                   size="lg"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Choisir des fichiers
+                  Ouvrir l’import
                 </Button>
-                <input
-                  type="file"
-                  multiple
-                  accept=".txt,.md,.pdf,.docx,.csv,.html"
-                  ref={fileInputRef}
-                  style={{ display: 'none' }}
-                  onChange={handleFileChange}
-                />
               </CardContent>
-              {dragOver && (
-                <div className="absolute inset-0 bg-blue-500/10 border-2 border-blue-500 border-dashed rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <Upload className="w-12 h-12 text-blue-500 mx-auto mb-2" />
-                    <p className="text-blue-600 dark:text-blue-400 font-medium">Déposez vos fichiers ici</p>
-                  </div>
-                </div>
-              )}
             </Card>
-
-            
           </div>
 
           {/* Toolbar */}
@@ -848,6 +823,58 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Supprimer définitivement
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Import Modal */}
+        <Dialog open={openImportModal} onOpenChange={setOpenImportModal}>
+          <DialogContent className="sm:max-w-lg" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Upload className="w-5 h-5 text-blue-500" />
+                Importer des fichiers
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Glissez-déposez vos fichiers ici ou utilisez le bouton pour parcourir.
+              </p>
+              <div
+                className="relative border-2 border-dashed rounded-xl p-6 text-center transition-colors"
+                style={{
+                  borderColor: dragOver ? '#3b82f6' : undefined,
+                  backgroundColor: dragOver ? 'rgba(59, 130, 246, 0.05)' : undefined,
+                }}
+              >
+                <Upload className="w-10 h-10 text-blue-500 mx-auto mb-3" />
+                <div className="flex flex-col items-center gap-2">
+                  <Button onClick={() => fileInputRef.current?.click()}>
+                    Choisir des fichiers
+                  </Button>
+                  <input
+                    type="file"
+                    multiple
+                    accept=".txt,.md,.pdf,.docx,.csv,.html"
+                    ref={fileInputRef}
+                    style={{ display: 'none' }}
+                    onChange={handleFileChange}
+                  />
+                  <div className="flex flex-wrap gap-2 text-xs mt-2">
+                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">TXT</span>
+                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">MD</span>
+                    <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded">PDF</span>
+                    <span className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded">DOCX</span>
+                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">CSV</span>
+                    <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded">HTML</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpenImportModal(false)}>
+                Fermer
               </Button>
             </DialogFooter>
           </DialogContent>
