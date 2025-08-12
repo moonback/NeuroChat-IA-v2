@@ -1,6 +1,6 @@
-# 🧠 NeuroChat
+# 🧠 NeuroChat IA v2
 
-> Application de chat IA moderne et intuitive avec reconnaissance vocale et analyse sémantique
+> Assistant de chat IA moderne avec voix, images, mémoire et RAG local
 
 <div align="center">
 
@@ -9,54 +9,46 @@
 
 </div>
 
-**NeuroChat** révolutionne votre façon d'interagir avec l'intelligence artificielle en combinant chat textuel, reconnaissance vocale et analyse d'images dans une interface élégante et responsive.
+**NeuroChat** combine conversation texte, reconnaissance/synthèse vocale, support d'images et recherche augmentée (RAG) locale dans une interface élégante et responsive.
 
-## ✨ Fonctionnalités principales
+## ✨ Fonctionnalités
 
-<!-- Système de personnalités retiré -->
+### 🗣️ Voix
+- Mode vocal automatique (mains libres) avec bip de reprise
+- Reconnaissance vocale (Web Speech API, fr-FR)
+- Synthèse vocale personnalisable (vitesse, tonalité, volume, voix)
+- Indicateur vocal flottant: déplaçable, minimisable, transcription en temps réel
 
-### 🗣️ **Communication vocale avancée**
-- **Mode vocal automatique** : conversation continue mains-libres
-- **Reconnaissance vocale** en français (Web Speech API)
-- **Synthèse vocale** personnalisable (vitesse, tonalité, volume)
-- **Indicateur vocal flottant** avec transcription en temps réel
-- **Contrôles audio intuitifs** (mute/unmute rapide)
+### 💬 Chat
+- Interface fluide (animations, scroll virtuel)
+- Images: envoi et analyse via Gemini
+- Sélection multiple et suppression groupée
+- Vue « Infos »: stats messages, contexte RAG, date de début
 
-### 💬 **Chat intelligent et intuitif**
-- **Interface conversationnelle** fluide avec animations
-- **Support d'images** : analyse IA complète de vos images
-- **Mémoire utilisateur** : l'IA se souvient de vos préférences
-- **Auto-détection d'informations** personnelles pour personnalisation
-- **Sélection multiple** de messages avec suppression groupée
-- **Modal d'informations** : statistiques de conversation détaillées
+### 🧠 Mémoire utilisateur
+- Extraction de faits (profil, préférences, objectifs…) + fallback LLM
+- Gestion dans la modale « Mémoire » (ajout/édition/désactivation/export/import)
+- Recherche sémantique via embeddings locaux
+- Commandes: `/memoir ... tags: a,b importance: 4`, `/supp ...`, `/memlist [query]`
 
-### 📚 **RAG (Recherche Augmentée)**
-- **Gestion de documents** : PDF, TXT, MD, DOCX, CSV
-- **Recherche sémantique** avec analyse d'embeddings
-- **Glisser-déposer** pour l'ajout de documents
-- **Activation/désactivation** dynamique du mode RAG
+### 📚 RAG (Recherche augmentée)
+- Import: TXT, MD, PDF, DOCX, CSV, HTML
+- Embeddings locaux (MiniLM) et similarité cosinus
+- Activation/désactivation à la volée
 
-### 🛡️ **Mode privé et sécurité**
-- **Mode éphémère** : aucune sauvegarde locale
-- **Chiffrement** des données sensibles
-- **Auto-suppression** à la fermeture
-- **Indicateurs visuels** du mode sécurisé
-- **Banner de notification** pour le mode privé
+### 🛡️ Mode privé
+- Discussion non persistée (pas de sauvegarde locale)
+- Alerte à la fermeture si messages présents
+- Indicateur visuel discret
 
-### ⚙️ **Configuration avancée**
-- **Hyperparamètres Gemini** : température, topK, topP, tokens
-- **Réglages TTS complets** : export/import des paramètres
-- **Thème clair/sombre** avec basculement instantané
-- **Interface responsive** optimisée mobile/desktop
-- **Indicateur vocal déplaçable** et redimensionnable
+### ⚙️ Réglages
+- Hyperparamètres Gemini (temperature, topK, topP, maxOutputTokens)
+- TTS: test, export/import, reset, suppression
+- Thème clair/sombre
 
-### 📊 **Gestion des données**
-- **Historique complet** avec recherche et tri
-- **Renommage** des conversations
-- **Export/import** des réglages
-- **Stockage local sécurisé**
-- **Vue compacte/détaillée** de l'historique
-- **Suppression groupée** des conversations
+### 🗂️ Historique
+- Sauvegarde locale (hors mode privé)
+- Recherche, tri, renommage, suppression (simple et multiple)
 
 ---
 
@@ -102,9 +94,8 @@
 5. Réduisez/agrandissez l'indicateur selon vos besoins
 
 ### 📱 **Envoi d'images**
-- Cliquez sur l'icône trombone 📎 dans la zone de saisie
-- Glissez-déposez une image directement
-- Formats supportés : JPG, PNG, GIF, WebP
+- Cliquez sur l'icône image 📷 dans la zone de saisie
+- Formats supportés : JPG, PNG, WebP
 
 ### 🔒 **Mode privé**
 - Activez le bouclier dans le header
@@ -114,9 +105,8 @@
 
 ### 📚 **Utiliser le RAG**
 1. Activez le mode RAG (icône cerveau)
-2. Ajoutez vos documents via "Documents RAG"
-3. Posez des questions sur vos documents
-4. L'IA utilise automatiquement le contexte
+2. Ajoutez vos documents via « Documents RAG » (TXT/MD/PDF/DOCX/CSV/HTML)
+3. Posez vos questions — les passages pertinents sont injectés dans le contexte
 
 ### ℹ️ **Informations de conversation**
 - Cliquez sur l'icône ℹ️ dans l'en-tête du chat
@@ -135,7 +125,7 @@
 | **IA** | Google Gemini Pro API |
 | **Audio** | Web Speech API (reconnaissance & synthèse) |
 | **ML Local** | @xenova/transformers (embeddings) |
-| **Données** | LocalStorage, IndexedDB |
+| **Données** | LocalStorage |
 
 ### Dépendances principales
 ```json
@@ -197,26 +187,24 @@ src/
 - ✅ **Voix système disponibles**
 
 ### Fonctionnalités avancées
-- ✅ **Web Workers** pour les embeddings
-- ✅ **File API** pour les documents
-- ✅ **LocalStorage** pour la persistance
+- ✅ Embeddings locaux (transformers.js)
+- ✅ File API pour l’import de documents
+- ✅ LocalStorage pour la persistance (hors mode privé)
 
 ---
 
 ## 🔒 Sécurité et confidentialité
 
 ### 🛡️ **Mesures de sécurité**
-- **Clé API locale** : stockée uniquement dans votre navigateur
-- **Chiffrement** des données sensibles en localStorage
-- **Validation** des entrées utilisateur
-- **Filtres de sécurité** activés sur l'API Gemini
-- **Mode privé** : zéro persistance des données
+- Clé API locale (variable `VITE_GEMINI_API_KEY`)
+- Filtres de sécurité activés sur l’API Gemini (safetySettings)
+- Mode privé: zéro persistance de la discussion
 
 ### 🔐 **Confidentialité**
-- **Stockage local uniquement** : vos données restent sur votre appareil
-- **Pas de serveur tiers** : communication directe avec Google
-- **Suppression facile** : effacez tout depuis l'interface
-- **Transparence** : code source ouvert et auditable
+- Stockage local (historique, mémoire, docs RAG) sur votre appareil
+- Pas de serveur applicatif tiers: appels directs à l’API Google
+- Suppression simple depuis l’interface
+- Transparence: code source ouvert et auditable
 
 ---
 
@@ -321,46 +309,19 @@ git push origin feature/ma-nouvelle-fonctionnalite
 
 ---
 
-## 📈 Roadmap
+## 📈 Roadmap (idées)
 
-### 🎯 **Prochaines fonctionnalités**
-- [ ] **Personnalités personnalisées** : créez vos propres personnalités
-- [ ] **Plugins** : système extensible pour nouvelles fonctionnalités
-- [ ] **Collaboration** : partage de conversations en temps réel
-- [ ] **Export avancé** : PDF, Markdown, Word
-- [ ] **Traduction automatique** : support multilingue
-- [ ] **IA locale** : support de modèles locaux (Llama, etc.)
-
-### 🔧 **Améliorations techniques**
-- [ ] **PWA** : installation comme application native
-- [ ] **Sync cloud** : sauvegarde optionnelle chiffrée
-- [ ] **Performance** : optimisations WebAssembly
-- [ ] **Tests** : couverture complète E2E
-- [ ] **Docker** : containerisation pour déploiement
-
-### 🎨 **UX/UI**
-- [ ] **Thèmes personnalisés** : éditeur visuel
-- [ ] **Animations avancées** : transitions fluides
-- [ ] **Accessibilité** : support complet WCAG 2.1
-- [ ] **Raccourcis clavier** : navigation rapide
+- Personnalités personnalisées
+- PWA et offline étendu
+- Export avancé des conversations (PDF/Markdown)
+- Raccourcis clavier
+- Partage de conversations
 
 ---
 
 ## 📸 Captures d'écran
 
-### Interface principale
-![NeuroChat Interface](./public/neurochat-main.png)
-*Interface principale avec chat*
-
-### Mode vocal automatique
-![Mode Vocal](./public/neurochat-vocal.png)
-*Indicateur vocal flottant en action*
-
-<!-- Captures personnalités retirées -->
-
-### Mode privé
-![Mode Privé](./public/neurochat-private.png)
-*Interface sécurisée en mode privé*
+> À compléter avec vos captures: interface principale, mode vocal, mémoire, RAG, mode privé
 
 ---
 
@@ -386,9 +347,7 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 
 ## 📞 Support
 
-- 🐛 **Bugs** : [Ouvrir une issue](https://github.com/votre-username/neurochat/issues)
-- 💡 **Suggestions** : [Discussions](https://github.com/votre-username/neurochat/discussions)
-- 📧 **Contact** : votre.email@example.com
+- Ouvrez une issue sur le dépôt GitHub du projet
 
 ---
 
