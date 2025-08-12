@@ -12,9 +12,12 @@ import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { searchDocuments } from '@/services/ragSearch';
 const RagDocsModalLazy = lazy(() => import('@/components/RagDocsModal').then(m => ({ default: m.RagDocsModal })));
 const HistoryModalLazy = lazy(() => import('@/components/HistoryModal').then(m => ({ default: m.HistoryModal })));
+const MemoryModalLazy = lazy(() => import('@/components/MemoryModal').then(m => ({ default: m.MemoryModal })));
 import type { DiscussionWithCategory } from '@/components/HistoryModal';
 
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
+import { getRelevantMemories, upsertMany } from '@/services/memory';
+import { extractFactsFromText } from '@/services/memoryExtractor';
 const GeminiSettingsDrawerLazy = lazy(() => import('@/components/GeminiSettingsDrawer').then(m => ({ default: m.GeminiSettingsDrawer })));
 // Retrait du sélecteur de personnalités
 
@@ -83,6 +86,7 @@ function App() {
   const [modeVocalAuto, setModeVocalAuto] = useState(false);
   // Ajout du state pour la modale de gestion des documents RAG
   const [showRagDocs, setShowRagDocs] = useState(false);
+  const [showMemory, setShowMemory] = useState(false);
   // Ajout du state pour activer/désactiver le RAG
   const [ragEnabled, setRagEnabled] = useState(false);
   // --- Sélection multiple de messages pour suppression groupée ---
@@ -265,7 +269,7 @@ function App() {
     setMessages(prev => [...prev, ragMsg as any]);
   };
 
-  // Mémoire utilisateur supprimée
+  // --- Mémoire utilisateur ---
 
   const handleSendMessage = async (userMessage: string, imageFile?: File) => {
     // Préparer la timeline de raisonnement
@@ -323,6 +327,18 @@ function App() {
       setReasoningSteps(prev => prev.map(s => s.key === 'buildPrompt' ? ({ ...s, status: 'running', start: performance.now(), detail: 'Assemblage du contexte…' }) : s));
       promptStart = performance.now();
       let ragContext = '';
+      let memoryContext = '';
+      // Récupération mémoire pertinente
+      try {
+        const memItems = await getRelevantMemories(userMessage, 5);
+        if (memItems.length > 0) {
+          memoryContext = 'MÉMOIRE UTILISATEUR (faits importants connus):\n';
+          memItems.forEach((m) => {
+            memoryContext += `- ${m.content}\n`;
+          });
+          memoryContext += '\n';
+        }
+      } catch {}
       if (ragEnabled && passages.length > 0) {
         ragContext = 'Contexte documentaire :\n';
         passages.forEach((p) => {
@@ -343,7 +359,7 @@ function App() {
 
       // Important: ne pas inclure à nouveau la question utilisateur dans le prompt système
       // pour éviter qu'elle soit envoyée deux fois au modèle.
-      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${ragEnabled ? ragContext : ""}`;
+      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memoryContext}${ragEnabled ? ragContext : ""}`;
       const promptEnd = performance.now();
       setReasoningSteps(prev => prev.map(s => s.key === 'buildPrompt' ? ({ ...s, status: 'done', end: promptEnd, durationMs: Math.round(promptEnd - (s.start || promptStart)), detail: `${prompt.length} caractères` }) : s));
       // LOG prompt final
@@ -361,6 +377,13 @@ function App() {
       // LOG réponse Gemini
       // console.log('[Réponse Gemini]', response);
       addMessage(response, false);
+      // Extraction de faits depuis le message utilisateur uniquement
+      try {
+        const userFacts = extractFactsFromText(userMessage, { source: 'user' });
+        if (!modePrive && userFacts.length > 0) {
+          upsertMany(userFacts.map((f) => ({ content: f.content, tags: f.tags, importance: f.importance, source: f.source })));
+        }
+      } catch {}
       
       // Indiquer que l'IA commence à parler
       setIsAISpeaking(true);
@@ -732,6 +755,7 @@ function App() {
           onOpenHistory={handleOpenHistory}
           onOpenTTSSettings={() => setShowTTSSettings(true)}
           onOpenRagDocs={() => setShowRagDocs(true)}
+          onOpenMemory={() => setShowMemory(true)}
           
           stop={stop}
           modeVocalAuto={modeVocalAuto}
@@ -832,6 +856,14 @@ function App() {
         <RagDocsModalLazy open={showRagDocs} onClose={() => setShowRagDocs(false)} />
       </Suspense>
 
+      {/* Modale de gestion de la mémoire */}
+      <Suspense fallback={null}>
+        {/** Import dynamique pour garder le bundle initial léger */}
+        {showMemory && (
+          <MemoryModalLazy open={showMemory} onClose={() => setShowMemory(false)} />
+        )}
+      </Suspense>
+
       {/* Modale latérale compacte pour les réglages Gemini */}
       <Suspense fallback={null}>
         <GeminiSettingsDrawerLazy
@@ -845,7 +877,7 @@ function App() {
         />
       </Suspense>
 
-      {/* Mémoire utilisateur supprimée */}
+      {/* Mémoire: gestion via modale */}
 
       
     </div>

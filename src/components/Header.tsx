@@ -27,6 +27,7 @@ interface HeaderProps {
   onOpenHistory: () => void;
   onOpenTTSSettings: () => void;
   onOpenRagDocs: () => void;
+  onOpenMemory: () => void;
   // Personnalité retirée
   stop: () => void;
   modeVocalAuto: boolean;
@@ -62,6 +63,7 @@ export function Header({
   onOpenHistory,
   onOpenTTSSettings,
   onOpenRagDocs,
+  onOpenMemory,
   
   modeVocalAuto,
   setModeVocalAuto,
@@ -188,6 +190,17 @@ export function Header({
             >
               <History className="w-4 h-4 mr-2" />
               Historique
+            </Button>
+
+            {/* Mémoire */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onOpenMemory}
+              className="h-9 px-3 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <Brain className="w-4 h-4 mr-2" />
+              Mémoire
             </Button>
 
             {/* Sélection de messages - Si conversation active */}
@@ -340,6 +353,10 @@ export function Header({
                 <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onOpenHistory(); setShowMobileMenu(false); }}>
                   <History className="w-4 h-4 mr-3" />
                   Historique
+                </Button>
+                <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onOpenMemory(); setShowMobileMenu(false); }}>
+                  <Brain className="w-4 h-4 mr-3" />
+                  Mémoire
                 </Button>
                 
                 {hasActiveConversation && (
