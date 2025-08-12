@@ -32,6 +32,7 @@ interface Message {
   isUser: boolean;
   timestamp: Date;
   imageUrl?: string;
+  memoryFactsCount?: number;
 }
 
 interface Discussion {
@@ -317,6 +318,15 @@ function App() {
     }
     // Ajoute le message utilisateur localement
     const newMessage = addMessage(userMessage, true, imageFile);
+    // Extraire et mémoriser immédiatement les faits utilisateur (indépendant du LLM)
+    try {
+      const userFacts = extractFactsFromText(userMessage, { source: 'user' });
+      if (!modePrive && userFacts.length > 0) {
+        upsertMany(userFacts.map((f) => ({ content: f.content, tags: f.tags, importance: f.importance, source: f.source })));
+        // Marquer le message avec l'indicateur
+        setMessages(prev => prev.map(m => m.id === newMessage.id ? { ...m, memoryFactsCount: userFacts.length } : m));
+      }
+    } catch {}
     setIsLoading(true);
     try {
       // On prépare l'historique complet (y compris le message utilisateur tout juste ajouté)
@@ -377,13 +387,6 @@ function App() {
       // LOG réponse Gemini
       // console.log('[Réponse Gemini]', response);
       addMessage(response, false);
-      // Extraction de faits depuis le message utilisateur uniquement
-      try {
-        const userFacts = extractFactsFromText(userMessage, { source: 'user' });
-        if (!modePrive && userFacts.length > 0) {
-          upsertMany(userFacts.map((f) => ({ content: f.content, tags: f.tags, importance: f.importance, source: f.source })));
-        }
-      } catch {}
       
       // Indiquer que l'IA commence à parler
       setIsAISpeaking(true);
