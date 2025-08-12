@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, Plus, Trash2, Upload, Download, Brain, ToggleLeft, ToggleRight, Edit3, Save } from 'lucide-react';
+import { X, Plus, Trash2, Upload, Download, Brain, ToggleLeft, ToggleRight, Edit3, Save, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { MemoryItem, loadMemory, addMemory, updateMemory, deleteMemory, toggleMemoryDisabled, clearAllMemory, exportMemory, importMemory } from '@/services/memory';
 
 interface MemoryModalProps {
@@ -96,15 +97,15 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="w-[90vw] max-w-[90vw] h-[90vh] p-0 overflow-hidden flex flex-col">
+        <DialogHeader className="px-6 py-4 border-b bg-white/70 dark:bg-slate-900/40 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-10">
           <DialogTitle className="flex items-center gap-2">
             <Brain className="w-5 h-5" />
             Mémoire utilisateur
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex-1 overflow-auto p-6 space-y-4">
           <div className="flex flex-col sm:flex-row gap-2">
             <Input placeholder="Rechercher (texte ou tag)…" value={query} onChange={(e) => setQuery(e.target.value)} />
             <div className="flex gap-2">
@@ -145,9 +146,12 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
             )}
           </div>
 
-          <div className="max-h-[50vh] overflow-auto space-y-2">
+          <div className="space-y-2">
             {filtered.map((m) => (
-              <div key={m.id} className="p-3 border rounded-xl flex items-start gap-3 bg-white/70 dark:bg-slate-900/50">
+              <div
+                key={m.id}
+                className="p-4 border border-slate-200 dark:border-slate-800 rounded-xl flex items-start gap-3 bg-white/80 dark:bg-slate-900/60 shadow-sm hover:shadow-md transition-shadow"
+              >
                 <div className="mt-1">
                   {m.disabled ? <ToggleLeft className="w-5 h-5 text-slate-400" /> : <ToggleRight className="w-5 h-5 text-emerald-500" />}
                 </div>
@@ -163,8 +167,28 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
                   ) : (
                     <>
                       <div className="text-sm font-medium">{m.content}</div>
-                      <div className="text-xs text-slate-500">Tags: {(m.tags || []).join(', ') || '—'} • Importance: {m.importance}</div>
-                      <div className="text-xs text-slate-400">Ajouté: {new Date(m.createdAt).toLocaleString('fr-FR')}</div>
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: 5 }).map((_, idx) => (
+                            <Star
+                              key={idx}
+                              className={`w-4 h-4 ${idx < (m.importance || 0) ? 'text-yellow-500 fill-yellow-400' : 'text-slate-300'}`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-slate-400">•</span>
+                        <div className="flex flex-wrap gap-1">
+                          {(m.tags || []).length > 0 ? (
+                            (m.tags || []).map((t) => (
+                              <Badge key={t} variant="secondary" className="text-[10px] py-0.5 px-1.5">{t}</Badge>
+                            ))
+                          ) : (
+                            <span className="text-xs text-slate-500">—</span>
+                          )}
+                        </div>
+                        <span className="text-xs text-slate-400">•</span>
+                        <div className="text-xs text-slate-400">Ajouté: {new Date(m.createdAt).toLocaleString('fr-FR')}</div>
+                      </div>
                     </>
                   )}
                 </div>
@@ -185,10 +209,12 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
           </div>
         </div>
 
-        <div className="flex justify-end pt-2">
-          <Button variant="ghost" onClick={onClose}>
-            <X className="w-4 h-4 mr-2" /> Fermer
-          </Button>
+        <div className="px-6 py-3 border-t bg-white/70 dark:bg-slate-900/40 sticky bottom-0">
+          <div className="flex justify-end">
+            <Button variant="ghost" onClick={onClose}>
+              <X className="w-4 h-4 mr-2" /> Fermer
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
