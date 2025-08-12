@@ -32,11 +32,10 @@ export async function sendMessageToGemini(
     throw new Error('Clé API Gemini introuvable. Merci d\'ajouter VITE_GEMINI_API_KEY dans ton fichier .env.local.');
   }
 
-  const systemMessage = { role: 'user', text: systemPrompt || SYSTEM_PROMPT };
-  const formattedMessages = [systemMessage, ...messages.map(msg => ({
+  const formattedMessages = messages.map(msg => ({
     role: msg.isUser ? 'user' : 'model',
     text: msg.text
-  }))];
+  }));
 
   let contents: any[] = [];
   if (files && files.length > 0) {
@@ -71,6 +70,10 @@ export async function sendMessageToGemini(
       },
       body: JSON.stringify({
         contents,
+        systemInstruction: {
+          role: 'system',
+          parts: [{ text: systemPrompt || SYSTEM_PROMPT }],
+        },
         generationConfig: {
           temperature: generationConfig?.temperature ?? 0.7,
           topK: generationConfig?.topK ?? 40,
@@ -78,6 +81,7 @@ export async function sendMessageToGemini(
           maxOutputTokens: generationConfig?.maxOutputTokens ?? 4096,
           stopSequences: generationConfig?.stopSequences ?? [],
           candidateCount: generationConfig?.candidateCount ?? 1,
+          responseMimeType: 'text/plain',
         },
         safetySettings: [
           {
@@ -105,13 +109,50 @@ export async function sendMessageToGemini(
       throw new Error(`Échec de la requête API : ${response.status} ${response.statusText}. ${errorData.error?.message || ''}`);
     }
 
-    const data: GeminiResponse = await response.json();
-    
-    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+    const data: any = await response.json();
+
+    // Vérifie un éventuel blocage sécurité
+    const blockReason = data?.promptFeedback?.blockReason || data?.candidates?.[0]?.finishReason;
+    if (blockReason && String(blockReason).toUpperCase().includes('SAFETY')) {
+      throw new Error(`Contenu bloqué par la sécurité (${blockReason})`);
+    }
+
+    const candidates: any[] = Array.isArray(data?.candidates) ? data.candidates : [];
+    let joined = '';
+    // 1) Nouveau format: texte au niveau "text" (quand responseMimeType = text/plain)
+    if (typeof candidates?.[0]?.content?.parts?.[0]?.text === 'string') {
+      const parts: any[] = candidates[0].content.parts;
+      joined = parts
+        .map((p: any) => (typeof p?.text === 'string' ? p.text : ''))
+        .filter((t: string) => t.trim().length > 0)
+        .join('\n')
+        .trim();
+    }
+    // 2) Fallback: texte directement sur le candidat
+    if (!joined && typeof candidates?.[0]?.text === 'string') {
+      joined = String(candidates[0].text).trim();
+    }
+    // 3) Fallback étendu: concaténer tous les candidats/parts
+    if (!joined) {
+      const texts: string[] = [];
+      for (const cand of candidates) {
+        if (typeof cand?.text === 'string') texts.push(cand.text);
+        const parts: any[] = Array.isArray(cand?.content?.parts) ? cand.content.parts : [];
+        for (const part of parts) {
+          if (typeof part?.text === 'string' && part.text.trim().length > 0) {
+            texts.push(part.text);
+          }
+        }
+      }
+      joined = texts.join('\n').trim();
+    }
+
+    if (!joined) {
+      console.error('Gemini raw response (no text parts found):', data);
       throw new Error('Format de réponse invalide depuis l\'API Gemini');
     }
 
-    return data.candidates[0].content.parts[0].text;
+    return joined;
   } catch (error) {
     console.error('Gemini API error:', error);
     throw error;
