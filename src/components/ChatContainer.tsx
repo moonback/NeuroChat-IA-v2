@@ -297,7 +297,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
           )}
           
           {/* Scroll to bottom button amélioré */}
-          {showScrollButton && (
+          {showScrollButton && messages.length > 0 && (
             <Button
               onClick={scrollToBottom}
               size="icon"
