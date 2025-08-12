@@ -298,7 +298,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
 
   return (
     <Drawer open={open} onOpenChange={onClose}>
-      <DrawerContent className="max-w-12xl px-2 sm:px-6 py-2 sm:py-6 rounded-3xl shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20 max-h-[95vh] overflow-y-auto">
+      <DrawerContent className="max-w-12xl px-2 sm:px-6 py-2 sm:py-6 rounded-3xl shadow-2xl border-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-white dark:from-slate-950 dark:via-indigo-950 dark:to-slate-950 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20 max-h-[95vh] overflow-y-auto">
         <DrawerHeader className="pb-2">
           <div className="flex items-center gap-2">
             <UploadCloud className="w-7 h-7 text-blue-500 mr-2" />
@@ -312,7 +312,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
         </DrawerHeader>
         {/* Ancien contenu de la modale ici, sans le header/titre ni bouton fermer */}
         <div className="p-8 pt-6">
-          <div className="w-full p-6 mb-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-center flex flex-col items-center justify-center gap-2">
+          <div className="w-full p-6 mb-3 rounded-xl border-2 border-dashed border-blue-200 dark:border-indigo-800 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950 text-center flex flex-col items-center justify-center gap-2">
             <UploadCloud className="w-10 h-10 mb-2 text-blue-400" />
             <span className="font-semibold text-base">
               Cliquez sur « Ajouter un document » pour importer vos fichiers
@@ -339,7 +339,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Rechercher un document..."
-            className="w-full mb-4 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full mb-4 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <div className="mb-4 flex justify-between items-center">
             <span className="text-sm text-slate-500">
@@ -420,7 +420,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
               {filteredDocs.map(doc => {
                 return (
                   <li key={doc.id}
-                    className={`border rounded-xl p-4 bg-slate-50 dark:bg-slate-800 flex flex-col sm:flex-row items-start sm:items-center gap-3 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-200 border-transparent hover:border-blue-400/60 relative group animate-fadeIn`}
+                    className={`border rounded-xl p-4 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950 flex flex-col sm:flex-row items-start sm:items-center gap-3 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-200 border-transparent hover:border-blue-400/60 relative group animate-fadeIn`}
                   >
                     {/* Badge type */}
                     <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-bold
@@ -512,7 +512,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8 w-full max-w-2xl max-h-[95vh] overflow-y-auto relative">
             <button onClick={() => setPreviewDoc(null)} className="absolute top-4 right-4 text-slate-500 hover:text-red-500"><X className="w-6 h-6" /></button>
             <h3 className="text-xl font-bold mb-4">{previewDoc.titre}</h3>
-            <pre className="whitespace-pre-wrap text-sm bg-slate-100 dark:bg-slate-800 rounded p-4 max-h-[70vh] overflow-y-auto">{previewDoc.contenu}</pre>
+            <pre className="whitespace-pre-wrap text-sm bg-white dark:bg-slate-900 rounded p-4 max-h-[70vh] overflow-y-auto">{previewDoc.contenu}</pre>
             <Button onClick={() => setPreviewDoc(null)} className="mt-6 w-full text-base py-3">Fermer l'aperçu</Button>
           </div>
         </div>
