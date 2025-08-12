@@ -4,25 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
-import { ReasoningTimeline, type ReasoningStep } from '@/components/ReasoningTimeline';
 
 interface VoiceInputProps {
   onSendMessage: (message: string, imageFile?: File) => void;
   isLoading: boolean;
-  reasoningVisible?: boolean;
-  reasoningSteps?: ReasoningStep[];
-  reasoningLoading?: boolean;
-  reasoningSpeaking?: boolean;
 }
 
-export function VoiceInput({ 
-  onSendMessage, 
-  isLoading, 
-  reasoningVisible = false, 
-  reasoningSteps = [], 
-  reasoningLoading = false, 
-  reasoningSpeaking = false 
-}: VoiceInputProps) {
+export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -168,21 +156,7 @@ export function VoiceInput({
            <div className="backdrop-blur-xl bg-white/85 dark:bg-slate-900/85 border-t border-white/40 dark:border-slate-800/40 shadow-xl">
              <div className="px-3 py-3 sm:px-4 sm:py-3 max-w-5xl mx-auto">
               
-              {/* Timeline compacte */}
-               {reasoningVisible && (
-                 <div className="mb-2 animate-in slide-in-from-bottom-2 fade-in-0 duration-200">
-                  <ReasoningTimeline
-                    visible={reasoningVisible}
-                    steps={reasoningSteps}
-                    loading={reasoningLoading}
-                    speaking={reasoningSpeaking}
-                    variant="inline"
-                    showProgress
-                    allowPin={false}
-                    disableAutoClose
-                  />
-                </div>
-              )}
+               {/* Timeline retirée */}
 
               {/* Aperçu image élégant */}
                {selectedImage && (

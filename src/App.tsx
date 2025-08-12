@@ -24,7 +24,7 @@ const GeminiSettingsDrawerLazy = lazy(() => import('@/components/GeminiSettingsD
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 
-import { type ReasoningStep } from '@/components/ReasoningTimeline';
+// Timeline retirée
 
 interface Message {
   id: string;
@@ -127,8 +127,7 @@ function App() {
   // --- Mode privé/éphémère ---
   const [modePrive, setModePrive] = useState(false);
   // --- Timeline de raisonnement ---
-  const [reasoningVisible, setReasoningVisible] = useState(false);
-  const [reasoningSteps, setReasoningSteps] = useState<ReasoningStep[]>([]);
+  // Timeline retirée
   // Affichage d'un toast d'avertissement lors de l'activation
   useEffect(() => {
     if (modePrive) {
@@ -415,21 +414,10 @@ ${lines.join('\n')}`, false);
     if (handled) return;
 
     // Préparer la timeline de raisonnement
-    setReasoningVisible(true);
-    const initialSteps: ReasoningStep[] = [
-      ...(ragEnabled
-        ? [{ key: 'rag', label: 'Recherche contextuelle (RAG)', status: 'running', start: performance.now(), detail: 'Analyse des documents…' } as ReasoningStep]
-        : []),
-      { key: 'buildPrompt', label: 'Construction du prompt', status: 'idle' },
-      { key: 'callLLM', label: 'Appel du modèle', status: 'idle' },
-      { key: 'tts', label: 'Synthèse vocale', status: 'idle' },
-    ];
-    setReasoningSteps(initialSteps);
+    // Timeline retirée
 
-    let ragStart = ragEnabled ? performance.now() : 0;
-    let promptStart = 0;
-    let llmStart = 0;
-    let ttsStart = 0;
+    // Temps RAG (non utilisé visuellement depuis retrait de la timeline)
+    // let ragStart = ragEnabled ? performance.now() : 0;
     // Arrêter immédiatement la reconnaissance vocale pour éviter qu'elle capte le TTS
     if (modeVocalAuto && listeningAuto) {
       stopAuto();
@@ -451,15 +439,14 @@ ${lines.join('\n')}`, false);
     let passages: { id: number; titre: string; contenu: string }[] = [];
     if (ragEnabled) {
       passages = await searchDocuments(userMessage, 3);
-      const ragEnd = performance.now();
-      setReasoningSteps(prev => prev.map(s => s.key === 'rag' ? ({ ...s, status: 'done', end: ragEnd, durationMs: Math.round(ragEnd - (s.start || ragStart)), detail: `${passages.length} passage(s)` }) : s));
+       // Timeline retirée
       if (passages.length > 0) {
         addRagContextMessage(passages);
       }
     }
     // Ajoute le message utilisateur localement
     const newMessage = addMessage(userMessage, true, imageFile);
-    // Extraire et mémoriser immédiatement les faits utilisateur (indépendant du LLM)
+    // Extraire et mémoriser immédiatement les faits utilisateur
     try {
       let userFacts = extractFactsFromText(userMessage, { source: 'user' });
       if ((!userFacts || userFacts.length === 0) && !modePrive) {
@@ -479,8 +466,7 @@ ${lines.join('\n')}`, false);
       // On ne garde que les messages qui ont un champ text (donc pas les messages RAG)
       const filteredHistory = fullHistory.filter(m => typeof m.text === 'string');
       // On construit le contexte documentaire pour le prompt
-      setReasoningSteps(prev => prev.map(s => s.key === 'buildPrompt' ? ({ ...s, status: 'running', start: performance.now(), detail: 'Assemblage du contexte…' }) : s));
-      promptStart = performance.now();
+       // Timeline retirée
       let ragContext = '';
       let memoryContext = '';
       // Récupération mémoire pertinente + résumé de profil
@@ -519,37 +505,31 @@ ${lines.join('\n')}`, false);
       // Important: ne pas inclure à nouveau la question utilisateur dans le prompt système
       // pour éviter qu'elle soit envoyée deux fois au modèle.
       const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memoryContext}${ragEnabled ? ragContext : ""}`;
-      const promptEnd = performance.now();
-      setReasoningSteps(prev => prev.map(s => s.key === 'buildPrompt' ? ({ ...s, status: 'done', end: promptEnd, durationMs: Math.round(promptEnd - (s.start || promptStart)), detail: `${prompt.length} caractères` }) : s));
+       // Timeline retirée
       // LOG prompt final
       // console.log('[Prompt envoyé à Gemini]', prompt);
-      setReasoningSteps(prev => prev.map(s => s.key === 'callLLM' ? ({ ...s, status: 'running', start: performance.now(), detail: 'Appel en cours…' }) : s));
-      llmStart = performance.now();
+       // Timeline retirée
       const response = await sendMessageToGemini(
         filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
         imageFile ? [imageFile] : undefined,
         prompt,
         geminiConfig
       );
-      const llmEnd = performance.now();
-      setReasoningSteps(prev => prev.map(s => s.key === 'callLLM' ? ({ ...s, status: 'done', end: llmEnd, durationMs: Math.round(llmEnd - (s.start || llmStart)), detail: `${response.length} caractères` }) : s));
+       // Timeline retirée
       // LOG réponse Gemini
       // console.log('[Réponse Gemini]', response);
       addMessage(response, false);
       
       // Indiquer que l'IA commence à parler
       setIsAISpeaking(true);
-      setReasoningSteps(prev => prev.map(s => s.key === 'tts' ? ({ ...s, status: 'running', start: performance.now(), detail: 'Lecture de la réponse…' }) : s));
-      ttsStart = performance.now();
+      // Timeline retirée
       console.log('[Vocal Mode] IA commence à parler - microphone coupé');
       
       speak(response, {
         onEnd: () => {
           // Indiquer que l'IA a fini de parler
           setIsAISpeaking(false);
-          const ttsEnd = performance.now();
-          setReasoningSteps(prev => prev.map(s => s.key === 'tts' ? ({ ...s, status: 'done', end: ttsEnd, durationMs: Math.round(ttsEnd - (s.start || ttsStart)) }) : s));
-          setTimeout(() => setReasoningVisible(false), 3000);
+          // Timeline retirée
           console.log('[Vocal Mode] IA a fini de parler - préparation redémarrage microphone');
           
           // Utiliser les références pour éviter les valeurs obsolètes
@@ -570,7 +550,7 @@ ${lines.join('\n')}`, false);
       });
       // toast.success('Réponse reçue !', { duration: 2000 });
     } catch (error) {
-      setReasoningSteps(prev => prev.map(s => s.key === 'callLLM' && s.status === 'running' ? ({ ...s, status: 'error', end: performance.now(), durationMs: Math.round(performance.now() - (s.start || llmStart)), detail: 'Erreur lors de l\'appel' }) : s));
+      // Timeline retirée
       const errorMessage = error instanceof Error 
         ? error.message 
         : "Impossible d'obtenir une réponse de Gemini. Réessaie.";
@@ -965,10 +945,7 @@ ${lines.join('\n')}`, false);
         <VoiceInput
           onSendMessage={handleSendMessage}
           isLoading={isLoading}
-          reasoningVisible={reasoningVisible}
-          reasoningSteps={reasoningSteps}
-          reasoningLoading={isLoading}
-          reasoningSpeaking={isAISpeaking}
+          
         />
       </div>
 
