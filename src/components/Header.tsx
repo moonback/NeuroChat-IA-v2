@@ -1,23 +1,17 @@
-// =====================
-// Imports
-// =====================
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { Tooltip as ReactTooltip } from 'react-tooltip';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import {
-  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, Trash2, Menu, X
+  MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, 
+  PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, 
+  Trash2, Menu, X, Wifi, WifiOff
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
-// Sélecteur de personnalité retiré
 
 // =====================
-// Constantes & Utilitaires
-// =====================
-
-// =====================
-// Types
+// Types améliorés
 // =====================
 interface HeaderProps {
   muted: boolean;
@@ -28,7 +22,6 @@ interface HeaderProps {
   onOpenTTSSettings: () => void;
   onOpenRagDocs: () => void;
   onOpenMemory: () => void;
-  // Personnalité retirée
   stop: () => void;
   modeVocalAuto: boolean;
   setModeVocalAuto: (v: boolean) => void;
@@ -41,7 +34,6 @@ interface HeaderProps {
   onChangeProvider?: (p: 'gemini' | 'openai') => void;
   modePrive: boolean;
   setModePrive: (v: boolean) => void;
-  // Props pour la sélection de messages
   selectMode: boolean;
   onToggleSelectMode: () => void;
   selectedCount: number;
@@ -55,312 +47,408 @@ interface HeaderProps {
 }
 
 // =====================
-// Composant principal Header
+// Hooks personnalisés
 // =====================
-export function Header({
-  muted,
-  onMute,
-  onUnmute,
-  onNewDiscussion,
-  onOpenHistory,
-  onOpenTTSSettings,
-  onOpenRagDocs,
-  onOpenMemory,
-  
-  modeVocalAuto,
-  setModeVocalAuto,
-  hasActiveConversation,
-  ragEnabled,
-  setRagEnabled,
-  onOpenGeminiSettings,
-  provider,
-  onChangeProvider,
-  modePrive,
-  setModePrive,
-  selectMode,
-  onToggleSelectMode,
-  selectedCount,
-  totalCount,
-  onSelectAll,
-  onDeselectAll,
-  onRequestDelete,
-  showConfirmDelete,
-  setShowConfirmDelete,
-  onDeleteConfirmed,
-}: HeaderProps) {
-  const { theme, toggleTheme } = useTheme();
-  const [isOnline, setIsOnline] = useState(true);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
+const useOnlineStatus = () => {
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
 
-  // Effet bip mode privé avec feedback tactile
   useEffect(() => {
-    if (modePrive && audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play();
-      // Vibration tactile sur mobile si disponible
-      if ('vibrate' in navigator) {
-        navigator.vibrate(100);
-      }
-    }
-  }, [modePrive]);
+    if (typeof window === 'undefined') return;
 
-  // Effet statut en ligne
-  useEffect(() => {
-    setIsOnline(navigator.onLine);
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
 
+  return isOnline;
+};
+
+const usePrivateModeFeedback = (modePrive: boolean) => {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (!modePrive) return;
+
+    // Audio feedback
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => {
+        // Ignore audio play errors (autoplay restrictions)
+      });
+    }
+
+    // Haptic feedback
+    if ('vibrate' in navigator) {
+      navigator.vibrate(100);
+    }
+  }, [modePrive]);
+
+  return audioRef;
+};
+
+// =====================
+// Sous-composants
+// =====================
+const StatusIndicator = ({ isOnline }: { isOnline: boolean }) => (
+  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-white dark:bg-slate-950 flex items-center justify-center">
+    <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}>
+      {isOnline && <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75" />}
+    </div>
+  </div>
+);
+
+const Logo = ({ onNewDiscussion, isOnline }: { onNewDiscussion: () => void; isOnline: boolean }) => (
+  <div className="flex items-center gap-3 cursor-pointer group" onClick={onNewDiscussion}>
+    <div className="relative">
+      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+        <MessageCircle className="w-5 h-5 text-white" />
+      </div>
+      <StatusIndicator isOnline={isOnline} />
+    </div>
+    <div className="hidden sm:block">
+      <h1 className="text-[1.35rem] sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-slate-900/90 to-slate-600/80 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+        NeuroChat
+      </h1>
+      <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+        {isOnline ? (
+          <>
+            <Wifi className="w-3 h-3" />
+            Connecté
+          </>
+        ) : (
+          <>
+            <WifiOff className="w-3 h-3" />
+            Hors ligne
+          </>
+        )}
+      </p>
+    </div>
+  </div>
+);
+
+const StatusBadge = ({ 
+  active, 
+  icon: Icon, 
+  tooltip, 
+  color 
+}: { 
+  active: boolean;
+  icon: any;
+  tooltip: string;
+  color: 'red' | 'green' | 'blue';
+}) => {
+  if (!active) return null;
+
+  const colorClasses = {
+    red: 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400',
+    green: 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800/50 text-green-600 dark:text-green-400',
+    blue: 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400'
+  };
+
+  return (
+    <div
+      className={`w-6 h-6 rounded-full border flex items-center justify-center shadow-sm ${colorClasses[color]}`}
+      data-tooltip-id="header-tooltip"
+      data-tooltip-content={tooltip}
+    >
+      <Icon className="w-3.5 h-3.5" />
+    </div>
+  );
+};
+
+const ActionButton = ({ 
+  children, 
+  onClick, 
+  tooltip, 
+  variant = "ghost",
+  className = "",
+  ...props 
+}: any) => (
+  <Button
+    variant={variant}
+    size="sm"
+    onClick={onClick}
+    data-tooltip-id="header-tooltip"
+    data-tooltip-content={tooltip}
+    className={`h-9 px-3 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-[1.03] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 ${className}`}
+    {...props}
+  >
+    {children}
+  </Button>
+);
+
+const IconButton = ({ 
+  children, 
+  onClick, 
+  tooltip, 
+  variant = "ghost",
+  className = "",
+  ...props 
+}: any) => (
+  <Button
+    variant={variant}
+    size="sm"
+    onClick={onClick}
+    data-tooltip-id="header-tooltip"
+    data-tooltip-content={tooltip}
+    className={`h-8 w-8 p-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 ${className}`}
+    {...props}
+  >
+    {children}
+  </Button>
+);
+
+const ButtonGroup = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`flex items-center gap-1 rounded-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-1 shadow-sm ${className}`}>
+    {children}
+  </div>
+);
+
+// =====================
+// Composant principal amélioré
+// =====================
+export function Header(props: HeaderProps) {
+  const {
+    muted, onMute, onUnmute, onNewDiscussion, onOpenHistory, onOpenTTSSettings,
+    onOpenRagDocs, onOpenMemory, modeVocalAuto, setModeVocalAuto,
+    hasActiveConversation, ragEnabled, setRagEnabled, onOpenGeminiSettings,
+    provider, onChangeProvider, modePrive, setModePrive, selectMode,
+    onToggleSelectMode, selectedCount, totalCount, onSelectAll, onDeselectAll,
+    onRequestDelete, showConfirmDelete, setShowConfirmDelete, onDeleteConfirmed
+  } = props;
+
+  const { theme, toggleTheme } = useTheme();
+  const isOnline = useOnlineStatus();
+  const audioRef = usePrivateModeFeedback(modePrive);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  // Mémoisation des handlers pour éviter les re-renders inutiles
+  const handleVolumeToggle = useCallback(() => {
+    muted ? onUnmute() : onMute();
+  }, [muted, onMute, onUnmute]);
+
+  const handleModeVocalToggle = useCallback(() => {
+    setModeVocalAuto(!modeVocalAuto);
+  }, [modeVocalAuto, setModeVocalAuto]);
+
+  const handlePrivateModeToggle = useCallback(() => {
+    setModePrive(!modePrive);
+  }, [modePrive, setModePrive]);
+
+  const handleRagToggle = useCallback(() => {
+    setRagEnabled(!ragEnabled);
+  }, [ragEnabled, setRagEnabled]);
+
+  const closeMobileMenu = useCallback(() => {
+    setShowMobileMenu(false);
+  }, []);
+
+  // Actions combinées pour le menu mobile
+  const handleMenuAction = useCallback((action: () => void) => {
+    return () => {
+      action();
+      closeMobileMenu();
+    };
+  }, [closeMobileMenu]);
+
+  // Mémoisation des composants coûteux
+  const selectionActions = useMemo(() => {
+    if (!hasActiveConversation) return null;
+
+    return (
+      <>
+        <ActionButton
+          variant={selectMode ? "default" : "ghost"}
+          onClick={onToggleSelectMode}
+          tooltip={selectMode ? 'Quitter la sélection' : 'Sélectionner des messages'}
+        >
+          {selectMode ? <CheckSquare className="w-4 h-4 mr-2" /> : <Square className="w-4 h-4 mr-2" />}
+          {selectMode ? 'Annuler' : 'Sélectionner'}
+        </ActionButton>
+
+        {selectMode && (
+          <>
+            <ActionButton
+              onClick={selectedCount === totalCount ? onDeselectAll : onSelectAll}
+              tooltip={selectedCount === totalCount ? 'Tout désélectionner' : 'Tout sélectionner'}
+            >
+              {selectedCount === totalCount ? 'Désélectionner tout' : 'Tout sélectionner'}
+            </ActionButton>
+
+            {selectedCount > 0 && (
+              <ActionButton
+                variant="destructive"
+                onClick={onRequestDelete}
+                tooltip={`Supprimer ${selectedCount} message${selectedCount > 1 ? 's' : ''}`}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Supprimer ({selectedCount})
+              </ActionButton>
+            )}
+          </>
+        )}
+      </>
+    );
+  }, [hasActiveConversation, selectMode, selectedCount, totalCount, onToggleSelectMode, onSelectAll, onDeselectAll, onRequestDelete]);
+
+  const mobileMenuActions = useMemo(() => (
+    <div className="md:hidden space-y-2">
+      <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onNewDiscussion)}>
+        <PlusCircle className="w-4 h-4 mr-3" />
+        Nouvelle discussion
+      </Button>
+      <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onOpenHistory)}>
+        <History className="w-4 h-4 mr-3" />
+        Historique
+      </Button>
+      <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onOpenMemory)}>
+        <Brain className="w-4 h-4 mr-3" />
+        Mémoire
+      </Button>
+      
+      {hasActiveConversation && (
+        <>
+          <div className="border-t border-slate-200 dark:border-slate-800 my-3" />
+          <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onToggleSelectMode)}>
+            {selectMode ? <CheckSquare className="w-4 h-4 mr-3" /> : <Square className="w-4 h-4 mr-3" />}
+            {selectMode ? 'Annuler sélection' : 'Sélectionner messages'}
+          </Button>
+          {selectMode && selectedCount > 0 && (
+            <Button variant="destructive" className="w-full justify-start h-10" onClick={handleMenuAction(onRequestDelete)}>
+              <Trash2 className="w-4 h-4 mr-3" />
+              Supprimer sélection ({selectedCount})
+            </Button>
+          )}
+        </>
+      )}
+      
+      <div className="border-t border-slate-200 dark:border-slate-800 my-3" />
+      
+      <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(handlePrivateModeToggle)}>
+        <Shield className="w-4 h-4 mr-3" />
+        {modePrive ? 'Désactiver mode privé' : 'Activer mode privé'}
+      </Button>
+      
+      <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(handleRagToggle)}>
+        <Brain className="w-4 h-4 mr-3" />
+        {ragEnabled ? 'Désactiver RAG' : 'Activer RAG'}
+      </Button>
+      
+      <div className="border-t border-slate-200 dark:border-slate-800 my-3" />
+    </div>
+  ), [hasActiveConversation, selectMode, selectedCount, modePrive, ragEnabled, handleMenuAction, onNewDiscussion, onOpenHistory, onOpenMemory, onToggleSelectMode, onRequestDelete, handlePrivateModeToggle, handleRagToggle]);
+
   return (
     <header className="w-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 sticky top-0 z-50">
       {/* Audio bip premium */}
-      <audio ref={audioRef} src="/bip2.mp3" preload="auto" />
+      <audio ref={audioRef} preload="auto">
+        <source src="/bip2.mp3" type="audio/mpeg" />
+        <source src="/bip2.ogg" type="audio/ogg" />
+      </audio>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo et branding */}
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 cursor-pointer group" onClick={onNewDiscussion}>
-              <div className="relative">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-                  <MessageCircle className="w-5 h-5 text-white" />
-                </div>
-                {/* Indicateur de statut */}
-                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-white dark:bg-slate-950 flex items-center justify-center">
-                  <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}>
-                    {isOnline && <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75" />}
-                  </div>
-                </div>
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-[1.35rem] sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-slate-900/90 to-slate-600/80 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
-                  NeuroChat
-                </h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {isOnline ? 'Connecté' : 'Hors ligne'}
-                </p>
-              </div>
-            </div>
+            <Logo onNewDiscussion={onNewDiscussion} isOnline={isOnline} />
 
-            {/* Indicateurs de statut - icônes seules sur desktop avec tooltip */}
+            {/* Indicateurs de statut - Desktop uniquement */}
             <div className="hidden lg:flex items-center gap-2">
-              {modePrive && (
-                <div
-                  className="w-6 h-6 rounded-full bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50 flex items-center justify-center shadow-sm"
-                  data-tooltip-id="header-tooltip"
-                  data-tooltip-content="Mode privé activé"
-                >
-                  <Shield className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-                </div>
-              )}
-              {ragEnabled && (
-                <div
-                  className="w-6 h-6 rounded-full bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800/50 flex items-center justify-center shadow-sm"
-                  data-tooltip-id="header-tooltip"
-                  data-tooltip-content="RAG actif"
-                >
-                  <Brain className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
-                </div>
-              )}
-              {modeVocalAuto && (
-                <div
-                  className="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50 flex items-center justify-center shadow-sm"
-                  data-tooltip-id="header-tooltip"
-                  data-tooltip-content="Mode vocal automatique"
-                >
-                  <Mic className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                </div>
-              )}
+              <StatusBadge active={modePrive} icon={Shield} tooltip="Mode privé activé" color="red" />
+              <StatusBadge active={ragEnabled} icon={Brain} tooltip="RAG actif" color="green" />
+              <StatusBadge active={modeVocalAuto} icon={Mic} tooltip="Mode vocal automatique" color="blue" />
             </div>
           </div>
 
           {/* Actions principales - Desktop */}
           <div className="hidden md:flex items-center gap-2">
-            {/* Bouton Nouvelle discussion */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onNewDiscussion}
-              data-tooltip-id="header-tooltip"
-              data-tooltip-content="Nouvelle discussion"
-              className="h-9 px-3 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-[1.03] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
-            >
+            {/* Actions principales */}
+            <ActionButton onClick={onNewDiscussion} tooltip="Nouvelle discussion">
               <PlusCircle className="w-4 h-4 mr-2" />
               Nouveau
-            </Button>
+            </ActionButton>
 
-            {/* Historique */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onOpenHistory}
-              data-tooltip-id="header-tooltip"
-              data-tooltip-content="Voir l'historique"
-              className="h-9 px-3 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-[1.03] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
-            >
+            <ActionButton onClick={onOpenHistory} tooltip="Voir l'historique">
               <History className="w-4 h-4 mr-2" />
               Historique
-            </Button>
+            </ActionButton>
 
-            {/* Mémoire */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onOpenMemory}
-              data-tooltip-id="header-tooltip"
-              data-tooltip-content="Ouvrir la mémoire"
-              className="h-9 px-3 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-[1.03] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
-            >
+            <ActionButton onClick={onOpenMemory} tooltip="Ouvrir la mémoire">
               <Brain className="w-4 h-4 mr-2" />
               Mémoire
-            </Button>
+            </ActionButton>
 
-            
+            {/* Actions de sélection */}
+            {selectionActions}
 
-            {/* Sélection de messages - Si conversation active */}
-            {hasActiveConversation && (
-              <>
-                <Button
-                  variant={selectMode ? "default" : "ghost"}
-                  size="sm"
-                  onClick={onToggleSelectMode}
-                  data-tooltip-id="header-tooltip"
-                  data-tooltip-content={selectMode ? 'Quitter la sélection' : 'Sélectionner des messages'}
-                  className="h-9 px-3 text-sm font-medium transition-all hover:scale-[1.03] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
-                >
-                  {selectMode ? <CheckSquare className="w-4 h-4 mr-2" /> : <Square className="w-4 h-4 mr-2" />}
-                  {selectMode ? 'Annuler' : 'Sélectionner'}
-                </Button>
-
-                {selectMode && (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={selectedCount === totalCount ? onDeselectAll : onSelectAll}
-                      data-tooltip-id="header-tooltip"
-                      data-tooltip-content={selectedCount === totalCount ? 'Tout désélectionner' : 'Tout sélectionner'}
-                      className="h-9 px-3 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-[1.03] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
-                    >
-                      {selectedCount === totalCount ? 'Désélectionner tout' : 'Tout sélectionner'}
-                    </Button>
-
-                    {selectedCount > 0 && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={onRequestDelete}
-                        data-tooltip-id="header-tooltip"
-                        data-tooltip-content={`Supprimer ${selectedCount} message${selectedCount > 1 ? 's' : ''}`}
-                        className="h-9 px-3 text-sm font-medium transition-all hover:scale-[1.03] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Supprimer ({selectedCount})
-                      </Button>
-                    )}
-                  </>
-                )}
-              </>
-            )}
-
-            
-
-            {/* Contrôles vocaux - bloc icônes */}
-            <div className="flex items-center gap-1 rounded-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-1 shadow-sm">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={muted ? onUnmute : onMute}
-                aria-pressed={!muted}
-                data-tooltip-id="header-tooltip"
-                data-tooltip-content={muted ? 'Activer audio' : 'Désactiver audio'}
-                className={`h-8 w-8 p-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 ${
-                  muted
-                    ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50'
-                    : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-950/50 animate-pulse'
-                }`}
+            {/* Contrôles vocaux */}
+            <ButtonGroup>
+              <IconButton
+                onClick={handleVolumeToggle}
+                tooltip={muted ? 'Activer audio' : 'Désactiver audio'}
+                className={muted
+                  ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50'
+                  : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-950/50 animate-pulse'
+                }
               >
                 {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-              </Button>
+              </IconButton>
 
-              <Button
+              <IconButton
                 variant={modeVocalAuto ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setModeVocalAuto(!modeVocalAuto)}
-                aria-pressed={modeVocalAuto}
-                data-tooltip-id="header-tooltip"
-                data-tooltip-content="Mode vocal automatique"
-                className={`h-8 w-8 p-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 ${
-                  modeVocalAuto ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 ring-1 ring-blue-400/30 animate-pulse' : ''
-                }`}
+                onClick={handleModeVocalToggle}
+                tooltip="Mode vocal automatique"
+                className={modeVocalAuto 
+                  ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 ring-1 ring-blue-400/30 animate-pulse' 
+                  : ''
+                }
               >
                 <Mic className="w-4 h-4" />
-              </Button>
-            </div>
+              </IconButton>
+            </ButtonGroup>
 
-            
-
-            {/* Modes IA - bloc icônes secondaires */}
-            <div className="flex items-center gap-1 rounded-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-1 shadow-sm">
-              <Button
+            {/* Modes IA */}
+            <ButtonGroup>
+              <IconButton
                 variant={modePrive ? 'destructive' : 'ghost'}
-                size="sm"
-                onClick={() => setModePrive(!modePrive)}
-                aria-pressed={modePrive}
-                data-tooltip-id="header-tooltip"
-                data-tooltip-content="Mode privé"
-                className="h-8 w-8 p-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
+                onClick={handlePrivateModeToggle}
+                tooltip="Mode privé"
               >
                 <Shield className="w-4 h-4" />
-              </Button>
-              <Button
+              </IconButton>
+              
+              <IconButton
                 variant={ragEnabled ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setRagEnabled(!ragEnabled)}
-                aria-pressed={ragEnabled}
-                data-tooltip-id="header-tooltip"
-                data-tooltip-content="Recherche documentaire (RAG)"
-                className="h-8 w-8 p-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
+                onClick={handleRagToggle}
+                tooltip="Recherche documentaire (RAG)"
               >
                 <Brain className="w-4 h-4" />
-              </Button>
-            </div>
+              </IconButton>
+            </ButtonGroup>
 
-            
-
-            {/* Réglages - bloc icônes */}
-            <div className="flex items-center gap-1 rounded-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-1 shadow-sm">
-              {/* Thème */}
-              <Button
-                variant="ghost"
-                size="sm"
+            {/* Réglages */}
+            <ButtonGroup>
+              <IconButton
                 onClick={toggleTheme}
-                data-tooltip-id="header-tooltip"
-                data-tooltip-content={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
-                className="h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
+                tooltip={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
               >
                 {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </Button>
+              </IconButton>
 
-              {/* Bouton Menu pour autres options */}
-              <Button
-                variant="ghost"
-                size="sm"
+              <IconButton
                 onClick={() => setShowMobileMenu(true)}
-                data-tooltip-id="header-tooltip"
-                data-tooltip-content="Plus d'options"
-                className="h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
+                tooltip="Plus d'options"
               >
                 <Settings2 className="w-4 h-4" />
-              </Button>
-            </div>
+              </IconButton>
+            </ButtonGroup>
           </div>
 
           {/* Menu mobile button */}
@@ -369,6 +457,7 @@ export function Header({
             size="sm"
             onClick={() => setShowMobileMenu(true)}
             className="md:hidden h-9 w-9 p-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
+            aria-label="Ouvrir le menu"
           >
             <Menu className="w-5 h-5" />
           </Button>
@@ -378,74 +467,27 @@ export function Header({
       {/* Menu mobile/options */}
       <Dialog open={showMobileMenu} onOpenChange={setShowMobileMenu}>
         <DialogContent className="max-w-sm mx-auto p-0 bg-white dark:bg-slate-950 rounded-2xl border shadow-xl">
-          {/* Titre accessible pour lecteurs d'écran */}
           <DialogHeader className="sr-only">
             <DialogTitle>Menu options</DialogTitle>
           </DialogHeader>
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold">Options</h2>
-              <Button variant="ghost" size="sm" onClick={() => setShowMobileMenu(false)} className="h-8 w-8 p-0">
+              <Button variant="ghost" size="sm" onClick={closeMobileMenu} className="h-8 w-8 p-0" aria-label="Fermer">
                 <X className="w-4 h-4" />
               </Button>
             </div>
 
             <div className="space-y-3">
-              {/* Actions principales mobile */}
-              <div className="md:hidden space-y-2">
-                <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onNewDiscussion(); setShowMobileMenu(false); }}>
-                  <PlusCircle className="w-4 h-4 mr-3" />
-                  Nouvelle discussion
-                </Button>
-                <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onOpenHistory(); setShowMobileMenu(false); }}>
-                  <History className="w-4 h-4 mr-3" />
-                  Historique
-                </Button>
-                <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onOpenMemory(); setShowMobileMenu(false); }}>
-                  <Brain className="w-4 h-4 mr-3" />
-                  Mémoire
-                </Button>
-                
-                {hasActiveConversation && (
-                  <>
-                    <div className="border-t border-slate-200 dark:border-slate-800 my-3" />
-                    <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onToggleSelectMode(); setShowMobileMenu(false); }}>
-                      {selectMode ? <CheckSquare className="w-4 h-4 mr-3" /> : <Square className="w-4 h-4 mr-3" />}
-                      {selectMode ? 'Annuler sélection' : 'Sélectionner messages'}
-                    </Button>
-                    {selectMode && selectedCount > 0 && (
-                      <Button variant="destructive" className="w-full justify-start h-10" onClick={() => { onRequestDelete(); setShowMobileMenu(false); }}>
-                        <Trash2 className="w-4 h-4 mr-3" />
-                        Supprimer sélection ({selectedCount})
-                      </Button>
-                    )}
-                  </>
-                )}
-                
-                <div className="border-t border-slate-200 dark:border-slate-800 my-3" />
-                
-                <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { setModePrive(!modePrive); setShowMobileMenu(false); }}>
-                  <Shield className="w-4 h-4 mr-3" />
-                  {modePrive ? 'Désactiver mode privé' : 'Activer mode privé'}
-                </Button>
-                
-                <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { setRagEnabled(!ragEnabled); setShowMobileMenu(false); }}>
-                  <Brain className="w-4 h-4 mr-3" />
-                  {ragEnabled ? 'Désactiver RAG' : 'Activer RAG'}
-                </Button>
-                
-                <div className="border-t border-slate-200 dark:border-slate-800 my-3" />
-              </div>
+              {mobileMenuActions}
 
               {/* Options toujours visibles */}
-              {/* Personnalité IA retirée du menu */}
-
-              <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onOpenTTSSettings(); setShowMobileMenu(false); }}>
+              <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onOpenTTSSettings)}>
                 <Settings2 className="w-4 h-4 mr-3" />
                 Réglages synthèse vocale
               </Button>
 
-              <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onOpenRagDocs(); setShowMobileMenu(false); }}>
+              <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onOpenRagDocs)}>
                 <BookOpen className="w-4 h-4 mr-3" />
                 Documents RAG
               </Button>
@@ -455,15 +497,15 @@ export function Header({
                 <div className="flex items-center gap-2">
                   <Button
                     variant={provider === 'gemini' ? 'default' : 'ghost'}
-                    className="h-10"
-                    onClick={() => { onChangeProvider('gemini'); setShowMobileMenu(false); }}
+                    className="flex-1 h-10"
+                    onClick={handleMenuAction(() => onChangeProvider('gemini'))}
                   >
                     Gemini
                   </Button>
                   <Button
                     variant={provider === 'openai' ? 'default' : 'ghost'}
-                    className="h-10"
-                    onClick={() => { onChangeProvider('openai'); setShowMobileMenu(false); }}
+                    className="flex-1 h-10"
+                    onClick={handleMenuAction(() => onChangeProvider('openai'))}
                   >
                     OpenAI
                   </Button>
@@ -471,7 +513,7 @@ export function Header({
               )}
 
               {onOpenGeminiSettings && provider === 'gemini' && (
-                <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onOpenGeminiSettings(); setShowMobileMenu(false); }}>
+                <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onOpenGeminiSettings)}>
                   <Settings2 className="w-4 h-4 mr-3" />
                   Réglages Gemini
                 </Button>
@@ -481,14 +523,14 @@ export function Header({
                 <Button
                   variant="ghost"
                   className="w-full justify-start h-10"
-                  onClick={() => { document.dispatchEvent(new CustomEvent('openai:settings:open')); setShowMobileMenu(false); }}
+                  onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('openai:settings:open')))}
                 >
                   <Settings2 className="w-4 h-4 mr-3" />
                   Réglages OpenAI
                 </Button>
               )}
 
-              <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { toggleTheme(); setShowMobileMenu(false); }}>
+              <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(toggleTheme)}>
                 {theme === 'dark' ? <Sun className="w-4 h-4 mr-3" /> : <Moon className="w-4 h-4 mr-3" />}
                 {theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
               </Button>
@@ -497,26 +539,31 @@ export function Header({
         </DialogContent>
       </Dialog>
 
-
-
       {/* AlertDialog pour la confirmation de suppression */}
       <AlertDialog open={showConfirmDelete} onOpenChange={setShowConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer {selectedCount} message{selectedCount > 1 ? 's' : ''} ?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Supprimer {selectedCount} message{selectedCount > 1 ? 's' : ''} ?
+            </AlertDialogTitle>
             <AlertDialogDescription>
               Cette action est irréversible. Les messages sélectionnés seront définitivement supprimés de la conversation et de l'historique.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={onDeleteConfirmed}>Supprimer</AlertDialogAction>
+            <AlertDialogAction onClick={onDeleteConfirmed} className="bg-red-600 hover:bg-red-700">
+              Supprimer
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      <ReactTooltip id="header-tooltip" place="bottom" className="!bg-slate-900 !text-white !text-xs !px-2 !py-1 !rounded-lg !shadow-lg" />
-      <ReactTooltip id="gemini-summary-tooltip" place="bottom" className="!bg-purple-900 !text-white !text-xs !px-2 !py-1 !rounded-lg !shadow-lg" />
+      <ReactTooltip 
+        id="header-tooltip" 
+        place="bottom" 
+        className="!bg-slate-900 !text-white !text-xs !px-2 !py-1 !rounded-lg !shadow-lg !z-50" 
+      />
     </header>
   );
 }
