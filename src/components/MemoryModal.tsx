@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { X, Plus, Trash2, Upload, Download, Brain, ToggleLeft, ToggleRight, Edit3, Save, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 import { MemoryItem, loadMemory, addMemory, updateMemory, deleteMemory, toggleMemoryDisabled, clearAllMemory, exportMemory, importMemory } from '@/services/memory';
 
 interface MemoryModalProps {
@@ -96,14 +96,19 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="w-[90vw] max-w-[90vw] h-[90vh] p-0 overflow-hidden flex flex-col">
-        <DialogHeader className="px-6 py-4 border-b bg-white/70 dark:bg-slate-900/40 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-10">
-          <DialogTitle className="flex items-center gap-2">
-            <Brain className="w-5 h-5" />
-            Mémoire utilisateur
-          </DialogTitle>
-        </DialogHeader>
+    <Drawer open={open} onOpenChange={onClose}>
+      <DrawerContent className="max-w-12xl px-2 sm:px-6 py-2 sm:py-6 rounded-3xl shadow-2xl border-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-white dark:from-slate-950 dark:via-indigo-950 dark:to-slate-950 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20 max-h-[95vh] overflow-y-auto">
+        <DrawerHeader className="px-6 py-4 pb-2">
+          <div className="flex items-center gap-2">
+            <Brain className="w-7 h-7 text-blue-500 mr-2" />
+            <DrawerTitle className="text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
+              Mémoire utilisateur
+            </DrawerTitle>
+            <button onClick={onClose} className="ml-auto text-slate-500 hover:text-red-500 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-red-400" title="Fermer" aria-label="Fermer">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        </DrawerHeader>
 
         <div className="flex-1 overflow-auto p-6 space-y-4">
           <div className="flex flex-col sm:flex-row gap-2">
@@ -209,15 +214,11 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
           </div>
         </div>
 
-        <div className="px-6 py-3 border-t bg-white/70 dark:bg-slate-900/40 sticky bottom-0">
-          <div className="flex justify-end">
-            <Button variant="ghost" onClick={onClose}>
-              <X className="w-4 h-4 mr-2" /> Fermer
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        <DrawerFooter className="flex flex-row gap-2 justify-end pt-3">
+          <Button onClick={onClose} className="w-full text-base py-3">Fermer</Button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 };
 
