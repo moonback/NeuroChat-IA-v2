@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Trash2, UploadCloud, Eye, Pencil, FileText, FileSpreadsheet, FileCode2, FileType2, File, FilePlus2, Github, LayoutGrid, List as ListIcon, Search, Filter, SortAsc, SortDesc, CheckCircle2, Circle, Upload, Settings, Folder, User, GitBranch } from 'lucide-react';
+import { X, Trash2, UploadCloud, Eye, Pencil, FileText, FileSpreadsheet, FileCode2, FileType2, File, FilePlus2, LayoutGrid, List as ListIcon, Search, SortAsc, SortDesc, CheckCircle2, Circle, Upload, Folder, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
-import { defaultGitHubConfig, getGitHubConfig, importRepoAsRagDocs, parseRepoInput, saveGitHubConfig, type GitHubConfig } from '@/services/github';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface RagDocsModalProps {
@@ -20,7 +19,7 @@ interface RagDoc {
   id: string;
   titre: string;
   contenu: string;
-  origine: 'dossier' | 'utilisateur' | 'github';
+  origine: 'dossier' | 'utilisateur';
   extension?: string;
 }
 
@@ -52,8 +51,6 @@ function getOriginIcon(origine: string) {
       return <Folder className="w-3 h-3" />;
     case 'utilisateur':
       return <User className="w-3 h-3" />;
-    case 'github':
-      return <Github className="w-3 h-3" />;
     default:
       return <File className="w-3 h-3" />;
   }
@@ -65,8 +62,6 @@ function getOriginColor(origine: string) {
       return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800';
     case 'utilisateur':
       return 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800';
-    case 'github':
-      return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800';
     default:
       return 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-950 dark:text-slate-300 dark:border-slate-800';
   }
@@ -83,13 +78,8 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   // Ajout de l'état pour le modal
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  // GitHub
-  const [ghConfig, setGhConfig] = useState<GitHubConfig>(() => getGitHubConfig());
-  const [ghRepoInput, setGhRepoInput] = useState<string>(ghConfig.owner && ghConfig.repo ? `${ghConfig.owner}/${ghConfig.repo}` : '');
-  const [isImportingGh, setIsImportingGh] = useState(false);
-  const [showGhSettings, setShowGhSettings] = useState(false);
   // UI: filtres / tri / vue
-  const [filterOrigin, setFilterOrigin] = useState<'all' | 'dossier' | 'utilisateur' | 'github'>('all');
+  const [filterOrigin, setFilterOrigin] = useState<'all' | 'dossier' | 'utilisateur'>('all');
   const [sortKey, setSortKey] = useState<'titre' | 'extension' | 'origine'>('titre');
   const [sortAsc, setSortAsc] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -111,12 +101,12 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
           extension,
         };
       });
-      // Docs utilisateur
+      // Docs utilisateur (en filtrant d'anciens docs GitHub éventuels)
       const userRaw = localStorage.getItem(LS_KEY);
       let userDocs: RagDoc[] = [];
       if (userRaw) {
         try {
-          userDocs = JSON.parse(userRaw);
+          userDocs = (JSON.parse(userRaw) as any[]).filter(d => d?.origine !== 'github');
         } catch {}
       }
       setDocs([...dossierDocs, ...userDocs]);
@@ -378,7 +368,6 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
     total: docs.length,
     dossier: docs.filter(d => d.origine === 'dossier').length,
     utilisateur: docs.filter(d => d.origine === 'utilisateur').length,
-    github: docs.filter(d => d.origine === 'github').length,
   };
 
   if (!open) return null;
@@ -422,10 +411,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
               <User className="w-3 h-3 inline mr-1" />
               {stats.utilisateur} utilisateur
             </div>
-            <div className="px-3 py-1 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium">
-              <Github className="w-3 h-3 inline mr-1" />
-              {stats.github} GitHub
-            </div>
+            
             <div className="px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium">
               Total: {stats.total}
             </div>
@@ -490,142 +476,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
               )}
             </Card>
 
-            {/* GitHub Import Card */}
-            <Card className="border-purple-200/60 dark:border-purple-800/50 bg-gradient-to-br from-purple-50/50 to-indigo-50/50 dark:from-purple-950/50 dark:to-indigo-950/50">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Github className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                  Import GitHub
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowGhSettings(!showGhSettings)}
-                    className="ml-auto"
-                  >
-                    <Settings className="w-4 h-4" />
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={ghRepoInput}
-                      onChange={e => setGhRepoInput(e.target.value)}
-                      placeholder="owner/repo ou URL GitHub"
-                      className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    />
-                  </div>
-                  {ghConfig.branch && (
-                    <div className="px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center gap-1 text-sm">
-                      <GitBranch className="w-3 h-3" />
-                      {ghConfig.branch}
-                    </div>
-                  )}
-                </div>
-
-                {showGhSettings && (
-                  <div className="space-y-3 p-4 bg-white/50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
-                    <div className="grid grid-cols-2 gap-3">
-                      <input
-                        type="text"
-                        value={ghConfig.branch || ''}
-                        onChange={e => setGhConfig(cfg => ({ ...cfg, branch: e.target.value }))}
-                        placeholder="Branche (ex: main)"
-                        className="px-3 py-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm"
-                      />
-                      <input
-                        type="number"
-                        min={32}
-                        max={2048}
-                        value={ghConfig.maxFileSizeKB ?? 256}
-                        onChange={e => setGhConfig(cfg => ({ ...cfg, maxFileSizeKB: Math.max(32, Math.min(2048, Number(e.target.value) || 256)) }))}
-                        placeholder="Taille max (kB)"
-                        className="px-3 py-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm"
-                      />
-                    </div>
-                    <input
-                      type="password"
-                      value={ghConfig.token}
-                      onChange={e => setGhConfig(cfg => ({ ...cfg, token: e.target.value }))}
-                      placeholder="Token GitHub (optionnel pour dépôts publics)"
-                      className="w-full px-3 py-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm"
-                    />
-                    <div className="grid grid-cols-2 gap-3">
-                      <input
-                        type="text"
-                        value={(ghConfig.includeExtensions || []).join(',')}
-                        onChange={e => setGhConfig(cfg => ({ ...cfg, includeExtensions: e.target.value.split(',').map(x => x.trim()).filter(Boolean) }))}
-                        placeholder="Extensions (md,txt,ts)"
-                        className="px-3 py-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm"
-                      />
-                      <input
-                        type="text"
-                        value={(ghConfig.includePaths || []).join(',')}
-                        onChange={e => setGhConfig(cfg => ({ ...cfg, includePaths: e.target.value.split(',').map(x => x.trim()).filter(Boolean) }))}
-                        placeholder="Chemins inclus (src/,docs/)"
-                        className="px-3 py-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm"
-                      />
-                    </div>
-                    <input
-                      type="text"
-                      value={(ghConfig.excludePaths || []).join(',')}
-                      onChange={e => setGhConfig(cfg => ({ ...cfg, excludePaths: e.target.value.split(',').map(x => x.trim()).filter(Boolean) }))}
-                      placeholder="Chemins exclus (node_modules/,dist/)"
-                      className="w-full px-3 py-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm"
-                    />
-                  </div>
-                )}
-
-                <div className="flex gap-2">
-                  <Button
-                    onClick={async () => {
-                      try {
-                        const parsed = parseRepoInput(ghRepoInput);
-                        if (!parsed) {
-                          toast.error('Format de dépôt invalide. Utilise owner/repo ou une URL GitHub.');
-                          return;
-                        }
-                        const cfg: GitHubConfig = { ...ghConfig, owner: parsed.owner, repo: parsed.repo };
-                        setIsImportingGh(true);
-                        const added = await importRepoAsRagDocs(cfg);
-                        toast.success(`${added} fichier(s) importé(s) depuis GitHub`);
-                        // Recharger la liste
-                        const userRaw = localStorage.getItem(LS_KEY);
-                        let userDocs: RagDoc[] = [];
-                        if (userRaw) {
-                          try { userDocs = JSON.parse(userRaw); } catch {}
-                        }
-                        setDocs(prev => {
-                          const dossier = prev.filter(d => d.origine === 'dossier');
-                          return [...dossier, ...userDocs];
-                        });
-                        saveGitHubConfig(cfg);
-                      } catch (e: any) {
-                        toast.error(e?.message || 'Échec de l\'import GitHub');
-                      } finally {
-                        setIsImportingGh(false);
-                      }
-                    }}
-                    disabled={isImportingGh}
-                    className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700"
-                  >
-                    <Github className="w-4 h-4 mr-2" />
-                    {isImportingGh ? 'Import en cours…' : 'Importer'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setGhConfig(defaultGitHubConfig);
-                      setGhRepoInput('');
-                    }}
-                  >
-                    Reset
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            
           </div>
 
           {/* Toolbar */}
@@ -655,7 +506,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
                   <option value="all">Toutes origines</option>
                   <option value="dossier">📁 Dossier</option>
                   <option value="utilisateur">👤 Utilisateur</option>
-                  <option value="github">🐙 GitHub</option>
+                  
                 </select>
 
                 <select
