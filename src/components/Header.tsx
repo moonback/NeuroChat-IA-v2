@@ -49,6 +49,7 @@ interface HeaderProps {
   showConfirmDelete: boolean;
   setShowConfirmDelete: (open: boolean) => void;
   onDeleteConfirmed: () => void;
+  onOpenMemory?: () => void;
 }
 
 // =====================
@@ -81,6 +82,7 @@ export function Header({
   showConfirmDelete,
   setShowConfirmDelete,
   onDeleteConfirmed,
+  onOpenMemory,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
@@ -291,6 +293,19 @@ export function Header({
               <Brain className="w-4 h-4" />
             </Button>
 
+            {/* Mémoire */}
+            {onOpenMemory && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onOpenMemory}
+                className="h-9 w-9 p-0 transition-colors"
+                title="Mémoire de la conversation"
+              >
+                <BookOpen className="w-4 h-4" />
+              </Button>
+            )}
+
             {/* Bouton Menu pour autres options */}
             <Button
               variant="ghost"
@@ -390,6 +405,13 @@ export function Header({
                 <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onOpenGeminiSettings(); setShowMobileMenu(false); }}>
                   <Settings2 className="w-4 h-4 mr-3" />
                   Réglages Gemini
+                </Button>
+              )}
+
+              {onOpenMemory && (
+                <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onOpenMemory(); setShowMobileMenu(false); }}>
+                  <BookOpen className="w-4 h-4 mr-3" />
+                  Mémoire de la conversation
                 </Button>
               )}
 

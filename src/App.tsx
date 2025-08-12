@@ -22,6 +22,9 @@ import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 
 import { type ReasoningStep } from '@/components/ReasoningTimeline';
+import { useHybridMemory } from '@/hooks/useHybridMemory';
+import { ContextStatusIndicator } from '@/components/ContextStatusIndicator';
+import { MemoryDetailModal } from '@/components/MemoryDetailModal';
 
 interface Message {
   id: string;
@@ -98,6 +101,7 @@ function App() {
     maxOutputTokens: 4096,
   });
   const [showGeminiSettings, setShowGeminiSettings] = useState(false);
+  const [showMemoryModal, setShowMemoryModal] = useState(false);
   // Gestion des presets Gemini
   const [presets, setPresets] = useState<{ name: string; config: GeminiGenerationConfig }[]>([]);
 
@@ -149,6 +153,9 @@ function App() {
     if (modePrive) return; // Pas de sauvegarde en mode privé
     localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify(messages));
   }, [messages, modePrive]);
+
+  // Mémoire hybride (long/short)
+  const hybrid = useHybridMemory(messages as any, { shortWindowSize: 10, summarizeThreshold: 16 });
 
   // Charger les presets au montage
   useEffect(() => {
@@ -322,7 +329,7 @@ function App() {
       // On construit le contexte documentaire pour le prompt
       setReasoningSteps(prev => prev.map(s => s.key === 'buildPrompt' ? ({ ...s, status: 'running', start: performance.now(), detail: 'Assemblage du contexte…' }) : s));
       promptStart = performance.now();
-      let ragContext = '';
+    let ragContext = '';
       if (ragEnabled && passages.length > 0) {
         ragContext = 'Contexte documentaire :\n';
         passages.forEach((p) => {
@@ -343,15 +350,19 @@ function App() {
 
       // Important: ne pas inclure à nouveau la question utilisateur dans le prompt système
       // pour éviter qu'elle soit envoyée deux fois au modèle.
-      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${ragEnabled ? ragContext : ""}`;
+    const longTerm = hybrid.longTermContextText || '';
+    const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${longTerm}${ragEnabled ? ragContext : ""}`;
       const promptEnd = performance.now();
       setReasoningSteps(prev => prev.map(s => s.key === 'buildPrompt' ? ({ ...s, status: 'done', end: promptEnd, durationMs: Math.round(promptEnd - (s.start || promptStart)), detail: `${prompt.length} caractères` }) : s));
       // LOG prompt final
       // console.log('[Prompt envoyé à Gemini]', prompt);
-      setReasoningSteps(prev => prev.map(s => s.key === 'callLLM' ? ({ ...s, status: 'running', start: performance.now(), detail: 'Appel en cours…' }) : s));
+    setReasoningSteps(prev => prev.map(s => s.key === 'callLLM' ? ({ ...s, status: 'running', start: performance.now(), detail: 'Appel en cours…' }) : s));
       llmStart = performance.now();
-      const response = await sendMessageToGemini(
-        filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
+    // N'envoyer que la fenêtre courte (10 derniers) pour le contexte immédiat
+    const shortStart = Math.max(0, filteredHistory.length - 10);
+    const shortWindow = filteredHistory.slice(shortStart);
+    const response = await sendMessageToGemini(
+      shortWindow.map(m => ({ text: m.text, isUser: m.isUser })),
         imageFile ? [imageFile] : undefined,
         prompt,
         geminiConfig
@@ -740,6 +751,7 @@ function App() {
           ragEnabled={ragEnabled}
           setRagEnabled={setRagEnabled}
           onOpenGeminiSettings={() => setShowGeminiSettings(true)}
+          onOpenMemory={() => setShowMemoryModal(true)}
           geminiConfig={geminiConfig}
           modePrive={modePrive}
           setModePrive={setModePrive}
@@ -765,6 +777,14 @@ function App() {
 
         {/* Enhanced Chat Interface */}
         <Card className="flex-1 flex flex-col shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl overflow-hidden ring-1 ring-white/20 dark:ring-slate-700/20 relative">
+          {/* Indicateur de statut du contexte (mémoire hybride) */}
+          <ContextStatusIndicator
+            className="absolute top-2 right-2"
+            totalMessages={messages.filter((m: any) => typeof (m as any).text === 'string').length}
+            contextMessages={Math.min(10, messages.filter((m: any) => typeof (m as any).text === 'string').length)}
+            memoryFacts={hybrid.facts.length}
+            isOptimized={hybrid.optimized || hybrid.status === 'running'}
+          />
           <div className="flex-1 overflow-y-auto pb-20"> {/* Ajout du padding-bottom pour l'input */}
             <ChatContainer
               messages={messages}
@@ -816,6 +836,21 @@ function App() {
           deleteSettings={deleteSettings}
         />
       </Suspense>
+
+      {/* Modale Mémoire */}
+      <MemoryDetailModal
+        open={showMemoryModal}
+        onClose={() => setShowMemoryModal(false)}
+        status={hybrid.status}
+        error={hybrid.error}
+        summary={hybrid.summary}
+        facts={hybrid.facts}
+        totalCount={hybrid.totalCount}
+        shortCount={hybrid.shortCount}
+        onForceUpdate={hybrid.forceSummarizeNow}
+        onUpdateSummary={hybrid.setSummary}
+        onUpdateFacts={hybrid.setFacts}
+      />
 
       <VocalModeIndicator 
         visible={modeVocalAuto} 
