@@ -1,5 +1,6 @@
 import type { MemorySource } from './memory';
 import { sendMessageToGemini, type GeminiGenerationConfig } from '@/services/geminiApi';
+import { sendMessage, type LlmConfig } from '@/services/llm';
 
 export interface ExtractedFact {
   content: string;
@@ -276,7 +277,12 @@ export async function extractFactsLLM(text: string): Promise<ExtractedFact[]> {
   ].join('\n');
   const gen: GeminiGenerationConfig = { temperature: 0.2, maxOutputTokens: 512, topK: 20, topP: 0.9 };
   try {
-    const response = await sendMessageToGemini([{ text, isUser: true }], undefined, system, gen, { soft: true });
+    const llmCfg: LlmConfig = {
+      provider: (localStorage.getItem('llm_provider') as 'gemini' | 'openai') || 'gemini',
+      gemini: gen,
+      openai: { temperature: gen.temperature, top_p: gen.topP, max_tokens: gen.maxOutputTokens, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' },
+    };
+    const response = await sendMessage([{ text, isUser: true }], undefined as any, system, llmCfg as any);
     const jsonStart = response.indexOf('[');
     const jsonEnd = response.lastIndexOf(']');
     if (jsonStart === -1 || jsonEnd === -1) return [];
@@ -305,7 +311,12 @@ export async function summarizeUserProfileLLM(messages: string[], maxChars = 500
   const body = messages.slice(-10).join('\n- ');
   const gen: GeminiGenerationConfig = { temperature: 0.2, maxOutputTokens: 512, topK: 20, topP: 0.9 };
   try {
-    const response = await sendMessageToGemini([{ text: body, isUser: true }], undefined, system, gen, { soft: true });
+    const llmCfg: LlmConfig = {
+      provider: (localStorage.getItem('llm_provider') as 'gemini' | 'openai') || 'gemini',
+      gemini: gen,
+      openai: { temperature: gen.temperature, top_p: gen.topP, max_tokens: gen.maxOutputTokens, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' },
+    };
+    const response = await sendMessage([{ text: body, isUser: true }], undefined as any, system, llmCfg as any);
     return response.trim().slice(0, maxChars);
   } catch {
     return '';

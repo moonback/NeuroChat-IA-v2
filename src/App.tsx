@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
 import { sendMessageToGemini, GeminiGenerationConfig } from '@/services/geminiApi';
+import { sendMessage, type LlmConfig } from '@/services/llm';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { toast } from 'sonner';
 // Lazy-loaded components pour réduire le bundle initial
@@ -19,6 +20,7 @@ import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
 import { getRelevantMemories, upsertMany, buildMemorySummary, addMemory, deleteMemory, loadMemory } from '@/services/memory';
 import { extractFactsFromText, extractFactsLLM } from '@/services/memoryExtractor';
 const GeminiSettingsDrawerLazy = lazy(() => import('@/components/GeminiSettingsDrawer').then(m => ({ default: m.GeminiSettingsDrawer })));
+const OpenAISettingsDrawerLazy = lazy(() => import('@/components/OpenAISettingsDrawer').then(m => ({ default: m.OpenAISettingsDrawer })));
 // Retrait du sélecteur de personnalités
 
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
@@ -102,7 +104,17 @@ function App() {
     topP: 0.95,
     maxOutputTokens: 4096,
   });
+  const [provider, setProvider] = useState<'gemini' | 'openai'>(
+    (localStorage.getItem('llm_provider') as 'gemini' | 'openai') || 'gemini'
+  );
+  const [openaiConfig, setOpenaiConfig] = useState({
+    temperature: 0.7,
+    top_p: 0.95,
+    max_tokens: 4096,
+    model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini',
+  });
   const [showGeminiSettings, setShowGeminiSettings] = useState(false);
+  const [showOpenAISettings, setShowOpenAISettings] = useState(false);
   // Gestion des presets Gemini
   const [presets, setPresets] = useState<{ name: string; config: GeminiGenerationConfig }[]>([]);
 
@@ -122,6 +134,13 @@ function App() {
     const rect = el.getBoundingClientRect();
     setInputHeight(Math.max(96, Math.round(rect.height + 28)));
     return () => ro.disconnect();
+  }, []);
+
+  // Ouvrir les réglages OpenAI via event du Header
+  useEffect(() => {
+    const handler = () => setShowOpenAISettings(true);
+    document.addEventListener('openai:settings:open' as any, handler);
+    return () => document.removeEventListener('openai:settings:open' as any, handler);
   }, []);
 
   // --- Mode privé/éphémère ---
@@ -507,13 +526,16 @@ ${lines.join('\n')}`, false);
       const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memoryContext}${ragEnabled ? ragContext : ""}`;
        // Timeline retirée
       // LOG prompt final
-      // console.log('[Prompt envoyé à Gemini]', prompt);
-       // Timeline retirée
-      const response = await sendMessageToGemini(
+      const llmCfg: LlmConfig = {
+        provider,
+        gemini: geminiConfig,
+        openai: openaiConfig,
+      };
+      const response = await sendMessage(
+        llmCfg,
         filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
         imageFile ? [imageFile] : undefined,
         prompt,
-        geminiConfig
       );
        // Timeline retirée
       // LOG réponse Gemini
@@ -553,7 +575,7 @@ ${lines.join('\n')}`, false);
       // Timeline retirée
       const errorMessage = error instanceof Error 
         ? error.message 
-        : "Impossible d'obtenir une réponse de Gemini. Réessaie.";
+         : "Impossible d'obtenir une réponse du modèle. Réessaie.";
       addMessage(`Désolé, j'ai rencontré une erreur : ${errorMessage}`, false);
       toast.error(errorMessage, {
         action: {
@@ -897,6 +919,8 @@ ${lines.join('\n')}`, false);
           setRagEnabled={setRagEnabled}
           onOpenGeminiSettings={() => setShowGeminiSettings(true)}
           geminiConfig={geminiConfig}
+          provider={provider}
+          onChangeProvider={(p) => { setProvider(p); localStorage.setItem('llm_provider', p); }}
           modePrive={modePrive}
           setModePrive={setModePrive}
           selectMode={selectMode}
@@ -1003,6 +1027,19 @@ ${lines.join('\n')}`, false);
           onReset={() => setGeminiConfig(DEFAULTS)}
           onClose={() => setShowGeminiSettings(false)}
           DEFAULTS={DEFAULTS}
+        />
+      </Suspense>
+
+      {/* Réglages OpenAI */}
+      <Suspense fallback={null}>
+        <OpenAISettingsDrawerLazy
+          open={showOpenAISettings}
+          onOpenChange={setShowOpenAISettings}
+          openaiConfig={openaiConfig}
+          onConfigChange={(key, value) => setOpenaiConfig(cfg => ({ ...cfg, [key]: value }))}
+          onReset={() => setOpenaiConfig({ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' })}
+          onClose={() => setShowOpenAISettings(false)}
+          DEFAULTS={{ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' }}
         />
       </Suspense>
 

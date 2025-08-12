@@ -37,6 +37,8 @@ interface HeaderProps {
   setRagEnabled: (v: boolean) => void;
   onOpenGeminiSettings?: () => void;
   geminiConfig?: any;
+  provider?: 'gemini' | 'openai';
+  onChangeProvider?: (p: 'gemini' | 'openai') => void;
   modePrive: boolean;
   setModePrive: (v: boolean) => void;
   // Props pour la sélection de messages
@@ -71,6 +73,8 @@ export function Header({
   ragEnabled,
   setRagEnabled,
   onOpenGeminiSettings,
+  provider,
+  onChangeProvider,
   modePrive,
   setModePrive,
   selectMode,
@@ -446,10 +450,41 @@ export function Header({
                 Documents RAG
               </Button>
 
-              {onOpenGeminiSettings && (
+              {/* Sélecteur de provider IA */}
+              {onChangeProvider && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={provider === 'gemini' ? 'default' : 'ghost'}
+                    className="h-10"
+                    onClick={() => { onChangeProvider('gemini'); setShowMobileMenu(false); }}
+                  >
+                    Gemini
+                  </Button>
+                  <Button
+                    variant={provider === 'openai' ? 'default' : 'ghost'}
+                    className="h-10"
+                    onClick={() => { onChangeProvider('openai'); setShowMobileMenu(false); }}
+                  >
+                    OpenAI
+                  </Button>
+                </div>
+              )}
+
+              {onOpenGeminiSettings && provider === 'gemini' && (
                 <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onOpenGeminiSettings(); setShowMobileMenu(false); }}>
                   <Settings2 className="w-4 h-4 mr-3" />
                   Réglages Gemini
+                </Button>
+              )}
+
+              {provider === 'openai' && (
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start h-10"
+                  onClick={() => { document.dispatchEvent(new CustomEvent('openai:settings:open')); setShowMobileMenu(false); }}
+                >
+                  <Settings2 className="w-4 h-4 mr-3" />
+                  Réglages OpenAI
                 </Button>
               )}
 
