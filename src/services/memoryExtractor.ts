@@ -2,6 +2,59 @@ import type { MemorySource } from './memory';
 import { type GeminiGenerationConfig } from '@/services/geminiApi';
 import { sendMessage, type LlmConfig } from '@/services/llm';
 
+// =====================
+// Regex précompilés (performance)
+// =====================
+const MONTHS_RE = '(?:jan|fev|mar|avr|mai|jun|jui|aou|sep|oct|nov|dec)';
+
+// Captures utiles uniquement → utiliser des groupes non-capturants partout ailleurs
+const NAME_RE = /\b(?:je m ?app(?:e)?l+e?s?|mon prenom est|moi c est)\s+([a-z'\-]{2,})(?:\s+([a-z'\-]{2,}))?/iu;
+const CITY_RE = /\b(?:j ?habite|je vis|je suis basee?|je suis de)\s+(?:a|en|au|aux)\s+([a-z'\-\s]{2,})/iu;
+const LANG_RE = /\b(?:je parle|je maitrise|ma langue (?:maternelle|native) est)\s+([a-z\-\s,et]+)\b/giu;
+const PREF_RE = /\b(?:jaime|je prefere|je deteste)\s+([^\.\n]{3,120})/giu;
+const RECURRENCE_DAY_RE = /\b(?:tous? les|chaque)\s+(?:lundis?|mardis?|mercredis?|jeudis?|vendredis?|samedis?|dimanches?)\b/iu;
+const RECURRENCE_DAYTIME_RE = /\b(?:le|les)\s+(?:lundis?|mardis?|mercredis?|jeudis?|vendredis?|samedis?|dimanches?)\s+(?:matin|apres-midi|soir(?:ee)?)\b/giu;
+
+const GOAL_FORMS: RegExp[] = [
+  new RegExp(`\\b(?:mon|ma|mes)\\s+(?:objectif|projet|but|priorite)s?\\s+(?:est|sont|:)\\s+([^\\.\\n]{4,160})`, 'iu'),
+  /\b(?:mon|ma)\s+(?:but|objectif)\s+(?:est|sera|devient)\s+de\s+([^\.\n]{4,160})/iu,
+  /\bje\s+(?:veux|souhaite|compte|prevois|projette|planifie)\s+([^\.\n]{4,160})/iu,
+  /\bj(?:'|e)\s+aimerais\s+([^\.\n]{4,160})/iu,
+];
+
+const LEARNING_RE = /\b(?:je veux apprendre|j apprends|je me forme a)\s+([^\.\n]{3,160})/giu;
+const BDAY_RE = /\b(?:mon anniversaire|ma date de naissance)\s+(?:est|c est|:)?\s+([^\.\n]{3,40})/iu;
+const EMAIL_RE = /[\w.+-]+@[\w-]+\.[\w.-]+/i;
+const PHONE_RE = /\b(?:\+\d{1,3}[\s.-]?)?(?:\(\d{1,4}\)[\s.-]?)?(?:\d[\s.-]?){6,14}\b/i;
+
+const JOB_RE = /\b(?:je (?:travaille|bosse) (?:comme|en tant que)\s+([a-z\-\s]{2,})|je suis\s+([a-z\-\s]{2,}))\b/giu;
+const COMPANY_RE = /\b(?:je (?:travaille|bosse) (?:chez|pour)\s+([a-z\d&' .-]{2,}))\b/giu;
+
+const ALLERGY_RE = /\b(?:je suis allergique a|allergie a)\s+([^\.\n]{3,80})/giu;
+const DIET_RE = /\b(?:je suis|je mange)\s+(vegetarien|vegane|vegan|sans gluten|halal|casher|keto|paleo)\b/giu;
+const CONSTRAINT_RE = /\b(?:je ne peux pas|je nai pas le droit de|j evite)\s+([^\.\n]{3,100})/giu;
+
+const COMM_PREF_RE = /\b(?:je prefere|preference de communication)\s+(?:par|via)\s+([a-z\s\-]{3,20})/giu;
+const TOOLS_RE = /\b(?:j utilise|je travaille avec|mon stack|ma stack)\s+([^\.\n]{3,160})/giu;
+
+const TODO_FORMS: RegExp[] = [
+  /\b(?:je dois|il faut que je|faut que je|je devrais)\s+([^\.\n]{3,160})/giu,
+  /\b(?:a\s+faire|à\s+faire|to ?do)\s*[:\-]?\s+([^\n]{3,160})/giu,
+  /\b(?:rappelle(?:-moi)?\s+de|n'?oublie pas de|pense\s+à)\s+([^\.\n]{3,160})/giu,
+  /\b(?:prevoir|prévoir|planifier|planifie|programmer)\s+([^\.\n]{3,160})/giu,
+  /\b(?:rendez[- ]vous|rdv)\s+(?:le\s+|pour\s+)?([^\.\n]{3,120})/giu,
+];
+
+const DEADLINE_FORMS: RegExp[] = [
+  /\b(?:avant|pour|d'ici|d ici|d’ici)\s+(demain|apres ?demain|la semaine prochaine|ce soir|fin de semaine)/giu,
+  /\b(?:avant|pour)\s+([0-3]?\d\/[0-1]?\d(?:\/[0-9]{2,4})?)/giu,
+  /\b(?:avant|pour|le)\s+([0-3]?\d[\.\-][0-1]?\d(?:[\.\-][0-9]{2,4})?)/giu,
+  new RegExp(`\\b(?:avant|pour|le)\\s+([0-3]?\\d\\s+${MONTHS_RE}(?:\\s+[0-9]{2,4})?)`, 'giu'),
+  /\b(\d{4}-\d{2}-\d{2})(?:[ t](\d{2}[:h]\d{2}))?/giu,
+  /\b(?:à|a|vers)\s+(\d{1,2}h(?:\d{2})?|\d{1,2}:\d{2})\b/giu,
+];
+
+
 export interface ExtractedFact {
   content: string;
   tags?: string[];
@@ -17,35 +70,34 @@ export function extractFactsFromText(text: string, opts?: { source?: MemorySourc
   const norm = normalizeForMatch(text);
 
   // Nom / prénom
-  const nameMatch = /\b(je m ?app(?:e)?l+e?s?|mon prenom est|moi c est)\s+([a-z'\-]{2,})(?:\s+([a-z'\-]{2,}))?/i.exec(norm);
+  const nameMatch = NAME_RE.exec(norm);
   if (nameMatch) {
-    const grp = [nameMatch[2], nameMatch[3]].filter(Boolean).join(' ');
+    const grp = [nameMatch[1], nameMatch[2]].filter(Boolean).join(' ');
     const orig = recoverOriginal(text, grp) || grp;
     facts.push({ content: `Prénom/Nom: ${capitalize(orig)}`, tags: ['profil', 'identité'], importance: 5, source: opts?.source });
   }
 
   // Localisation
-  const cityMatch = /\b(j ?habite|je vis|je suis basee?|je suis de)\s+(a|en|au|aux)\s+([a-z'\-\s]{2,})/i.exec(norm);
+  const cityMatch = CITY_RE.exec(norm);
   if (cityMatch) {
-    const grp = cleanTrailing(cityMatch[3]);
+    const grp = cleanTrailing(cityMatch[1]);
     const orig = recoverOriginal(text, grp) || grp;
     facts.push({ content: `Ville: ${capitalize(orig)}`, tags: ['profil', 'localisation'], importance: 4, source: opts?.source });
   }
 
   // Langues (multi)
-  const langMatch = /\b(je parle|je maitrise|ma langue (?:maternelle|native) est)\s+([a-z\-\s,et]+)\b/gi;
-  for (const m of matchAll(langMatch, norm)) {
-    const grp = cleanTrailing(m[2]);
+  for (const m of matchAll(LANG_RE, norm)) {
+    const grp = cleanTrailing(m[1]);
     const orig = recoverOriginal(text, grp) || grp;
     const langs = splitList(orig);
     if (langs.length) facts.push({ content: `Langues: ${langs.map(capitalize).join(', ')}`, tags: ['profil', 'langue'], importance: 3, source: opts?.source });
   }
 
   // Préférences (aime/préfère/déteste) — multi éléments
-  const prefsRegex = /\b(jaime|je prefere|je deteste)\s+([^\.\n]{3,120})/gi;
-  for (const m of matchAll(prefsRegex, norm)) {
-    const verb = m[1].toLowerCase();
-    const grp = cleanTrailing(m[2]);
+  for (const m of matchAll(PREF_RE, norm)) {
+    const verbText = m[0].toLowerCase();
+    const verb = verbText.includes('deteste') ? 'deteste' : verbText.includes('prefere') ? 'prefere' : 'aime';
+    const grp = cleanTrailing(m[1]);
     const orig = recoverOriginal(text, grp) || grp;
     const list = splitList(orig);
     const sentiment = verb.includes('deteste') ? 'n’aime pas' : verb.includes('prefere') ? 'préfère' : 'aime';
@@ -55,114 +107,92 @@ export function extractFactsFromText(text: string, opts?: { source?: MemorySourc
   }
 
   // Disponibilités/date récurrente simple
-  const dayMatch = /\b(tous? les|chaque)\s+(lundis?|mardis?|mercredis?|jeudis?|vendredis?|samedis?|dimanches?)\b/i.exec(norm);
+  const dayMatch = RECURRENCE_DAY_RE.exec(norm);
   if (dayMatch) {
     facts.push({ content: `Récurrence: ${capitalize(dayMatch[0])}`, tags: ['agenda'], importance: 3, source: opts?.source });
   }
-  const dayTimeMatch = /\b(le|les)\s+(lundis?|mardis?|mercredis?|jeudis?|vendredis?|samedis?|dimanches?)\s+(matin|apres-midi|soir(?:ee)?)\b/gi;
-  for (const m of matchAll(dayTimeMatch, norm)) {
+  for (const m of matchAll(RECURRENCE_DAYTIME_RE, norm)) {
     facts.push({ content: `Disponibilité: ${capitalize(m[0])}`, tags: ['agenda'], importance: 3, source: opts?.source });
   }
 
   // Rappel objectif / projet (formes variées)
-  const goalForms: RegExp[] = [
-    /\b(mon|ma|mes)\s+(objectif|projet|but|priorite)s?\s+(?:est|sont|:)\s+([^\.\n]{4,160})/i,
-    /\b(mon|ma)\s+(but|objectif)\s+(?:est|sera|devient)\s+de\s+([^\.\n]{4,160})/i,
-    /\bje\s+(?:veux|souhaite|compte|prevois|projette|planifie)\s+([^\.\n]{4,160})/i,
-    /\bj(?:'|e)\s+aimerais\s+([^\.\n]{4,160})/i,
-  ];
-  for (const re of goalForms) {
+  for (const re of GOAL_FORMS) {
     const m = re.exec(norm);
     if (m) {
-      const grp = cleanTrailing(m[m.length - 1]);
+      const grp = cleanTrailing(m[1] || m[m.length - 1]);
       const orig = recoverOriginal(text, grp) || grp;
       facts.push({ content: `Objectif: ${capitalize(orig)}`, tags: ['objectif'], importance: 4, source: opts?.source });
       break;
     }
   }
-  const learningMatch = /\b(je veux apprendre|j apprends|je me forme a)\s+([^\.\n]{3,120})/gi;
-  for (const m of matchAll(learningMatch, norm)) {
-    const grp = cleanTrailing(m[2]);
+  for (const m of matchAll(LEARNING_RE, norm)) {
+    const grp = cleanTrailing(m[1]);
     const orig = recoverOriginal(text, grp) || grp;
     facts.push({ content: `Apprentissage: ${capitalize(orig)}`, tags: ['objectif', 'apprentissage'], importance: 4, source: opts?.source });
   }
 
   // Anniversaire (non sensible au jour précis si non nécessaire)
-  const bday = /\b(mon anniversaire|ma date de naissance)\s+(?:est|c est|:)?\s+([^\.\n]{3,40})/i.exec(norm);
+  const bday = BDAY_RE.exec(norm);
   if (bday) {
-    const grp = cleanTrailing(bday[2]);
+    const grp = cleanTrailing(bday[1]);
     const orig = recoverOriginal(text, grp) || grp;
     facts.push({ content: `Anniversaire: ${capitalize(orig)}`, tags: ['profil'], importance: 3, source: opts?.source });
   }
 
   // Email/téléphone — on évite de stocker sans confirmation explicite
-  const email = /[\w.+-]+@[\w-]+\.[\w.-]+/i.exec(text);
+  const email = EMAIL_RE.exec(text);
   if (email && (norm.includes('tu peux retenir') || norm.includes('garde en memoire') || norm.includes('sauvegarde mon email'))) {
     facts.push({ content: `Email: ${email[0]}`, tags: ['contact'], importance: 2, source: opts?.source });
   }
-  const phone = /\b(?:\+\d{1,3}[\s.-]?)?(?:\(\d{1,4}\)[\s.-]?)?(?:\d[\s.-]?){6,14}\b/i.exec(text);
+  const phone = PHONE_RE.exec(text);
   if (phone && (norm.includes('tu peux retenir') || norm.includes('garde en memoire') || norm.includes('sauvegarde mon numero'))) {
     facts.push({ content: `Téléphone: ${phone[0]}`, tags: ['contact'], importance: 2, source: opts?.source });
   }
 
   // Métier / rôle
-  const jobRegex = /\b(je (travaille|bosse) (comme|en tant que)\s+([a-z\-\s]{2,})|je suis\s+([a-z\-\s]{2,}))\b/gi;
-  for (const m of matchAll(jobRegex, norm)) {
-    const roleNorm = (m[4] || m[5] || '').trim();
+  for (const m of matchAll(JOB_RE, norm)) {
+    const roleNorm = (m[1] || m[2] || '').trim();
     if (roleNorm) {
       const orig = recoverOriginal(text, roleNorm) || roleNorm;
       facts.push({ content: `Métier: ${capitalize(cleanTrailing(orig))}`, tags: ['profil', 'métier'], importance: 4, source: opts?.source });
     }
   }
-  const companyRegex = /\b(je (travaille|bosse) (chez|pour)\s+([a-z\d&' .-]{2,}))\b/gi;
-  for (const m of matchAll(companyRegex, norm)) {
-    const grp = cleanTrailing(m[4]);
+  for (const m of matchAll(COMPANY_RE, norm)) {
+    const grp = cleanTrailing(m[1]);
     const orig = recoverOriginal(text, grp) || grp;
     if (grp) facts.push({ content: `Société: ${capitalize(orig)}`, tags: ['profil', 'travail'], importance: 3, source: opts?.source });
   }
 
   // Contraintes / santé / régime
-  const allergyRegex = /\b(je suis allergique a|allergie a)\s+([^\.\n]{3,80})/gi;
-  for (const m of matchAll(allergyRegex, norm)) {
-    const grp = cleanTrailing(m[2]);
+  for (const m of matchAll(ALLERGY_RE, norm)) {
+    const grp = cleanTrailing(m[1]);
     const orig = recoverOriginal(text, grp) || grp;
     facts.push({ content: `Allergie: ${capitalize(orig)}`, tags: ['santé', 'contrainte'], importance: 5, source: opts?.source });
   }
-  const dietRegex = /\b(je suis|je mange)\s+(vegetarien|vegane|vegan|sans gluten|halal|casher|keto|paleo)\b/gi;
-  for (const m of matchAll(dietRegex, norm)) {
-    facts.push({ content: `Régime: ${capitalize(m[2])}`, tags: ['santé', 'régime'], importance: 4, source: opts?.source });
+  for (const m of matchAll(DIET_RE, norm)) {
+    facts.push({ content: `Régime: ${capitalize(m[1])}`, tags: ['santé', 'régime'], importance: 4, source: opts?.source });
   }
-  const constraintRegex = /\b(je ne peux pas|je nai pas le droit de|j evite)\s+([^\.\n]{3,100})/gi;
-  for (const m of matchAll(constraintRegex, norm)) {
-    const grp = cleanTrailing(m[2]);
+  for (const m of matchAll(CONSTRAINT_RE, norm)) {
+    const grp = cleanTrailing(m[1]);
     const orig = recoverOriginal(text, grp) || grp;
     facts.push({ content: `Contrainte: ${capitalize(orig)}`, tags: ['contrainte'], importance: 4, source: opts?.source });
   }
 
   // Préférence de communication / outils
-  const commRegex = /\b(je prefere|preference de communication)\s+(par|via)\s+([a-z\s\-]{3,20})/gi;
-  for (const m of matchAll(commRegex, norm)) {
-    const grp = cleanTrailing(m[3]);
+  for (const m of matchAll(COMM_PREF_RE, norm)) {
+    const grp = cleanTrailing(m[1]);
     const orig = recoverOriginal(text, grp) || grp;
     facts.push({ content: `Communication: ${capitalize(orig)}`, tags: ['préférences', 'communication'], importance: 3, source: opts?.source });
   }
-  const toolsRegex = /\b(j utilise|je travaille avec|mon stack|ma stack)\s+([^\.\n]{3,120})/gi;
-  for (const m of matchAll(toolsRegex, norm)) {
-    const grp = cleanTrailing(m[2]);
+  for (const m of matchAll(TOOLS_RE, norm)) {
+    const grp = cleanTrailing(m[1]);
     const orig = recoverOriginal(text, grp) || grp;
     const items = splitList(orig);
     if (items.length) facts.push({ content: `Outils: ${items.map(capitalize).join(', ')}`, tags: ['travail', 'outils'], importance: 3, source: opts?.source });
   }
 
   // Tâches / rappels (formes étendues) + deadlines
-  const taskPatterns: RegExp[] = [
-    /\b(?:je dois|il faut que je|faut que je|je devrais)\s+([^\.\n]{3,160})/gi,
-    /\b(?:a\s+faire|à\s+faire|to ?do)\s*[:\-]?\s+([^\n]{3,160})/gi,
-    /\b(?:rappelle(?:\-moi)?\s+de|n'?oublie pas de|pense\s+à)\s+([^\.\n]{3,160})/gi,
-    /\b(?:prevoir|prévoir|planifier|planifie|programmer)\s+([^\.\n]{3,160})/gi,
-    /\b(?:rendez[- ]vous|rdv)\s+(?:le\s+|pour\s+)?([^\.\n]{3,120})/gi,
-  ];
-  for (const re of taskPatterns) {
+  for (const re of TODO_FORMS) {
     for (const m of matchAll(re, norm)) {
       const grp = cleanTrailing(m[1]);
       const orig = recoverOriginal(text, grp) || grp;
@@ -170,15 +200,7 @@ export function extractFactsFromText(text: string, opts?: { source?: MemorySourc
     }
   }
   // Deadlines étendues (formats de date variés, mots-clés)
-  const deadlinePatterns: RegExp[] = [
-    /\b(?:avant|pour|d'ici|d ici|d’ici)\s+(demain|apres ?demain|la semaine prochaine|ce soir|fin de semaine)/gi,
-    /\b(?:avant|pour)\s+([0-3]?\d\/[0-1]?\d(?:\/[0-9]{2,4})?)/gi, // 12/09[/2025]
-    /\b(?:avant|pour|le)\s+([0-3]?\d[\.\-][0-1]?\d(?:[\.\-][0-9]{2,4})?)/gi, // 12.09.2025, 12-09
-    /\b(?:avant|pour|le)\s+([0-3]?\d\s+(jan|fev|mar|avr|mai|jun|jui|aou|sep|oct|nov|dec)(?:\s+[0-9]{2,4})?)/gi,
-    /\b(\d{4}-\d{2}-\d{2})(?:[ t](\d{2}[:h]\d{2}))?/gi, // ISO 2025-08-12[ 14:00]
-    /\b(?:à|a|vers)\s+(\d{1,2}h(?:\d{2})?|\d{1,2}:\d{2})\b/gi,
-  ];
-  for (const re of deadlinePatterns) {
+  for (const re of DEADLINE_FORMS) {
     for (const m of matchAll(re, norm)) {
       const whole = m[0];
       const orig = recoverOriginal(text, cleanTrailing(whole)) || cleanTrailing(whole);
@@ -304,6 +326,8 @@ export async function extractFactsLLM(text: string): Promise<ExtractedFact[]> {
   ].join('\n');
   const gen: GeminiGenerationConfig = { temperature: 0.2, maxOutputTokens: 512, topK: 20, topP: 0.9 };
   try {
+    // Si mode privé, ne pas interroger la mémoire/LLM pour extraction
+    if (localStorage.getItem('mode_prive') === 'true') return [];
     const llmCfg: LlmConfig = {
       provider: (localStorage.getItem('llm_provider') as 'gemini' | 'openai') || 'gemini',
       gemini: gen,

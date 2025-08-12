@@ -152,6 +152,10 @@ function App() {
     if (modePrive) {
       // toast.warning('Mode privé activé : les messages ne seront pas sauvegardés et seront effacés à la fermeture.');
     }
+    // Exposer l'état pour d'autres services (ex: memoryExtractor)
+    try {
+      localStorage.setItem('mode_prive', modePrive ? 'true' : 'false');
+    } catch {}
   }, [modePrive]);
 
   // --- Gestion de l'historique des discussions ---
@@ -355,8 +359,14 @@ function App() {
   }
 
   async function handleMemoryCommand(userMessage: string): Promise<boolean> {
+    // D'abord détecter si c'est une commande mémoire
     const parsed = parseMemoryCommand(userMessage);
     if (!parsed) return false;
+    // Si c'est une commande mémoire, bloquer en mode privé
+    if (modePrive) {
+      addMessage('🔒 Mode privé actif — fonctionnalités mémoire désactivées.', false);
+      return true;
+    }
     // Log le message utilisateur
     const newMessage = addMessage(userMessage, true);
 
@@ -489,20 +499,22 @@ ${lines.join('\n')}`, false);
       let ragContext = '';
       let memoryContext = '';
       // Récupération mémoire pertinente + résumé de profil
-      try {
-        const memItems = await getRelevantMemories(userMessage, 8);
-        if (memItems.length > 0) {
-          memoryContext = 'MÉMOIRE UTILISATEUR (faits importants connus):\n';
-          memItems.forEach((m) => {
-            memoryContext += `- ${m.content}\n`;
-          });
-          memoryContext += '\n';
-        }
-        const profileSummary = buildMemorySummary(500);
-        if (profileSummary) {
-          memoryContext = `${profileSummary}\n${memoryContext}`;
-        }
-      } catch {}
+      if (!modePrive) {
+        try {
+          const memItems = await getRelevantMemories(userMessage, 8);
+          if (memItems.length > 0) {
+            memoryContext = 'MÉMOIRE UTILISATEUR (faits importants connus):\n';
+            memItems.forEach((m) => {
+              memoryContext += `- ${m.content}\n`;
+            });
+            memoryContext += '\n';
+          }
+          const profileSummary = buildMemorySummary(500);
+          if (profileSummary) {
+            memoryContext = `${profileSummary}\n${memoryContext}`;
+          }
+        } catch {}
+      }
       if (ragEnabled && passages.length > 0) {
         ragContext = 'Contexte documentaire :\n';
         passages.forEach((p) => {
