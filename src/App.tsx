@@ -10,21 +10,17 @@ const TTSSettingsModalLazy = lazy(() => import('@/components/TTSSettingsModal').
 import { Header } from '@/components/Header';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { searchDocuments } from '@/services/ragSearch';
-import { getEmbedder, embedText, cosineSimilarityNormalized } from '@/services/embeddings';
 const RagDocsModalLazy = lazy(() => import('@/components/RagDocsModal').then(m => ({ default: m.RagDocsModal })));
 const HistoryModalLazy = lazy(() => import('@/components/HistoryModal').then(m => ({ default: m.HistoryModal })));
 import type { DiscussionWithCategory } from '@/components/HistoryModal';
 
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
-import { useMemory } from "@/hooks/useMemory";
-const MemoryModalLazy = lazy(() => import('@/components/MemoryModal').then(m => ({ default: m.MemoryModal })));
 const GeminiSettingsDrawerLazy = lazy(() => import('@/components/GeminiSettingsDrawer').then(m => ({ default: m.GeminiSettingsDrawer })));
 // Retrait du sélecteur de personnalités
 
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 
-import { MemoryFeedback } from '@/components/MemoryFeedback';
 import { type ReasoningStep } from '@/components/ReasoningTimeline';
 
 interface Message {
@@ -48,24 +44,7 @@ type RagContextMessage = {
   timestamp: Date;
 };
 
-// Clé de cache pour les embeddings des exemples
-const EXAMPLE_EMBEDDINGS_LS_KEY = 'memory_example_embeddings_v1';
-const SEMANTIC_THRESHOLD_LS_KEY = 'semantic_threshold_v1';
-
-// Debugging contrôlé par localStorage.setItem('debug_semantic','1')
-function semanticDebug(): boolean {
-  try {
-    return localStorage.getItem('debug_semantic') === '1';
-  } catch {
-    return false;
-  }
-}
-function sLog(...args: unknown[]) {
-  if (semanticDebug()) {
-    // eslint-disable-next-line no-console
-    console.log('[Semantic]', ...args);
-  }
-}
+// Mémoire utilisateur supprimée
 
 // Similarité: vecteurs normalisés => cosinus = dot product
 
@@ -273,10 +252,6 @@ function App() {
     return message;
   };
 
-  const { memory, addFact } = useMemory();
-
- 
-
   // Prompt système unique (personnalités retirées)
   const getSystemPrompt = () => SYSTEM_PROMPT;
 
@@ -290,45 +265,7 @@ function App() {
     setMessages(prev => [...prev, ragMsg as any]);
   };
 
-  // Détection automatique d'informations à mémoriser
-  function detectAndMemorize(text: string) {
-    // Prénom
-    const nameMatch = text.match(/je m'appelle ([\w\- ]+)/i);
-    if (nameMatch) {
-      addFact(`Le prénom de l'utilisateur est ${nameMatch[1]}`);
-    }
-    // Ville
-    const cityMatch = text.match(/j'habite (à|au|en|aux) ([\w\- ]+)/i);
-    if (cityMatch) {
-      addFact(`L'utilisateur habite ${cityMatch[2]}`);
-    }
-    // Plat préféré
-    const platMatch = text.match(/(mon plat préféré est|je préfère manger|j'adore manger) ([\w\- ]+)/i);
-    if (platMatch) {
-      addFact(`Le plat préféré de l'utilisateur est ${platMatch[2]}`);
-    }
-    // Métier
-    const jobMatch = text.match(/je suis (un |une |)([\w\- ]+)/i);
-    if (jobMatch && !/je suis (fatigué|content|heureux|triste|malade|prêt|prête|désolé|désolée|occupé|occupée|disponible|en forme|en retard|à l'heure|là|ici|ok|d'accord|prêt à|prête à)/i.test(text)) {
-      addFact(`Le métier de l'utilisateur est ${jobMatch[2]}`);
-    }
-    // Date de naissance
-    const birthMatch = text.match(/je suis né(e)? le ([0-9]{1,2} [a-zéû]+ [0-9]{4})/i);
-    if (birthMatch) {
-      addFact(`La date de naissance de l'utilisateur est ${birthMatch[2]}`);
-    }
-    // Animal préféré
-    const animalMatch = text.match(/(mon animal préféré est|j'adore les|je préfère les) ([\w\- ]+)/i);
-    if (animalMatch) {
-      addFact(`L'animal préféré de l'utilisateur est ${animalMatch[2]}`);
-    }
-    // Couleur préférée
-    const colorMatch = text.match(/(ma couleur préférée est|j'aime la couleur|je préfère la couleur) ([\w\- ]+)/i);
-    if (colorMatch) {
-      addFact(`La couleur préférée de l'utilisateur est ${colorMatch[2]}`);
-    }
-    // Autres patterns à enrichir selon besoin
-  }
+  // Mémoire utilisateur supprimée
 
   const handleSendMessage = async (userMessage: string, imageFile?: File) => {
     // Préparer la timeline de raisonnement
@@ -359,87 +296,7 @@ function App() {
       setTempTranscriptAuto('');
     }
     
-    // Commande spéciale : ajout manuel à la mémoire via le chat
-    const memoryCommand = userMessage.match(/^(enregistre dans la mémoire|ajoute à la mémoire|mémorise) *: *(.+)/i);
-    if (memoryCommand) {
-      const info = memoryCommand[2].trim();
-      if (info) {
-        // Patterns intelligents et détection par mots-clés (rapide)
-        const patterns = [
-          // Prénom
-          { regex: /je m'appelle ([\w\- ]+)/i, label: "prénom" },
-          { regex: /mon prénom est ([\w\- ]+)/i, label: "prénom" },
-          { regex: /on m'appelle ([\w\- ]+)/i, label: "prénom" },
-          // Ville
-          { regex: /j'habite (à|au|en|aux)? ?([\w\- ]+)/i, label: "ville" },
-          { regex: /je vis (à|au|en|aux)? ?([\w\- ]+)/i, label: "ville" },
-          { regex: /je suis (à|au|en|aux)? ?([\w\- ]+)/i, label: "ville" },
-          { regex: /ma ville est ([\w\- ]+)/i, label: "ville" },
-          // Préférences générales
-          { regex: /je préfère ([\w\- ]+)/i, label: "préférence" },
-          { regex: /j'adore ([\w\- ]+)/i, label: "préférence" },
-          { regex: /je n'aime pas ([\w\- ]+)/i, label: "préférence négative" },
-          { regex: /mon (plat|animal|sport|film|livre|couleur|hobby|pays) préféré(e)? (est|sont)? ([\w\- ]+)/i, label: "préférence" },
-          { regex: /ma (couleur|passion|activité) préférée (est|sont)? ([\w\- ]+)/i, label: "préférence" },
-          // Métier
-          { regex: /je travaille comme ([\w\- ]+)/i, label: "métier" },
-          { regex: /mon métier est ([\w\- ]+)/i, label: "métier" },
-          { regex: /je suis (un |une |)([\w\- ]+)/i, label: "métier" },
-          // Date de naissance
-          { regex: /je suis né(e)? le ([0-9]{1,2} [a-zéû]+ [0-9]{4})/i, label: "date de naissance" },
-          { regex: /ma date de naissance est le? ([0-9]{1,2} [a-zéû]+ [0-9]{4})/i, label: "date de naissance" },
-          { regex: /je fête mon anniversaire le ([0-9]{1,2} [a-zéû]+ [0-9]{4})/i, label: "date de naissance" },
-          // Autres infos
-          { regex: /mon animal préféré est ([\w\- ]+)/i, label: "animal préféré" },
-          { regex: /ma couleur préférée est ([\w\- ]+)/i, label: "couleur préférée" },
-          { regex: /mon sport favori est ([\w\- ]+)/i, label: "sport favori" },
-          { regex: /ma passion est ([\w\- ]+)/i, label: "passion" },
-        ];
-        let pertinent = false;
-        sLog('Commande mémoire détectée. Texte:', info);
-        for (const p of patterns) {
-          if (p.regex.test(info)) {
-            pertinent = true;
-            sLog('Correspondance pattern:', p.label, p.regex.toString());
-            break;
-          }
-        }
-        // Fallback : détection par mots-clés sémantiques
-        if (!pertinent) {
-          const keywords = [
-            "prénom", "nom", "ville", "habite", "vis", "travaille", "métier", "préféré", "préférée", "préférés", "préférées",
-            "animal", "couleur", "sport", "passion", "date de naissance", "anniversaire", "plat", "hobby", "pays", "activité"
-          ];
-          const lowerInfo = info.toLowerCase();
-          const kwHit = keywords.find(kw => lowerInfo.includes(kw));
-          if (kwHit) {
-            pertinent = true;
-            sLog('Correspondance mot-clé:', kwHit);
-          }
-        }
-        // Si toujours pas pertinent, on tente l'analyse sémantique locale
-        if (!pertinent) {
-          setSemanticLoading(true);
-          addMessage("Analyse sémantique en cours...", false);
-          sLog('Analyse sémantique locale… seuil =', semanticThreshold, '| nb exemples =', examples.length);
-          pertinent = await isPersonalInfoSemantic(info);
-          setSemanticLoading(false);
-        }
-        if (pertinent) {
-          addFact(info);
-          sLog('Ajout à la mémoire (pertinent):', info);
-          addMessage(`Information pertinente ajoutée à la mémoire !${semanticScore !== null ? ` (score : ${(semanticScore * 100).toFixed(1)}%)` : ''}`, false);
-          toast.success("Information pertinente ajoutée à la mémoire !");
-        } else {
-          sLog('Non pertinent — non ajouté:', info);
-          addMessage(`Information non pertinente, non ajoutée à la mémoire.${semanticScore !== null ? ` (score : ${(semanticScore * 100).toFixed(1)}%)` : ''}`, false);
-          toast.info("Information non pertinente, non ajoutée à la mémoire.");
-        }
-        setSemanticScore(null);
-        return; // On n'envoie pas à l'IA, c'est une commande locale
-      }
-    }
-    detectAndMemorize(userMessage);
+    // Mémoire utilisateur retirée
     if (!isOnline) {
       toast.error('Pas de connexion Internet. Vérifie ta connexion réseau.');
       return;
@@ -484,15 +341,9 @@ function App() {
         minute: '2-digit'
       })}\n\n`;
 
-      // Injection de la mémoire dans le prompt système
-      const memorySummary = memory.length
-        ? `Contexte utilisateur à mémoriser et à utiliser dans toutes tes réponses :\n${memory.map(f => "- " + f.content).join("\n")}\n\nTu dois toujours utiliser ces informations pour personnaliser tes réponses, même si l'utilisateur ne les mentionne pas.\n`
-        : "";
-      // LOG mémoire injectée
-      // console.log('[Mémoire utilisateur injectée]', memorySummary);
       // Important: ne pas inclure à nouveau la question utilisateur dans le prompt système
       // pour éviter qu'elle soit envoyée deux fois au modèle.
-      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memorySummary}${ragEnabled ? ragContext : ""}`;
+      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${ragEnabled ? ragContext : ""}`;
       const promptEnd = performance.now();
       setReasoningSteps(prev => prev.map(s => s.key === 'buildPrompt' ? ({ ...s, status: 'done', end: promptEnd, durationMs: Math.round(promptEnd - (s.start || promptStart)), detail: `${prompt.length} caractères` }) : s));
       // LOG prompt final
@@ -825,149 +676,27 @@ function App() {
     setGeminiConfig(cfg => ({ ...cfg, [key]: value }));
   };
 
-  const [showMemoryModal, setShowMemoryModal] = useState(false);
-  // Exemples d'informations personnelles pertinentes (état modifiable)
-  const [examples, setExamples] = useState<string[]>([
-    "Je m'appelle Thomas et je suis directeur marketing",
-    "Mon prénom est Marie et je travaille dans la finance",
-    "J'habite à Lyon dans le 6ème arrondissement",
-    "Je vis à Bordeaux depuis 5 ans avec ma famille",
-    "Je suis allergique aux arachides et aux fruits de mer",
-    "Je suis développeur full-stack spécialisé en React",
-    "Ma couleur préférée est le vert émeraude",
-    "Je suis né le 15 avril 1988 à Nantes",
-    "Je pratique le yoga et la méditation quotidiennement",
-    "Ma passion est la cuisine gastronomique française",
-    "J'ai deux chats et un chien comme animaux de compagnie",
-    "Je travaille comme chirurgienne en neurologie",
-    "Notre entreprise compte 250 employés répartis sur 3 sites",
-    "Mon bureau se situe au 4ème étage de la tour Eiffel",
-    "Je prends mes vacances en août pour partir en Grèce",
-    "Mon plat préféré est le couscous aux légumes",
-    "Je parle couramment français, anglais et espagnol",
-    "J'ai fait mes études à HEC Paris en management",
-    "Je suis marié depuis 12 ans et j'ai 3 enfants",
-    "Mon salaire annuel est de 65000 euros brut",
-    "Je souffre d'asthme depuis mon enfance",
-    "Notre chiffre d'affaires a augmenté de 25% cette année",
-    "Je prends le TGV tous les lundis pour aller au bureau",
-    "Mon équipe est composée de 8 développeurs seniors",
-    "J'ai une intolérance au gluten et au lactose",
-    "Nous utilisons principalement AWS pour notre infrastructure",
-    "Je fais du télétravail 3 jours par semaine",
-    "Mon objectif est d'ouvrir ma propre entreprise en 2025",
-    "J'investis régulièrement en bourse et en cryptomonnaies",
-    "Notre startup a levé 2 millions d'euros l'an dernier"
-  ]);
+  // Mémoire utilisateur supprimée: exemples retirés
   // Seuil de similarité ajustable
-  const [semanticThreshold, setSemanticThreshold] = useState(0.7);
-  // Loader et feedback UX
-  const [semanticLoading, setSemanticLoading] = useState(false);
-  const [semanticScore, setSemanticScore] = useState<number | null>(null);
-  // Charger le seuil sémantique depuis localStorage au montage
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(SEMANTIC_THRESHOLD_LS_KEY);
-      if (raw) {
-        const parsed = parseFloat(raw);
-        if (!Number.isNaN(parsed)) {
-          // Clamp dans la plage autorisée du slider
-          const clamped = Math.min(0.95, Math.max(0.5, parsed));
-          setSemanticThreshold(clamped);
-        }
-      }
-    } catch {}
-  }, []);
+  // Mémoire utilisateur supprimée
+  // Mémoire utilisateur supprimée
 
-  // Persister le seuil sémantique à chaque modification
-  useEffect(() => {
-    try {
-      localStorage.setItem(SEMANTIC_THRESHOLD_LS_KEY, String(semanticThreshold));
-    } catch {}
-  }, [semanticThreshold]);
+  // Mémoire utilisateur supprimée
 
   // Cache en mémoire des embeddings d'exemples { texteExemple: embedding }
-  const exampleEmbeddingsRef = useRef<Record<string, number[]>>({});
+  // Mémoire utilisateur supprimée
 
   // Charger le cache depuis localStorage et préchauffer l'embedder en idle
-  useEffect(() => {
-    try {
-      const cached = localStorage.getItem(EXAMPLE_EMBEDDINGS_LS_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed && typeof parsed === 'object') {
-          exampleEmbeddingsRef.current = parsed;
-        }
-      }
-    } catch {}
-    const idle = (window as any).requestIdleCallback || ((cb: Function) => setTimeout(cb as any, 300));
-    idle(() => {
-      // Préchargement silencieux du modèle
-      getEmbedder().catch(() => {});
-    });
-  }, []);
+  // Mémoire utilisateur supprimée
 
   // Sauvegarde du cache d'embeddings en localStorage (debounced léger)
-  const persistExampleEmbeddings = useRef<number | null>(null);
-  function saveExampleEmbeddingsDebounced() {
-    if (persistExampleEmbeddings.current) {
-      window.clearTimeout(persistExampleEmbeddings.current);
-    }
-    persistExampleEmbeddings.current = window.setTimeout(() => {
-      try {
-        localStorage.setItem(EXAMPLE_EMBEDDINGS_LS_KEY, JSON.stringify(exampleEmbeddingsRef.current));
-      } catch {}
-    }, 250);
-  }
+  // Mémoire utilisateur supprimée
 
   // Pré-calculer en arrière-plan les embeddings manquants pour les exemples (normalisés)
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const missing = examples.filter((ex) => !exampleEmbeddingsRef.current[ex]);
-      if (missing.length === 0) return;
-      try {
-        sLog('Pré-calcul embeddings manquants (examples):', missing.length, missing);
-        for (const ex of missing) {
-          if (cancelled) return;
-          await new Promise((res) => setTimeout(res, 0));
-          const emb = await embedText(ex, true);
-          exampleEmbeddingsRef.current[ex] = Array.from(emb);
-          sLog('Exemple vectorisé (cache):', ex);
-        }
-        saveExampleEmbeddingsDebounced();
-      } catch {}
-    })();
-    return () => { cancelled = true; };
-  }, [examples]);
+  // Mémoire utilisateur supprimée
 
   // Fonction asynchrone pour juger la pertinence sémantique (utilise les exemples et seuil du state)
-  const isPersonalInfoSemantic = async (text: string): Promise<boolean> => {
-    const inputEmbedding = await embedText(text, true);
-    sLog('Embedding entrée taille:', inputEmbedding.length, '| Texte:', text);
-
-    // Récupérer les embeddings des exemples depuis le cache, calculer ceux manquants à la volée (normalisés)
-    const exampleEmbeddings: number[][] = [];
-    for (const ex of examples) {
-      let emb = exampleEmbeddingsRef.current[ex];
-      if (!emb) {
-        const exEmb = await embedText(ex, true);
-        emb = Array.from(exEmb);
-        exampleEmbeddingsRef.current[ex] = emb;
-        sLog('Exemple manquant vectorisé à la volée:', ex);
-      }
-      exampleEmbeddings.push(emb);
-    }
-    saveExampleEmbeddingsDebounced();
-
-    const similaritiesLocal = exampleEmbeddings.map((exEmb) => cosineSimilarityNormalized(inputEmbedding, exEmb));
-    sLog('Similarités (exemples):', similaritiesLocal.map((s) => Number(s.toFixed(3))));
-    const maxSim = similaritiesLocal.length ? Math.max(...similaritiesLocal) : 0;
-    setSemanticScore(maxSim);
-    const decision = maxSim > semanticThreshold;
-    sLog('Score max =', Number(maxSim.toFixed(4)), '| Seuil =', semanticThreshold, '| Décision =', decision ? 'PERTINENT' : 'NON PERTINENT');
-    return decision;
-  };
+  // Mémoire utilisateur supprimée
 
   // Nettoyer le timeout à la fermeture du composant
   useEffect(() => {
@@ -1014,7 +743,6 @@ function App() {
           geminiConfig={geminiConfig}
           modePrive={modePrive}
           setModePrive={setModePrive}
-          onOpenMemoryModal={() => setShowMemoryModal(true)}
           selectMode={selectMode}
           onToggleSelectMode={handleToggleSelectMode}
           selectedCount={selectedMessageIds.length}
@@ -1066,7 +794,6 @@ function App() {
           reasoningLoading={isLoading}
           reasoningSpeaking={isAISpeaking}
         />
-        <MemoryFeedback loading={semanticLoading} score={semanticScore} />
       </div>
 
       <Suspense fallback={null}>
@@ -1118,17 +845,7 @@ function App() {
         />
       </Suspense>
 
-      <Suspense fallback={null}>
-        <MemoryModalLazy
-          open={showMemoryModal}
-          onClose={() => setShowMemoryModal(false)}
-          examples={examples}
-          setExamples={setExamples}
-          semanticThreshold={semanticThreshold}
-          setSemanticThreshold={setSemanticThreshold}
-          semanticLoading={semanticLoading}
-        />
-      </Suspense>
+      {/* Mémoire utilisateur supprimée */}
 
       
     </div>

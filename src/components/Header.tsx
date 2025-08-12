@@ -38,7 +38,6 @@ interface HeaderProps {
   geminiConfig?: any;
   modePrive: boolean;
   setModePrive: (v: boolean) => void;
-  onOpenMemoryModal: () => void;
   // Props pour la sélection de messages
   selectMode: boolean;
   onToggleSelectMode: () => void;
@@ -72,7 +71,6 @@ export function Header({
   onOpenGeminiSettings,
   modePrive,
   setModePrive,
-  onOpenMemoryModal,
   selectMode,
   onToggleSelectMode,
   selectedCount,
@@ -386,11 +384,6 @@ export function Header({
               <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onOpenRagDocs(); setShowMobileMenu(false); }}>
                 <BookOpen className="w-4 h-4 mr-3" />
                 Documents RAG
-              </Button>
-
-              <Button variant="ghost" className="w-full justify-start h-10" onClick={() => { onOpenMemoryModal(); setShowMobileMenu(false); }}>
-                <BookOpen className="w-4 h-4 mr-3" />
-                Mémoire utilisateur
               </Button>
 
               {onOpenGeminiSettings && (
