@@ -16,8 +16,8 @@ const MemoryModalLazy = lazy(() => import('@/components/MemoryModal').then(m => 
 import type { DiscussionWithCategory } from '@/components/HistoryModal';
 
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
-import { getRelevantMemories, upsertMany } from '@/services/memory';
-import { extractFactsFromText } from '@/services/memoryExtractor';
+import { getRelevantMemories, upsertMany, buildMemorySummary } from '@/services/memory';
+import { extractFactsFromText, extractFactsLLM } from '@/services/memoryExtractor';
 const GeminiSettingsDrawerLazy = lazy(() => import('@/components/GeminiSettingsDrawer').then(m => ({ default: m.GeminiSettingsDrawer })));
 // Retrait du sélecteur de personnalités
 
@@ -320,10 +320,14 @@ function App() {
     const newMessage = addMessage(userMessage, true, imageFile);
     // Extraire et mémoriser immédiatement les faits utilisateur (indépendant du LLM)
     try {
-      const userFacts = extractFactsFromText(userMessage, { source: 'user' });
-      if (!modePrive && userFacts.length > 0) {
+      let userFacts = extractFactsFromText(userMessage, { source: 'user' });
+      if ((!userFacts || userFacts.length === 0) && !modePrive) {
+        // Fallback LLM si aucune heuristique ne matche
+        const llmFacts = await extractFactsLLM(userMessage);
+        userFacts = llmFacts.map(f => ({ ...f, source: 'user' as const }));
+      }
+      if (!modePrive && userFacts && userFacts.length > 0) {
         upsertMany(userFacts.map((f) => ({ content: f.content, tags: f.tags, importance: f.importance, source: f.source })));
-        // Marquer le message avec l'indicateur
         setMessages(prev => prev.map(m => m.id === newMessage.id ? { ...m, memoryFactsCount: userFacts.length } : m));
       }
     } catch {}
@@ -338,15 +342,19 @@ function App() {
       promptStart = performance.now();
       let ragContext = '';
       let memoryContext = '';
-      // Récupération mémoire pertinente
+      // Récupération mémoire pertinente + résumé de profil
       try {
-        const memItems = await getRelevantMemories(userMessage, 5);
+        const memItems = await getRelevantMemories(userMessage, 8);
         if (memItems.length > 0) {
           memoryContext = 'MÉMOIRE UTILISATEUR (faits importants connus):\n';
           memItems.forEach((m) => {
             memoryContext += `- ${m.content}\n`;
           });
           memoryContext += '\n';
+        }
+        const profileSummary = buildMemorySummary(500);
+        if (profileSummary) {
+          memoryContext = `${profileSummary}\n${memoryContext}`;
         }
       } catch {}
       if (ragEnabled && passages.length > 0) {

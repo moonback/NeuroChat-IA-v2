@@ -26,7 +26,8 @@ export async function sendMessageToGemini(
   messages: { text: string; isUser: boolean }[],
   files?: File[],
   systemPrompt?: string,
-  generationConfig?: GeminiGenerationConfig
+  generationConfig?: GeminiGenerationConfig,
+  options?: { soft?: boolean }
 ): Promise<string> {
   if (!API_KEY) {
     throw new Error('Clé API Gemini introuvable. Merci d\'ajouter VITE_GEMINI_API_KEY dans ton fichier .env.local.');
@@ -102,19 +103,33 @@ export async function sendMessageToGemini(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      if (options?.soft) return '';
       throw new Error(`Échec de la requête API : ${response.status} ${response.statusText}. ${errorData.error?.message || ''}`);
     }
 
     const data: GeminiResponse = await response.json();
-    
-    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+    // Essayez de récupérer n'importe quel texte disponible
+    const texts: string[] = [];
+    if (Array.isArray(data.candidates)) {
+      for (const c of data.candidates) {
+        const parts = (c as any)?.content?.parts || [];
+        for (const p of parts) {
+          if (typeof p.text === 'string') texts.push(p.text);
+        }
+      }
+    }
+    const finalText = texts.join('\n').trim();
+    if (!finalText) {
+      if (options?.soft) return '';
       throw new Error('Format de réponse invalide depuis l\'API Gemini');
     }
-
-    return data.candidates[0].content.parts[0].text;
+    return finalText;
   } catch (error) {
-    console.error('Gemini API error:', error);
-    throw error;
+    if (!options?.soft) {
+      console.error('Gemini API error:', error);
+      throw error;
+    }
+    return '';
   }
 }
 

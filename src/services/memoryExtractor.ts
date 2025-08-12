@@ -1,4 +1,5 @@
 import type { MemorySource } from './memory';
+import { sendMessageToGemini, type GeminiGenerationConfig } from '@/services/geminiApi';
 
 export interface ExtractedFact {
   content: string;
@@ -143,6 +144,20 @@ export function extractFactsFromText(text: string, opts?: { source?: MemorySourc
     if (items.length) facts.push({ content: `Outils: ${items.map(capitalize).join(', ')}`, tags: ['travail', 'outils'], importance: 3, source: opts?.source });
   }
 
+  // Tâches / rappels simples (deadline, faire, demain, cette semaine)
+  const todoRegex = /\b(?:je dois|faut que je|a faire|to ?do)\s+([^\.\n]{3,120})/gi;
+  for (const m of matchAll(todoRegex, norm)) {
+    const grp = cleanTrailing(m[1]);
+    const orig = recoverOriginal(text, grp) || grp;
+    facts.push({ content: `Tâche: ${capitalize(orig)}`, tags: ['tâche'], importance: 3, source: opts?.source });
+  }
+  const deadlineRegex = /\b(?:avant|pour)\s+(demain|apres ?demain|la semaine prochaine|ce soir|fin de semaine|[0-3]?\d\/[0-1]?\d|[0-3]?\d\s+(jan|fev|mar|avr|mai|jun|jui|aou|sep|oct|nov|dec)\b.*)/gi;
+  for (const m of matchAll(deadlineRegex, norm)) {
+    const grp = cleanTrailing(m[0]);
+    const orig = recoverOriginal(text, grp) || grp;
+    facts.push({ content: `Deadline: ${capitalize(orig)}`, tags: ['agenda', 'deadline'], importance: 3, source: opts?.source });
+  }
+
   // Préférence de réponse (style)
   const styleRegex = /\b(reponds|parle|jaime les reponses)\s+([^\.\n]{3,80})/gi;
   for (const m of matchAll(styleRegex, norm)) {
@@ -245,6 +260,56 @@ function dedupeFacts(facts: ExtractedFact[]): ExtractedFact[] {
     }
   }
   return out;
+}
+
+// --- LLM fallback extraction (si heuristiques ne trouvent rien) ---
+export async function extractFactsLLM(text: string): Promise<ExtractedFact[]> {
+  if (!text || text.trim().length < 3) return [];
+  const system = [
+    'Tu es un extracteur de faits. Retourne STRICTEMENT un JSON array de faits pertinents concernant le profil, préférences, objectifs, contraintes, outils, agenda, contact (uniquement si autorisé explicitement).',
+    'Format: [{"content":"...","tags":["profil"],"importance":3}]',
+    'Règles:',
+    '- Pas d’invention, uniquement ce qui est dans le texte.',
+    '- 0-6 items max, concis.',
+    '- importance: 1..5 (5 = très important).',
+    '- Pas de données sensibles sauf consentement explicite (email/tel).',
+  ].join('\n');
+  const gen: GeminiGenerationConfig = { temperature: 0.2, maxOutputTokens: 512, topK: 20, topP: 0.9 };
+  try {
+    const response = await sendMessageToGemini([{ text, isUser: true }], undefined, system, gen, { soft: true });
+    const jsonStart = response.indexOf('[');
+    const jsonEnd = response.lastIndexOf(']');
+    if (jsonStart === -1 || jsonEnd === -1) return [];
+    const raw = response.slice(jsonStart, jsonEnd + 1);
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((x: any) => x && typeof x.content === 'string')
+      .map((x: any) => ({
+        content: String(x.content).trim(),
+        tags: Array.isArray(x.tags) ? x.tags.map((t: any) => String(t)).slice(0, 5) : [],
+        importance: Number(x.importance) || 3,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+export async function summarizeUserProfileLLM(messages: string[], maxChars = 500): Promise<string> {
+  if (!messages || messages.length === 0) return '';
+  const system = [
+    'Tu es un synthétiseur de profil. Résume en français, en puces courtes, les infos stables de l’utilisateur (profil, préférences, objectifs, contraintes, outils, agenda).',
+    `Contraintes: ${maxChars} caractères max.`,
+    'Pas de données sensibles sans consentement explicite.',
+  ].join('\n');
+  const body = messages.slice(-10).join('\n- ');
+  const gen: GeminiGenerationConfig = { temperature: 0.2, maxOutputTokens: 512, topK: 20, topP: 0.9 };
+  try {
+    const response = await sendMessageToGemini([{ text: body, isUser: true }], undefined, system, gen, { soft: true });
+    return response.trim().slice(0, maxChars);
+  } catch {
+    return '';
+  }
 }
 
 

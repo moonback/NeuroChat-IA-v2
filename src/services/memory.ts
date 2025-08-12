@@ -13,6 +13,8 @@ export interface MemoryItem {
   originMessageId?: string;
   embedding?: number[]; // normalized vector stored as number[] for JSON
   disabled?: boolean; // if true, never retrieved
+  evidenceCount?: number; // number of times observed
+  lastSeenAt?: string; // ISO string of most recent occurrence
 }
 
 const STORAGE_KEY = 'neurochat_user_memory_v1';
@@ -48,12 +50,16 @@ export function addMemory(item: Omit<MemoryItem, 'id' | 'createdAt' | 'updatedAt
     originMessageId: item.originMessageId,
     embedding: item.embedding,
     disabled: !!item.disabled,
+    evidenceCount: 1,
+    lastSeenAt: now,
   };
   // Merge naive: avoid exact duplicates by content
   const exists = list.find((m) => m.content.toLowerCase() === newItem.content.toLowerCase());
   if (exists) {
     exists.updatedAt = now;
     exists.importance = Math.max(exists.importance, newItem.importance);
+    exists.evidenceCount = (exists.evidenceCount || 1) + 1;
+    exists.lastSeenAt = now;
     exists.tags = Array.from(new Set([...(exists.tags || []), ...(newItem.tags || [])]));
     saveMemory(list);
     return exists;
@@ -149,13 +155,13 @@ export async function getRelevantMemories(query: string, limit = 5): Promise<Mem
     queryEmbedding = await embedText(query, true);
   } catch {
     return memories
-      .sort((a, b) => (b.importance || 0) - (a.importance || 0))
+      .sort((a, b) => computeRankingScore(b) - computeRankingScore(a))
       .slice(0, limit);
   }
   const scored = memories.map((m) => {
-    const score = m.embedding ? cosineSimilarityNormalized(queryEmbedding!, new Float32Array(m.embedding)) : 0;
-    const bonus = (m.importance || 1) * 0.02; // small boost for important items
-    return { m, score: score + bonus };
+    const sim = m.embedding ? cosineSimilarityNormalized(queryEmbedding!, new Float32Array(m.embedding)) : 0;
+    const rankBonus = computeRankingScore(m) * 0.05; // small weight for meta scoring
+    return { m, score: sim + rankBonus };
   });
   return scored
     .sort((a, b) => b.score - a.score)
@@ -181,5 +187,43 @@ export function upsertMany(facts: Array<{ content: string; tags?: string[]; impo
 export function countActiveMemories(): number {
   return loadMemory().filter((m) => !m.disabled).length;
 }
+
+function computeRankingScore(m: MemoryItem): number {
+  const importance = m.importance || 1; // 1..5
+  const evidence = Math.min(10, Math.max(1, m.evidenceCount || 1)); // cap at 10
+  let recencyBoost = 1;
+  if (m.lastSeenAt) {
+    const ageDays = Math.max(0, (Date.now() - new Date(m.lastSeenAt).getTime()) / (1000 * 60 * 60 * 24));
+    // Exponential decay over ~6 months
+    recencyBoost = Math.exp(-ageDays / 180);
+  }
+  return importance + 0.2 * evidence + 1.5 * recencyBoost;
+}
+
+export function buildMemorySummary(maxChars = 600): string {
+  const items = loadMemory().filter((m) => !m.disabled);
+  if (items.length === 0) return '';
+  const sorted = items
+    .slice()
+    .sort((a, b) => computeRankingScore(b) - computeRankingScore(a))
+    .slice(0, 20);
+  const groups: Record<string, string[]> = {};
+  for (const it of sorted) {
+    const tag = (it.tags && it.tags[0]) || 'autre';
+    if (!groups[tag]) groups[tag] = [];
+    groups[tag].push(it.content);
+  }
+  const order = ['identité', 'localisation', 'métier', 'travail', 'langue', 'préférences', 'objectif', 'agenda', 'santé', 'outils', 'communication', 'style-réponse', 'famille', 'temps', 'autre'];
+  let summary = 'Résumé profil:\n';
+  for (const k of order) {
+    if (!groups[k] || groups[k].length === 0) continue;
+    summary += `- ${capitalize(k)}: ${groups[k].slice(0, 3).join('; ')}\n`;
+    if (summary.length > maxChars) break;
+  }
+  if (summary.length > maxChars) summary = summary.slice(0, maxChars - 1) + '…';
+  return summary;
+}
+
+function capitalize(s: string): string { return s.length ? s[0].toUpperCase() + s.slice(1) : s; }
 
 
