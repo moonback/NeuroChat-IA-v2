@@ -1,5 +1,5 @@
 import type { MemorySource } from './memory';
-import { sendMessageToGemini, type GeminiGenerationConfig } from '@/services/geminiApi';
+import { type GeminiGenerationConfig } from '@/services/geminiApi';
 import { sendMessage, type LlmConfig } from '@/services/llm';
 
 export interface ExtractedFact {
@@ -282,7 +282,7 @@ export async function extractFactsLLM(text: string): Promise<ExtractedFact[]> {
       gemini: gen,
       openai: { temperature: gen.temperature, top_p: gen.topP, max_tokens: gen.maxOutputTokens, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' },
     };
-    const response = await sendMessage([{ text, isUser: true }], undefined as any, system, llmCfg as any);
+    const response = await sendMessage(llmCfg, [{ text, isUser: true }], undefined, system);
     const jsonStart = response.indexOf('[');
     const jsonEnd = response.lastIndexOf(']');
     if (jsonStart === -1 || jsonEnd === -1) return [];
@@ -316,7 +316,7 @@ export async function summarizeUserProfileLLM(messages: string[], maxChars = 500
       gemini: gen,
       openai: { temperature: gen.temperature, top_p: gen.topP, max_tokens: gen.maxOutputTokens, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' },
     };
-    const response = await sendMessage([{ text: body, isUser: true }], undefined as any, system, llmCfg as any);
+    const response = await sendMessage(llmCfg, [{ text: body, isUser: true }], undefined, system);
     return response.trim().slice(0, maxChars);
   } catch {
     return '';
