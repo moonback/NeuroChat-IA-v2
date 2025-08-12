@@ -112,7 +112,7 @@ export function importMemory(json: string): void {
           updatedAt: new Date().toISOString(),
           source: (m.source as MemorySource) || 'user',
           originMessageId: m.originMessageId,
-          embedding: Array.isArray(m.embedding) ? m.embedding.map((x) => Number(x)) : undefined,
+          embedding: Array.isArray(m.embedding) ? m.embedding.map((x: unknown) => Number(x)) : undefined,
           disabled: !!m.disabled,
         }));
       saveMemory(cleaned);
