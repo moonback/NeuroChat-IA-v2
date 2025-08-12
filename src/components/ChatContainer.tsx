@@ -12,6 +12,7 @@ interface Message {
   isUser: boolean;
   timestamp: Date;
   imageUrl?: string;
+  memoryFactsCount?: number;
 }
 
 // Type spécial pour le contexte RAG
@@ -310,6 +311,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                         isUser={msg.isUser}
                         timestamp={msg.timestamp}
                         imageUrl={msg.imageUrl}
+                        memoryFactsCount={msg.memoryFactsCount}
                         isLatest={index === messages.length - 1}
                         onEdit={onEditMessage ? (newText) => onEditMessage(msg.id, newText) : undefined}
                         onDelete={onDeleteMessage ? () => onDeleteMessage(msg.id) : undefined}

@@ -20,7 +20,7 @@ function getAllDocuments() {
   return [...dossierDocs, ...userDocs];
 }
 
-let model: any = null; // conservé pour compat mais plus utilisé directement ici
+// (champ 'model' supprimé – plus utilisé)
 let documentEmbeddings: { [id: string]: Float32Array } = {};
 
 // Fonction utilitaire pour la similarité cosinus

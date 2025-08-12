@@ -12,9 +12,12 @@ import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { searchDocuments } from '@/services/ragSearch';
 const RagDocsModalLazy = lazy(() => import('@/components/RagDocsModal').then(m => ({ default: m.RagDocsModal })));
 const HistoryModalLazy = lazy(() => import('@/components/HistoryModal').then(m => ({ default: m.HistoryModal })));
+const MemoryModalLazy = lazy(() => import('@/components/MemoryModal').then(m => ({ default: m.MemoryModal })));
 import type { DiscussionWithCategory } from '@/components/HistoryModal';
 
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
+import { getRelevantMemories, upsertMany, buildMemorySummary, addMemory, deleteMemory, loadMemory } from '@/services/memory';
+import { extractFactsFromText, extractFactsLLM } from '@/services/memoryExtractor';
 const GeminiSettingsDrawerLazy = lazy(() => import('@/components/GeminiSettingsDrawer').then(m => ({ default: m.GeminiSettingsDrawer })));
 // Retrait du sélecteur de personnalités
 
@@ -29,6 +32,7 @@ interface Message {
   isUser: boolean;
   timestamp: Date;
   imageUrl?: string;
+  memoryFactsCount?: number;
 }
 
 interface Discussion {
@@ -83,6 +87,7 @@ function App() {
   const [modeVocalAuto, setModeVocalAuto] = useState(false);
   // Ajout du state pour la modale de gestion des documents RAG
   const [showRagDocs, setShowRagDocs] = useState(false);
+  const [showMemory, setShowMemory] = useState(false);
   // Ajout du state pour activer/désactiver le RAG
   const [ragEnabled, setRagEnabled] = useState(false);
   // --- Sélection multiple de messages pour suppression groupée ---
@@ -100,6 +105,24 @@ function App() {
   const [showGeminiSettings, setShowGeminiSettings] = useState(false);
   // Gestion des presets Gemini
   const [presets, setPresets] = useState<{ name: string; config: GeminiGenerationConfig }[]>([]);
+
+  // Hauteur dynamique de la zone d'entrée (VoiceInput) pour éviter le chevauchement
+  const [inputHeight, setInputHeight] = useState<number>(120);
+  const voiceInputContainerRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = voiceInputContainerRef.current || document.getElementById('voice-input-wrapper');
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => {
+      const rect = el.getBoundingClientRect();
+      // Marge supplémentaire pour éviter tout chevauchement
+      setInputHeight(Math.max(96, Math.round(rect.height + 28)));
+    });
+    ro.observe(el);
+    // Mesure initiale
+    const rect = el.getBoundingClientRect();
+    setInputHeight(Math.max(96, Math.round(rect.height + 28)));
+    return () => ro.disconnect();
+  }, []);
 
   // --- Mode privé/éphémère ---
   const [modePrive, setModePrive] = useState(false);
@@ -265,9 +288,132 @@ function App() {
     setMessages(prev => [...prev, ragMsg as any]);
   };
 
-  // Mémoire utilisateur supprimée
+  // --- Mémoire utilisateur ---
+  function splitTags(text: string): string[] {
+    return Array.from(new Set(text.split(',').map((t) => t.trim()).filter(Boolean))).slice(0, 8);
+  }
+
+  function parseMemoryCommand(raw: string):
+    | { kind: 'add'; content: string; tags?: string[]; importance?: number }
+    | { kind: 'delete'; content: string }
+    | { kind: 'list'; query?: string }
+    | null {
+    if (!raw || raw.trim().length < 3) return null;
+    const text = raw.trim();
+    // /memoir ou /memoire
+    const addSlash = /^\/memoir[e]?(?:\s+|:)([\s\S]+)$/i.exec(text);
+    if (addSlash) {
+      const rest = addSlash[1].trim();
+      let tags: string[] | undefined;
+      let importance: number | undefined;
+      const tagsMatch = /(?:tags?|#)\s*:\s*([^\n]+)$/i.exec(rest);
+      if (tagsMatch) tags = splitTags(tagsMatch[1]);
+      const importanceMatch = /importance\s*:\s*(\d)/i.exec(rest);
+      if (importanceMatch) {
+        const imp = Number(importanceMatch[1]);
+        if (!Number.isNaN(imp)) importance = Math.min(5, Math.max(1, imp));
+      }
+      const content = rest
+        .replace(/(?:tags?|#)\s*:\s*[^\n]+/gi, '')
+        .replace(/importance\s*:\s*\d/gi, '')
+        .trim();
+      if (content) return { kind: 'add', content, tags, importance };
+      return null;
+    }
+    // /supp
+    const delSlash = /^\/supp(?:\s+|:)([\s\S]+)$/i.exec(text);
+    if (delSlash) {
+      const content = delSlash[1].trim();
+      if (content) return { kind: 'delete', content };
+      return null;
+    }
+    // /memlist [query]
+    const listSlash = /^\/memlist(?:\s+|:)?([\s\S]*)$/i.exec(text);
+    if (listSlash) {
+      const q = (listSlash[1] || '').trim();
+      return { kind: 'list', query: q || undefined };
+    }
+    return null;
+  }
+
+  async function handleMemoryCommand(userMessage: string): Promise<boolean> {
+    const parsed = parseMemoryCommand(userMessage);
+    if (!parsed) return false;
+    // Log le message utilisateur
+    const newMessage = addMessage(userMessage, true);
+
+    if (parsed.kind === 'add') {
+      const item = addMemory({
+        content: parsed.content,
+        tags: parsed.tags || [],
+        importance: parsed.importance ?? 3,
+        source: 'user',
+      });
+      addMessage(`✅ Ajouté à la mémoire: "${item.content}"${item.tags?.length ? ` (tags: ${item.tags.join(', ')})` : ''} • importance: ${item.importance}`, false);
+      setMessages(prev => prev.map(m => m.id === newMessage.id ? { ...m, memoryFactsCount: 1 } : m));
+      return true;
+    }
+    if (parsed.kind === 'delete') {
+      const query = parsed.content.toLowerCase();
+      const list = loadMemory();
+      let target = list.find(m => m.content.toLowerCase().includes(query));
+      if (!target) {
+        try {
+          const best = await getRelevantMemories(parsed.content, 1);
+          if (best && best.length > 0) target = best[0];
+        } catch {}
+      }
+      if (target) {
+        deleteMemory(target.id);
+        addMessage(`✅ Supprimé de la mémoire: "${target.content}"`, false);
+      } else {
+        addMessage(`❓ Aucun élément de mémoire correspondant trouvé pour: "${parsed.content}"`, false);
+      }
+      return true;
+    }
+    if (parsed.kind === 'list') {
+      const computeScore = (m: any): number => {
+        const importance = m.importance || 1;
+        const evidence = Math.min(10, Math.max(1, m.evidenceCount || 1));
+        let recencyBoost = 1;
+        if (m.lastSeenAt) {
+          const ageDays = Math.max(0, (Date.now() - new Date(m.lastSeenAt).getTime()) / (1000 * 60 * 60 * 24));
+          recencyBoost = Math.exp(-ageDays / 180);
+        }
+        return importance + 0.2 * evidence + 1.5 * recencyBoost;
+      };
+      let items: any[] = [];
+      if (parsed.query) {
+        try {
+          items = await getRelevantMemories(parsed.query, 5);
+        } catch {
+          items = [];
+        }
+      }
+      if (!parsed.query || items.length === 0) {
+        const all = loadMemory().filter((m) => !m.disabled);
+        items = all.slice().sort((a, b) => computeScore(b) - computeScore(a)).slice(0, 5);
+      }
+      if (items.length === 0) {
+        addMessage('ℹ️ Aucune mémoire active à afficher.', false);
+      } else {
+        const lines = items.map((m, idx) => {
+          const tagStr = m.tags && m.tags.length ? ` [${m.tags.join(', ')}]` : '';
+          return `${idx + 1}. ${m.content}${tagStr} • importance: ${m.importance}`;
+        });
+        addMessage(`🧠 Top ${Math.min(5, items.length)} éléments de mémoire${parsed.query ? ` pour "${parsed.query}"` : ''}:
+${lines.join('\n')}`, false);
+      }
+      return true;
+    }
+    return false;
+  }
 
   const handleSendMessage = async (userMessage: string, imageFile?: File) => {
+    // Intercepter et gérer les commandes mémoire avant tout
+    const handled = await handleMemoryCommand(userMessage);
+    if (handled) return;
+
     // Préparer la timeline de raisonnement
     setReasoningVisible(true);
     const initialSteps: ReasoningStep[] = [
@@ -313,6 +459,19 @@ function App() {
     }
     // Ajoute le message utilisateur localement
     const newMessage = addMessage(userMessage, true, imageFile);
+    // Extraire et mémoriser immédiatement les faits utilisateur (indépendant du LLM)
+    try {
+      let userFacts = extractFactsFromText(userMessage, { source: 'user' });
+      if ((!userFacts || userFacts.length === 0) && !modePrive) {
+        // Fallback LLM si aucune heuristique ne matche
+        const llmFacts = await extractFactsLLM(userMessage);
+        userFacts = llmFacts.map(f => ({ ...f, source: 'user' as const }));
+      }
+      if (!modePrive && userFacts && userFacts.length > 0) {
+        upsertMany(userFacts.map((f) => ({ content: f.content, tags: f.tags, importance: f.importance, source: f.source })));
+        setMessages(prev => prev.map(m => m.id === newMessage.id ? { ...m, memoryFactsCount: userFacts.length } : m));
+      }
+    } catch {}
     setIsLoading(true);
     try {
       // On prépare l'historique complet (y compris le message utilisateur tout juste ajouté)
@@ -323,6 +482,22 @@ function App() {
       setReasoningSteps(prev => prev.map(s => s.key === 'buildPrompt' ? ({ ...s, status: 'running', start: performance.now(), detail: 'Assemblage du contexte…' }) : s));
       promptStart = performance.now();
       let ragContext = '';
+      let memoryContext = '';
+      // Récupération mémoire pertinente + résumé de profil
+      try {
+        const memItems = await getRelevantMemories(userMessage, 8);
+        if (memItems.length > 0) {
+          memoryContext = 'MÉMOIRE UTILISATEUR (faits importants connus):\n';
+          memItems.forEach((m) => {
+            memoryContext += `- ${m.content}\n`;
+          });
+          memoryContext += '\n';
+        }
+        const profileSummary = buildMemorySummary(500);
+        if (profileSummary) {
+          memoryContext = `${profileSummary}\n${memoryContext}`;
+        }
+      } catch {}
       if (ragEnabled && passages.length > 0) {
         ragContext = 'Contexte documentaire :\n';
         passages.forEach((p) => {
@@ -343,7 +518,7 @@ function App() {
 
       // Important: ne pas inclure à nouveau la question utilisateur dans le prompt système
       // pour éviter qu'elle soit envoyée deux fois au modèle.
-      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${ragEnabled ? ragContext : ""}`;
+      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memoryContext}${ragEnabled ? ragContext : ""}`;
       const promptEnd = performance.now();
       setReasoningSteps(prev => prev.map(s => s.key === 'buildPrompt' ? ({ ...s, status: 'done', end: promptEnd, durationMs: Math.round(promptEnd - (s.start || promptStart)), detail: `${prompt.length} caractères` }) : s));
       // LOG prompt final
@@ -732,6 +907,7 @@ function App() {
           onOpenHistory={handleOpenHistory}
           onOpenTTSSettings={() => setShowTTSSettings(true)}
           onOpenRagDocs={() => setShowRagDocs(true)}
+          onOpenMemory={() => setShowMemory(true)}
           
           stop={stop}
           modeVocalAuto={modeVocalAuto}
@@ -765,7 +941,7 @@ function App() {
 
         {/* Enhanced Chat Interface */}
         <Card className="flex-1 flex flex-col shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl overflow-hidden ring-1 ring-white/20 dark:ring-slate-700/20 relative">
-          <div className="flex-1 overflow-y-auto pb-20"> {/* Ajout du padding-bottom pour l'input */}
+          <div className="flex-1 overflow-y-auto" style={{ paddingBottom: inputHeight }}>
             <ChatContainer
               messages={messages}
               isLoading={isLoading}
@@ -785,7 +961,7 @@ function App() {
       </div>
 
       {/* Zone de saisie fixée en bas de l'écran */}
-      <div className="fixed bottom-0 left-0 w-full z-50 bg-white/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-700 px-2 pt-2 pb-2 backdrop-blur-xl">
+      <div id="voice-input-wrapper" ref={voiceInputContainerRef} className="fixed bottom-0 left-0 w-full z-50 bg-white/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-700 px-2 pt-2 pb-2 backdrop-blur-xl">
         <VoiceInput
           onSendMessage={handleSendMessage}
           isLoading={isLoading}
@@ -832,6 +1008,14 @@ function App() {
         <RagDocsModalLazy open={showRagDocs} onClose={() => setShowRagDocs(false)} />
       </Suspense>
 
+      {/* Modale de gestion de la mémoire */}
+      <Suspense fallback={null}>
+        {/** Import dynamique pour garder le bundle initial léger */}
+        {showMemory && (
+          <MemoryModalLazy open={showMemory} onClose={() => setShowMemory(false)} />
+        )}
+      </Suspense>
+
       {/* Modale latérale compacte pour les réglages Gemini */}
       <Suspense fallback={null}>
         <GeminiSettingsDrawerLazy
@@ -845,7 +1029,7 @@ function App() {
         />
       </Suspense>
 
-      {/* Mémoire utilisateur supprimée */}
+      {/* Mémoire: gestion via modale */}
 
       
     </div>
