@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Trash2, UploadCloud, Eye, Pencil, Check, X as XIcon, FileText, FileSpreadsheet, FileCode2, FileType2, File, FilePlus2 } from 'lucide-react';
+import { X, Trash2, UploadCloud, Eye, Pencil, FileText, FileSpreadsheet, FileCode2, FileType2, File, FilePlus2, Github, LayoutGrid, List as ListIcon, Search, Filter, SortAsc, SortDesc, CheckCircle2, Circle, Upload, Settings, Folder, User, GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
+import { defaultGitHubConfig, getGitHubConfig, importRepoAsRagDocs, parseRepoInput, saveGitHubConfig, type GitHubConfig } from '@/services/github';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface RagDocsModalProps {
   open: boolean;
@@ -18,7 +20,7 @@ interface RagDoc {
   id: string;
   titre: string;
   contenu: string;
-  origine: 'dossier' | 'utilisateur';
+  origine: 'dossier' | 'utilisateur' | 'github';
   extension?: string;
 }
 
@@ -44,6 +46,32 @@ function getIcon(ext: string) {
   }
 }
 
+function getOriginIcon(origine: string) {
+  switch (origine) {
+    case 'dossier':
+      return <Folder className="w-3 h-3" />;
+    case 'utilisateur':
+      return <User className="w-3 h-3" />;
+    case 'github':
+      return <Github className="w-3 h-3" />;
+    default:
+      return <File className="w-3 h-3" />;
+  }
+}
+
+function getOriginColor(origine: string) {
+  switch (origine) {
+    case 'dossier':
+      return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800';
+    case 'utilisateur':
+      return 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800';
+    case 'github':
+      return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800';
+    default:
+      return 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-950 dark:text-slate-300 dark:border-slate-800';
+  }
+}
+
 export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
   const [docs, setDocs] = useState<RagDoc[]>([]);
   const [search, setSearch] = useState('');
@@ -55,6 +83,17 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   // Ajout de l'état pour le modal
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  // GitHub
+  const [ghConfig, setGhConfig] = useState<GitHubConfig>(() => getGitHubConfig());
+  const [ghRepoInput, setGhRepoInput] = useState<string>(ghConfig.owner && ghConfig.repo ? `${ghConfig.owner}/${ghConfig.repo}` : '');
+  const [isImportingGh, setIsImportingGh] = useState(false);
+  const [showGhSettings, setShowGhSettings] = useState(false);
+  // UI: filtres / tri / vue
+  const [filterOrigin, setFilterOrigin] = useState<'all' | 'dossier' | 'utilisateur' | 'github'>('all');
+  const [sortKey, setSortKey] = useState<'titre' | 'extension' | 'origine'>('titre');
+  const [sortAsc, setSortAsc] = useState(true);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [dragOver, setDragOver] = useState(false);
 
   // Charger les docs du dossier (via import.meta.glob)
   useEffect(() => {
@@ -202,17 +241,33 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
     throw new Error('Type de fichier non supporté.');
   }
 
-  // Ajouter un document utilisateur
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+  // Drag & Drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const files = Array.from(e.dataTransfer.files);
+    await processFiles(files);
+  };
+
+  // Traitement des fichiers (commun pour upload et drag&drop)
+  const processFiles = async (files: File[]) => {
     let userRaw = localStorage.getItem(LS_KEY);
     let userDocs: RagDoc[] = [];
     if (userRaw) {
       try { userDocs = JSON.parse(userRaw); } catch {}
     }
     let addedCount = 0;
-    for (const file of Array.from(files)) {
+    for (const file of files) {
       const ext = getExtension(file.name);
       if (!['txt','md','pdf','docx','csv','html'].includes(ext)) {
         toast.error(`Type de fichier non supporté : ${file.name}`);
@@ -243,6 +298,13 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
     localStorage.setItem(LS_KEY, JSON.stringify(userDocs));
     setDocs(docs => [...docs, ...userDocs.filter(d => !docs.some(doc => doc.id === d.id))]);
     if (addedCount > 0) toast.success(`${addedCount} document(s) ajouté(s) !`);
+  };
+
+  // Ajouter un document utilisateur
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    await processFiles(Array.from(files));
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -265,9 +327,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
     setEditingId(doc.id);
     setEditingValue(doc.titre);
   };
-  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditingValue(e.target.value);
-  };
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => { setEditingValue(e.target.value); };
   const handleEditSave = (doc: RagDoc) => {
     const trimmed = editingValue.trim();
     if (!trimmed) return;
@@ -283,240 +343,700 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
     setEditingValue('');
     toast.success('Titre modifié.');
   };
-  const handleEditKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, doc: RagDoc) => {
-    if (e.key === 'Enter') handleEditSave(doc);
-    else if (e.key === 'Escape') { setEditingId(null); setEditingValue(''); }
+  const handleEditKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, doc: RagDoc) => { 
+    if (e.key === 'Enter') handleEditSave(doc); 
+    else if (e.key === 'Escape') { setEditingId(null); setEditingValue(''); } 
   };
 
-  // Filtrage
-  const filteredDocs = docs.filter(doc =>
-    doc.titre.toLowerCase().includes(search.toLowerCase()) ||
-    doc.contenu.toLowerCase().includes(search.toLowerCase())
-  );
+  // Toggle selection
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(selectedId => selectedId !== id)
+        : [...prev, id]
+    );
+  };
+
+  // Filtrage + tri
+  const filteredDocs = docs
+    .filter(doc =>
+      (filterOrigin === 'all' || doc.origine === filterOrigin) &&
+      (
+        doc.titre.toLowerCase().includes(search.toLowerCase()) ||
+        doc.contenu.toLowerCase().includes(search.toLowerCase())
+      )
+    )
+    .sort((a, b) => {
+      const dir = sortAsc ? 1 : -1;
+      if (sortKey === 'titre') return a.titre.localeCompare(b.titre) * dir;
+      if (sortKey === 'extension') return (a.extension || '').localeCompare(b.extension || '') * dir;
+      return a.origine.localeCompare(b.origine) * dir;
+    });
+
+  // Statistiques
+  const stats = {
+    total: docs.length,
+    dossier: docs.filter(d => d.origine === 'dossier').length,
+    utilisateur: docs.filter(d => d.origine === 'utilisateur').length,
+    github: docs.filter(d => d.origine === 'github').length,
+  };
 
   if (!open) return null;
 
   return (
     <Drawer open={open} onOpenChange={onClose}>
-      <DrawerContent className="max-w-12xl px-2 sm:px-6 py-2 sm:py-6 rounded-3xl shadow-2xl border-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-white dark:from-slate-950 dark:via-indigo-950 dark:to-slate-950 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20 max-h-[95vh] overflow-y-auto">
-        <DrawerHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <UploadCloud className="w-7 h-7 text-blue-500 mr-2" />
-            <DrawerTitle className="text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
-              Gestion des documents RAG
-            </DrawerTitle>
-            <button onClick={onClose} className="ml-auto text-slate-500 hover:text-red-500 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-red-400" title="Fermer" aria-label="Fermer">
-              <X className="w-6 h-6" />
-            </button>
+      <DrawerContent className="max-w-[100vw] px-2 sm:px-6 py-2 sm:py-6 rounded-3xl shadow-2xl border-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20 max-h-[95vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <DrawerHeader className="pb-4 border-b border-slate-200/50 dark:border-slate-700/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
+                <UploadCloud className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <DrawerTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent">
+                  Documents RAG
+                </DrawerTitle>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Gérez vos documents pour la recherche augmentée
+                </p>
+              </div>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onClose} 
+              className="hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/20"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+
+          {/* Stats Bar */}
+          <div className="flex flex-wrap gap-2 mt-4">
+            <div className="px-3 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium">
+              <Folder className="w-3 h-3 inline mr-1" />
+              {stats.dossier} dossier
+            </div>
+            <div className="px-3 py-1 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium">
+              <User className="w-3 h-3 inline mr-1" />
+              {stats.utilisateur} utilisateur
+            </div>
+            <div className="px-3 py-1 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium">
+              <Github className="w-3 h-3 inline mr-1" />
+              {stats.github} GitHub
+            </div>
+            <div className="px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium">
+              Total: {stats.total}
+            </div>
           </div>
         </DrawerHeader>
-        {/* Ancien contenu de la modale ici, sans le header/titre ni bouton fermer */}
-        <div className="p-8 pt-6">
-          <div className="w-full p-6 mb-3 rounded-xl border-2 border-dashed border-blue-200 dark:border-indigo-800 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950 text-center flex flex-col items-center justify-center gap-2">
-            <UploadCloud className="w-10 h-10 mb-2 text-blue-400" />
-            <span className="font-semibold text-base">
-              Cliquez sur « Ajouter un document » pour importer vos fichiers
-            </span>
-            <span className="text-xs text-muted-foreground">(Formats acceptés : txt, md, pdf, docx, csv, html)</span>
-            <button
-              type="button"
-              className="mt-3 px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              onClick={() => fileInputRef.current && fileInputRef.current.click()}
-            >
-              Ajouter un document
-            </button>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Import Section */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {/* File Upload Card */}
+            <Card className="relative overflow-hidden border-2 border-dashed transition-all duration-200 hover:border-blue-400 dark:hover:border-blue-500"
+                  style={{
+                    borderColor: dragOver ? '#3b82f6' : undefined,
+                    backgroundColor: dragOver ? 'rgba(59, 130, 246, 0.05)' : undefined
+                  }}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Upload className="w-5 h-5 text-blue-500" />
+                  Import de fichiers
+                </CardTitle>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Glissez-déposez vos fichiers ou cliquez pour parcourir
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">TXT</span>
+                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">MD</span>
+                  <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded">PDF</span>
+                  <span className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded">DOCX</span>
+                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">CSV</span>
+                  <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded">HTML</span>
+                </div>
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                  size="lg"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Choisir des fichiers
+                </Button>
+                <input
+                  type="file"
+                  multiple
+                  accept=".txt,.md,.pdf,.docx,.csv,.html"
+                  ref={fileInputRef}
+                  style={{ display: 'none' }}
+                  onChange={handleFileChange}
+                />
+              </CardContent>
+              {dragOver && (
+                <div className="absolute inset-0 bg-blue-500/10 border-2 border-blue-500 border-dashed rounded-lg flex items-center justify-center">
+                  <div className="text-center">
+                    <Upload className="w-12 h-12 text-blue-500 mx-auto mb-2" />
+                    <p className="text-blue-600 dark:text-blue-400 font-medium">Déposez vos fichiers ici</p>
+                  </div>
+                </div>
+              )}
+            </Card>
+
+            {/* GitHub Import Card */}
+            <Card className="border-purple-200/60 dark:border-purple-800/50 bg-gradient-to-br from-purple-50/50 to-indigo-50/50 dark:from-purple-950/50 dark:to-indigo-950/50">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Github className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  Import GitHub
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowGhSettings(!showGhSettings)}
+                    className="ml-auto"
+                  >
+                    <Settings className="w-4 h-4" />
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={ghRepoInput}
+                      onChange={e => setGhRepoInput(e.target.value)}
+                      placeholder="owner/repo ou URL GitHub"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+                  {ghConfig.branch && (
+                    <div className="px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center gap-1 text-sm">
+                      <GitBranch className="w-3 h-3" />
+                      {ghConfig.branch}
+                    </div>
+                  )}
+                </div>
+
+                {showGhSettings && (
+                  <div className="space-y-3 p-4 bg-white/50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <div className="grid grid-cols-2 gap-3">
+                      <input
+                        type="text"
+                        value={ghConfig.branch || ''}
+                        onChange={e => setGhConfig(cfg => ({ ...cfg, branch: e.target.value }))}
+                        placeholder="Branche (ex: main)"
+                        className="px-3 py-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm"
+                      />
+                      <input
+                        type="number"
+                        min={32}
+                        max={2048}
+                        value={ghConfig.maxFileSizeKB ?? 256}
+                        onChange={e => setGhConfig(cfg => ({ ...cfg, maxFileSizeKB: Math.max(32, Math.min(2048, Number(e.target.value) || 256)) }))}
+                        placeholder="Taille max (kB)"
+                        className="px-3 py-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm"
+                      />
+                    </div>
+                    <input
+                      type="password"
+                      value={ghConfig.token}
+                      onChange={e => setGhConfig(cfg => ({ ...cfg, token: e.target.value }))}
+                      placeholder="Token GitHub (optionnel pour dépôts publics)"
+                      className="w-full px-3 py-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm"
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <input
+                        type="text"
+                        value={(ghConfig.includeExtensions || []).join(',')}
+                        onChange={e => setGhConfig(cfg => ({ ...cfg, includeExtensions: e.target.value.split(',').map(x => x.trim()).filter(Boolean) }))}
+                        placeholder="Extensions (md,txt,ts)"
+                        className="px-3 py-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm"
+                      />
+                      <input
+                        type="text"
+                        value={(ghConfig.includePaths || []).join(',')}
+                        onChange={e => setGhConfig(cfg => ({ ...cfg, includePaths: e.target.value.split(',').map(x => x.trim()).filter(Boolean) }))}
+                        placeholder="Chemins inclus (src/,docs/)"
+                        className="px-3 py-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={(ghConfig.excludePaths || []).join(',')}
+                      onChange={e => setGhConfig(cfg => ({ ...cfg, excludePaths: e.target.value.split(',').map(x => x.trim()).filter(Boolean) }))}
+                      placeholder="Chemins exclus (node_modules/,dist/)"
+                      className="w-full px-3 py-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm"
+                    />
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={async () => {
+                      try {
+                        const parsed = parseRepoInput(ghRepoInput);
+                        if (!parsed) {
+                          toast.error('Format de dépôt invalide. Utilise owner/repo ou une URL GitHub.');
+                          return;
+                        }
+                        const cfg: GitHubConfig = { ...ghConfig, owner: parsed.owner, repo: parsed.repo };
+                        setIsImportingGh(true);
+                        const added = await importRepoAsRagDocs(cfg);
+                        toast.success(`${added} fichier(s) importé(s) depuis GitHub`);
+                        // Recharger la liste
+                        const userRaw = localStorage.getItem(LS_KEY);
+                        let userDocs: RagDoc[] = [];
+                        if (userRaw) {
+                          try { userDocs = JSON.parse(userRaw); } catch {}
+                        }
+                        setDocs(prev => {
+                          const dossier = prev.filter(d => d.origine === 'dossier');
+                          return [...dossier, ...userDocs];
+                        });
+                        saveGitHubConfig(cfg);
+                      } catch (e: any) {
+                        toast.error(e?.message || 'Échec de l\'import GitHub');
+                      } finally {
+                        setIsImportingGh(false);
+                      }
+                    }}
+                    disabled={isImportingGh}
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700"
+                  >
+                    <Github className="w-4 h-4 mr-2" />
+                    {isImportingGh ? 'Import en cours…' : 'Importer'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setGhConfig(defaultGitHubConfig);
+                      setGhRepoInput('');
+                    }}
+                  >
+                    Reset
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <input
-            type="file"
-            multiple
-            accept=".txt,.md,.pdf,.docx,.csv,.html"
-            ref={fileInputRef}
-            style={{ display: 'none' }}
-            onChange={handleFileChange}
-          />
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Rechercher un document..."
-            className="w-full mb-4 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-          <div className="mb-4 flex justify-between items-center">
-            <span className="text-sm text-slate-500">
-              {filteredDocs.length} document{filteredDocs.length !== 1 ? "s" : ""} affiché{filteredDocs.length !== 1 ? "s" : ""}
-            </span>
-            <span className="text-xs text-slate-400">
-              {docs.length} au total
-            </span>
-          </div>
-          {/* Boutons de sélection et suppression groupée */}
-          <div className="mb-4 flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSelectedIds(docs.filter(d => d.origine === 'utilisateur').map(d => d.id))}
-              disabled={docs.filter(d => d.origine === 'utilisateur').length === 0}
-            >
-              Tout sélectionner
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => setOpenDeleteModal(true)}
-              disabled={selectedIds.length === 0}
-            >
-              Tout supprimer
-            </Button>
-          </div>
-          <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Supprimer les documents sélectionnés ?</DialogTitle>
-              </DialogHeader>
-              <div className="py-2 text-sm">
-                Cette action est <span className="text-red-600 font-semibold">irréversible</span>.<br />
-                Voulez-vous vraiment supprimer {selectedIds.length} document{selectedIds.length > 1 ? 's' : ''} ?
+
+          {/* Toolbar */}
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-xl border border-slate-200/50 dark:border-slate-700/50 p-4 shadow-sm">
+            <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center">
+              {/* Search */}
+              <div className="flex-1 max-w-md">
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Rechercher dans les documents..."
+                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
+                </div>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>
-                  Annuler
+
+              {/* Filters & Controls */}
+              <div className="flex flex-wrap gap-2 items-center">
+                <select
+                  value={filterOrigin}
+                  onChange={e => setFilterOrigin(e.target.value as any)}
+                  className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">Toutes origines</option>
+                  <option value="dossier">📁 Dossier</option>
+                  <option value="utilisateur">👤 Utilisateur</option>
+                  <option value="github">🐙 GitHub</option>
+                </select>
+
+                <select
+                  value={sortKey}
+                  onChange={e => setSortKey(e.target.value as any)}
+                  className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="titre">Titre</option>
+                  <option value="extension">Extension</option>
+                  <option value="origine">Origine</option>
+                </select>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSortAsc(v => !v)}
+                  className="px-3"
+                >
+                  {sortAsc ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
+                </Button>
+
+                <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
+
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                >
+                  <LayoutGrid className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant="destructive"
-                  onClick={() => {
-                    const userRaw = localStorage.getItem(LS_KEY);
-                    let userDocs: RagDoc[] = [];
-                    if (userRaw) {
-                      try { userDocs = JSON.parse(userRaw); } catch {}
-                    }
-                    userDocs = userDocs.filter(doc => !selectedIds.includes(doc.id));
-                    localStorage.setItem(LS_KEY, JSON.stringify(userDocs));
-                    setDocs(docs => docs.filter(doc => !selectedIds.includes(doc.id)));
-                    setSelectedIds([]);
-                    setOpenDeleteModal(false);
-                    toast.success('Documents supprimés.');
-                  }}
+                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
                 >
-                  Confirmer la suppression
+                  <ListIcon className="w-4 h-4" />
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+
+                <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
+
+                {selectedIds.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">
+                      {selectedIds.length} sélectionné(s)
+                    </span>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setOpenDeleteModal(true)}
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Supprimer
+                    </Button>
+                  </div>
+                )}
+
+                <span className="text-xs text-slate-500 hidden lg:block">
+                  {filteredDocs.length} / {docs.length} documents
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Documents List */}
           {filteredDocs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 opacity-80 select-none animate-fadeIn">
-              <svg width="90" height="90" viewBox="0 0 90 90" fill="none" className="mb-4">
-                <rect x="10" y="20" width="70" height="50" rx="10" fill="#e0e7ef" />
-                <rect x="20" y="30" width="50" height="8" rx="4" fill="#b6c3e0" />
-                <rect x="20" y="45" width="35" height="6" rx="3" fill="#cfd8ea" />
-                <rect x="20" y="57" width="25" height="6" rx="3" fill="#cfd8ea" />
-                <circle cx="70" cy="60" r="6" fill="#b6c3e0" />
-                <FilePlus2 x={30} y={65} className="w-8 h-8 text-blue-400 opacity-60" />
-              </svg>
-              <div className="text-muted-foreground text-lg font-semibold mb-1">Aucun document trouvé</div>
-              <div className="text-xs text-slate-400">Ajoutez vos documents pour commencer.</div>
+            <div className="flex flex-col items-center justify-center py-16 opacity-60">
+              <div className="relative mb-6">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center">
+                  <FilePlus2 className="w-12 h-12 text-blue-500 dark:text-blue-400" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                  <Search className="w-4 h-4 text-white" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                {search || filterOrigin !== 'all' ? 'Aucun résultat' : 'Aucun document'}
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 text-center max-w-md">
+                {search || filterOrigin !== 'all' 
+                  ? 'Essayez de modifier vos critères de recherche ou filtres'
+                  : 'Commencez par importer vos premiers documents'
+                }
+              </p>
+            </div>
+          ) : viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+              {filteredDocs.map(doc => (
+                <div key={doc.id} className="group relative bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+                  {/* Selection Checkbox */}
+                  {doc.origine !== 'dossier' && (
+                    <div className="absolute top-3 left-3 z-10">
+                      <button
+                        onClick={() => toggleSelection(doc.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        {selectedIds.includes(doc.id) ? (
+                          <CheckCircle2 className="w-5 h-5 text-blue-600" />
+                        ) : (
+                          <Circle className="w-5 h-5 text-slate-400 hover:text-blue-600" />
+                        )}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Document Type & Origin Badges */}
+                  <div className="absolute top-3 right-3 flex gap-1">
+                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold border ${getOriginColor(doc.origine)} flex items-center gap-1`}>
+                      {getOriginIcon(doc.origine)}
+                      {doc.origine}
+                    </span>
+                    {doc.extension && (
+                      <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                        {doc.extension.toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="p-4 pt-12">
+                    {/* File Icon & Title */}
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="flex-shrink-0 mt-1">
+                        {getIcon(doc.extension || '')}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        {editingId === doc.id ? (
+                          <input
+                            type="text"
+                            value={editingValue}
+                            onChange={handleEditChange}
+                            onKeyDown={e => handleEditKeyDown(e, doc)}
+                            onBlur={() => handleEditSave(doc)}
+                            className="w-full px-2 py-1 rounded border border-blue-300 dark:border-blue-600 bg-white dark:bg-slate-900 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            autoFocus
+                          />
+                        ) : (
+                          <h4 className="font-semibold text-slate-900 dark:text-slate-100 line-clamp-2 text-sm">
+                            {doc.titre}
+                          </h4>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Content Preview */}
+                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 mb-4 leading-relaxed">
+                      {doc.contenu.slice(0, 150)}{doc.contenu.length > 150 ? '...' : ''}
+                    </p>
+
+                    {/* Actions */}
+                    <div className="flex gap-1 justify-end">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setPreviewDoc(doc)}
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      {doc.origine !== 'dossier' && (
+                        <>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleStartEdit(doc)}
+                            className="text-slate-600 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleDelete(doc.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
-            <ul className="space-y-4">
-              {filteredDocs.map(doc => {
-                return (
-                  <li key={doc.id}
-                    className={`border rounded-xl p-4 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950 flex flex-col sm:flex-row items-start sm:items-center gap-3 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-200 border-transparent hover:border-blue-400/60 relative group animate-fadeIn`}
-                  >
-                    {/* Badge type */}
-                    <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-bold
-                      ${doc.extension === 'pdf' ? 'bg-red-100 text-red-600' :
-                        doc.extension === 'docx' ? 'bg-indigo-100 text-indigo-600' :
-                        doc.extension === 'csv' ? 'bg-green-100 text-green-600' :
-                        doc.extension === 'md' ? 'bg-blue-100 text-blue-600' :
-                        doc.extension === 'txt' ? 'bg-slate-200 text-slate-600' :
-                        doc.extension === 'html' ? 'bg-orange-100 text-orange-600' :
-                        'bg-slate-200 text-slate-600'}
-                    `}>
-                      {doc.extension?.toUpperCase()}
-                    </span>
-                    {doc.origine === 'utilisateur' && (
-                      <input
-                        type="checkbox"
-                        className="mr-2 mt-1"
-                        checked={selectedIds.includes(doc.id)}
-                        onChange={e => {
-                          if (e.target.checked) setSelectedIds(ids => [...ids, doc.id]);
-                          else setSelectedIds(ids => ids.filter(id => id !== doc.id));
-                        }}
-                      />
-                    )}
-                    <div className="flex-1 min-w-0 flex flex-col sm:flex-row gap-2 items-start sm:items-center">
-                      <div className="flex-shrink-0">{getIcon(doc.extension || '')}</div>
-                      <div className="flex flex-col gap-1 w-full">
-                        {editingId === doc.id ? (
-                          <div className="flex items-center gap-2">
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+              <div className="divide-y divide-slate-200 dark:divide-slate-700">
+                {filteredDocs.map(doc => (
+                  <div key={doc.id} className="group p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <div className="flex items-center gap-4">
+                      {/* Selection & Icon */}
+                      <div className="flex items-center gap-3">
+                        {doc.origine !== 'dossier' && (
+                          <button
+                            onClick={() => toggleSelection(doc.id)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            {selectedIds.includes(doc.id) ? (
+                              <CheckCircle2 className="w-5 h-5 text-blue-600" />
+                            ) : (
+                              <Circle className="w-5 h-5 text-slate-400 hover:text-blue-600" />
+                            )}
+                          </button>
+                        )}
+                        <div className="flex-shrink-0">
+                          {getIcon(doc.extension || '')}
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          {editingId === doc.id ? (
                             <input
                               type="text"
                               value={editingValue}
                               onChange={handleEditChange}
-                              onBlur={() => handleEditSave(doc)}
                               onKeyDown={e => handleEditKeyDown(e, doc)}
+                              onBlur={() => handleEditSave(doc)}
+                              className="flex-1 px-2 py-1 rounded border border-blue-300 dark:border-blue-600 bg-white dark:bg-slate-900 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
                               autoFocus
-                              className="text-base font-semibold bg-transparent border-b border-blue-400 focus:outline-none px-1 w-40"
                             />
-                            <Button size="icon" variant="ghost" onClick={() => handleEditSave(doc)} title="Valider"><Check className="w-5 h-5 text-green-500" /></Button>
-                            <Button size="icon" variant="ghost" onClick={() => { setEditingId(null); setEditingValue(''); }} title="Annuler"><XIcon className="w-5 h-5 text-red-500" /></Button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-blue-900 dark:text-blue-100 text-base truncate max-w-[200px]">{doc.titre}</span>
-                            {doc.origine === 'utilisateur' && (
-                              <Button size="icon" variant="ghost" onClick={() => handleStartEdit(doc)} title="Renommer"><Pencil className="w-4 h-4 text-blue-400" /></Button>
+                          ) : (
+                            <h4 className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+                              {doc.titre}
+                            </h4>
+                          )}
+                          <div className="flex gap-1">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${getOriginColor(doc.origine)} flex items-center gap-1`}>
+                              {getOriginIcon(doc.origine)}
+                              {doc.origine}
+                            </span>
+                            {doc.extension && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                {doc.extension.toUpperCase()}
+                              </span>
                             )}
                           </div>
+                        </div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 truncate">
+                          {doc.contenu.slice(0, 120)}{doc.contenu.length > 120 ? '...' : ''}
+                        </p>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => setPreviewDoc(doc)}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        {doc.origine !== 'dossier' && (
+                          <>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleStartEdit(doc)}
+                              className="text-slate-600 hover:text-slate-700"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleDelete(doc.id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </>
                         )}
-                        <div className="text-xs text-muted-foreground truncate max-w-[350px]">{doc.contenu.slice(0, 120)}{doc.contenu.length > 120 ? "…" : ""}</div>
-                        <div className="text-[11px] text-slate-400">.{doc.extension}</div>
                       </div>
                     </div>
-                    <div className="flex gap-1 mt-2 sm:mt-0">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="ml-1"
-                        title="Aperçu"
-                        onClick={() => setPreviewDoc(doc)}
-                      >
-                        <Eye className="w-5 h-5 text-indigo-500" />
-                      </Button>
-                      {doc.origine === 'utilisateur' ? (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="ml-1"
-                          title="Supprimer"
-                          onClick={() => handleDelete(doc.id)}
-                        >
-                          <Trash2 className="w-5 h-5 text-red-500" />
-                        </Button>
-                      ) : null}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
-        <DrawerFooter className="flex flex-row gap-2 justify-end pt-3">
-          <Button onClick={onClose} className="w-full text-base py-3">Fermer</Button>
-        </DrawerFooter>
-      </DrawerContent>
-      {/* Modale d'aperçu */}
-      {previewDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8 w-full max-w-2xl max-h-[95vh] overflow-y-auto relative">
-            <button onClick={() => setPreviewDoc(null)} className="absolute top-4 right-4 text-slate-500 hover:text-red-500"><X className="w-6 h-6" /></button>
-            <h3 className="text-xl font-bold mb-4">{previewDoc.titre}</h3>
-            <pre className="whitespace-pre-wrap text-sm bg-white dark:bg-slate-900 rounded p-4 max-h-[70vh] overflow-y-auto">{previewDoc.contenu}</pre>
-            <Button onClick={() => setPreviewDoc(null)} className="mt-6 w-full text-base py-3">Fermer l'aperçu</Button>
+
+        {/* Footer */}
+        <DrawerFooter className="border-t border-slate-200/50 dark:border-slate-700/50 pt-4">
+          <div className="flex gap-3">
+            <Button onClick={onClose} variant="outline" className="flex-1">
+              Fermer
+            </Button>
+            {selectedIds.length > 0 && (
+              <Button 
+                onClick={() => {
+                  setSelectedIds([]);
+                  toast.success('Sélection effacée');
+                }}
+                variant="ghost"
+                className="px-6"
+              >
+                Déselectionner tout
+              </Button>
+            )}
           </div>
-        </div>
-      )}
+        </DrawerFooter>
+
+        {/* Delete Confirmation Modal */}
+        <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-red-600">
+                <Trash2 className="w-5 h-5" />
+                Supprimer les documents
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                Cette action est <span className="font-semibold text-red-600">irréversible</span>.
+              </p>
+              <p className="text-sm">
+                Voulez-vous vraiment supprimer <span className="font-semibold">{selectedIds.length}</span> document{selectedIds.length > 1 ? 's' : ''} ?
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>
+                Annuler
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  const userRaw = localStorage.getItem(LS_KEY);
+                  let userDocs: RagDoc[] = [];
+                  if (userRaw) {
+                    try { userDocs = JSON.parse(userRaw); } catch {}
+                  }
+                  userDocs = userDocs.filter(doc => !selectedIds.includes(doc.id));
+                  localStorage.setItem(LS_KEY, JSON.stringify(userDocs));
+                  setDocs(docs => docs.filter(doc => !selectedIds.includes(doc.id)));
+                  setSelectedIds([]);
+                  setOpenDeleteModal(false);
+                  toast.success('Documents supprimés.');
+                }}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Supprimer définitivement
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Preview Modal */}
+        {previewDoc && (
+          <Dialog open={!!previewDoc} onOpenChange={() => setPreviewDoc(null)}>
+            <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+              <DialogHeader className="border-b border-slate-200 dark:border-slate-700 pb-4">
+                <DialogTitle className="flex items-center gap-3">
+                  {getIcon(previewDoc.extension || '')}
+                  <span className="flex-1 truncate">{previewDoc.titre}</span>
+                  <div className="flex gap-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getOriginColor(previewDoc.origine)} flex items-center gap-1`}>
+                      {getOriginIcon(previewDoc.origine)}
+                      {previewDoc.origine}
+                    </span>
+                    {previewDoc.extension && (
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                        {previewDoc.extension.toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                </DialogTitle>
+              </DialogHeader>
+              <div className="flex-1 overflow-y-auto p-6">
+                <pre className="whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-mono">
+                  {previewDoc.contenu}
+                </pre>
+              </div>
+              <DialogFooter className="border-t border-slate-200 dark:border-slate-700 pt-4">
+                <Button onClick={() => setPreviewDoc(null)} className="w-full">
+                  Fermer l'aperçu
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+      </DrawerContent>
     </Drawer>
   );
-} 
+}
