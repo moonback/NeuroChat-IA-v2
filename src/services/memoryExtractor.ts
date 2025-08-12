@@ -64,12 +64,21 @@ export function extractFactsFromText(text: string, opts?: { source?: MemorySourc
     facts.push({ content: `Disponibilité: ${capitalize(m[0])}`, tags: ['agenda'], importance: 3, source: opts?.source });
   }
 
-  // Rappel objectif / projet
-  const goalMatch = /\b(mon|ma|mes)\s+(objectif|projet|but|priorite)s?\s+(?:est|sont|:)\s+([^\.\n]{4,120})/i.exec(norm);
-  if (goalMatch) {
-    const grp = cleanTrailing(goalMatch[3]);
-    const orig = recoverOriginal(text, grp) || grp;
-    facts.push({ content: `Objectif: ${capitalize(orig)}`, tags: ['objectif'], importance: 4, source: opts?.source });
+  // Rappel objectif / projet (formes variées)
+  const goalForms: RegExp[] = [
+    /\b(mon|ma|mes)\s+(objectif|projet|but|priorite)s?\s+(?:est|sont|:)\s+([^\.\n]{4,160})/i,
+    /\b(mon|ma)\s+(but|objectif)\s+(?:est|sera|devient)\s+de\s+([^\.\n]{4,160})/i,
+    /\bje\s+(?:veux|souhaite|compte|prevois|projette|planifie)\s+([^\.\n]{4,160})/i,
+    /\bj(?:'|e)\s+aimerais\s+([^\.\n]{4,160})/i,
+  ];
+  for (const re of goalForms) {
+    const m = re.exec(norm);
+    if (m) {
+      const grp = cleanTrailing(m[m.length - 1]);
+      const orig = recoverOriginal(text, grp) || grp;
+      facts.push({ content: `Objectif: ${capitalize(orig)}`, tags: ['objectif'], importance: 4, source: opts?.source });
+      break;
+    }
   }
   const learningMatch = /\b(je veux apprendre|j apprends|je me forme a)\s+([^\.\n]{3,120})/gi;
   for (const m of matchAll(learningMatch, norm)) {
@@ -145,18 +154,36 @@ export function extractFactsFromText(text: string, opts?: { source?: MemorySourc
     if (items.length) facts.push({ content: `Outils: ${items.map(capitalize).join(', ')}`, tags: ['travail', 'outils'], importance: 3, source: opts?.source });
   }
 
-  // Tâches / rappels simples (deadline, faire, demain, cette semaine)
-  const todoRegex = /\b(?:je dois|faut que je|a faire|to ?do)\s+([^\.\n]{3,120})/gi;
-  for (const m of matchAll(todoRegex, norm)) {
-    const grp = cleanTrailing(m[1]);
-    const orig = recoverOriginal(text, grp) || grp;
-    facts.push({ content: `Tâche: ${capitalize(orig)}`, tags: ['tâche'], importance: 3, source: opts?.source });
+  // Tâches / rappels (formes étendues) + deadlines
+  const taskPatterns: RegExp[] = [
+    /\b(?:je dois|il faut que je|faut que je|je devrais)\s+([^\.\n]{3,160})/gi,
+    /\b(?:a\s+faire|à\s+faire|to ?do)\s*[:\-]?\s+([^\n]{3,160})/gi,
+    /\b(?:rappelle(?:\-moi)?\s+de|n'?oublie pas de|pense\s+à)\s+([^\.\n]{3,160})/gi,
+    /\b(?:prevoir|prévoir|planifier|planifie|programmer)\s+([^\.\n]{3,160})/gi,
+    /\b(?:rendez[- ]vous|rdv)\s+(?:le\s+|pour\s+)?([^\.\n]{3,120})/gi,
+  ];
+  for (const re of taskPatterns) {
+    for (const m of matchAll(re, norm)) {
+      const grp = cleanTrailing(m[1]);
+      const orig = recoverOriginal(text, grp) || grp;
+      facts.push({ content: `Tâche: ${capitalize(orig)}`, tags: ['tâche'], importance: 3, source: opts?.source });
+    }
   }
-  const deadlineRegex = /\b(?:avant|pour)\s+(demain|apres ?demain|la semaine prochaine|ce soir|fin de semaine|[0-3]?\d\/[0-1]?\d|[0-3]?\d\s+(jan|fev|mar|avr|mai|jun|jui|aou|sep|oct|nov|dec)\b.*)/gi;
-  for (const m of matchAll(deadlineRegex, norm)) {
-    const grp = cleanTrailing(m[0]);
-    const orig = recoverOriginal(text, grp) || grp;
-    facts.push({ content: `Deadline: ${capitalize(orig)}`, tags: ['agenda', 'deadline'], importance: 3, source: opts?.source });
+  // Deadlines étendues (formats de date variés, mots-clés)
+  const deadlinePatterns: RegExp[] = [
+    /\b(?:avant|pour|d'ici|d ici|d’ici)\s+(demain|apres ?demain|la semaine prochaine|ce soir|fin de semaine)/gi,
+    /\b(?:avant|pour)\s+([0-3]?\d\/[0-1]?\d(?:\/[0-9]{2,4})?)/gi, // 12/09[/2025]
+    /\b(?:avant|pour|le)\s+([0-3]?\d[\.\-][0-1]?\d(?:[\.\-][0-9]{2,4})?)/gi, // 12.09.2025, 12-09
+    /\b(?:avant|pour|le)\s+([0-3]?\d\s+(jan|fev|mar|avr|mai|jun|jui|aou|sep|oct|nov|dec)(?:\s+[0-9]{2,4})?)/gi,
+    /\b(\d{4}-\d{2}-\d{2})(?:[ t](\d{2}[:h]\d{2}))?/gi, // ISO 2025-08-12[ 14:00]
+    /\b(?:à|a|vers)\s+(\d{1,2}h(?:\d{2})?|\d{1,2}:\d{2})\b/gi,
+  ];
+  for (const re of deadlinePatterns) {
+    for (const m of matchAll(re, norm)) {
+      const whole = m[0];
+      const orig = recoverOriginal(text, cleanTrailing(whole)) || cleanTrailing(whole);
+      facts.push({ content: `Deadline: ${capitalize(orig)}`, tags: ['agenda', 'deadline'], importance: 3, source: opts?.source });
+    }
   }
 
   // Préférence de réponse (style)
