@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Mic, MicOff, ImageIcon, Sparkles, X, Command } from 'lucide-react';
+import { Send, Loader2, Mic, MicOff, ImageIcon, X, Command } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
