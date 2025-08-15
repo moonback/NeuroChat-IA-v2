@@ -1057,6 +1057,7 @@ ${lines.join('\n')}`, false);
               selectedMessageIds={selectedMessageIds}
               onSelectMessage={handleSelectMessage}
               modePrive={modePrive || modeEnfant}
+              modeEnfant={modeEnfant}
             />
           </div>
         </Card>
