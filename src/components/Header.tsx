@@ -385,6 +385,13 @@ export function Header(props: HeaderProps) {
               <StatusBadge active={ragEnabled} icon={Brain} tooltip="RAG actif" color="green" />
               <StatusBadge active={modeVocalAuto} icon={Mic} tooltip="Mode vocal automatique" color="blue" />
             </div>
+
+            {/* Indicateur RAG - Mobile uniquement */}
+            {ragEnabled && (
+              <div className="lg:hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
+                <Brain className="w-3.5 h-3.5" /> RAG
+              </div>
+            )}
           </div>
 
           {/* Actions principales - Desktop */}
