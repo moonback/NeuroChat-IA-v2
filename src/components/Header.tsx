@@ -311,14 +311,18 @@ export function Header(props: HeaderProps) {
         <PlusCircle className="w-4 h-4 mr-3" />
         Nouvelle discussion
       </Button>
+      {!props.modeEnfant && (
       <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onOpenHistory)}>
         <History className="w-4 h-4 mr-3" />
         Historique
       </Button>
+      )}
+      {!props.modeEnfant && (
       <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onOpenMemory)}>
         <Brain className="w-4 h-4 mr-3" />
         Mémoire
       </Button>
+      )}
       
       {hasActiveConversation && (
         <>
@@ -338,19 +342,23 @@ export function Header(props: HeaderProps) {
       
       <div className="border-t border-slate-200 dark:border-slate-800 my-3" />
       
-      <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(handlePrivateModeToggle)}>
-        <Shield className="w-4 h-4 mr-3" />
-        {modePrive ? 'Désactiver mode privé' : 'Activer mode privé'}
-      </Button>
+      {!props.modeEnfant && (
+        <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(handlePrivateModeToggle)}>
+          <Shield className="w-4 h-4 mr-3" />
+          {modePrive ? 'Désactiver mode privé' : 'Activer mode privé'}
+        </Button>
+      )}
       <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(handleChildModeToggle)}>
         <Baby className="w-4 h-4 mr-3" />
         {props.modeEnfant ? 'Désactiver mode enfant' : 'Activer mode enfant'}
       </Button>
       
+      {!props.modeEnfant && (
       <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(handleRagToggle)}>
         <Brain className="w-4 h-4 mr-3" />
         {ragEnabled ? 'Désactiver RAG' : 'Activer RAG'}
       </Button>
+      )}
       
       <div className="border-t border-slate-200 dark:border-slate-800 my-3" />
     </div>
@@ -372,7 +380,7 @@ export function Header(props: HeaderProps) {
 
             {/* Indicateurs de statut - Desktop uniquement */}
             <div className="hidden lg:flex items-center gap-2">
-              <StatusBadge active={modePrive} icon={Shield} tooltip="Mode privé activé" color="red" />
+              <StatusBadge active={modePrive && !props.modeEnfant} icon={Shield} tooltip="Mode privé activé" color="red" />
               <StatusBadge active={!!props.modeEnfant} icon={Baby} tooltip="Mode enfant activé" color="blue" />
               <StatusBadge active={ragEnabled} icon={Brain} tooltip="RAG actif" color="green" />
               <StatusBadge active={modeVocalAuto} icon={Mic} tooltip="Mode vocal automatique" color="blue" />
@@ -392,10 +400,12 @@ export function Header(props: HeaderProps) {
               Historique
             </ActionButton>
 
-            <ActionButton onClick={onOpenMemory} tooltip="Ouvrir la mémoire">
-              <Brain className="w-4 h-4 mr-2" />
-              Mémoire
-            </ActionButton>
+            {!props.modeEnfant && (
+              <ActionButton onClick={onOpenMemory} tooltip="Ouvrir la mémoire">
+                <Brain className="w-4 h-4 mr-2" />
+                Mémoire
+              </ActionButton>
+            )}
 
             {/* Actions de sélection */}
             {selectionActions}
@@ -413,28 +423,32 @@ export function Header(props: HeaderProps) {
                 {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
               </IconButton>
 
-              <IconButton
-                variant={modeVocalAuto ? 'default' : 'ghost'}
-                onClick={handleModeVocalToggle}
-                tooltip="Mode vocal automatique"
-                className={modeVocalAuto 
-                  ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 ring-1 ring-blue-400/30 animate-pulse' 
-                  : ''
-                }
-              >
-                <Mic className="w-4 h-4" />
-              </IconButton>
+              {!props.modeEnfant && (
+                <IconButton
+                  variant={modeVocalAuto ? 'default' : 'ghost'}
+                  onClick={handleModeVocalToggle}
+                  tooltip="Mode vocal automatique"
+                  className={modeVocalAuto 
+                    ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 ring-1 ring-blue-400/30 animate-pulse' 
+                    : ''
+                  }
+                >
+                  <Mic className="w-4 h-4" />
+                </IconButton>
+              )}
             </ButtonGroup>
 
             {/* Modes IA */}
             <ButtonGroup>
-              <IconButton
-                variant={modePrive ? 'destructive' : 'ghost'}
-                onClick={handlePrivateModeToggle}
-                tooltip="Mode privé"
-              >
-                <Shield className="w-4 h-4" />
-              </IconButton>
+              {!props.modeEnfant && (
+                <IconButton
+                  variant={modePrive ? 'destructive' : 'ghost'}
+                  onClick={handlePrivateModeToggle}
+                  tooltip="Mode privé"
+                >
+                  <Shield className="w-4 h-4" />
+                </IconButton>
+              )}
               <IconButton
                 variant={props.modeEnfant ? 'default' : 'ghost'}
                 onClick={handleChildModeToggle}
@@ -443,31 +457,35 @@ export function Header(props: HeaderProps) {
                 <Baby className="w-4 h-4" />
               </IconButton>
               
-              <IconButton
-                variant={ragEnabled ? 'default' : 'ghost'}
-                onClick={handleRagToggle}
-                tooltip="Recherche documentaire (RAG)"
-              >
-                <Brain className="w-4 h-4" />
-              </IconButton>
+              {!props.modeEnfant && (
+                <IconButton
+                  variant={ragEnabled ? 'default' : 'ghost'}
+                  onClick={handleRagToggle}
+                  tooltip="Recherche documentaire (RAG)"
+                >
+                  <Brain className="w-4 h-4" />
+                </IconButton>
+              )}
             </ButtonGroup>
 
             {/* Réglages */}
-            <ButtonGroup>
-              <IconButton
-                onClick={toggleTheme}
-                tooltip={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
-              >
-                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </IconButton>
+            {!props.modeEnfant && (
+              <ButtonGroup>
+                <IconButton
+                  onClick={toggleTheme}
+                  tooltip={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+                >
+                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </IconButton>
 
-              <IconButton
-                onClick={() => setShowMobileMenu(true)}
-                tooltip="Plus d'options"
-              >
-                <Settings2 className="w-4 h-4" />
-              </IconButton>
-            </ButtonGroup>
+                <IconButton
+                  onClick={() => setShowMobileMenu(true)}
+                  tooltip="Plus d'options"
+                >
+                  <Settings2 className="w-4 h-4" />
+                </IconButton>
+              </ButtonGroup>
+            )}
           </div>
 
           {/* Menu mobile button */}
@@ -498,20 +516,24 @@ export function Header(props: HeaderProps) {
             </div>
 
             <div className="space-y-3">
-              {mobileMenuActions}
+              {!props.modeEnfant && mobileMenuActions}
 
               {/* Options toujours visibles */}
-              <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onOpenTTSSettings)}>
-                <Settings2 className="w-4 h-4 mr-3" />
-                Réglages synthèse vocale
-              </Button>
+              {!props.modeEnfant && (
+                <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onOpenTTSSettings)}>
+                  <Settings2 className="w-4 h-4 mr-3" />
+                  Réglages synthèse vocale
+                </Button>
+              )}
 
-              <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onOpenRagDocs)}>
-                <BookOpen className="w-4 h-4 mr-3" />
-                Documents RAG
-              </Button>
+              {!props.modeEnfant && (
+                <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onOpenRagDocs)}>
+                  <BookOpen className="w-4 h-4 mr-3" />
+                  Documents RAG
+                </Button>
+              )}
 
-              {props.onOpenChildPinSettings && (
+              {!props.modeEnfant && props.onOpenChildPinSettings && (
                 <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(props.onOpenChildPinSettings)}>
                   <Settings2 className="w-4 h-4 mr-3" />
                   Changer le PIN (mode enfant)
@@ -519,7 +541,7 @@ export function Header(props: HeaderProps) {
               )}
 
               {/* Sélecteur de provider IA */}
-              {onChangeProvider && (
+              {!props.modeEnfant && onChangeProvider && (
                 <div className="flex items-center gap-2">
                   <Button
                     variant={provider === 'gemini' ? 'default' : 'ghost'}
@@ -538,14 +560,14 @@ export function Header(props: HeaderProps) {
                 </div>
               )}
 
-              {onOpenGeminiSettings && provider === 'gemini' && (
+              {!props.modeEnfant && onOpenGeminiSettings && provider === 'gemini' && (
                 <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onOpenGeminiSettings)}>
                   <Settings2 className="w-4 h-4 mr-3" />
                   Réglages Gemini
                 </Button>
               )}
 
-              {provider === 'openai' && (
+              {!props.modeEnfant && provider === 'openai' && (
                 <Button
                   variant="ghost"
                   className="w-full justify-start h-10"
@@ -556,10 +578,12 @@ export function Header(props: HeaderProps) {
                 </Button>
               )}
 
-              <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(toggleTheme)}>
-                {theme === 'dark' ? <Sun className="w-4 h-4 mr-3" /> : <Moon className="w-4 h-4 mr-3" />}
-                {theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
-              </Button>
+              {!props.modeEnfant && (
+                <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(toggleTheme)}>
+                  {theme === 'dark' ? <Sun className="w-4 h-4 mr-3" /> : <Moon className="w-4 h-4 mr-3" />}
+                  {theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+                </Button>
+              )}
             </div>
           </div>
         </DialogContent>

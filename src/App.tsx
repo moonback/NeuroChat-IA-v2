@@ -171,6 +171,8 @@ function App() {
     try {
       localStorage.setItem('mode_enfant', modeEnfant ? 'true' : 'false');
     } catch {}
+    // En mode enfant, forcer le mode privé à false
+    if (modeEnfant && modePrive) setModePrive(false);
   }, [modeEnfant]);
 
   // --- Gestion de l'historique des discussions ---
@@ -224,6 +226,13 @@ function App() {
   useEffect(() => {
     localStorage.setItem('gemini_presets', JSON.stringify(presets));
   }, [presets]);
+
+  // En mode enfant, forcer RAG OFF et empêcher l'ouverture des réglages
+  useEffect(() => {
+    if (modeEnfant && ragEnabled) {
+      setRagEnabled(false);
+    }
+  }, [modeEnfant]);
 
   // Sauvegarder une discussion dans l'historique (sans doublons consécutifs)
   const saveDiscussionToHistory = (discussion: Message[]) => {
@@ -429,9 +438,9 @@ function App() {
     // D'abord détecter si c'est une commande mémoire
     const parsed = parseMemoryCommand(userMessage);
     if (!parsed) return false;
-    // Si c'est une commande mémoire, bloquer en mode privé
-    if (modePrive) {
-      addMessage('🔒 Mode privé actif — fonctionnalités mémoire désactivées.', false);
+    // Si c'est une commande mémoire, bloquer en mode privé ou enfant
+    if (modePrive || modeEnfant) {
+      addMessage('🔒 Mode restreint actif — fonctionnalités mémoire désactivées.', false);
       return true;
     }
     // Log le message utilisateur
@@ -998,7 +1007,7 @@ ${lines.join('\n')}`, false);
           hasActiveConversation={messages.length > 0}
           ragEnabled={ragEnabled}
           setRagEnabled={setRagEnabled}
-          onOpenGeminiSettings={() => setShowGeminiSettings(true)}
+          onOpenGeminiSettings={() => { if (!modeEnfant) setShowGeminiSettings(true); }}
           geminiConfig={geminiConfig}
           provider={provider}
           onChangeProvider={(p) => { setProvider(p); localStorage.setItem('llm_provider', p); }}
@@ -1034,8 +1043,8 @@ ${lines.join('\n')}`, false);
           onDeleteConfirmed={handleDeleteMultipleMessages}
         />
 
-        {/* Indicateur visuel du mode privé SOUS le header, centré */}
-        <PrivateModeBanner visible={modePrive} />
+        {/* Indicateur visuel du mode privé SOUS le header, centré (caché en mode enfant) */}
+        <PrivateModeBanner visible={modePrive && !modeEnfant} />
         {/* Indicateur visuel du mode enfant */}
         <ChildModeBanner visible={modeEnfant} />
 
@@ -1096,7 +1105,7 @@ ${lines.join('\n')}`, false);
 
       <Suspense fallback={null}>
         <TTSSettingsModalLazy
-          open={showTTSSettings}
+          open={modeEnfant ? false : showTTSSettings}
           onClose={() => setShowTTSSettings(false)}
           rate={rate}
           setRate={setRate}
@@ -1127,13 +1136,13 @@ ${lines.join('\n')}`, false);
       {/* Suppression de l'overlay de timeline car affichage inline dans VoiceInput */}
       {/* Modale de gestion des documents RAG */}
       <Suspense fallback={null}>
-        <RagDocsModalLazy open={showRagDocs} onClose={() => setShowRagDocs(false)} />
+        <RagDocsModalLazy open={modeEnfant ? false : showRagDocs} onClose={() => setShowRagDocs(false)} />
       </Suspense>
 
       {/* Modale de gestion de la mémoire */}
       <Suspense fallback={null}>
         {/** Import dynamique pour garder le bundle initial léger */}
-        {showMemory && (
+        {!modeEnfant && showMemory && (
           <MemoryModalLazy open={showMemory} onClose={() => setShowMemory(false)} />
         )}
       </Suspense>
@@ -1154,8 +1163,8 @@ ${lines.join('\n')}`, false);
       {/* Réglages OpenAI */}
       <Suspense fallback={null}>
         <OpenAISettingsDrawerLazy
-          open={showOpenAISettings}
-          onOpenChange={setShowOpenAISettings}
+          open={modeEnfant ? false : showOpenAISettings}
+          onOpenChange={(open) => !modeEnfant && setShowOpenAISettings(open)}
           openaiConfig={openaiConfig}
           onConfigChange={(key, value) => setOpenaiConfig(cfg => ({ ...cfg, [key]: value }))}
           onReset={() => setOpenaiConfig({ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' })}
