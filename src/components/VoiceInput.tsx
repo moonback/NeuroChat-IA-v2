@@ -389,32 +389,7 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
                 </div>
               )}
 
-              {/* Indicateur de chargement amélioré
-               {isLoading && (
-                 <div className="mt-3 animate-in slide-in-from-bottom-4 fade-in-0 duration-300">
-                  <div className="flex items-center justify-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-blue-50/90 via-indigo-50/90 to-blue-50/90 dark:from-blue-950/50 dark:via-indigo-950/50 dark:to-blue-950/50 border border-blue-200/60 dark:border-blue-800/60 shadow-xl backdrop-blur-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-                        <div className="absolute inset-0 bg-blue-500/20 rounded-full animate-ping" />
-                      </div>
-                      <div className="text-center sm:text-left">
-                        <div className="text-base font-semibold text-blue-700 dark:text-blue-300">
-                          Traitement en cours...
-                        </div>
-                        <div className="text-sm text-blue-600/80 dark:text-blue-400/80">
-                          Analyse et génération de la réponse
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-blue-100/60 dark:bg-blue-900/40 rounded-xl border border-blue-200/40 dark:border-blue-700/40">
-                      <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400 animate-pulse" />
-                      <span className="text-sm font-medium text-blue-700 dark:text-blue-300">IA</span>
-                    </div>
-                  </div>
-                </div>
-              )} */}
+            
             </div>
           </div>
         </div>
