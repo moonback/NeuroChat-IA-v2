@@ -367,6 +367,12 @@ export function Header(props: HeaderProps) {
         {ragEnabled ? 'Désactiver RAG' : 'Activer RAG'}
       </Button>
       )}
+      {!props.modeEnfant && (
+      <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(handleWebToggle)}>
+        <Wifi className="w-4 h-4 mr-3" />
+        {webEnabled ? 'Désactiver recherche web' : 'Activer recherche web'}
+      </Button>
+      )}
       
       <div className="border-t border-slate-200 dark:border-slate-800 my-3" />
     </div>
@@ -395,10 +401,15 @@ export function Header(props: HeaderProps) {
               <StatusBadge active={modeVocalAuto} icon={Mic} tooltip="Mode vocal automatique" color="blue" />
             </div>
 
-            {/* Indicateur RAG - Mobile uniquement */}
+            {/* Indicateurs mobiles compacts */}
             {ragEnabled && (
               <div className="lg:hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
                 <Brain className="w-3.5 h-3.5" /> RAG
+              </div>
+            )}
+            {webEnabled && (
+              <div className="lg:hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60">
+                <Wifi className="w-3.5 h-3.5" /> Web
               </div>
             )}
           </div>
