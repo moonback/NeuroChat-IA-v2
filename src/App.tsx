@@ -43,6 +43,7 @@ interface Message {
 interface Discussion {
   title: string;
   messages: Message[];
+  childMode?: boolean;
 }
 
 // Ajout d'un type spécial pour les messages contextuels RAG
@@ -248,6 +249,7 @@ function App() {
           history = parsed.map((msgs: Message[], idx: number) => ({
             title: `Discussion ${idx + 1}`,
             messages: msgs,
+            childMode: false,
           }));
         } else {
           history = parsed;
@@ -263,7 +265,12 @@ function App() {
       return true;
     };
     if (history.length === 0 || !isSame(history[history.length - 1].messages, discussion)) {
-      history.push({ title: `Discussion ${history.length + 1}`, messages: discussion });
+      // Titre par défaut: 1er message utilisateur tronqué ou date
+      const firstUser = discussion.find(m => m.isUser)?.text || '';
+      const defaultTitle = firstUser
+        ? (firstUser.length > 40 ? firstUser.slice(0, 40) + '…' : firstUser)
+        : new Date().toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+      history.push({ title: defaultTitle, messages: discussion, childMode: modeEnfant });
       localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(history));
     }
   };
@@ -732,7 +739,14 @@ ${lines.join('\n')}`, false);
   // Renommer une discussion (compatible avec le nouveau composant)
   const handleRenameDiscussion = (idx: number, newTitle: string) => {
     const newHistory = [...historyList];
-    newHistory[idx] = { ...newHistory[idx], title: newTitle || `Discussion ${idx + 1}` };
+    if (!newTitle.trim()) {
+      // Recalcul de titre par défaut depuis le 1er message utilisateur
+      const firstUser = newHistory[idx].messages.find(m => m.isUser)?.text || '';
+      newTitle = firstUser
+        ? (firstUser.length > 40 ? firstUser.slice(0, 40) + '…' : firstUser)
+        : `Conversation ${idx + 1}`;
+    }
+    newHistory[idx] = { ...newHistory[idx], title: newTitle };
     setHistoryList(newHistory);
     localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newHistory));
   };
