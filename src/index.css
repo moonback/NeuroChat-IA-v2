@@ -451,3 +451,63 @@ button:active {
     border: 2px solid rgba(255, 255, 255, 0.8);
   }
 }
+
+/* Horizon glow at the bottom of the home page */
+.bottom-horizon-glow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -18vh;
+  height: 60vh;
+  pointer-events: none;
+  background: radial-gradient(60% 50% at 50% 100%, rgba(59, 130, 246, 0.55) 0%, rgba(59, 130, 246, 0.35) 25%, rgba(99, 102, 241, 0.25) 40%, transparent 70%);
+  filter: blur(36px);
+  opacity: 0.9;
+}
+
+.dark .bottom-horizon-glow {
+  background: radial-gradient(60% 50% at 50% 100%, rgba(37, 99, 235, 0.35) 0%, rgba(59, 130, 246, 0.25) 30%, transparent 70%);
+  filter: blur(44px);
+  opacity: 0.85;
+}
+
+/* Glow au-dessus du titre de la page d'accueil */
+.hero-top-glow {
+  position: absolute;
+  top: -48px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(900px, 85%);
+  height: 180px;
+  pointer-events: none;
+  background: radial-gradient(60% 65% at 50% 30%, rgba(59, 130, 246, 0.35) 0%, rgba(99, 102, 241, 0.28) 35%, transparent 70%);
+  filter: blur(28px);
+  opacity: 0.9;
+  z-index: 0;
+}
+
+.dark .hero-top-glow {
+  background: radial-gradient(60% 65% at 50% 30%, rgba(37, 99, 235, 0.28) 0%, rgba(59, 130, 246, 0.22) 35%, transparent 70%);
+  filter: blur(36px);
+  opacity: 0.85;
+}
+
+/* Glow complémentaire en bas à gauche du héros */
+.hero-bottom-left-glow {
+  position: absolute;
+  left: -100px;
+  bottom: -100px;
+  width: 420px;
+  height: 220px;
+  pointer-events: none;
+  background: radial-gradient(65% 70% at 20% 80%, rgba(139, 92, 246, 0.35) 0%, rgba(99, 102, 241, 0.28) 35%, transparent 75%);
+  filter: blur(30px);
+  opacity: 0.9;
+  z-index: 0;
+}
+
+.dark .hero-bottom-left-glow {
+  background: radial-gradient(65% 70% at 20% 80%, rgba(124, 58, 237, 0.28) 0%, rgba(99, 102, 241, 0.22) 35%, transparent 75%);
+  filter: blur(36px);
+  opacity: 0.85;
+}

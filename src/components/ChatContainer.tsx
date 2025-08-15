@@ -140,11 +140,16 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[400px] text-center px-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
+              <div className="flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[400px] text-center px-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-700 relative">
                 
                 {/* Avatar retiré */}
                 
-                <div className="max-w-2xl mx-auto space-y-6">
+                {/* Halo décoratif au-dessus du titre */}
+                <div className="hero-top-glow" aria-hidden="true" />
+                {/* Halo en bas à gauche */}
+                <div className="hero-bottom-left-glow" aria-hidden="true" />
+
+                <div className="max-w-2xl mx-auto space-y-6 relative z-10">
                   <div className="space-y-3">
                     <h2 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
                       Bienvenue sur NeuroChat
