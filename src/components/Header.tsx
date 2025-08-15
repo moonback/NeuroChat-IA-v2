@@ -5,7 +5,7 @@ import { useTheme } from '@/hooks/useTheme';
 import {
   MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, 
   PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, 
-  Trash2, Menu, X, Wifi, WifiOff
+  Trash2, Menu, X, Wifi, WifiOff, Code2
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
@@ -44,6 +44,8 @@ interface HeaderProps {
   showConfirmDelete: boolean;
   setShowConfirmDelete: (open: boolean) => void;
   onDeleteConfirmed: () => void;
+  modeCode?: boolean;
+  setModeCode?: (v: boolean) => void;
 }
 
 // =====================
@@ -221,7 +223,8 @@ export function Header(props: HeaderProps) {
     hasActiveConversation, ragEnabled, setRagEnabled, onOpenGeminiSettings,
     provider, onChangeProvider, modePrive, setModePrive, selectMode,
     onToggleSelectMode, selectedCount, totalCount, onSelectAll, onDeselectAll,
-    onRequestDelete, showConfirmDelete, setShowConfirmDelete, onDeleteConfirmed
+    onRequestDelete, showConfirmDelete, setShowConfirmDelete, onDeleteConfirmed,
+    modeCode = false, setModeCode
   } = props;
 
   const { theme, toggleTheme } = useTheme();
@@ -245,6 +248,10 @@ export function Header(props: HeaderProps) {
   const handleRagToggle = useCallback(() => {
     setRagEnabled(!ragEnabled);
   }, [ragEnabled, setRagEnabled]);
+
+  const handleCodeModeToggle = useCallback(() => {
+    if (setModeCode) setModeCode(!modeCode);
+  }, [modeCode, setModeCode]);
 
   const closeMobileMenu = useCallback(() => {
     setShowMobileMenu(false);
@@ -335,6 +342,11 @@ export function Header(props: HeaderProps) {
         <Shield className="w-4 h-4 mr-3" />
         {modePrive ? 'Désactiver mode privé' : 'Activer mode privé'}
       </Button>
+
+      <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(handleCodeModeToggle)}>
+        <Code2 className="w-4 h-4 mr-3" />
+        {modeCode ? 'Désactiver mode code' : 'Activer mode code'}
+      </Button>
       
       <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(handleRagToggle)}>
         <Brain className="w-4 h-4 mr-3" />
@@ -363,6 +375,7 @@ export function Header(props: HeaderProps) {
             <div className="hidden lg:flex items-center gap-2">
               <StatusBadge active={modePrive} icon={Shield} tooltip="Mode privé activé" color="red" />
               <StatusBadge active={ragEnabled} icon={Brain} tooltip="RAG actif" color="green" />
+              <StatusBadge active={modeCode} icon={Code2} tooltip="Mode code activé" color="blue" />
               <StatusBadge active={modeVocalAuto} icon={Mic} tooltip="Mode vocal automatique" color="blue" />
             </div>
           </div>
@@ -424,6 +437,14 @@ export function Header(props: HeaderProps) {
                 <Shield className="w-4 h-4" />
               </IconButton>
               
+              <IconButton
+                variant={modeCode ? 'default' : 'ghost'}
+                onClick={handleCodeModeToggle}
+                tooltip="Mode code"
+              >
+                <Code2 className="w-4 h-4" />
+              </IconButton>
+
               <IconButton
                 variant={ragEnabled ? 'default' : 'ghost'}
                 onClick={handleRagToggle}

@@ -24,7 +24,9 @@ const OpenAISettingsDrawerLazy = lazy(() => import('@/components/OpenAISettingsD
 // Retrait du sélecteur de personnalités
 
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
+import { CodeModeBanner } from '@/components/CodeModeBanner';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
+import { CodeEditorPanel } from '@/components/CodeEditorPanel';
 
 // Timeline retirée
 
@@ -145,6 +147,8 @@ function App() {
 
   // --- Mode privé/éphémère ---
   const [modePrive, setModePrive] = useState(false);
+  // --- Mode code ---
+  const [modeCode, setModeCode] = useState(false);
   // --- Timeline de raisonnement ---
   // Timeline retirée
   // Affichage d'un toast d'avertissement lors de l'activation
@@ -295,6 +299,12 @@ function App() {
     };
     setMessages(prev => [...prev, message]);
     return message;
+  };
+
+  // Envoi d’un bloc de code depuis l’éditeur
+  const handleSendCodeSnippet = (code: string, language: 'javascript' | 'typescript' | 'python' | 'html' | 'css' | 'json') => {
+    const fenced = `\n\n\`\`\`${language === 'typescript' ? 'ts' : language === 'javascript' ? 'js' : language}\n${code}\n\`\`\`\n`;
+    handleSendMessage(fenced);
   };
 
   // Prompt système avec règles additionnelles en mode privé
@@ -964,16 +974,24 @@ ${lines.join('\n')}`, false);
           showConfirmDelete={showConfirmDeleteMultiple}
           setShowConfirmDelete={setShowConfirmDeleteMultiple}
           onDeleteConfirmed={handleDeleteMultipleMessages}
+          modeCode={modeCode}
+          setModeCode={setModeCode}
         />
 
-        {/* Indicateur visuel du mode privé SOUS le header, centré */}
+        {/* Indicateurs visuels SOUS le header, centrés */}
         <PrivateModeBanner visible={modePrive} />
+        <CodeModeBanner visible={modeCode} />
 
 
 
         {/* Enhanced Chat Interface */}
         <Card className="flex-1 flex flex-col shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl overflow-hidden ring-1 ring-white/20 dark:ring-slate-700/20 relative">
           <div className="flex-1 overflow-y-auto" style={{ paddingBottom: inputHeight }}>
+            {modeCode && (
+              <div className="p-3 sm:p-4">
+                <CodeEditorPanel onSend={handleSendCodeSnippet} />
+              </div>
+            )}
             <ChatContainer
               messages={messages}
               isLoading={isLoading}
@@ -987,6 +1005,7 @@ ${lines.join('\n')}`, false);
               selectedMessageIds={selectedMessageIds}
               onSelectMessage={handleSelectMessage}
               modePrive={modePrive}
+              modeCode={modeCode}
             />
           </div>
         </Card>

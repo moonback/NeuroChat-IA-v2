@@ -42,9 +42,10 @@ interface ChatContainerProps {
   selectedMessageIds?: string[]; // Ajouté
   onSelectMessage?: (id: string) => void; // Ajouté
   modePrive?: boolean; // Ajouté
+  modeCode?: boolean; // Ajouté
 }
 
-export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMessage, onReplyToMessage, selectMode = false, selectedMessageIds = [], onSelectMessage, modePrive = false }: ChatContainerProps) {
+export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMessage, onReplyToMessage, selectMode = false, selectedMessageIds = [], onSelectMessage, modePrive = false, modeCode = false }: ChatContainerProps) {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(true);
@@ -90,7 +91,8 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
     <div
       className={cn(
         "flex-1 relative bg-gradient-to-br from-slate-50/80 via-white/90 to-blue-50/60 dark:from-slate-900/80 dark:via-slate-900/90 dark:to-slate-800/60 backdrop-blur-xl",
-        modePrive && "ring-2 ring-red-400/40 shadow-2xl shadow-red-400/20 bg-gradient-to-br from-red-50/20 via-white/90 to-purple-50/30 dark:from-red-950/20 dark:via-slate-900/90 dark:to-purple-950/30"
+        modePrive && "ring-2 ring-red-400/40 shadow-2xl shadow-red-400/20 bg-gradient-to-br from-red-50/20 via-white/90 to-purple-50/30 dark:from-red-950/20 dark:via-slate-900/90 dark:to-purple-950/30",
+        modeCode && "ring-2 ring-blue-400/40 shadow-2xl shadow-blue-400/20"
       )}
       style={{
         minHeight: '0',
@@ -303,6 +305,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                         onEdit={onEditMessage ? (newText) => onEditMessage(msg.id, newText) : undefined}
                         onDelete={onDeleteMessage ? () => onDeleteMessage(msg.id) : undefined}
                         onReply={onReplyToMessage}
+                        modeCode={modeCode}
                       />
                     </div>
                   );

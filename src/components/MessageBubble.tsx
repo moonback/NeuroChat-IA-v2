@@ -5,7 +5,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'; // Added useRe
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog'; // Added AlertDialog components
 
-interface MessageBubbleProps {
+export interface MessageBubbleProps {
   message: string;
   isUser: boolean;
   timestamp: Date;
@@ -15,9 +15,10 @@ interface MessageBubbleProps {
   onDelete?: () => void; // Added onDelete prop
   onReply?: (messageContent: string) => void; // Added onReply prop, passing message content
   memoryFactsCount?: number; // New optional indicator
+  modeCode?: boolean;
 }
 
-export function MessageBubble({ message, isUser, timestamp, isLatest = false, imageUrl, onEdit, onDelete, onReply, memoryFactsCount }: MessageBubbleProps) {
+export function MessageBubble({ message, isUser, timestamp, isLatest = false, imageUrl, onEdit, onDelete, onReply, memoryFactsCount, modeCode = false }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
   const [isLiked, setIsLiked] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
@@ -237,9 +238,24 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
                 </AlertDialog>
               </div>
             ) : (
-              <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words font-medium">
-                {message}
-              </p>
+              <div className={cn(
+                "text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words",
+                modeCode ? "font-mono" : "font-medium"
+              )}>
+                {(() => {
+                  if (!modeCode) {
+                    return <p>{message}</p>;
+                  }
+                  const trimmed = (message || '').trim();
+                  const fence = /^```(?:[a-zA-Z0-9_-]+)?\n([\s\S]*?)\n```$/m.exec(trimmed);
+                  const codeOnly = fence ? fence[1] : message;
+                  return (
+                    <pre className="whitespace-pre-wrap bg-slate-900/90 text-slate-100 rounded-xl p-3 border border-slate-700/60 overflow-x-auto">
+{codeOnly}
+                    </pre>
+                  );
+                })()}
+              </div>
             )}
 
             {/* Enhanced timestamp and status */}
