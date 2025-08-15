@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Card } from '@/components/ui/card';
 import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
-import { sendMessageToGemini, GeminiGenerationConfig } from '@/services/geminiApi';
+import { GeminiGenerationConfig } from '@/services/geminiApi';
 import { sendMessage, type LlmConfig } from '@/services/llm';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { toast } from 'sonner';
@@ -24,6 +24,8 @@ const OpenAISettingsDrawerLazy = lazy(() => import('@/components/OpenAISettingsD
 // Retrait du sélecteur de personnalités
 
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
+import { ChildModeBanner } from '@/components/ChildModeBanner';
+import { ChildModePinDialog } from '@/components/ChildModePinDialog';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 
 // Timeline retirée
@@ -145,6 +147,10 @@ function App() {
 
   // --- Mode privé/éphémère ---
   const [modePrive, setModePrive] = useState(false);
+  // --- Mode enfant (protégé par PIN) ---
+  const [modeEnfant, setModeEnfant] = useState<boolean>(localStorage.getItem('mode_enfant') === 'true');
+  const [childPin, setChildPin] = useState<string>(localStorage.getItem('mode_enfant_pin') || '');
+  const [showChildPinDialog, setShowChildPinDialog] = useState<boolean>(false);
   // --- Timeline de raisonnement ---
   // Timeline retirée
   // Affichage d'un toast d'avertissement lors de l'activation
@@ -157,6 +163,13 @@ function App() {
       localStorage.setItem('mode_prive', modePrive ? 'true' : 'false');
     } catch {}
   }, [modePrive]);
+
+  // Persistance du mode enfant
+  useEffect(() => {
+    try {
+      localStorage.setItem('mode_enfant', modeEnfant ? 'true' : 'false');
+    } catch {}
+  }, [modeEnfant]);
 
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
@@ -297,6 +310,33 @@ function App() {
     return message;
   };
 
+  // Gestion PIN mode enfant
+  const handleConfirmChildPin = (pin: string) => {
+    // Si le mode est actif, on vérifie pour désactiver
+    if (modeEnfant) {
+      if (pin && childPin && pin === childPin) {
+        setModeEnfant(false);
+        setShowChildPinDialog(false);
+      } else {
+        toast.error('Code PIN incorrect.');
+      }
+      return;
+    }
+    // Si le mode est inactif, définir le PIN si vide et activer
+    if (!childPin) {
+      if (!pin || pin.length < 4) {
+        toast.error('Choisis un code PIN d’au moins 4 chiffres.');
+        return;
+      }
+      setChildPin(pin);
+      try { localStorage.setItem('mode_enfant_pin', pin); } catch {}
+    }
+    setModeEnfant(true);
+    setShowChildPinDialog(false);
+  };
+
+  const handleCloseChildPin = () => setShowChildPinDialog(false);
+
   // Prompt système avec règles additionnelles en mode privé
   const getSystemPrompt = () => {
     const base = SYSTEM_PROMPT;
@@ -310,6 +350,17 @@ function App() {
         "- Si l’utilisateur demande des fonctions liées à la mémoire, précise poliment que la mémoire est désactivée en mode privé."
       ].join('\n');
       return `${base}\n\n${privateBlock}`;
+    }
+    if (modeEnfant) {
+      const childBlock = [
+        'MODE ENFANT ACTIF :',
+        '- Utilise un ton chaleureux, simple et ludique adapté aux enfants.',
+        '- Évite les sujets sensibles, violents ou inappropriés. Redirige vers des thèmes éducatifs et bienveillants.',
+        "- Privilégie des explications courtes avec des exemples concrets, des analogies et des mini-jeux (devinettes, quiz).",
+        "- Demande l'avis d'un adulte pour toute action qui pourrait nécessiter une supervision (ex: télécharger, acheter, partager).",
+        '- N’inclus pas de liens externes bruts; si nécessaire, mentionne de demander à un adulte.'
+      ].join('\n');
+      return `${base}\n\n${childBlock}`;
     }
     return base;
   };
@@ -951,6 +1002,20 @@ ${lines.join('\n')}`, false);
           onChangeProvider={(p) => { setProvider(p); localStorage.setItem('llm_provider', p); }}
           modePrive={modePrive}
           setModePrive={setModePrive}
+          modeEnfant={modeEnfant}
+          onToggleModeEnfant={() => {
+            // Si on désactive alors qu'il est actif -> demander le PIN
+            if (modeEnfant) {
+              setShowChildPinDialog(true);
+              return;
+            }
+            // Si on active et qu'aucun PIN n'est défini -> demander un nouveau PIN
+            if (!childPin) {
+              setShowChildPinDialog(true);
+            } else {
+              setModeEnfant(true);
+            }
+          }}
           selectMode={selectMode}
           onToggleSelectMode={handleToggleSelectMode}
           selectedCount={selectedMessageIds.length}
@@ -968,6 +1033,8 @@ ${lines.join('\n')}`, false);
 
         {/* Indicateur visuel du mode privé SOUS le header, centré */}
         <PrivateModeBanner visible={modePrive} />
+        {/* Indicateur visuel du mode enfant */}
+        <ChildModeBanner visible={modeEnfant} />
 
 
 
@@ -986,11 +1053,21 @@ ${lines.join('\n')}`, false);
               selectMode={selectMode}
               selectedMessageIds={selectedMessageIds}
               onSelectMessage={handleSelectMessage}
-              modePrive={modePrive}
+              modePrive={modePrive || modeEnfant}
             />
           </div>
         </Card>
       </div>
+
+      {/* Dialog PIN pour activer/désactiver le mode enfant */}
+      <ChildModePinDialog
+        open={showChildPinDialog}
+        modeActive={modeEnfant}
+        onClose={handleCloseChildPin}
+        onConfirmPin={handleConfirmChildPin}
+        requireToDisable
+        minLength={4}
+      />
 
       {/* Zone de saisie fixée en bas de l'écran */}
       <div id="voice-input-wrapper" ref={voiceInputContainerRef} className="fixed bottom-0 left-0 w-full z-50 bg-white/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-700 px-2 pt-2 pb-2 backdrop-blur-xl">

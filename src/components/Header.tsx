@@ -5,7 +5,7 @@ import { useTheme } from '@/hooks/useTheme';
 import {
   MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, 
   PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, 
-  Trash2, Menu, X, Wifi, WifiOff
+  Trash2, Menu, X, Wifi, WifiOff, Baby
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
@@ -34,6 +34,8 @@ interface HeaderProps {
   onChangeProvider?: (p: 'gemini' | 'openai') => void;
   modePrive: boolean;
   setModePrive: (v: boolean) => void;
+  modeEnfant?: boolean;
+  onToggleModeEnfant?: () => void;
   selectMode: boolean;
   onToggleSelectMode: () => void;
   selectedCount: number;
@@ -246,6 +248,10 @@ export function Header(props: HeaderProps) {
     setRagEnabled(!ragEnabled);
   }, [ragEnabled, setRagEnabled]);
 
+  const handleChildModeToggle = useCallback(() => {
+    props.onToggleModeEnfant?.();
+  }, [props.onToggleModeEnfant]);
+
   const closeMobileMenu = useCallback(() => {
     setShowMobileMenu(false);
   }, []);
@@ -335,6 +341,10 @@ export function Header(props: HeaderProps) {
         <Shield className="w-4 h-4 mr-3" />
         {modePrive ? 'Désactiver mode privé' : 'Activer mode privé'}
       </Button>
+      <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(handleChildModeToggle)}>
+        <Baby className="w-4 h-4 mr-3" />
+        {props.modeEnfant ? 'Désactiver mode enfant' : 'Activer mode enfant'}
+      </Button>
       
       <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(handleRagToggle)}>
         <Brain className="w-4 h-4 mr-3" />
@@ -343,7 +353,7 @@ export function Header(props: HeaderProps) {
       
       <div className="border-t border-slate-200 dark:border-slate-800 my-3" />
     </div>
-  ), [hasActiveConversation, selectMode, selectedCount, modePrive, ragEnabled, handleMenuAction, onNewDiscussion, onOpenHistory, onOpenMemory, onToggleSelectMode, onRequestDelete, handlePrivateModeToggle, handleRagToggle]);
+  ), [hasActiveConversation, selectMode, selectedCount, modePrive, ragEnabled, props.modeEnfant, handleMenuAction, onNewDiscussion, onOpenHistory, onOpenMemory, onToggleSelectMode, onRequestDelete, handlePrivateModeToggle, handleChildModeToggle, handleRagToggle]);
 
   return (
     <header className="w-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 sticky top-0 z-50">
@@ -362,6 +372,7 @@ export function Header(props: HeaderProps) {
             {/* Indicateurs de statut - Desktop uniquement */}
             <div className="hidden lg:flex items-center gap-2">
               <StatusBadge active={modePrive} icon={Shield} tooltip="Mode privé activé" color="red" />
+              <StatusBadge active={!!props.modeEnfant} icon={Baby} tooltip="Mode enfant activé" color="blue" />
               <StatusBadge active={ragEnabled} icon={Brain} tooltip="RAG actif" color="green" />
               <StatusBadge active={modeVocalAuto} icon={Mic} tooltip="Mode vocal automatique" color="blue" />
             </div>
@@ -422,6 +433,13 @@ export function Header(props: HeaderProps) {
                 tooltip="Mode privé"
               >
                 <Shield className="w-4 h-4" />
+              </IconButton>
+              <IconButton
+                variant={props.modeEnfant ? 'default' : 'ghost'}
+                onClick={handleChildModeToggle}
+                tooltip="Mode enfant"
+              >
+                <Baby className="w-4 h-4" />
               </IconButton>
               
               <IconButton
