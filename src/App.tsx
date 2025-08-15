@@ -577,6 +577,33 @@ ${lines.join('\n')}`, false);
       // LOG réponse Gemini
       // console.log('[Réponse Gemini]', response);
       addMessage(response, false);
+      // Si la réponse contient des blocs de code, les envoyer dans l'éditeur
+      try {
+        const codeBlocks: { lang?: string; code: string }[] = [];
+        const regex = /```([\w-]+)?\n([\s\S]*?)```/g;
+        let match: RegExpExecArray | null;
+        while ((match = regex.exec(response)) !== null) {
+          const lang = (match[1] || '').trim();
+          const code = (match[2] || '').trim();
+          if (code) codeBlocks.push({ lang, code });
+        }
+        if (codeBlocks.length > 0) {
+          // Activer automatiquement le mode code
+          setModeCode(true);
+          // Insérer dans l'éditeur: remplacer avec le premier bloc, puis ajouter les suivants
+          codeBlocks.forEach((blk, idx) => {
+            try {
+              document.dispatchEvent(new CustomEvent('code-editor:insert' as any, {
+                detail: {
+                  code: blk.code,
+                  language: blk.lang,
+                  replace: idx === 0,
+                }
+              } as any));
+            } catch {}
+          });
+        }
+      } catch {}
       
       // Indiquer que l'IA commence à parler
       setIsAISpeaking(true);

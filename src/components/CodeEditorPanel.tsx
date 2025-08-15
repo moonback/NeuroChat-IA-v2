@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
@@ -73,6 +73,43 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({ className, onS
     if (!code.trim()) return;
     onSend?.(code, language);
   };
+
+  // Réception d’instructions pour insérer du code depuis l’extérieur (LLM)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ev = e as CustomEvent<{ code: string; language?: string; replace?: boolean }>;
+      const incoming = (ev.detail?.code || '').toString();
+      if (!incoming) return;
+      const langRaw = (ev.detail?.language || '').toLowerCase();
+      const toKey = (s: string): LanguageKey | null => {
+        switch (s) {
+          case 'ts':
+          case 'typescript':
+            return 'typescript';
+          case 'js':
+          case 'jsx':
+          case 'javascript':
+            return 'javascript';
+          case 'py':
+          case 'python':
+            return 'python';
+          case 'html':
+            return 'html';
+          case 'css':
+            return 'css';
+          case 'json':
+            return 'json';
+          default:
+            return null;
+        }
+      };
+      const mapped = toKey(langRaw);
+      if (mapped) setLanguage(mapped);
+      setCode(prev => (ev.detail?.replace ? incoming : (prev ? prev + '\n\n' + incoming : incoming)));
+    };
+    document.addEventListener('code-editor:insert' as any, handler as any);
+    return () => document.removeEventListener('code-editor:insert' as any, handler as any);
+  }, []);
 
   return (
     <div className={cn(
