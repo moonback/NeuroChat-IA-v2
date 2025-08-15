@@ -333,7 +333,7 @@ export async function extractFactsLLM(text: string): Promise<ExtractedFact[]> {
       gemini: gen,
       openai: { temperature: gen.temperature, top_p: gen.topP, max_tokens: gen.maxOutputTokens, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' },
     };
-    const response = await sendMessage(llmCfg, [{ text, isUser: true }], undefined, system);
+    const response = await sendMessage(llmCfg, [{ text, isUser: true }], undefined, system, { soft: true });
     const jsonStart = response.indexOf('[');
     const jsonEnd = response.lastIndexOf(']');
     if (jsonStart === -1 || jsonEnd === -1) return [];

@@ -14,9 +14,10 @@ export async function sendMessage(
   messages: Array<{ text: string; isUser: boolean }>,
   images: File[] | undefined,
   systemPrompt: string,
+  options?: { soft?: boolean },
 ): Promise<string> {
   if (cfg.provider === 'gemini') {
-    return sendMessageToGemini(messages, images, systemPrompt, cfg.gemini);
+    return sendMessageToGemini(messages, images, systemPrompt, cfg.gemini, options);
   }
   return sendMessageToOpenAI(messages, images, systemPrompt, cfg.openai);
 }

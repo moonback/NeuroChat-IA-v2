@@ -98,6 +98,8 @@ function App() {
   const [showMemory, setShowMemory] = useState(false);
   // Ajout du state pour activer/désactiver le RAG
   const [ragEnabled, setRagEnabled] = useState(false);
+  // Ajout du state pour activer/désactiver la recherche web
+  const [webEnabled, setWebEnabled] = useState<boolean>(false);
   // Documents RAG utilisés dans la conversation courante
   const [usedRagDocs, setUsedRagDocs] = useState<Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }>>([]);
   // Sidebar RAG mobile
@@ -569,6 +571,22 @@ ${lines.join('\n')}`, false);
         });
       }
     }
+    // Étape Web : recherche en ligne (si activée)
+    let webContext = '';
+    try {
+      if (webEnabled) {
+        const { searchWeb } = await import('@/services/webSearch');
+        const webResults = await searchWeb(userMessage, 5, { enrich: false });
+        if (webResults.length > 0) {
+          webContext = 'RÉSULTATS WEB RÉCENTS :\n';
+          webResults.slice(0, 5).forEach((r, idx) => {
+            const snippet = (r.snippet || '').replace(/\s+/g, ' ').slice(0, 360);
+            webContext += `- (${idx + 1}) [${r.title}] ${snippet}\nSource: ${r.url}\n`;
+          });
+          webContext += '\n';
+        }
+      }
+    } catch {}
     // Ajoute le message utilisateur localement
     const newMessage = addMessage(userMessage, true, imageFile);
     // Extraire et mémoriser immédiatement les faits utilisateur
@@ -631,7 +649,7 @@ ${lines.join('\n')}`, false);
 
       // Important: ne pas inclure à nouveau la question utilisateur dans le prompt système
       // pour éviter qu'elle soit envoyée deux fois au modèle.
-      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memoryContext}${ragEnabled ? ragContext : ""}`;
+      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memoryContext}${ragEnabled ? ragContext : ""}${webContext}`;
        // Timeline retirée
       // LOG prompt final
       const llmCfg: LlmConfig = {
@@ -1034,6 +1052,8 @@ ${lines.join('\n')}`, false);
           hasActiveConversation={messages.length > 0}
           ragEnabled={ragEnabled}
           setRagEnabled={setRagEnabled}
+          webEnabled={webEnabled}
+          setWebEnabled={setWebEnabled}
           onOpenGeminiSettings={() => { if (!modeEnfant) setShowGeminiSettings(true); }}
           geminiConfig={geminiConfig}
           provider={provider}
