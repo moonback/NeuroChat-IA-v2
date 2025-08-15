@@ -297,8 +297,22 @@ function App() {
     return message;
   };
 
-  // Prompt système unique (personnalités retirées)
-  const getSystemPrompt = () => SYSTEM_PROMPT;
+  // Prompt système avec règles additionnelles en mode privé
+  const getSystemPrompt = () => {
+    const base = SYSTEM_PROMPT;
+    if (modePrive) {
+      const privateBlock = [
+        'MODE PRIVÉ ACTIF :',
+        "- Ne conserve, n'invoque ni ne fais référence à aucune mémoire ou historique.",
+        "- Ne propose pas de sauvegarder des informations personnelles.",
+        "- Évite de demander des données sensibles (email, téléphone, adresse, identifiants). Si nécessaire, demande un consentement explicite et propose des alternatives.",
+        "- Réponds de manière concise et éphémère. Ne fais pas de suivi hors de ce message.",
+        "- Si l’utilisateur demande des fonctions liées à la mémoire, précise poliment que la mémoire est désactivée en mode privé."
+      ].join('\n');
+      return `${base}\n\n${privateBlock}`;
+    }
+    return base;
+  };
 
   const addRagContextMessage = (passages: { id: number; titre: string; contenu: string }[]) => {
     const ragMsg: RagContextMessage = {
