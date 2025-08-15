@@ -13,6 +13,9 @@ let embedderPromise: Promise<any> | null = null;
 try {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { env } = require('@xenova/transformers');
+  // Forcer le chargement distant des modèles (évite les tentatives de /models/Xenova/...)
+  env.allowLocalModels = false;
+  // Optimisations WASM pour onnxruntime-web via transformers.js
   if (env && env.backends && env.backends.onnx && env.backends.onnx.wasm) {
     env.backends.onnx.wasm.simd = true;
     env.backends.onnx.wasm.proxy = true;

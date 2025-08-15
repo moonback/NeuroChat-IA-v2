@@ -44,9 +44,11 @@ async function tryTavily(query: string, maxResults: number): Promise<WebSearchRe
 	}
 }
 
-async function tryDuckDuckGo(query: string, maxResults: number): Promise<WebSearchResult[]> {
+	async function tryDuckDuckGo(query: string, maxResults: number): Promise<WebSearchResult[]> {
 	try {
-		const data = await fetchJson(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`);
+		// CORS: utiliser un proxy en lecture seule qui renvoie des en-têtes permissifs
+		const url = `https://r.jina.ai/http://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
+		const data = await fetchJson(url);
 		const results: WebSearchResult[] = [];
 		if (data?.AbstractText && data?.AbstractURL) {
 			results.push({ title: data.Heading || 'DuckDuckGo', url: data.AbstractURL, snippet: data.AbstractText });
