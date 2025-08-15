@@ -15,9 +15,10 @@ interface MessageBubbleProps {
   onDelete?: () => void; // Added onDelete prop
   onReply?: (messageContent: string) => void; // Added onReply prop, passing message content
   memoryFactsCount?: number; // New optional indicator
+  sources?: Array<{ title: string; url: string }>;
 }
 
-export function MessageBubble({ message, isUser, timestamp, isLatest = false, imageUrl, onEdit, onDelete, onReply, memoryFactsCount }: MessageBubbleProps) {
+export function MessageBubble({ message, isUser, timestamp, isLatest = false, imageUrl, onEdit, onDelete, onReply, memoryFactsCount, sources }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
   const [isLiked, setIsLiked] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
@@ -267,6 +268,28 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
                 </div>
               )}
             </div>
+
+            {/* Sources sous le message (uniquement pour messages IA) */}
+            {!isUser && Array.isArray(sources) && sources.length > 0 && (
+              <div className="mt-2 text-xs text-slate-600 dark:text-slate-300 space-y-1">
+                {sources.map((s, idx) => (
+                  <div key={`${s.url}-${idx}`} className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-semibold">
+                      {idx + 1}
+                    </span>
+                    <a
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="truncate hover:underline text-blue-700 dark:text-blue-300"
+                      title={s.title}
+                    >
+                      {s.title || s.url}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Enhanced action buttons */}

@@ -40,6 +40,7 @@ interface Message {
   timestamp: Date;
   imageUrl?: string;
   memoryFactsCount?: number;
+  sources?: Array<{ title: string; url: string }>;
 }
 
 interface Discussion {
@@ -324,13 +325,14 @@ function App() {
     };
   }, []);
 
-  const addMessage = (text: string, isUser: boolean, imageFile?: File): Message => {
+  const addMessage = (text: string, isUser: boolean, imageFile?: File, sources?: Array<{ title: string; url: string }>): Message => {
     const message: Message = {
       id: Date.now().toString(),
       text,
       isUser,
       timestamp: new Date(),
       imageUrl: imageFile ? URL.createObjectURL(imageFile) : undefined,
+      sources,
     };
     setMessages(prev => [...prev, message]);
     return message;
@@ -573,6 +575,7 @@ ${lines.join('\n')}`, false);
     }
     // Étape Web : recherche en ligne (si activée)
     let webContext = '';
+    let webSources: Array<{ title: string; url: string }> = [];
     try {
       if (webEnabled) {
         const { searchWeb } = await import('@/services/webSearch');
@@ -584,6 +587,7 @@ ${lines.join('\n')}`, false);
             webContext += `- (${idx + 1}) [${r.title}] ${snippet}\nSource: ${r.url}\n`;
           });
           webContext += '\n';
+          webSources = webResults.slice(0, 5).map(r => ({ title: r.title, url: r.url }));
         }
       }
     } catch {}
@@ -666,7 +670,7 @@ ${lines.join('\n')}`, false);
        // Timeline retirée
       // LOG réponse Gemini
       // console.log('[Réponse Gemini]', response);
-      addMessage(response, false);
+      addMessage(response, false, undefined, webSources.length ? webSources : undefined);
       
       // Indiquer que l'IA commence à parler
       setIsAISpeaking(true);
