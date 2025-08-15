@@ -41,6 +41,14 @@
 - Alerte à la fermeture si messages présents
 - Indicateur visuel discret
 
+### 👶 Mode Enfant (nouveau)
+- Activation/désactivation via le header, protégé par PIN (4+ chiffres)
+- Choix/Changement de PIN depuis le menu mobile (option "Changer le PIN (mode enfant)")
+- Contenu adapté: ton bienveillant, explications simples, mini‑jeux/quiz
+- Blocages de sécurité: mémoire désactivée, RAG désactivé, réglages et providers masqués
+- UI dédiée: bannière enfant et page d’accueil spécifique
+- Historique: badge "Mode enfant" par conversation et titres auto pertinents
+
 ### ⚙️ Réglages
 - Hyperparamètres Gemini (temperature, topK, topP, maxOutputTokens)
 - TTS: test, export/import, reset, suppression
@@ -103,6 +111,13 @@
 - Tout est effacé à la fermeture
 - Banner de notification pour rappel
 
+### 👶 **Mode Enfant**
+1. Cliquez sur l’icône bébé pour activer
+2. À la première activation, définissez un PIN (≥ 4 chiffres)
+3. Pour désactiver, ressaisissez le PIN
+4. Option "Changer le PIN (mode enfant)" disponible dans le menu mobile
+5. En mode enfant: Mémoire/RAG/Réglages sont masqués et non accessibles
+
 ### 📚 **Utiliser le RAG**
 1. Activez le mode RAG (icône cerveau)
 2. Ajoutez vos documents via « Documents RAG » (TXT/MD/PDF/DOCX/CSV/HTML)
@@ -122,7 +137,7 @@
 |-----------|-------------|
 | **Frontend** | React 18, TypeScript, Vite |
 | **UI/UX** | Tailwind CSS, Radix UI, Lucide React |
-| **IA** | Google Gemini Pro API |
+| **IA** | Google Gemini Pro API, OpenAI (optionnel) |
 | **Audio** | Web Speech API (reconnaissance & synthèse) |
 | **ML Local** | @xenova/transformers (embeddings) |
 | **Données** | LocalStorage |
@@ -147,7 +162,6 @@ src/
 ├── components/           # Composants React
 │   ├── ui/              # Composants UI génériques (Radix)
 │   ├── ChatContainer.tsx        # Zone de conversation
-│   ├── ChatContainer.tsx        # Zone de conversation
 │   ├── VoiceInput.tsx          # Saisie vocale/texte
 │   ├── VocalModeIndicator.tsx  # Indicateur vocal flottant
 │   ├── Header.tsx              # Navigation et actions
@@ -155,7 +169,10 @@ src/
 │   ├── RagDocsModal.tsx        # Gestion documents RAG
 │   ├── MemoryModal.tsx         # Gestion mémoire utilisateur
 │   ├── TTSSettingsModal.tsx    # Réglages synthèse vocale
-│   └── PrivateModeBanner.tsx   # Banner mode privé
+│   ├── PrivateModeBanner.tsx   # Bannière mode privé
+│   ├── ChildModeBanner.tsx     # Bannière mode enfant
+│   ├── ChildModePinDialog.tsx  # Modale PIN (activer/désactiver)
+│   └── ChildModeChangePinDialog.tsx # Modale changement de PIN
 ├── config/              # Configuration
 │   └── (personnalités retirées)
 ├── hooks/               # Hooks React personnalisés
@@ -165,6 +182,7 @@ src/
 │   └── useTheme.ts      # Gestion thème
 ├── services/            # Services API et utilitaires
 │   ├── geminiApi.ts     # API Google Gemini
+│   ├── openaiApi.ts     # API OpenAI (optionnelle)
 │   ├── geminiSystemPrompt.ts # Prompts système
 │   └── ragSearch.ts     # Recherche documentaire
 └── lib/                 # Utilitaires
