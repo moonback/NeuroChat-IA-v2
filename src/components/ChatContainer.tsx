@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
@@ -77,6 +77,15 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
     setShowChatInfo(false);
   }, []);
 
+  // Auto-scroll vers le bas lors de la réception d'un nouveau message
+  // Ne s'exécute que si l'utilisateur est proche du bas (intention de suivre la conversation)
+  useEffect(() => {
+    if (isNearBottom && messages.length > 0) {
+      scrollToBottom();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length]);
+
   return (
     <div
       className={cn(
@@ -154,6 +163,7 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
                 ref={virtuosoRef}
                 style={{ height: 'calc(100vh - 160px)' }}
                 atBottomStateChange={handleAtBottomChange}
+                atBottomThreshold={200}
                 followOutput={isNearBottom ? 'smooth' : false}
                 totalCount={messages.length + (isLoading ? 1 : 0)}
                 components={{
