@@ -523,7 +523,20 @@ export function Header(props: HeaderProps) {
             </div>
 
             <div className="space-y-3">
-              {!props.modeEnfant && mobileMenuActions}
+              {props.modeEnfant ? (
+                <div className="md:hidden space-y-2">
+                  <Button
+                    variant="destructive"
+                    className="w-full justify-start h-10"
+                    onClick={handleMenuAction(handleChildModeToggle)}
+                  >
+                    <Baby className="w-4 h-4 mr-3" />
+                    Désactiver mode enfant
+                  </Button>
+                </div>
+              ) : (
+                mobileMenuActions
+              )}
 
               {/* Options toujours visibles */}
               {!props.modeEnfant && (
