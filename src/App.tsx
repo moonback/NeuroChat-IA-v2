@@ -40,6 +40,7 @@ interface Message {
   timestamp: Date;
   imageUrl?: string;
   memoryFactsCount?: number;
+  sources?: Array<{ title: string; url: string }>;
 }
 
 interface Discussion {
@@ -98,6 +99,8 @@ function App() {
   const [showMemory, setShowMemory] = useState(false);
   // Ajout du state pour activer/désactiver le RAG
   const [ragEnabled, setRagEnabled] = useState(false);
+  // Ajout du state pour activer/désactiver la recherche web
+  const [webEnabled, setWebEnabled] = useState<boolean>(false);
   // Documents RAG utilisés dans la conversation courante
   const [usedRagDocs, setUsedRagDocs] = useState<Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }>>([]);
   // Sidebar RAG mobile
@@ -322,13 +325,14 @@ function App() {
     };
   }, []);
 
-  const addMessage = (text: string, isUser: boolean, imageFile?: File): Message => {
+  const addMessage = (text: string, isUser: boolean, imageFile?: File, sources?: Array<{ title: string; url: string }>): Message => {
     const message: Message = {
       id: Date.now().toString(),
       text,
       isUser,
       timestamp: new Date(),
       imageUrl: imageFile ? URL.createObjectURL(imageFile) : undefined,
+      sources,
     };
     setMessages(prev => [...prev, message]);
     return message;
@@ -569,6 +573,24 @@ ${lines.join('\n')}`, false);
         });
       }
     }
+    // Étape Web : recherche en ligne (si activée)
+    let webContext = '';
+    let webSources: Array<{ title: string; url: string }> = [];
+    try {
+      if (webEnabled) {
+        const { searchWeb } = await import('@/services/webSearch');
+        const webResults = await searchWeb(userMessage, 5, { enrich: false });
+        if (webResults.length > 0) {
+          webContext = 'RÉSULTATS WEB RÉCENTS :\n';
+          webResults.slice(0, 5).forEach((r, idx) => {
+            const snippet = (r.snippet || '').replace(/\s+/g, ' ').slice(0, 360);
+            webContext += `- (${idx + 1}) [${r.title}] ${snippet}\nSource: ${r.url}\n`;
+          });
+          webContext += '\n';
+          webSources = webResults.slice(0, 5).map(r => ({ title: r.title, url: r.url }));
+        }
+      }
+    } catch {}
     // Ajoute le message utilisateur localement
     const newMessage = addMessage(userMessage, true, imageFile);
     // Extraire et mémoriser immédiatement les faits utilisateur
@@ -631,7 +653,7 @@ ${lines.join('\n')}`, false);
 
       // Important: ne pas inclure à nouveau la question utilisateur dans le prompt système
       // pour éviter qu'elle soit envoyée deux fois au modèle.
-      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memoryContext}${ragEnabled ? ragContext : ""}`;
+      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memoryContext}${ragEnabled ? ragContext : ""}${webContext}`;
        // Timeline retirée
       // LOG prompt final
       const llmCfg: LlmConfig = {
@@ -648,7 +670,7 @@ ${lines.join('\n')}`, false);
        // Timeline retirée
       // LOG réponse Gemini
       // console.log('[Réponse Gemini]', response);
-      addMessage(response, false);
+      addMessage(response, false, undefined, webSources.length ? webSources : undefined);
       
       // Indiquer que l'IA commence à parler
       setIsAISpeaking(true);
@@ -1034,6 +1056,8 @@ ${lines.join('\n')}`, false);
           hasActiveConversation={messages.length > 0}
           ragEnabled={ragEnabled}
           setRagEnabled={setRagEnabled}
+          webEnabled={webEnabled}
+          setWebEnabled={setWebEnabled}
           onOpenGeminiSettings={() => { if (!modeEnfant) setShowGeminiSettings(true); }}
           geminiConfig={geminiConfig}
           provider={provider}

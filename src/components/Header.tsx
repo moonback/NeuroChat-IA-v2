@@ -28,6 +28,9 @@ interface HeaderProps {
   hasActiveConversation: boolean;
   ragEnabled: boolean;
   setRagEnabled: (v: boolean) => void;
+  // Nouveau: recherche web
+  webEnabled?: boolean;
+  setWebEnabled?: (v: boolean) => void;
   onOpenGeminiSettings?: () => void;
   geminiConfig?: any;
   provider?: 'gemini' | 'openai';
@@ -222,6 +225,7 @@ export function Header(props: HeaderProps) {
     muted, onMute, onUnmute, onNewDiscussion, onOpenHistory, onOpenTTSSettings,
     onOpenRagDocs, onOpenMemory, modeVocalAuto, setModeVocalAuto,
     hasActiveConversation, ragEnabled, setRagEnabled, onOpenGeminiSettings,
+    webEnabled, setWebEnabled,
     provider, onChangeProvider, modePrive, setModePrive, selectMode,
     onToggleSelectMode, selectedCount, totalCount, onSelectAll, onDeselectAll,
     onRequestDelete, showConfirmDelete, setShowConfirmDelete, onDeleteConfirmed
@@ -248,6 +252,10 @@ export function Header(props: HeaderProps) {
   const handleRagToggle = useCallback(() => {
     setRagEnabled(!ragEnabled);
   }, [ragEnabled, setRagEnabled]);
+
+  const handleWebToggle = useCallback(() => {
+    if (setWebEnabled) setWebEnabled(!webEnabled);
+  }, [webEnabled, setWebEnabled]);
 
   const handleChildModeToggle = useCallback(() => {
     props.onToggleModeEnfant?.();
@@ -383,6 +391,7 @@ export function Header(props: HeaderProps) {
               <StatusBadge active={modePrive && !props.modeEnfant} icon={Shield} tooltip="Mode privé activé" color="red" />
               <StatusBadge active={!!props.modeEnfant} icon={Baby} tooltip="Mode enfant activé" color="blue" />
               <StatusBadge active={ragEnabled} icon={Brain} tooltip="RAG actif" color="green" />
+              <StatusBadge active={!!webEnabled} icon={Wifi} tooltip="Recherche web active" color="blue" />
               <StatusBadge active={modeVocalAuto} icon={Mic} tooltip="Mode vocal automatique" color="blue" />
             </div>
 
@@ -471,6 +480,15 @@ export function Header(props: HeaderProps) {
                   tooltip="Recherche documentaire (RAG)"
                 >
                   <Brain className="w-4 h-4" />
+                </IconButton>
+              )}
+              {!props.modeEnfant && (
+                <IconButton
+                  variant={webEnabled ? 'default' : 'ghost'}
+                  onClick={handleWebToggle}
+                  tooltip="Recherche web"
+                >
+                  <Wifi className="w-4 h-4" />
                 </IconButton>
               )}
             </ButtonGroup>
