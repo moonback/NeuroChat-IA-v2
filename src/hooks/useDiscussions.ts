@@ -10,6 +10,7 @@ export interface Message {
 export interface Discussion {
   title: string;
   messages: Message[];
+  childMode?: boolean;
 }
 
 const LOCALSTORAGE_KEY = 'gemini_discussions';
@@ -48,11 +49,13 @@ export function useDiscussions() {
           discussions = parsed.map((msgs: Message[], idx: number) => ({
             title: `Discussion ${idx + 1}`,
             messages: msgs.map(msg => ({ ...msg, timestamp: new Date(msg.timestamp) })),
+            childMode: false,
           }));
         } else {
           discussions = parsed.map((d: any) => ({
             title: d.title || 'Discussion',
             messages: d.messages.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) })),
+            childMode: !!d.childMode,
           }));
         }
         setHistory(discussions);
@@ -90,7 +93,7 @@ export function useDiscussions() {
       return true;
     };
     if (historyArr.length === 0 || !isSame(historyArr[historyArr.length - 1].messages, discussion)) {
-      historyArr.push({ title: `Discussion ${historyArr.length + 1}`, messages: discussion });
+      historyArr.push({ title: `Discussion ${historyArr.length + 1}`, messages: discussion, childMode: false });
       localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(historyArr));
       setHistory(historyArr);
     }

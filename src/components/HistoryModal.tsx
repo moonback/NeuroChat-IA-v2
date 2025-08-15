@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { History, X, Search, MessageCircle, Users, Trash2, CheckSquare, Square, Grid3X3, List, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { History, X, Search, MessageCircle, Users, Trash2, CheckSquare, Square, Grid3X3, List, ChevronLeft, ChevronRight, MoreHorizontal, Baby } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Discussion } from '@/hooks/useDiscussions';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
@@ -282,6 +282,11 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
                           <span className="text-xs text-slate-500 dark:text-slate-400">
                             {date ? formatDate(date) : ''}
                           </span>
+                          {discussion.childMode && (
+                            <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60">
+                              <Baby className="w-3 h-3" /> Mode enfant
+                            </span>
+                          )}
                           {viewMode === 'detailed' && (
                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               {editingIdx === actualIdx ? (
@@ -336,9 +341,9 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
                       )}
                       
                       {/* Stats */}
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify_between">
                         <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <span className="flex items-center gap-1">
+                          <span className="flex items_center gap-1">
                             <MessageCircle className="w-3 h-3" />
                             {nbMessages}
                           </span>

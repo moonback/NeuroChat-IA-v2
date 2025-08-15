@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
-import { ArrowDown, Zap, Brain, Clock, Info, ExternalLink, Shield, X } from 'lucide-react';
+import { ArrowDown, Zap, Brain, Clock, Info, ExternalLink, Shield, X, Smile, BookOpen } from 'lucide-react';
 import { TypingIndicator } from './TypingIndicator';
 import { cn } from '@/lib/utils'; // Assuming cn utility is available for Tailwind class merging
 
@@ -42,9 +42,10 @@ interface ChatContainerProps {
   selectedMessageIds?: string[]; // Ajouté
   onSelectMessage?: (id: string) => void; // Ajouté
   modePrive?: boolean; // Ajouté
+  modeEnfant?: boolean; // Ajouté
 }
 
-export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMessage, onReplyToMessage, selectMode = false, selectedMessageIds = [], onSelectMessage, modePrive = false }: ChatContainerProps) {
+export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMessage, onReplyToMessage, selectMode = false, selectedMessageIds = [], onSelectMessage, modePrive = false, modeEnfant = false }: ChatContainerProps) {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(true);
@@ -102,7 +103,39 @@ export function ChatContainer({ messages, isLoading, onEditMessage, onDeleteMess
         <div className="space-y-3 sm:space-y-4 min-h-[calc(60vh)] sm:min-h-0">
           {/* Hero sections améliorées */}
           {messages.length === 0 ? (
-            modePrive ? (
+            modeEnfant ? (
+              <div className="flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[400px] text-center px-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
+                <div className="max-w-lg mx-auto space-y-6">
+                  <div className="space-y-2">
+                    <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent tracking-tight">
+                      Espace Enfants
+                    </h2>
+                    <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
+                      Un endroit <span className="font-semibold text-pink-600 dark:text-pink-400">amusant</span> et <span className="font-semibold text-emerald-600 dark:text-emerald-400">sécurisé</span> pour apprendre, jouer et discuter
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {[
+                      { icon: Smile, title: 'Ludique', desc: 'Jeux et quiz adaptés', color: 'from-pink-500 to-rose-500' },
+                      { icon: BookOpen, title: 'Pédagogique', desc: 'Explications simples', color: 'from-violet-500 to-indigo-500' },
+                      { icon: Shield, title: 'Sécurisé', desc: 'Contenu approprié', color: 'from-emerald-500 to-teal-500' }
+                    ].map((feature, idx) => (
+                      <div 
+                        key={feature.title}
+                        className="group p-4 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-white/60 dark:border-slate-700/60 backdrop-blur-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 animate-in slide-in-from-bottom-4"
+                        style={{ animationDelay: `${idx * 100}ms` }}
+                      >
+                        <div className={`w-10 h-10 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:rotate-12 transition-transform duration-300`}>
+                          <feature.icon className="w-5 h-5 text-white" />
+                        </div>
+                        <h3 className="font-semibold text-sm text-slate-800 dark:text-slate-200 mb-1">{feature.title}</h3>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">{feature.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : modePrive ? (
               <div className="flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[400px] text-center px-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
                 
                 {/* Avatar retiré */}

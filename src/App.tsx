@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Card } from '@/components/ui/card';
 import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
-import { sendMessageToGemini, GeminiGenerationConfig } from '@/services/geminiApi';
+import { GeminiGenerationConfig } from '@/services/geminiApi';
 import { sendMessage, type LlmConfig } from '@/services/llm';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { toast } from 'sonner';
@@ -24,6 +24,9 @@ const OpenAISettingsDrawerLazy = lazy(() => import('@/components/OpenAISettingsD
 // Retrait du sélecteur de personnalités
 
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
+import { ChildModeBanner } from '@/components/ChildModeBanner';
+import { ChildModePinDialog } from '@/components/ChildModePinDialog';
+import { ChildModeChangePinDialog } from '@/components/ChildModeChangePinDialog';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 
 // Timeline retirée
@@ -40,6 +43,7 @@ interface Message {
 interface Discussion {
   title: string;
   messages: Message[];
+  childMode?: boolean;
 }
 
 // Ajout d'un type spécial pour les messages contextuels RAG
@@ -145,6 +149,11 @@ function App() {
 
   // --- Mode privé/éphémère ---
   const [modePrive, setModePrive] = useState(false);
+  // --- Mode enfant (protégé par PIN) ---
+  const [modeEnfant, setModeEnfant] = useState<boolean>(localStorage.getItem('mode_enfant') === 'true');
+  const [childPin, setChildPin] = useState<string>(localStorage.getItem('mode_enfant_pin') || '');
+  const [showChildPinDialog, setShowChildPinDialog] = useState<boolean>(false);
+  const [showChildChangePinDialog, setShowChildChangePinDialog] = useState<boolean>(false);
   // --- Timeline de raisonnement ---
   // Timeline retirée
   // Affichage d'un toast d'avertissement lors de l'activation
@@ -157,6 +166,15 @@ function App() {
       localStorage.setItem('mode_prive', modePrive ? 'true' : 'false');
     } catch {}
   }, [modePrive]);
+
+  // Persistance du mode enfant
+  useEffect(() => {
+    try {
+      localStorage.setItem('mode_enfant', modeEnfant ? 'true' : 'false');
+    } catch {}
+    // En mode enfant, forcer le mode privé à false
+    if (modeEnfant && modePrive) setModePrive(false);
+  }, [modeEnfant]);
 
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY = 'gemini_discussions';
@@ -210,6 +228,13 @@ function App() {
     localStorage.setItem('gemini_presets', JSON.stringify(presets));
   }, [presets]);
 
+  // En mode enfant, forcer RAG OFF et empêcher l'ouverture des réglages
+  useEffect(() => {
+    if (modeEnfant && ragEnabled) {
+      setRagEnabled(false);
+    }
+  }, [modeEnfant]);
+
   // Sauvegarder une discussion dans l'historique (sans doublons consécutifs)
   const saveDiscussionToHistory = (discussion: Message[]) => {
     if (modePrive) return; // Pas de sauvegarde en mode privé
@@ -224,6 +249,7 @@ function App() {
           history = parsed.map((msgs: Message[], idx: number) => ({
             title: `Discussion ${idx + 1}`,
             messages: msgs,
+            childMode: false,
           }));
         } else {
           history = parsed;
@@ -239,7 +265,12 @@ function App() {
       return true;
     };
     if (history.length === 0 || !isSame(history[history.length - 1].messages, discussion)) {
-      history.push({ title: `Discussion ${history.length + 1}`, messages: discussion });
+      // Titre par défaut: 1er message utilisateur tronqué ou date
+      const firstUser = discussion.find(m => m.isUser)?.text || '';
+      const defaultTitle = firstUser
+        ? (firstUser.length > 40 ? firstUser.slice(0, 40) + '…' : firstUser)
+        : new Date().toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+      history.push({ title: defaultTitle, messages: discussion, childMode: modeEnfant });
       localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(history));
     }
   };
@@ -297,6 +328,33 @@ function App() {
     return message;
   };
 
+  // Gestion PIN mode enfant
+  const handleConfirmChildPin = (pin: string) => {
+    // Si le mode est actif, on vérifie pour désactiver
+    if (modeEnfant) {
+      if (pin && childPin && pin === childPin) {
+        setModeEnfant(false);
+        setShowChildPinDialog(false);
+      } else {
+        toast.error('Code PIN incorrect.');
+      }
+      return;
+    }
+    // Si le mode est inactif, définir le PIN si vide et activer
+    if (!childPin) {
+      if (!pin || pin.length < 4) {
+        toast.error('Choisis un code PIN d’au moins 4 chiffres.');
+        return;
+      }
+      setChildPin(pin);
+      try { localStorage.setItem('mode_enfant_pin', pin); } catch {}
+    }
+    setModeEnfant(true);
+    setShowChildPinDialog(false);
+  };
+
+  const handleCloseChildPin = () => setShowChildPinDialog(false);
+
   // Prompt système avec règles additionnelles en mode privé
   const getSystemPrompt = () => {
     const base = SYSTEM_PROMPT;
@@ -310,6 +368,17 @@ function App() {
         "- Si l’utilisateur demande des fonctions liées à la mémoire, précise poliment que la mémoire est désactivée en mode privé."
       ].join('\n');
       return `${base}\n\n${privateBlock}`;
+    }
+    if (modeEnfant) {
+      const childBlock = [
+        'MODE ENFANT ACTIF :',
+        '- Utilise un ton chaleureux, simple et ludique adapté aux enfants.',
+        '- Évite les sujets sensibles, violents ou inappropriés. Redirige vers des thèmes éducatifs et bienveillants.',
+        "- Privilégie des explications courtes avec des exemples concrets, des analogies et des mini-jeux (devinettes, quiz).",
+        "- Demande l'avis d'un adulte pour toute action qui pourrait nécessiter une supervision (ex: télécharger, acheter, partager).",
+        '- N’inclus pas de liens externes bruts; si nécessaire, mentionne de demander à un adulte.'
+      ].join('\n');
+      return `${base}\n\n${childBlock}`;
     }
     return base;
   };
@@ -376,9 +445,9 @@ function App() {
     // D'abord détecter si c'est une commande mémoire
     const parsed = parseMemoryCommand(userMessage);
     if (!parsed) return false;
-    // Si c'est une commande mémoire, bloquer en mode privé
-    if (modePrive) {
-      addMessage('🔒 Mode privé actif — fonctionnalités mémoire désactivées.', false);
+    // Si c'est une commande mémoire, bloquer en mode privé ou enfant
+    if (modePrive || modeEnfant) {
+      addMessage('🔒 Mode restreint actif — fonctionnalités mémoire désactivées.', false);
       return true;
     }
     // Log le message utilisateur
@@ -670,7 +739,14 @@ ${lines.join('\n')}`, false);
   // Renommer une discussion (compatible avec le nouveau composant)
   const handleRenameDiscussion = (idx: number, newTitle: string) => {
     const newHistory = [...historyList];
-    newHistory[idx] = { ...newHistory[idx], title: newTitle || `Discussion ${idx + 1}` };
+    if (!newTitle.trim()) {
+      // Recalcul de titre par défaut depuis le 1er message utilisateur
+      const firstUser = newHistory[idx].messages.find(m => m.isUser)?.text || '';
+      newTitle = firstUser
+        ? (firstUser.length > 40 ? firstUser.slice(0, 40) + '…' : firstUser)
+        : `Conversation ${idx + 1}`;
+    }
+    newHistory[idx] = { ...newHistory[idx], title: newTitle };
     setHistoryList(newHistory);
     localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newHistory));
   };
@@ -945,12 +1021,27 @@ ${lines.join('\n')}`, false);
           hasActiveConversation={messages.length > 0}
           ragEnabled={ragEnabled}
           setRagEnabled={setRagEnabled}
-          onOpenGeminiSettings={() => setShowGeminiSettings(true)}
+          onOpenGeminiSettings={() => { if (!modeEnfant) setShowGeminiSettings(true); }}
           geminiConfig={geminiConfig}
           provider={provider}
           onChangeProvider={(p) => { setProvider(p); localStorage.setItem('llm_provider', p); }}
           modePrive={modePrive}
           setModePrive={setModePrive}
+          modeEnfant={modeEnfant}
+          onToggleModeEnfant={() => {
+            // Si on désactive alors qu'il est actif -> demander le PIN
+            if (modeEnfant) {
+              setShowChildPinDialog(true);
+              return;
+            }
+            // Si on active et qu'aucun PIN n'est défini -> demander un nouveau PIN
+            if (!childPin) {
+              setShowChildPinDialog(true);
+            } else {
+              setModeEnfant(true);
+            }
+          }}
+          onOpenChildPinSettings={() => setShowChildChangePinDialog(true)}
           selectMode={selectMode}
           onToggleSelectMode={handleToggleSelectMode}
           selectedCount={selectedMessageIds.length}
@@ -966,8 +1057,10 @@ ${lines.join('\n')}`, false);
           onDeleteConfirmed={handleDeleteMultipleMessages}
         />
 
-        {/* Indicateur visuel du mode privé SOUS le header, centré */}
-        <PrivateModeBanner visible={modePrive} />
+        {/* Indicateur visuel du mode privé SOUS le header, centré (caché en mode enfant) */}
+        <PrivateModeBanner visible={modePrive && !modeEnfant} />
+        {/* Indicateur visuel du mode enfant */}
+        <ChildModeBanner visible={modeEnfant} />
 
 
 
@@ -986,11 +1079,34 @@ ${lines.join('\n')}`, false);
               selectMode={selectMode}
               selectedMessageIds={selectedMessageIds}
               onSelectMessage={handleSelectMessage}
-              modePrive={modePrive}
+              modePrive={modePrive || modeEnfant}
+              modeEnfant={modeEnfant}
             />
           </div>
         </Card>
       </div>
+
+      {/* Dialog PIN pour activer/désactiver le mode enfant */}
+      <ChildModePinDialog
+        open={showChildPinDialog}
+        modeActive={modeEnfant}
+        onClose={handleCloseChildPin}
+        onConfirmPin={handleConfirmChildPin}
+        requireToDisable
+        minLength={4}
+      />
+
+      <ChildModeChangePinDialog
+        open={showChildChangePinDialog}
+        onClose={() => setShowChildChangePinDialog(false)}
+        isCurrentValid={(pin) => pin === childPin}
+        onConfirmNewPin={(newPin) => {
+          setChildPin(newPin);
+          try { localStorage.setItem('mode_enfant_pin', newPin); } catch {}
+          setShowChildChangePinDialog(false);
+          toast.success('PIN mis à jour.');
+        }}
+      />
 
       {/* Zone de saisie fixée en bas de l'écran */}
       <div id="voice-input-wrapper" ref={voiceInputContainerRef} className="fixed bottom-0 left-0 w-full z-50 bg-white/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-700 px-2 pt-2 pb-2 backdrop-blur-xl">
@@ -1003,7 +1119,7 @@ ${lines.join('\n')}`, false);
 
       <Suspense fallback={null}>
         <TTSSettingsModalLazy
-          open={showTTSSettings}
+          open={modeEnfant ? false : showTTSSettings}
           onClose={() => setShowTTSSettings(false)}
           rate={rate}
           setRate={setRate}
@@ -1034,13 +1150,13 @@ ${lines.join('\n')}`, false);
       {/* Suppression de l'overlay de timeline car affichage inline dans VoiceInput */}
       {/* Modale de gestion des documents RAG */}
       <Suspense fallback={null}>
-        <RagDocsModalLazy open={showRagDocs} onClose={() => setShowRagDocs(false)} />
+        <RagDocsModalLazy open={modeEnfant ? false : showRagDocs} onClose={() => setShowRagDocs(false)} />
       </Suspense>
 
       {/* Modale de gestion de la mémoire */}
       <Suspense fallback={null}>
         {/** Import dynamique pour garder le bundle initial léger */}
-        {showMemory && (
+        {!modeEnfant && showMemory && (
           <MemoryModalLazy open={showMemory} onClose={() => setShowMemory(false)} />
         )}
       </Suspense>
@@ -1061,8 +1177,8 @@ ${lines.join('\n')}`, false);
       {/* Réglages OpenAI */}
       <Suspense fallback={null}>
         <OpenAISettingsDrawerLazy
-          open={showOpenAISettings}
-          onOpenChange={setShowOpenAISettings}
+          open={modeEnfant ? false : showOpenAISettings}
+          onOpenChange={(open) => !modeEnfant && setShowOpenAISettings(open)}
           openaiConfig={openaiConfig}
           onConfigChange={(key, value) => setOpenaiConfig(cfg => ({ ...cfg, [key]: value }))}
           onReset={() => setOpenaiConfig({ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' })}
