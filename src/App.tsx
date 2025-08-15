@@ -29,6 +29,7 @@ import { ChildModePinDialog } from '@/components/ChildModePinDialog';
 import { ChildModeChangePinDialog } from '@/components/ChildModeChangePinDialog';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 import { RagSidebar } from '@/components/RagSidebar';
+import { RagSidebarDrawer } from '@/components/RagSidebarDrawer';
 
 // Timeline retirée
 
@@ -99,6 +100,8 @@ function App() {
   const [ragEnabled, setRagEnabled] = useState(false);
   // Documents RAG utilisés dans la conversation courante
   const [usedRagDocs, setUsedRagDocs] = useState<Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }>>([]);
+  // Sidebar RAG mobile
+  const [showRagSidebarMobile, setShowRagSidebarMobile] = useState(false);
   // --- Sélection multiple de messages pour suppression groupée ---
   const [selectMode, setSelectMode] = useState(false);
   const [selectedMessageIds, setSelectedMessageIds] = useState<string[]>([]);
@@ -1094,7 +1097,25 @@ ${lines.join('\n')}`, false);
             />
             {/* Sidebar RAG à droite (desktop) quand RAG actif et non en mode enfant */}
             {ragEnabled && !modeEnfant && (
-              <RagSidebar onOpenRagDocs={() => setShowRagDocs(true)} usedDocs={usedRagDocs} />
+              <>
+                <div className="hidden lg:block">
+                  <RagSidebar onOpenRagDocs={() => setShowRagDocs(true)} usedDocs={usedRagDocs} />
+                </div>
+                {/* Bouton flottant pour mobile */}
+                <button
+                  className="lg:hidden fixed right-3 bottom-28 z-40 rounded-full px-4 py-2 text-white bg-gradient-to-r from-blue-500 to-indigo-600 shadow-xl border border-white/20"
+                  onClick={() => setShowRagSidebarMobile(true)}
+                  aria-label="Ouvrir les documents RAG"
+                >
+                  Docs
+                </button>
+                <RagSidebarDrawer
+                  open={showRagSidebarMobile}
+                  onClose={() => setShowRagSidebarMobile(false)}
+                  usedDocs={usedRagDocs}
+                  onOpenRagDocs={() => setShowRagDocs(true)}
+                />
+              </>
             )}
           </div>
         </Card>
