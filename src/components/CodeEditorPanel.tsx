@@ -4,6 +4,7 @@ import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
 import { html } from '@codemirror/lang-html';
 import { css } from '@codemirror/lang-css';
+import { json as jsonLang } from '@codemirror/lang-json';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Copy, Send, Trash2, Download, Code2 } from 'lucide-react';
@@ -41,7 +42,7 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({ className, onS
       case 'css':
         return [css()];
       case 'json':
-        return [javascript({ json: true })];
+        return [jsonLang()];
       default:
         return [];
     }

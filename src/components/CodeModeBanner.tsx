@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Code2, Info } from 'lucide-react';
+import { X, Code2 } from 'lucide-react';
 
 interface CodeModeBannerProps {
   visible: boolean;

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Card } from '@/components/ui/card';
 import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
-import { sendMessageToGemini, GeminiGenerationConfig } from '@/services/geminiApi';
+import { GeminiGenerationConfig } from '@/services/geminiApi';
 import { sendMessage, type LlmConfig } from '@/services/llm';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { toast } from 'sonner';
