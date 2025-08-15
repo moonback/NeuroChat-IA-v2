@@ -26,6 +26,7 @@ const OpenAISettingsDrawerLazy = lazy(() => import('@/components/OpenAISettingsD
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
 import { ChildModeBanner } from '@/components/ChildModeBanner';
 import { ChildModePinDialog } from '@/components/ChildModePinDialog';
+import { ChildModeChangePinDialog } from '@/components/ChildModeChangePinDialog';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 
 // Timeline retirée
@@ -151,6 +152,7 @@ function App() {
   const [modeEnfant, setModeEnfant] = useState<boolean>(localStorage.getItem('mode_enfant') === 'true');
   const [childPin, setChildPin] = useState<string>(localStorage.getItem('mode_enfant_pin') || '');
   const [showChildPinDialog, setShowChildPinDialog] = useState<boolean>(false);
+  const [showChildChangePinDialog, setShowChildChangePinDialog] = useState<boolean>(false);
   // --- Timeline de raisonnement ---
   // Timeline retirée
   // Affichage d'un toast d'avertissement lors de l'activation
@@ -1016,6 +1018,7 @@ ${lines.join('\n')}`, false);
               setModeEnfant(true);
             }
           }}
+          onOpenChildPinSettings={() => setShowChildChangePinDialog(true)}
           selectMode={selectMode}
           onToggleSelectMode={handleToggleSelectMode}
           selectedCount={selectedMessageIds.length}
@@ -1067,6 +1070,18 @@ ${lines.join('\n')}`, false);
         onConfirmPin={handleConfirmChildPin}
         requireToDisable
         minLength={4}
+      />
+
+      <ChildModeChangePinDialog
+        open={showChildChangePinDialog}
+        onClose={() => setShowChildChangePinDialog(false)}
+        isCurrentValid={(pin) => pin === childPin}
+        onConfirmNewPin={(newPin) => {
+          setChildPin(newPin);
+          try { localStorage.setItem('mode_enfant_pin', newPin); } catch {}
+          setShowChildChangePinDialog(false);
+          toast.success('PIN mis à jour.');
+        }}
       />
 
       {/* Zone de saisie fixée en bas de l'écran */}

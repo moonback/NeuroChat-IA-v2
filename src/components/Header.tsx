@@ -46,6 +46,7 @@ interface HeaderProps {
   showConfirmDelete: boolean;
   setShowConfirmDelete: (open: boolean) => void;
   onDeleteConfirmed: () => void;
+  onOpenChildPinSettings?: () => void;
 }
 
 // =====================
@@ -509,6 +510,13 @@ export function Header(props: HeaderProps) {
                 <BookOpen className="w-4 h-4 mr-3" />
                 Documents RAG
               </Button>
+
+              {props.onOpenChildPinSettings && (
+                <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(props.onOpenChildPinSettings)}>
+                  <Settings2 className="w-4 h-4 mr-3" />
+                  Changer le PIN (mode enfant)
+                </Button>
+              )}
 
               {/* Sélecteur de provider IA */}
               {onChangeProvider && (
