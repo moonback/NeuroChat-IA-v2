@@ -598,12 +598,10 @@ export function Header(props: HeaderProps) {
                 </Button>
               )}
 
-              {!props.modeEnfant && (
-                <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(toggleTheme)}>
-                  {theme === 'dark' ? <Sun className="w-4 h-4 mr-3" /> : <Moon className="w-4 h-4 mr-3" />}
-                  {theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
-                </Button>
-              )}
+              <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(toggleTheme)}>
+                {theme === 'dark' ? <Sun className="w-4 h-4 mr-3" /> : <Moon className="w-4 h-4 mr-3" />}
+                {theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+              </Button>
             </div>
           </div>
         </DialogContent>
