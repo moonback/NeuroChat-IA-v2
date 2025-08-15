@@ -28,6 +28,7 @@ import { ChildModeBanner } from '@/components/ChildModeBanner';
 import { ChildModePinDialog } from '@/components/ChildModePinDialog';
 import { ChildModeChangePinDialog } from '@/components/ChildModeChangePinDialog';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
+import { RagSidebar } from '@/components/RagSidebar';
 
 // Timeline retirée
 
@@ -96,6 +97,8 @@ function App() {
   const [showMemory, setShowMemory] = useState(false);
   // Ajout du state pour activer/désactiver le RAG
   const [ragEnabled, setRagEnabled] = useState(false);
+  // Documents RAG utilisés dans la conversation courante
+  const [usedRagDocs, setUsedRagDocs] = useState<Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }>>([]);
   // --- Sélection multiple de messages pour suppression groupée ---
   const [selectMode, setSelectMode] = useState(false);
   const [selectedMessageIds, setSelectedMessageIds] = useState<string[]>([]);
@@ -548,12 +551,19 @@ ${lines.join('\n')}`, false);
       return;
     }
     // Étape RAG : recherche documentaire (seulement si activé)
-    let passages: { id: number; titre: string; contenu: string }[] = [];
+    let passages: Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }> = [];
     if (ragEnabled) {
       passages = await searchDocuments(userMessage, 3);
        // Timeline retirée
       if (passages.length > 0) {
-        addRagContextMessage(passages);
+        const simplePassages = passages.map((p, idx) => ({ id: idx, titre: p.titre, contenu: p.contenu }));
+        addRagContextMessage(simplePassages);
+        // Mémoriser les documents utilisés (unicité par id)
+        setUsedRagDocs(prev => {
+          const byId = new Map<string, any>();
+          [...prev, ...passages].forEach(d => byId.set(String(d.id), { ...d, id: String(d.id) }));
+          return Array.from(byId.values());
+        });
       }
     }
     // Ajoute le message utilisateur localement
@@ -1066,7 +1076,7 @@ ${lines.join('\n')}`, false);
 
         {/* Enhanced Chat Interface */}
         <Card className="flex-1 flex flex-col shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl overflow-hidden ring-1 ring-white/20 dark:ring-slate-700/20 relative">
-          <div className="flex-1 overflow-y-auto" style={{ paddingBottom: inputHeight }}>
+          <div className="flex-1 overflow-y-auto relative" style={{ paddingBottom: inputHeight }}>
             <ChatContainer
               messages={messages}
               isLoading={isLoading}
@@ -1082,6 +1092,10 @@ ${lines.join('\n')}`, false);
               modePrive={modePrive || modeEnfant}
               modeEnfant={modeEnfant}
             />
+            {/* Sidebar RAG à droite (desktop) quand RAG actif et non en mode enfant */}
+            {ragEnabled && !modeEnfant && (
+              <RagSidebar onOpenRagDocs={() => setShowRagDocs(true)} usedDocs={usedRagDocs} />
+            )}
           </div>
         </Card>
       </div>
