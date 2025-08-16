@@ -328,10 +328,12 @@ export async function extractFactsLLM(text: string): Promise<ExtractedFact[]> {
   try {
     // Si mode privé, ne pas interroger la mémoire/LLM pour extraction
     if (localStorage.getItem('mode_prive') === 'true') return [];
+    const stored = (localStorage.getItem('llm_provider') as 'gemini' | 'openai' | 'mistral') || 'gemini';
     const llmCfg: LlmConfig = {
-      provider: (localStorage.getItem('llm_provider') as 'gemini' | 'openai') || 'gemini',
+      provider: stored,
       gemini: gen,
       openai: { temperature: gen.temperature, top_p: gen.topP, max_tokens: gen.maxOutputTokens, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' },
+      mistral: { temperature: gen.temperature, top_p: gen.topP, max_tokens: gen.maxOutputTokens, model: (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest' },
     };
     const response = await sendMessage(llmCfg, [{ text, isUser: true }], undefined, system, { soft: true });
     const jsonStart = response.indexOf('[');
@@ -362,10 +364,12 @@ export async function summarizeUserProfileLLM(messages: string[], maxChars = 500
   const body = messages.slice(-10).join('\n- ');
   const gen: GeminiGenerationConfig = { temperature: 0.2, maxOutputTokens: 512, topK: 20, topP: 0.9 };
   try {
+    const stored = (localStorage.getItem('llm_provider') as 'gemini' | 'openai' | 'mistral') || 'gemini';
     const llmCfg: LlmConfig = {
-      provider: (localStorage.getItem('llm_provider') as 'gemini' | 'openai') || 'gemini',
+      provider: stored,
       gemini: gen,
       openai: { temperature: gen.temperature, top_p: gen.topP, max_tokens: gen.maxOutputTokens, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' },
+      mistral: { temperature: gen.temperature, top_p: gen.topP, max_tokens: gen.maxOutputTokens, model: (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest' },
     };
     const response = await sendMessage(llmCfg, [{ text: body, isUser: true }], undefined, system);
     return response.trim().slice(0, maxChars);

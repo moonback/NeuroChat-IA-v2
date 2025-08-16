@@ -1,12 +1,14 @@
 import { sendMessageToGemini, type GeminiGenerationConfig } from '@/services/geminiApi';
 import { sendMessageToOpenAI, type OpenAIGenerationConfig } from '@/services/openaiApi';
+import { sendMessageToMistral, type MistralGenerationConfig } from '@/services/mistralApi';
 
-export type Provider = 'gemini' | 'openai';
+export type Provider = 'gemini' | 'openai' | 'mistral';
 
 export interface LlmConfig {
   provider: Provider;
   gemini?: GeminiGenerationConfig;
   openai?: OpenAIGenerationConfig;
+  mistral?: MistralGenerationConfig;
 }
 
 export async function sendMessage(
@@ -19,7 +21,10 @@ export async function sendMessage(
   if (cfg.provider === 'gemini') {
     return sendMessageToGemini(messages, images, systemPrompt, cfg.gemini, options);
   }
-  return sendMessageToOpenAI(messages, images, systemPrompt, cfg.openai);
+  if (cfg.provider === 'openai') {
+    return sendMessageToOpenAI(messages, images, systemPrompt, cfg.openai);
+  }
+  return sendMessageToMistral(messages, images, systemPrompt, cfg.mistral);
 }
 
 

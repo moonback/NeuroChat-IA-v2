@@ -36,8 +36,8 @@ interface HeaderProps {
   webSearching?: boolean;
   onOpenGeminiSettings?: () => void;
   geminiConfig?: any;
-  provider?: 'gemini' | 'openai';
-  onChangeProvider?: (p: 'gemini' | 'openai') => void;
+  provider?: 'gemini' | 'openai' | 'mistral';
+  onChangeProvider?: (p: 'gemini' | 'openai' | 'mistral') => void;
   modePrive: boolean;
   setModePrive: (v: boolean) => void;
   modeEnfant?: boolean;
@@ -860,6 +860,22 @@ export function Header(props: HeaderProps) {
                   )}
                   {!props.modeEnfant && (
                     <TileButton
+                      onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('openai:settings:open') as any))}
+                      label={'OpenAI'}
+                      icon={Brain}
+                      tooltip="Réglages OpenAI"
+                    />
+                  )}
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('mistral:settings:open') as any))}
+                      label={'Mistral'}
+                      icon={Sparkles}
+                      tooltip="Réglages Mistral"
+                    />
+                  )}
+                  {!props.modeEnfant && (
+                    <TileButton
                       onClick={handleMenuAction(onOpenRagDocs)}
                       label={'Docs RAG'}
                       icon={BookOpen}
@@ -966,6 +982,16 @@ export function Header(props: HeaderProps) {
                           OpenAI
                         </div>
                       </Button>
+                      <Button
+                        variant={provider === 'mistral' ? 'default' : 'ghost'}
+                        className="flex-1 h-10 rounded-lg text-sm"
+                        onClick={handleMenuAction(() => onChangeProvider('mistral'))}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4" />
+                          Mistral
+                        </div>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -1002,6 +1028,7 @@ export function Header(props: HeaderProps) {
                   </Button>
                 )}
 
+                
                     </div>
                       </div>
         </SheetContent>
