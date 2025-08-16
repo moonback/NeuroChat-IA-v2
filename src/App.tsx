@@ -30,6 +30,9 @@ import { ChildModeChangePinDialog } from '@/components/ChildModeChangePinDialog'
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
 import { RagSidebar } from '@/components/RagSidebar';
 import { RagSidebarDrawer } from '@/components/RagSidebarDrawer';
+import { WebSourcesSidebar } from '@/components/WebSourcesSidebar';
+import { WebSourcesDrawer } from '@/components/WebSourcesDrawer';
+import type { WebSource } from '@/components/WebSourcesSidebar';
 
 // Timeline retirée
 
@@ -105,6 +108,11 @@ function App() {
   const [usedRagDocs, setUsedRagDocs] = useState<Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }>>([]);
   // Sidebar RAG mobile
   const [showRagSidebarMobile, setShowRagSidebarMobile] = useState(false);
+  
+  // Sources web utilisées dans la conversation courante
+  const [usedWebSources, setUsedWebSources] = useState<WebSource[]>([]);
+  // Sidebar Web mobile
+  const [showWebSidebarMobile, setShowWebSidebarMobile] = useState(false);
   // --- Sélection multiple de messages pour suppression groupée ---
   const [selectMode, setSelectMode] = useState(false);
   const [selectedMessageIds, setSelectedMessageIds] = useState<string[]>([]);
@@ -290,6 +298,8 @@ function App() {
       saveDiscussionToHistory(messages);
     }
     setMessages([]);
+    setUsedRagDocs([]);
+    setUsedWebSources([]);
     if (!modePrive) localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify([]));
   };
 
@@ -588,11 +598,38 @@ ${lines.join('\n')}`, false);
           });
           webContext += '\n';
           webSources = webResults.slice(0, 5).map(r => ({ title: r.title, url: r.url }));
+          
+          // Ajouter les nouvelles sources à la liste des sources utilisées (messageId sera mis à jour après)
+          const newWebSources: WebSource[] = webResults.slice(0, 5).map(r => ({
+            title: r.title,
+            url: r.url,
+            snippet: r.snippet,
+            timestamp: new Date().toISOString(),
+            messageId: `temp-${Date.now()}`, // Temporaire, sera mis à jour après création du message
+          }));
+          
+          setUsedWebSources(prev => {
+            // Éviter les doublons par URL
+            const existingUrls = new Set(prev.map(s => s.url));
+            const uniqueNewSources = newWebSources.filter(s => !existingUrls.has(s.url));
+            return [...prev, ...uniqueNewSources];
+          });
         }
       }
     } catch {}
     // Ajoute le message utilisateur localement
     const newMessage = addMessage(userMessage, true, imageFile);
+    
+    // Mettre à jour les messageId des sources web avec le vrai ID
+    if (webEnabled && webSources.length > 0) {
+      setUsedWebSources(prev => 
+        prev.map(source => 
+          source.messageId?.startsWith('temp-') 
+            ? { ...source, messageId: newMessage.id }
+            : source
+        )
+      );
+    }
     // Extraire et mémoriser immédiatement les faits utilisateur
     try {
       let userFacts = extractFactsFromText(userMessage, { source: 'user' });
@@ -1138,6 +1175,28 @@ ${lines.join('\n')}`, false);
                   onClose={() => setShowRagSidebarMobile(false)}
                   usedDocs={usedRagDocs}
                   onOpenRagDocs={() => setShowRagDocs(true)}
+                />
+              </>
+            )}
+
+            {/* Sidebar Web Sources à gauche (desktop) quand recherche web active et non en mode enfant */}
+            {webEnabled && !modeEnfant && (
+              <>
+                <div className="hidden lg:block">
+                  <WebSourcesSidebar usedSources={usedWebSources} />
+                </div>
+                {/* Bouton flottant pour mobile */}
+                <button
+                  className="lg:hidden fixed left-3 bottom-28 z-40 rounded-full px-4 py-2 text-white bg-gradient-to-r from-green-500 to-emerald-600 shadow-xl border border-white/20"
+                  onClick={() => setShowWebSidebarMobile(true)}
+                  aria-label="Ouvrir les sources web"
+                >
+                  Web
+                </button>
+                <WebSourcesDrawer
+                  open={showWebSidebarMobile}
+                  onClose={() => setShowWebSidebarMobile(false)}
+                  usedSources={usedWebSources}
                 />
               </>
             )}
