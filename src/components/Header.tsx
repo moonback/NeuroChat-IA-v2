@@ -860,6 +860,22 @@ export function Header(props: HeaderProps) {
                   )}
                   {!props.modeEnfant && (
                     <TileButton
+                      onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('openai:settings:open') as any))}
+                      label={'OpenAI'}
+                      icon={Brain}
+                      tooltip="Réglages OpenAI"
+                    />
+                  )}
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('mistral:settings:open') as any))}
+                      label={'Mistral'}
+                      icon={Sparkles}
+                      tooltip="Réglages Mistral"
+                    />
+                  )}
+                  {!props.modeEnfant && (
+                    <TileButton
                       onClick={handleMenuAction(onOpenRagDocs)}
                       label={'Docs RAG'}
                       icon={BookOpen}
@@ -1011,8 +1027,8 @@ export function Header(props: HeaderProps) {
                     </div>
                   </Button>
                 )}
-                {/* TODO: Ajouter un drawer de réglages Mistral si nécessaire */}
 
+                
                     </div>
                       </div>
         </SheetContent>

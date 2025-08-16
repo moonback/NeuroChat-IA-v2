@@ -22,6 +22,7 @@ import { getRelevantMemories, upsertMany, buildMemorySummary, addMemory, deleteM
 import { extractFactsFromText, extractFactsLLM } from '@/services/memoryExtractor';
 const GeminiSettingsDrawerLazy = lazy(() => import('@/components/GeminiSettingsDrawer').then(m => ({ default: m.GeminiSettingsDrawer })));
 const OpenAISettingsDrawerLazy = lazy(() => import('@/components/OpenAISettingsDrawer').then(m => ({ default: m.OpenAISettingsDrawer })));
+const MistralSettingsDrawerLazy = lazy(() => import('@/components/MistralSettingsDrawer').then(m => ({ default: m.MistralSettingsDrawer })));
 // Retrait du sélecteur de personnalités
 
 import { PrivateModeBanner } from '@/components/PrivateModeBanner';
@@ -166,6 +167,7 @@ function App() {
   });
   const [showGeminiSettings, setShowGeminiSettings] = useState(false);
   const [showOpenAISettings, setShowOpenAISettings] = useState(false);
+  const [showMistralSettings, setShowMistralSettings] = useState(false);
   // Gestion des presets Gemini
   const [presets, setPresets] = useState<{ name: string; config: GeminiGenerationConfig }[]>([]);
 
@@ -192,6 +194,13 @@ function App() {
     const handler = () => setShowOpenAISettings(true);
     document.addEventListener('openai:settings:open' as any, handler);
     return () => document.removeEventListener('openai:settings:open' as any, handler);
+  }, []);
+
+  // Ouvrir les réglages Mistral via event du Header
+  useEffect(() => {
+    const handler = () => setShowMistralSettings(true);
+    document.addEventListener('mistral:settings:open' as any, handler);
+    return () => document.removeEventListener('mistral:settings:open' as any, handler);
   }, []);
 
   // --- Mode privé/éphémère ---
@@ -1433,6 +1442,19 @@ ${lines.join('\n')}`, false);
           onReset={() => setOpenaiConfig({ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' })}
           onClose={() => setShowOpenAISettings(false)}
           DEFAULTS={{ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' }}
+        />
+      </Suspense>
+
+      {/* Réglages Mistral */}
+      <Suspense fallback={null}>
+        <MistralSettingsDrawerLazy
+          open={modeEnfant ? false : showMistralSettings}
+          onOpenChange={(open) => !modeEnfant && setShowMistralSettings(open)}
+          mistralConfig={mistralConfig}
+          onConfigChange={(key, value) => _setMistralConfig(cfg => ({ ...cfg, [key]: value }))}
+          onReset={() => _setMistralConfig({ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest' })}
+          onClose={() => setShowMistralSettings(false)}
+          DEFAULTS={{ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest' }}
         />
       </Suspense>
 
