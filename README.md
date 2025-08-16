@@ -4,11 +4,12 @@
 
 [![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](./README.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
-[![Build](https://github.com/your-username/NeuroChat-IA-v2/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/NeuroChat-IA-v2/actions)
+[![Build](https://github.com/moonback/NeuroChat-IA-v2/actions/workflows/ci.yml/badge.svg)](https://github.com/moonback/NeuroChat-IA-v2/actions)
 [![React](https://img.shields.io/badge/react-18.3.1-61dafb.svg)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/typescript-5.5.3-3178c6.svg)](https://www.typescriptlang.org/)
-[![Stars](https://img.shields.io/github/stars/your-username/NeuroChat-IA-v2.svg?style=social)](https://github.com/your-username/NeuroChat-IA-v2)
-[![Contributors](https://img.shields.io/github/contributors/your-username/NeuroChat-IA-v2.svg)](https://github.com/your-username/NeuroChat-IA-v2/graphs/contributors)
+[![Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://chat-gemini-coral.vercel.app)
+[![Stars](https://img.shields.io/github/stars/moonback/NeuroChat-IA-v2.svg?style=social)](https://github.com/moonback/NeuroChat-IA-v2)
+[![Contributors](https://img.shields.io/github/contributors/moonback/NeuroChat-IA-v2.svg)](https://github.com/moonback/NeuroChat-IA-v2/graphs/contributors)
 [![Deploy](https://img.shields.io/badge/deploy-Vercel-black.svg)](https://vercel.com/)
 
 <div align="center">
@@ -65,7 +66,7 @@
 
 ```bash
 # 1) Cloner et installer
-git clone https://github.com/your-username/NeuroChat-IA-v2.git
+git clone https://github.com/moonback/NeuroChat-IA-v2.git
 cd NeuroChat-IA-v2
 npm install
 
@@ -248,7 +249,7 @@ npx tsc --noEmit
 
 1) Préparer l’environnement
 ```bash
-git clone https://github.com/your-username/NeuroChat-IA-v2.git
+git clone https://github.com/moonback/NeuroChat-IA-v2.git
 cd NeuroChat-IA-v2
 npm install
 ```
@@ -319,16 +320,17 @@ Projet sous licence MIT — voir `LICENSE`.
 ### 🔖 Badges suggérés (à placer en haut)
 
 ```md
-[![Build](https://github.com/your-username/NeuroChat-IA-v2/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/NeuroChat-IA-v2/actions)
+[![Build](https://github.com/moonback/NeuroChat-IA-v2/actions/workflows/ci.yml/badge.svg)](https://github.com/moonback/NeuroChat-IA-v2/actions)
 [![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](./README.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![React](https://img.shields.io/badge/react-18.3.1-61dafb.svg)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/typescript-5.5.3-3178c6.svg)](https://www.typescriptlang.org/)
+[![Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://chat-gemini-coral.vercel.app)
 [![Deploy](https://img.shields.io/badge/deploy-Vercel-black.svg)](https://vercel.com/)
-[![Stars](https://img.shields.io/github/stars/your-username/NeuroChat-IA-v2.svg?style=social)](https://github.com/your-username/NeuroChat-IA-v2)
-[![Contributors](https://img.shields.io/github/contributors/your-username/NeuroChat-IA-v2.svg)](https://github.com/your-username/NeuroChat-IA-v2/graphs/contributors)
+[![Stars](https://img.shields.io/github/stars/moonback/NeuroChat-IA-v2.svg?style=social)](https://github.com/moonback/NeuroChat-IA-v2)
+[![Contributors](https://img.shields.io/github/contributors/moonback/NeuroChat-IA-v2.svg)](https://github.com/moonback/NeuroChat-IA-v2/graphs/contributors)
 ```
 
-Remplacez `your-username/NeuroChat-IA-v2` par le dépôt réel et adaptez les URLs CI/Vercel selon votre configuration.
+Liens utiles: dépôt GitHub `moonback/NeuroChat-IA-v2` et démo hébergée sur Vercel.
 
  
