@@ -1,16 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Mic, MicOff, ImageIcon, X, Command, Paperclip, FileText } from 'lucide-react';
+import { Send, Loader2, Mic, MicOff, ImageIcon, X, Command, Paperclip, FileText, Sparkles, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import type { Provider } from '@/services/llm';
 
 interface VoiceInputProps {
   onSendMessage: (message: string, imageFile?: File) => void;
   isLoading: boolean;
+  provider?: Provider;
+  agentEnabled?: boolean;
+  onToggleAgent?: () => void;
 }
 
-export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
+export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agentEnabled = false, onToggleAgent }: VoiceInputProps) {
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -306,6 +310,35 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
                       <Paperclip className="h-5 w-5 text-slate-600 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                     </Button>
+
+                    {/* Toggle Agent (Gemini/Mistral) */}
+                    {(provider === 'gemini' || provider === 'mistral') && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={onToggleAgent}
+                        disabled={isLoading}
+                        className={cn(
+                          "h-9 px-3 rounded-xl border transition-all duration-300 flex items-center gap-2",
+                          agentEnabled
+                            ? provider === 'gemini'
+                              ? 'bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/40 border-indigo-300/60 text-indigo-700 dark:text-indigo-300'
+                              : 'bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/40 dark:to-pink-950/40 border-purple-300/60 text-purple-700 dark:text-purple-300'
+                            : 'bg-white/80 dark:bg-slate-800/80 border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-50/90 dark:hover:bg-slate-700/90'
+                        )}
+                        title={agentEnabled ? `Désactiver ${provider === 'gemini' ? 'Agent Gemini' : 'Agent Mistral'}` : `Activer ${provider === 'gemini' ? 'Agent Gemini' : 'Agent Mistral'}`}
+                      >
+                        {provider === 'gemini' ? (
+                          <Sparkles className={cn("w-4 h-4", agentEnabled ? 'text-indigo-600 dark:text-indigo-300' : 'text-slate-500 dark:text-slate-400')} />
+                        ) : (
+                          <Bot className={cn("w-4 h-4", agentEnabled ? 'text-purple-600 dark:text-purple-300' : 'text-slate-500 dark:text-slate-400')} />
+                        )}
+                        <span className="text-xs font-medium">
+                          {agentEnabled ? 'Agent: ON' : 'Activer agent'}
+                        </span>
+                      </Button>
+                    )}
                   </div>
 
                   {/* Input principal avec design moderne */}

@@ -1404,7 +1404,12 @@ ${lines.join('\n')}`, false);
         <VoiceInput
           onSendMessage={handleSendMessage}
           isLoading={isLoading}
-          
+          provider={provider}
+          agentEnabled={(provider === 'gemini' && geminiAgentEnabled) || (provider === 'mistral' && mistralAgentEnabled)}
+          onToggleAgent={() => {
+            if (provider === 'gemini') setGeminiAgentEnabled(!geminiAgentEnabled);
+            if (provider === 'mistral') setMistralAgentEnabled(!mistralAgentEnabled);
+          }}
         />
       </div>
 
