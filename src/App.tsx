@@ -173,9 +173,15 @@ function App() {
   const [mistralAgentEnabled, setMistralAgentEnabled] = useState<boolean>(() => {
     try { return localStorage.getItem('mistral_agent_enabled') === 'true'; } catch { return false; }
   });
+  const [geminiAgentEnabled, setGeminiAgentEnabled] = useState<boolean>(() => {
+    try { return localStorage.getItem('gemini_agent_enabled') === 'true'; } catch { return false; }
+  });
   useEffect(() => {
     try { localStorage.setItem('mistral_agent_enabled', mistralAgentEnabled ? 'true' : 'false'); } catch {}
   }, [mistralAgentEnabled]);
+  useEffect(() => {
+    try { localStorage.setItem('gemini_agent_enabled', geminiAgentEnabled ? 'true' : 'false'); } catch {}
+  }, [geminiAgentEnabled]);
   // Gestion des presets Gemini
   const [presets, setPresets] = useState<{ name: string; config: GeminiGenerationConfig }[]>([]);
 
@@ -622,7 +628,7 @@ ${lines.join('\n')}`, false);
     }
     // Étape RAG : recherche documentaire (si activé ou agent Mistral)
     let passages: Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }> = [];
-    if (ragEnabled || (provider === 'mistral' && mistralAgentEnabled)) {
+    if (ragEnabled || (provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) {
       setIsRagSearching(true);
       try {
         passages = await searchDocuments(userMessage, 3, workspaceId);
@@ -645,7 +651,7 @@ ${lines.join('\n')}`, false);
     let webContext = '';
     let webSources: Array<{ title: string; url: string }> = [];
     try {
-      if (webEnabled || (provider === 'mistral' && mistralAgentEnabled)) {
+      if (webEnabled || (provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) {
         setIsWebSearching(true);
         const { searchWeb } = await import('@/services/webSearch');
         const webResults = await searchWeb(userMessage, 5, { enrich: false });
@@ -676,7 +682,7 @@ ${lines.join('\n')}`, false);
         }
       }
     } catch {} finally {
-      if (webEnabled || (provider === 'mistral' && mistralAgentEnabled)) setIsWebSearching(false);
+      if (webEnabled || (provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) setIsWebSearching(false);
     }
     // Ajoute le message utilisateur localement
     const newMessage = addMessage(userMessage, true, imageFile);
@@ -1355,7 +1361,7 @@ ${lines.join('\n')}`, false);
             )}
           </div>
           {/* Indicateur Agent Mistral */}
-          {provider === 'mistral' && mistralAgentEnabled && (
+          {(provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled) ? (
             <div className="absolute right-3 bottom-28 z-40">
               <AgentStatus
                 visible
@@ -1366,7 +1372,7 @@ ${lines.join('\n')}`, false);
                 }}
               />
             </div>
-          )}
+          ) : null}
         </Card>
       </div>
 
@@ -1455,6 +1461,8 @@ ${lines.join('\n')}`, false);
           onReset={() => setGeminiConfig(DEFAULTS)}
           onClose={() => setShowGeminiSettings(false)}
           DEFAULTS={DEFAULTS}
+          agentEnabled={geminiAgentEnabled}
+          onToggleAgent={(enabled) => setGeminiAgentEnabled(enabled)}
         />
       </Suspense>
 
