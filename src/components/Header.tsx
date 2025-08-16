@@ -673,7 +673,7 @@ export function Header(props: HeaderProps) {
 
       {/* Panneau latéral de réglages (Sheet) */}
       <Sheet open={showMobileMenu} onOpenChange={setShowMobileMenu}>
-        <SheetContent side="right" className="p-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-l border-slate-200/50 dark:border-slate-800/50 shadow-2xl w-[92vw] sm:w-[420px] md:w-[560px] lg:w-[720px]">
+        <SheetContent side="right" className="p-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-l border-slate-200/50 dark:border-slate-800/50 shadow-2xl w-[96vw] sm:w-[520px] md:w-[720px] lg:w-[920px]">
           <SheetHeader className="sr-only">
             <SheetTitle>Menu options</SheetTitle>
           </SheetHeader>
