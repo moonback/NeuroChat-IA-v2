@@ -103,7 +103,7 @@ export function RagSidebar({ onOpenRagDocs, usedDocs }: { onOpenRagDocs?: () => 
       className="absolute top-0 right-0 bottom-0 w-80 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-l border-slate-200 dark:border-slate-800 shadow-xl hidden lg:flex flex-col z-40 transition-transform duration-300"
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
-      style={{ transform: expanded ? 'translateX(0)' : 'translateX(calc(100% - 18px))' }}
+      style={{ transform: expanded ? 'translateX(0)' : 'translateX(calc(100% - 0px))' }}
       aria-label="Barre latérale des documents RAG"
     >
       <div className="p-3 border-b border-slate-200/60 dark:border-slate-800/60 bg-gradient-to-r from-blue-50/60 to-indigo-50/60 dark:from-slate-950/40 dark:to-indigo-950/30">
