@@ -864,6 +864,20 @@ ${lines.join('\n')}`, false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const isAISpeakingRef = useRef(false);
   const modeVocalAutoRef = useRef(false);
+  // Paramètres du mode vocal auto (persistés)
+  const [autoVoiceConfig, setAutoVoiceConfig] = useState<{ silenceMs: number; minChars: number; minWords: number; cooldownMs: number }>(() => {
+    try {
+      const raw = localStorage.getItem('auto_voice_cfg');
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return { silenceMs: 2500, minChars: 6, minWords: 2, cooldownMs: 1500 };
+  });
+  useEffect(() => {
+    try { localStorage.setItem('auto_voice_cfg', JSON.stringify(autoVoiceConfig)); } catch {}
+  }, [autoVoiceConfig]);
+  // Anti-doublon et cooldown
+  const lastAutoSentAtRef = useRef<number>(0);
+  const lastAutoTextRef = useRef<string>('');
   
   // Mettre à jour les références quand les états changent
   useEffect(() => {
@@ -888,25 +902,57 @@ ${lines.join('\n')}`, false);
     onResult: (finalText) => {
       // Ne traiter que si le mode vocal auto est actif et l'IA ne parle pas
       if (modeVocalAutoRef.current && !isAISpeakingRef.current) {
+        // Cooldown pour éviter les envois trop rapprochés
+        const now = Date.now();
+        if (now - lastAutoSentAtRef.current < autoVoiceConfig.cooldownMs) {
+          return;
+        }
+
         setTempTranscriptAuto(finalText);
-        
+
         // Annuler le timeout précédent
         if (autoVoiceTimeout) {
           clearTimeout(autoVoiceTimeout);
         }
-        
-        // Créer un nouveau timeout de 3 secondes
+
+        // Validation de texte (longueur minimale, mots, fillers)
+        const isAcceptable = (text: string): boolean => {
+          const t = (text || '').trim();
+          if (t.length < autoVoiceConfig.minChars) return false;
+          const words = t.split(/\s+/).filter(Boolean);
+          if (words.length < autoVoiceConfig.minWords) return false;
+          const fillers = ['euh', 'heu', 'hum', 'hmm', 'bah', 'ben', 'heu…', 'euh…'];
+          if (fillers.includes(t.toLowerCase())) return false;
+          // Éviter d'envoyer deux fois le même texte
+          if (t.toLowerCase() === lastAutoTextRef.current.toLowerCase()) return false;
+          // Éviter d'envoyer le même que le dernier message utilisateur
+          const lastUser = [...messages].reverse().find(m => m.isUser)?.text || '';
+          if (lastUser && t.toLowerCase() === lastUser.toLowerCase()) return false;
+          return true;
+        };
+
+        // Créer un nouveau timeout basé sur le silence configuré
         const timeout = setTimeout(() => {
-          if (finalText && finalText.trim().length > 0 && !isAISpeakingRef.current && modeVocalAutoRef.current) {
-            console.log('[Vocal Mode] Envoi automatique du message:', finalText.trim());
-            handleSendMessage(finalText.trim());
-            setTempTranscriptAuto('');
-            resetAuto();
+          if (!isAISpeakingRef.current && modeVocalAutoRef.current) {
+            const candidate = (finalText || '').trim();
+            if (isAcceptable(candidate)) {
+              console.log('[Vocal Mode] Envoi automatique du message:', candidate);
+              playBip();
+              lastAutoTextRef.current = candidate;
+              lastAutoSentAtRef.current = Date.now();
+              handleSendMessage(candidate);
+              setTempTranscriptAuto('');
+              resetAuto();
+            } else {
+              // Texte ignoré: on nettoie mais on continue à écouter
+              setTempTranscriptAuto('');
+              resetAuto();
+            }
           } else if (isAISpeakingRef.current) {
             console.log('[Vocal Mode] Message ignoré car IA en train de parler');
           }
-        }, 3000); // 3 secondes d'attente après la dernière parole
-        
+        }, autoVoiceConfig.silenceMs);
+
         setAutoVoiceTimeout(timeout);
       }
     },
@@ -944,6 +990,7 @@ ${lines.join('\n')}`, false);
       }
       setTempTranscriptAuto('');
       setIsAISpeaking(false); // Nettoyer l'état de l'IA qui parle
+      lastAutoTextRef.current = '';
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modeVocalAuto, isAISpeaking]);
@@ -960,6 +1007,8 @@ ${lines.join('\n')}`, false);
         setAutoVoiceTimeout(null);
       }
       setTempTranscriptAuto('');
+      // Empêcher la détection immédiate d'un doublon à la reprise
+      lastAutoTextRef.current = '';
     }
   }, [isAISpeaking]); // Simplifier les dépendances
 
@@ -975,6 +1024,7 @@ ${lines.join('\n')}`, false);
         setAutoVoiceTimeout(null);
       }
       setTempTranscriptAuto('');
+      lastAutoTextRef.current = '';
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [muted]);
@@ -1180,6 +1230,8 @@ ${lines.join('\n')}`, false);
             }
           }}
           onOpenChildPinSettings={() => setShowChildChangePinDialog(true)}
+          autoVoiceConfig={autoVoiceConfig}
+          onUpdateAutoVoiceConfig={(key, value) => setAutoVoiceConfig(cfg => ({ ...cfg, [key]: value }))}
           selectMode={selectMode}
           onToggleSelectMode={handleToggleSelectMode}
           selectedCount={selectedMessageIds.length}

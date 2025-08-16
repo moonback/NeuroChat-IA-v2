@@ -9,6 +9,8 @@ import {
   Globe, Database, Activity, Pencil
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
+// import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
 // =====================
@@ -50,6 +52,9 @@ interface HeaderProps {
   setShowConfirmDelete: (open: boolean) => void;
   onDeleteConfirmed: () => void;
   onOpenChildPinSettings?: () => void;
+  // Vocal auto config
+  autoVoiceConfig?: { silenceMs: number; minChars: number; minWords: number; cooldownMs: number };
+  onUpdateAutoVoiceConfig?: (key: 'silenceMs' | 'minChars' | 'minWords' | 'cooldownMs', value: number) => void;
   // Workspaces
   workspaceId?: string;
   workspaces?: Array<{ id: string; name: string }>;
@@ -372,11 +377,12 @@ export function Header(props: HeaderProps) {
   const { isOnline, connectionQuality } = useOnlineStatus();
   const { audioRef, showPrivateIndicator } = usePrivateModeFeedback(modePrive);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showVocalSettings, setShowVocalSettings] = useState(false);
   
 
   // Handlers optimisés avec feedback
   const handleVolumeToggle = useCallback(() => {
-    muted ? onUnmute() : onMute();
+      muted ? onUnmute() : onMute();
   }, [muted, onMute, onUnmute]);
 
   const handleModeVocalToggle = useCallback(() => {
@@ -675,15 +681,15 @@ export function Header(props: HeaderProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
-                    Options
-                  </h2>
+                Options
+              </h2>
                   <p className="text-sm text-slate-500 dark:text-slate-400">Réglages rapides</p>
                 </div>
-                <Button variant="ghost" size="sm" onClick={closeMobileMenu} className="h-8 w-8 p-0 rounded-xl" aria-label="Fermer">
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
+              <Button variant="ghost" size="sm" onClick={closeMobileMenu} className="h-8 w-8 p-0 rounded-xl" aria-label="Fermer">
+                <X className="w-4 h-4" />
+              </Button>
             </div>
+                    </div>
 
             <div className="space-y-4">
               {/* Section: Actions */}
@@ -694,6 +700,15 @@ export function Header(props: HeaderProps) {
               </div>
               <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-2">
                 <div className="grid grid-cols-4 gap-3">
+                {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(handleModeVocalToggle)}
+                      label={'Vocal'}
+                      icon={Mic}
+                      active={modeVocalAuto}
+                      tooltip="Activer/désactiver le mode vocal auto"
+                    />
+                  )}
                   <TileButton
                     onClick={handleMenuAction(onNewDiscussion)}
                     label={'Nouveau'}
@@ -716,7 +731,7 @@ export function Header(props: HeaderProps) {
                       tooltip="Gérer les informations mémorisées"
                     />
                   )}
-                </div>
+                        </div>
               </div>
 
               {hasActiveConversation && (
@@ -761,7 +776,7 @@ export function Header(props: HeaderProps) {
                   </div>
                 </>
               )}
-
+              
               <div className="border-t border-slate-200/60 dark:border-slate-800/60" />
 
               {/* Section: Modes */}
@@ -769,7 +784,7 @@ export function Header(props: HeaderProps) {
                 <Sparkles className="w-4 h-4" />
                 <span className="text-xs font-semibold uppercase tracking-wide">Modes</span>
                 <span className="text-[10px] opacity-70 ml-2">Activer des contextes</span>
-              </div>
+                      </div>
               <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-3">
                 <div className="grid grid-cols-4 gap-3">
                   {!props.modeEnfant && (
@@ -791,8 +806,8 @@ export function Header(props: HeaderProps) {
                     intent={props.modeEnfant ? 'info' : 'default'}
                     tooltip="Mode enfant"
                   />
-
-                  {!props.modeEnfant && (
+                
+                {!props.modeEnfant && (
                     <TileButton
                       onClick={handleMenuAction(handleRagToggle)}
                       label={ragEnabled ? 'RAG: ON' : 'RAG: OFF'}
@@ -813,8 +828,8 @@ export function Header(props: HeaderProps) {
                       tooltip="Recherche web"
                     />
                   )}
-                </div>
-              </div>
+                        </div>
+                          </div>
 
               <div className="border-t border-slate-200/60 dark:border-slate-800/60" />
 
@@ -823,7 +838,7 @@ export function Header(props: HeaderProps) {
                 <Settings2 className="w-4 h-4" />
                 <span className="text-xs font-semibold uppercase tracking-wide">Paramètres</span>
                 <span className="text-[10px] opacity-70 ml-2">Personnaliser l’expérience</span>
-              </div>
+                        </div>
               <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-3 mb-2">
                 <div className="grid grid-cols-4 gap-3">
                   {!props.modeEnfant && (
@@ -834,12 +849,28 @@ export function Header(props: HeaderProps) {
                       tooltip="Synthèse vocale"
                     />
                   )}
+                  {!props.modeEnfant && onOpenGeminiSettings && (
+                    <TileButton
+                      onClick={handleMenuAction(onOpenGeminiSettings)}
+                      label={'Gemini'}
+                      icon={Sparkles}
+                      tooltip="Réglages Gemini"
+                    />
+                  )}
                   {!props.modeEnfant && (
                     <TileButton
                       onClick={handleMenuAction(onOpenRagDocs)}
                       label={'Docs RAG'}
                       icon={BookOpen}
                       tooltip="Documents RAG"
+                    />
+                  )}
+                  {!props.modeEnfant && props.autoVoiceConfig && props.onUpdateAutoVoiceConfig && (
+                    <TileButton
+                      onClick={() => setShowVocalSettings(true)}
+                      label={'Vocal réglages'}
+                      icon={Settings2}
+                      tooltip="Ouvrir les réglages du mode vocal"
                     />
                   )}
                   {props.onOpenChildPinSettings && (
@@ -857,11 +888,59 @@ export function Header(props: HeaderProps) {
                       icon={theme === 'dark' ? Sun : Moon}
                       tooltip={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
                     />
-                  )}
-                </div>
+                )}
+              </div>
+                {/* Réglages du mode vocal automatique */}
+                {/* {!props.modeEnfant && props.autoVoiceConfig && props.onUpdateAutoVoiceConfig && (
+                  <div className="mt-4 space-y-3">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Vocal</div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="space-y-1">
+                        <label className="text-xs text-slate-600 dark:text-slate-300">Silence (ms)</label>
+                        <Input
+                          type="number"
+                          min={500}
+                          max={8000}
+                          value={props.autoVoiceConfig.silenceMs}
+                          onChange={(e) => props.onUpdateAutoVoiceConfig?.('silenceMs', Math.max(500, Math.min(8000, Number(e.target.value) || 0)))}
+                        />
+                        </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-600 dark:text-slate-300">Min. caractères</label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={200}
+                          value={props.autoVoiceConfig.minChars}
+                          onChange={(e) => props.onUpdateAutoVoiceConfig?.('minChars', Math.max(1, Math.min(200, Number(e.target.value) || 0)))}
+                        />
+                        </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-600 dark:text-slate-300">Min. mots</label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={20}
+                          value={props.autoVoiceConfig.minWords}
+                          onChange={(e) => props.onUpdateAutoVoiceConfig?.('minWords', Math.max(1, Math.min(20, Number(e.target.value) || 0)))}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-600 dark:text-slate-300">Cooldown (ms)</label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={10000}
+                          value={props.autoVoiceConfig.cooldownMs}
+                          onChange={(e) => props.onUpdateAutoVoiceConfig?.('cooldownMs', Math.max(0, Math.min(10000, Number(e.target.value) || 0)))}
+                        />
+                        </div>
+                        </div>
+                      </div>
+                )} */}
               </div>
 
-              {/* Sélecteur de provider IA */}
+                {/* Sélecteur de provider IA */}
                 {!props.modeEnfant && onChangeProvider && (
                   <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
                     <div className="text-sm font-medium mb-3 text-slate-700 dark:text-slate-300">Fournisseur IA</div>
@@ -890,7 +969,7 @@ export function Header(props: HeaderProps) {
                   </div>
                 )}
 
-                {!props.modeEnfant && onOpenGeminiSettings && provider === 'gemini' && (
+                {/* {!props.modeEnfant && onOpenGeminiSettings && provider === 'gemini' && (
                   <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onOpenGeminiSettings)}>
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 flex items-center justify-center">
@@ -902,7 +981,7 @@ export function Header(props: HeaderProps) {
                       </div>
                     </div>
                   </Button>
-                )}
+                )} */}
 
                 {!props.modeEnfant && provider === 'openai' && (
                   <Button
@@ -921,11 +1000,27 @@ export function Header(props: HeaderProps) {
                     </div>
                   </Button>
                 )}
-              
-            </div>
-          </div>
+
+                    </div>
+                      </div>
         </SheetContent>
       </Sheet>
+
+      {/* Modal Réglages Vocal Auto */}
+      {!props.modeEnfant && props.autoVoiceConfig && props.onUpdateAutoVoiceConfig && (
+        <VocalAutoSettingsModal
+          open={showVocalSettings}
+          onClose={() => setShowVocalSettings(false)}
+          config={props.autoVoiceConfig}
+          onUpdate={props.onUpdateAutoVoiceConfig}
+          onReset={() => {
+            props.onUpdateAutoVoiceConfig?.('silenceMs', 2500);
+            props.onUpdateAutoVoiceConfig?.('minChars', 6);
+            props.onUpdateAutoVoiceConfig?.('minWords', 2);
+            props.onUpdateAutoVoiceConfig?.('cooldownMs', 1500);
+          }}
+        />
+      )}
 
       {/* AlertDialog modernisée pour la confirmation de suppression */}
       <AlertDialog open={showConfirmDelete} onOpenChange={setShowConfirmDelete}>
