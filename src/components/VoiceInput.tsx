@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Mic, MicOff, ImageIcon, X, Command } from 'lucide-react';
+import { Send, Loader2, Mic, MicOff, ImageIcon, X, Command, Paperclip, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -15,7 +15,9 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [extractedText, setExtractedText] = useState<string>("");
+  const [fileInfo, setFileInfo] = useState<{ kind: 'image' | 'pdf' | 'docx' | 'other'; pages?: number; words?: number }>({ kind: 'other' });
 
   // Commandes slash supportées
   const slashCommands = [
@@ -69,23 +71,79 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
     }
   }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedImage(e.target.files[0]);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    setSelectedFile(file);
+    setExtractedText("");
+    const mime = file.type || '';
+    const name = file.name.toLowerCase();
+    if (mime.startsWith('image/')) {
+      setFileInfo({ kind: 'image' });
+      return;
     }
+    if (mime === 'application/pdf' || name.endsWith('.pdf')) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdfModule: any = await import('pdfjs-dist');
+        const pdfjsLib = pdfModule?.default ?? pdfModule;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.mjs';
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        setFileInfo({ kind: 'pdf', pages: pdf.numPages });
+        // Extraction légère: première page texte (optionnel, court)
+        try {
+          const page = await pdf.getPage(1);
+          const content = await page.getTextContent();
+          const text = content.items.map((it: any) => (it?.str || '')).join(' ');
+          setExtractedText(text.trim());
+        } catch {}
+      } catch {
+        setFileInfo({ kind: 'pdf' });
+      }
+      return;
+    }
+    if (
+      mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      name.endsWith('.docx') ||
+      mime === 'application/msword' ||
+      name.endsWith('.doc')
+    ) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const mammothModule: any = await import('mammoth');
+        const mammoth = mammothModule?.default ?? mammothModule;
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        const text = (result?.value || '').trim();
+        const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+        setFileInfo({ kind: 'docx', words });
+        setExtractedText(text);
+      } catch {
+        setFileInfo({ kind: 'docx' });
+      }
+      return;
+    }
+    setFileInfo({ kind: 'other' });
   };
 
   const handleSend = () => {
-    const valueToSend = listening && transcript ? transcript : inputValue;
-    if (!valueToSend.trim() && !selectedImage) return;
-    
+    const baseText = listening && transcript ? transcript : inputValue;
+    if (!baseText.trim() && !selectedFile) return;
     if (listening) {
       stop();
     }
-    
-    onSendMessage(valueToSend, selectedImage || undefined);
+    // Pour PDF/DOCX, injecter un extrait texte dans le message
+    let finalText = baseText;
+    if (selectedFile && (fileInfo.kind === 'pdf' || fileInfo.kind === 'docx')) {
+      const header = `\n\n[Pièce jointe: ${selectedFile.name}]`;
+      const excerpt = extractedText ? `\n${extractedText.slice(0, 6000)}` : '';
+      finalText = `${baseText}${header}${excerpt}`.trim();
+    }
+    const imageToSend = selectedFile && fileInfo.kind === 'image' ? selectedFile : undefined;
+    onSendMessage(finalText, imageToSend);
     setInputValue('');
-    setSelectedImage(null);
+    setSelectedFile(null);
+    setExtractedText("");
+    setFileInfo({ kind: 'other' });
     reset();
   };
 
@@ -98,7 +156,7 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
 
   // Affichage prioritaire de la voix si écoute en cours
   const displayValue = listening ? transcript : inputValue;
-  const hasContent = displayValue.trim().length > 0 || !!selectedImage;
+  const hasContent = displayValue.trim().length > 0 || !!selectedFile;
   const showSlashHelp = displayValue.trim().startsWith('/');
   const slashToken = showSlashHelp ? displayValue.trim().split(/\s+/)[0] : '';
   const filteredCommands = showSlashHelp
@@ -158,37 +216,58 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
               
                {/* Timeline retirée */}
 
-              {/* Aperçu image élégant */}
-               {selectedImage && (
+              {/* Aperçu fichier élégant (image, pdf, docx, autres) */}
+               {selectedFile && (
                  <div className="mb-3 animate-in slide-in-from-bottom-2 fade-in-0 duration-200">
                   <div className="relative inline-flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-950/40 dark:to-indigo-950/40 border border-blue-200/50 dark:border-blue-800/50 shadow-lg backdrop-blur-sm">
                     <div className="relative">
-                      <img
-                        src={URL.createObjectURL(selectedImage)}
-                        alt="Aperçu"
-                         className="w-10 h-10 rounded-lg object-cover border border-white/80 dark:border-slate-700/80 shadow"
-                      />
+                      {fileInfo.kind === 'image' ? (
+                        <img
+                          src={URL.createObjectURL(selectedFile)}
+                          alt="Aperçu"
+                          className="w-10 h-10 rounded-lg object-cover border border-white/80 dark:border-slate-700/80 shadow"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg border border-white/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 flex items-center justify-center shadow">
+                          <FileText className="w-5 h-5 text-blue-600 dark:text-blue-300" />
+                        </div>
+                      )}
                       <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                        <ImageIcon className="w-3 h-3 text-white" />
+                        {fileInfo.kind === 'image' ? (
+                          <ImageIcon className="w-3 h-3 text-white" />
+                        ) : (
+                          <FileText className="w-3 h-3 text-white" />
+                        )}
                       </div>
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-blue-900 dark:text-blue-100 truncate" title={selectedImage.name}>
-                        {selectedImage.name}
+                      <div className="text-sm font-medium text-blue-900 dark:text-blue-100 truncate" title={selectedFile.name}>
+                        {selectedFile.name}
                       </div>
                       <div className="text-xs text-blue-700/80 dark:text-blue-300/80">
-                        {(selectedImage.size / 1024).toFixed(1)} Ko • {selectedImage.type.split('/')[1].toUpperCase()}
+                        {(() => {
+                          const size = selectedFile.size;
+                          const sizeStr = size >= 1024 * 1024 ? `${(size / (1024*1024)).toFixed(1)} Mo` : `${(size / 1024).toFixed(1)} Ko`;
+                          const ext = (selectedFile.type || '').split('/')[1]?.toUpperCase() || selectedFile.name.split('.').pop()?.toUpperCase();
+                          const meta = fileInfo.kind === 'pdf' && fileInfo.pages ? ` • ${fileInfo.pages} page${fileInfo.pages>1?'s':''}` : fileInfo.kind === 'docx' && fileInfo.words ? ` • ${fileInfo.words} mots` : '';
+                          return `${sizeStr} • ${ext || 'FICHIER'}${meta}`;
+                        })()}
                       </div>
+                      {extractedText && fileInfo.kind !== 'image' && (
+                        <div className="mt-1 text-xs text-blue-900/80 dark:text-blue-100/80 line-clamp-2">
+                          {extractedText}
+                        </div>
+                      )}
                     </div>
                     
                     <Button
                       type="button"
                       size="sm"
                       variant="ghost"
-                      onClick={() => setSelectedImage(null)}
-                       className="h-7 w-7 p-0 rounded-md hover:bg-red-100 dark:hover:bg-red-950/50 text-red-600 dark:text-red-400"
-                      title="Retirer l'image"
+                      onClick={() => { setSelectedFile(null); setExtractedText(""); setFileInfo({ kind: 'other' }); }}
+                      className="h-7 w-7 p-0 rounded-md hover:bg-red-100 dark:hover:bg-red-950/50 text-red-600 dark:text-red-400"
+                      title="Retirer le fichier"
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -203,7 +282,7 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
                   <div className="flex items-center gap-2">
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/*,.pdf,.doc,.docx"
                       style={{ display: 'none' }}
                       ref={fileInputRef}
                       onChange={handleFileChange}
@@ -222,9 +301,9 @@ export function VoiceInput({ onSendMessage, isLoading }: VoiceInputProps) {
                         "border border-slate-200/60 dark:border-slate-700/60 hover:border-blue-300/60 dark:hover:border-blue-600/60",
                         "shadow-lg hover:shadow-xl shadow-black/5 dark:shadow-black/20"
                       )}
-                      title="Ajouter une image"
+                      title="Joindre un fichier (image, PDF, DOCX)"
                     >
-                      <ImageIcon className="h-5 w-5 text-slate-600 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                      <Paperclip className="h-5 w-5 text-slate-600 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                     </Button>
                   </div>
