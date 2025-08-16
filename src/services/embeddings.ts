@@ -8,6 +8,10 @@ import type { pipeline as PipelineType } from '@xenova/transformers';
 
 let embedderPromise: Promise<any> | null = null;
 
+// Cache des embeddings pour éviter les recalculs
+const embeddingCache = new Map<string, Float32Array>();
+const EMBEDDING_CACHE_SIZE = 1000; // Limite du cache
+
 // Optimisations WASM pour onnxruntime-web via transformers.js
 // Sûres à appeler dans le navigateur; ignorées si non supportées
 try {
@@ -64,11 +68,35 @@ export function cosineSimilarityNormalized(a: ArrayLike<number>, b: ArrayLike<nu
 
 // Renvoie un embedding NORMALISÉ (Float32Array)
 export async function embedText(text: string, normalize = true): Promise<Float32Array> {
+  // Créer une clé de cache basée sur le texte et les paramètres
+  const cacheKey = `${text}:${normalize}`;
+  
+  // Vérifier le cache d'abord
+  if (embeddingCache.has(cacheKey)) {
+    const cached = embeddingCache.get(cacheKey)!;
+    return new Float32Array(cached); // Retourner une copie
+  }
+  
   const embedder = await getEmbedder();
   const output = await embedder(text, { pooling: 'mean', normalize: false });
   // output.data est typiquement un TypedArray
   const arr = new Float32Array(output.data);
-  return normalize ? normalizeVector(arr) : arr;
+  const result = normalize ? normalizeVector(arr) : arr;
+  
+  // Ajouter au cache avec gestion de la taille
+  if (embeddingCache.size >= EMBEDDING_CACHE_SIZE) {
+    // Supprimer le plus ancien élément (FIFO)
+    const firstKey = embeddingCache.keys().next().value;
+    embeddingCache.delete(firstKey);
+  }
+  embeddingCache.set(cacheKey, new Float32Array(result));
+  
+  return result;
+}
+
+// Fonction pour nettoyer le cache si nécessaire
+export function clearEmbeddingCache(): void {
+  embeddingCache.clear();
 }
 
 

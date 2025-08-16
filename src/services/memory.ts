@@ -18,21 +18,69 @@ export interface MemoryItem {
 }
 
 const STORAGE_KEY = 'neurochat_user_memory_v1';
+const CACHE_KEY = 'neurochat_memory_cache';
+
+// Cache en mémoire pour éviter les accès répétés au localStorage
+let memoryCache: MemoryItem[] | null = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 30000; // 30 secondes
 
 export function loadMemory(): MemoryItem[] {
+  // Utiliser le cache si disponible et récent
+  const now = Date.now();
+  if (memoryCache && (now - cacheTimestamp) < CACHE_DURATION) {
+    return [...memoryCache]; // Retourner une copie pour éviter les mutations
+  }
+
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
+    if (!raw) {
+      memoryCache = [];
+      cacheTimestamp = now;
+      return [];
+    }
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed;
+    if (!Array.isArray(parsed)) {
+      memoryCache = [];
+      cacheTimestamp = now;
+      return [];
+    }
+    memoryCache = parsed;
+    cacheTimestamp = now;
+    return [...parsed];
   } catch {
+    memoryCache = [];
+    cacheTimestamp = now;
     return [];
   }
 }
 
 export function saveMemory(memories: MemoryItem[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
+  try {
+    // Compression basique : supprimer les propriétés undefined
+    const compressed = memories.map(m => {
+      const cleaned: any = {};
+      for (const [key, value] of Object.entries(m)) {
+        if (value !== undefined) {
+          cleaned[key] = value;
+        }
+      }
+      return cleaned;
+    });
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(compressed));
+    // Mettre à jour le cache
+    memoryCache = [...memories];
+    cacheTimestamp = Date.now();
+  } catch (error) {
+    console.warn('Erreur lors de la sauvegarde de la mémoire:', error);
+  }
+}
+
+// Fonction pour invalider le cache manuellement si nécessaire
+export function invalidateMemoryCache(): void {
+  memoryCache = null;
+  cacheTimestamp = 0;
 }
 
 export function addMemory(item: Omit<MemoryItem, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }): MemoryItem {
@@ -126,47 +174,120 @@ async function ensureEmbeddingsForMemories(memories: MemoryItem[]): Promise<Memo
   // Compute normalized embeddings for items missing one
   const updated: MemoryItem[] = [...memories];
   let changed = false;
-  for (let i = 0; i < updated.length; i += 1) {
-    const m = updated[i];
-    if (!m.embedding && !m.disabled) {
-      try {
-        const vec = await embedText(m.content, true); // normalized Float32Array
-        updated[i] = { ...m, embedding: Array.from(vec) };
-        changed = true;
-      } catch {
-        // ignore
-      }
-      // Yield to event loop
-      // eslint-disable-next-line no-await-in-loop
-      await new Promise((res) => setTimeout(res, 0));
-    }
+  const batchSize = 5; // Traiter par petits lots pour éviter de bloquer l'UI
+  
+  const itemsNeedingEmbeddings = updated.filter((m, index) => !m.embedding && !m.disabled).map((m, _, arr) => {
+    const originalIndex = updated.findIndex(item => item.id === m.id);
+    return { item: m, index: originalIndex };
+  });
+  
+  for (let i = 0; i < itemsNeedingEmbeddings.length; i += batchSize) {
+    const batch = itemsNeedingEmbeddings.slice(i, i + batchSize);
+    
+    // Traiter le lot en parallèle
+    await Promise.allSettled(
+      batch.map(async ({ item, index }) => {
+        try {
+          const vec = await embedText(item.content, true); // normalized Float32Array
+          updated[index] = { ...item, embedding: Array.from(vec) };
+          changed = true;
+        } catch {
+          // ignore individual failures
+        }
+      })
+    );
+    
+    // Yield to event loop after chaque lot
+    await new Promise((res) => setTimeout(res, 10));
   }
+  
   if (changed) saveMemory(updated);
   return updated;
 }
 
+// Cache des recherches récentes
+const searchCache = new Map<string, { results: MemoryItem[], timestamp: number }>();
+const SEARCH_CACHE_DURATION = 60000; // 1 minute
+const SEARCH_CACHE_SIZE = 50;
+
 export async function getRelevantMemories(query: string, limit = 5): Promise<MemoryItem[]> {
   if (!query || !query.trim()) return [];
+  
+  // Vérifier le cache de recherche
+  const cacheKey = `${query.trim().toLowerCase()}:${limit}`;
+  const cached = searchCache.get(cacheKey);
+  if (cached && (Date.now() - cached.timestamp) < SEARCH_CACHE_DURATION) {
+    return [...cached.results];
+  }
+  
   let memories = loadMemory().filter((m) => !m.disabled);
   if (memories.length === 0) return [];
-  memories = await ensureEmbeddingsForMemories(memories);
+  
+  // Pré-filtrage rapide par mots-clés pour réduire l'ensemble de recherche
+  const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+  let candidateMemories = memories;
+  
+  if (queryWords.length > 0 && memories.length > 100) {
+    candidateMemories = memories.filter(m => 
+      queryWords.some(word => 
+        m.content.toLowerCase().includes(word) || 
+        m.tags.some(tag => tag.toLowerCase().includes(word))
+      )
+    );
+    
+    // Si le pré-filtrage réduit trop, garder les mieux classés
+    if (candidateMemories.length < limit * 2) {
+      const topRanked = memories
+        .sort((a, b) => computeRankingScore(b) - computeRankingScore(a))
+        .slice(0, Math.max(limit * 5, 50));
+      candidateMemories = Array.from(new Set([...candidateMemories, ...topRanked]));
+    }
+  }
+  
+  candidateMemories = await ensureEmbeddingsForMemories(candidateMemories);
   let queryEmbedding: Float32Array | null = null;
+  
   try {
     queryEmbedding = await embedText(query, true);
   } catch {
-    return memories
+    const fallback = candidateMemories
       .sort((a, b) => computeRankingScore(b) - computeRankingScore(a))
       .slice(0, limit);
+    
+    // Mettre en cache le résultat
+    if (searchCache.size >= SEARCH_CACHE_SIZE) {
+      const oldestKey = searchCache.keys().next().value;
+      searchCache.delete(oldestKey);
+    }
+    searchCache.set(cacheKey, { results: fallback, timestamp: Date.now() });
+    
+    return fallback;
   }
-  const scored = memories.map((m) => {
+  
+  const scored = candidateMemories.map((m) => {
     const sim = m.embedding ? cosineSimilarityNormalized(queryEmbedding!, new Float32Array(m.embedding)) : 0;
     const rankBonus = computeRankingScore(m) * 0.05; // small weight for meta scoring
     return { m, score: sim + rankBonus };
   });
-  return scored
+  
+  const results = scored
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
     .map((s) => s.m);
+  
+  // Mettre en cache le résultat
+  if (searchCache.size >= SEARCH_CACHE_SIZE) {
+    const oldestKey = searchCache.keys().next().value;
+    searchCache.delete(oldestKey);
+  }
+  searchCache.set(cacheKey, { results: [...results], timestamp: Date.now() });
+  
+  return results;
+}
+
+// Fonction pour nettoyer le cache de recherche
+export function clearSearchCache(): void {
+  searchCache.clear();
 }
 
 export function upsertMany(facts: Array<{ content: string; tags?: string[]; importance?: number; source?: MemorySource; originMessageId?: string }>): MemoryItem[] {

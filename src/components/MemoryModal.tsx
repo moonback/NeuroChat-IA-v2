@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, Plus, Trash2, Upload, Download, Brain, ToggleLeft, ToggleRight, Edit3, Save, Star } from 'lucide-react';
+import { X, Plus, Trash2, Upload, Download, Brain, ToggleLeft, ToggleRight, Edit3, Save, Star, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 import { MemoryItem, loadMemory, addMemory, updateMemory, deleteMemory, toggleMemoryDisabled, clearAllMemory, exportMemory, importMemory } from '@/services/memory';
 
@@ -20,6 +21,11 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
   const [newImportance, setNewImportance] = useState(3);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState('');
+  
+  // États pour la pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [sortBy, setSortBy] = useState<'created' | 'updated' | 'importance' | 'content'>('updated');
 
   useEffect(() => {
     if (open) {
@@ -28,13 +34,45 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
   }, [open]);
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return items;
-    const q = query.toLowerCase();
-    return items.filter((m) =>
-      m.content.toLowerCase().includes(q) ||
-      (m.tags || []).some((t) => t.toLowerCase().includes(q))
-    );
-  }, [items, query]);
+    let result = items;
+    
+    // Filtrage par recherche
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      result = result.filter((m) =>
+        m.content.toLowerCase().includes(q) ||
+        (m.tags || []).some((t) => t.toLowerCase().includes(q))
+      );
+    }
+    
+    // Tri
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case 'created':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'updated':
+          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        case 'importance':
+          return (b.importance || 0) - (a.importance || 0);
+        case 'content':
+          return a.content.localeCompare(b.content);
+        default:
+          return 0;
+      }
+    });
+    
+    return result;
+  }, [items, query, sortBy]);
+
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedItems = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+  // Réinitialiser la page lors du changement de filtre
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, sortBy]);
 
   function refresh() {
     setItems(loadMemory());
@@ -111,16 +149,57 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
         </DrawerHeader>
 
         <div className="flex-1 overflow-auto p-6 space-y-4">
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Input placeholder="Rechercher (texte ou tag)…" value={query} onChange={(e) => setQuery(e.target.value)} />
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleExport} title="Exporter">
-                <Download className="w-4 h-4 mr-2" /> Exporter
-              </Button>
-              <label className="inline-flex items-center gap-2 px-3 py-2 border rounded-md cursor-pointer text-sm">
-                <Upload className="w-4 h-4" /> Importer
-                <input type="file" accept="application/json" className="hidden" onChange={(e) => handleImport(e.target.files?.[0] || null)} />
-              </label>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input 
+                placeholder="Rechercher (texte ou tag)…" 
+                value={query} 
+                onChange={(e) => setQuery(e.target.value)} 
+                className="flex-1"
+              />
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={handleExport} title="Exporter">
+                  <Download className="w-4 h-4 mr-2" /> Exporter
+                </Button>
+                <label className="inline-flex items-center gap-2 px-3 py-2 border rounded-md cursor-pointer text-sm">
+                  <Upload className="w-4 h-4" /> Importer
+                  <input type="file" accept="application/json" className="hidden" onChange={(e) => handleImport(e.target.files?.[0] || null)} />
+                </label>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-2 items-center">
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="w-4 h-4 text-slate-500" />
+                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Trier par..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="updated">Modifié</SelectItem>
+                    <SelectItem value="created">Créé</SelectItem>
+                    <SelectItem value="importance">Importance</SelectItem>
+                    <SelectItem value="content">Contenu</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex items-center gap-2 ml-auto">
+                <span className="text-sm text-slate-600 dark:text-slate-400">
+                  {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filtered.length)} sur {filtered.length}
+                </span>
+                <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
@@ -143,7 +222,34 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="text-sm text-slate-600 dark:text-slate-400">{filtered.length} élément(s)</div>
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-slate-600 dark:text-slate-400">
+                {filtered.length} élément(s) total
+              </div>
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                    Page {currentPage} sur {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
             {items.length > 0 && (
               <Button variant="destructive" onClick={() => { clearAllMemory(); refresh(); }}>
                 <Trash2 className="w-4 h-4 mr-2" /> Tout effacer
@@ -152,7 +258,7 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
           </div>
 
           <div className="space-y-2">
-            {filtered.map((m) => (
+            {paginatedItems.map((m) => (
               <div
                 key={m.id}
                 className="p-4 border border-slate-200 dark:border-slate-800 rounded-xl flex items-start gap-3 bg-white/80 dark:bg-slate-900/60 shadow-sm hover:shadow-md transition-shadow"
@@ -208,8 +314,10 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
                 </div>
               </div>
             ))}
-            {filtered.length === 0 && (
-              <div className="text-sm text-slate-500 text-center py-10">Aucun élément de mémoire</div>
+            {paginatedItems.length === 0 && (
+              <div className="text-sm text-slate-500 text-center py-10">
+                {filtered.length === 0 ? 'Aucun élément de mémoire' : 'Aucun résultat sur cette page'}
+              </div>
             )}
           </div>
         </div>
