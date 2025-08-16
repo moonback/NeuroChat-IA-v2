@@ -474,7 +474,72 @@ export function RagSidebar({ onOpenRagDocs, usedDocs }: { onOpenRagDocs?: () => 
         </div>
 
         {/* Tous les documents */}
-        
+        <div>
+          <div className="text-xs font-semibold text-slate-500 uppercase px-2 mb-2">
+            Tous les documents
+            {totalPages > 1 && (
+              <span className="ml-2 font-normal">({startIndex + 1}-{Math.min(startIndex + itemsPerPage, processedDocs.length)} sur {processedDocs.length})</span>
+            )}
+          </div>
+          {paginatedDocs.length === 0 ? (
+            <div className="text-xs text-slate-500 px-2">
+              {processedDocs.length === 0 ? 'Aucun document trouvé.' : 'Aucun résultat sur cette page.'}
+            </div>
+          ) : (
+            paginatedDocs.map(doc => (
+              <div key={doc.id} className="relative group">
+                <button
+                  className="w-full text-left p-3 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-700/60 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow transition-all"
+                  onClick={() => handlePreview(doc)}
+                  title="Aperçu"
+                >
+                  <div className="flex items-start gap-2">
+                    <div className="mt-0.5 flex items-center gap-1">
+                      {getIcon(doc.extension || '')}
+                      {doc.favorite && <Star className="w-3 h-3 text-yellow-500 fill-yellow-400" />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{doc.titre}</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
+                        {doc.contenu.slice(0, 100)}{doc.contenu.length > 100 ? '…' : ''}
+                      </div>
+                      
+                      {/* Métadonnées */}
+                      <div className="mt-1 flex items-center gap-2 text-[10px] text-slate-400">
+                        {doc.size && (
+                          <span>{doc.size > 1000 ? `${Math.round(doc.size/1000)}k` : doc.size} car.</span>
+                        )}
+                        {doc.useCount && doc.useCount > 0 && (
+                          <span>• {doc.useCount} util.</span>
+                        )}
+                        {doc.lastUsed && (
+                          <span>• {new Date(doc.lastUsed).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-2 flex items-center justify-between">
+                    <div className="flex items-center gap-1">{getOriginBadge(doc.origine)}</div>
+                    <Eye className="w-4 h-4 text-slate-400 group-hover:text-blue-500" />
+                  </div>
+                </button>
+                
+                {/* Bouton favori */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(doc.id);
+                  }}
+                  className="absolute top-2 right-2 p-1 rounded-full bg-white/80 dark:bg-slate-800/80 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white dark:hover:bg-slate-800"
+                  title={doc.favorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                >
+                  <Star className={`w-3 h-3 ${doc.favorite ? 'text-yellow-500 fill-yellow-400' : 'text-slate-400'}`} />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {previewDoc && (
