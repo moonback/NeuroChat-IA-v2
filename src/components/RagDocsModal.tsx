@@ -323,13 +323,13 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
   const handleEditSave = (doc: RagDoc) => {
     const trimmed = editingValue.trim();
     if (!trimmed) return;
-    const userRaw = localStorage.getItem(LS_KEY);
+    const userRaw = localStorage.getItem(wsKey(workspaceId, 'rag_user_docs'));
     let userDocs: RagDoc[] = [];
     if (userRaw) {
       try { userDocs = JSON.parse(userRaw); } catch {}
     }
     userDocs = userDocs.map(d => d.id === doc.id ? { ...d, titre: trimmed } : d);
-    localStorage.setItem(LS_KEY, JSON.stringify(userDocs));
+    localStorage.setItem(wsKey(workspaceId, 'rag_user_docs'), JSON.stringify(userDocs));
     setDocs(docs => docs.map(d => d.id === doc.id ? { ...d, titre: trimmed } : d));
     setEditingId(null);
     setEditingValue('');

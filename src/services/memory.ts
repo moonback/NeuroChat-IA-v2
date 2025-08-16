@@ -186,7 +186,7 @@ async function ensureEmbeddingsForMemories(memories: MemoryItem[]): Promise<Memo
   let changed = false;
   const batchSize = 5; // Traiter par petits lots pour éviter de bloquer l'UI
   
-  const itemsNeedingEmbeddings = updated.filter((m, index) => !m.embedding && !m.disabled).map((m, _, arr) => {
+  const itemsNeedingEmbeddings = updated.filter((m) => !m.embedding && !m.disabled).map((m) => {
     const originalIndex = updated.findIndex(item => item.id === m.id);
     return { item: m, index: originalIndex };
   });
@@ -266,8 +266,8 @@ export async function getRelevantMemories(query: string, limit = 5): Promise<Mem
     
     // Mettre en cache le résultat
     if (searchCache.size >= SEARCH_CACHE_SIZE) {
-      const oldestKey = searchCache.keys().next().value;
-      searchCache.delete(oldestKey);
+      const oldestKey = searchCache.keys().next().value as string | undefined;
+      if (oldestKey !== undefined) searchCache.delete(oldestKey);
     }
     searchCache.set(cacheKey, { results: fallback, timestamp: Date.now() });
     
@@ -287,8 +287,8 @@ export async function getRelevantMemories(query: string, limit = 5): Promise<Mem
   
   // Mettre en cache le résultat
   if (searchCache.size >= SEARCH_CACHE_SIZE) {
-    const oldestKey = searchCache.keys().next().value;
-    searchCache.delete(oldestKey);
+    const oldestKey = searchCache.keys().next().value as string | undefined;
+    if (oldestKey !== undefined) searchCache.delete(oldestKey);
   }
   searchCache.set(cacheKey, { results: [...results], timestamp: Date.now() });
   
