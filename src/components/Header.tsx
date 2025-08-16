@@ -685,55 +685,48 @@ export function Header(props: HeaderProps) {
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-4">
               {/* Section: Actions */}
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-2">Actions</div>
-              <div className="space-y-1">
-                <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onNewDiscussion)}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center">
-                      <PlusCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div>
-                      <div className="font-medium">Nouvelle discussion</div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">Démarrer une nouvelle conversation</div>
-                    </div>
-                  </div>
-                </Button>
-
-                {!props.modeEnfant && (
-                  <>
-                    <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onOpenHistory)}>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center">
-                          <History className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                        </div>
-                        <div>
-                          <div className="font-medium">Historique</div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">Consulter les conversations passées</div>
-                        </div>
-                      </div>
-                    </Button>
-
-                    <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onOpenMemory)}>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/40 flex items-center justify-center">
-                          <Brain className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                        </div>
-                        <div>
-                          <div className="font-medium">Mémoire</div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">Gérer les informations mémorisées</div>
-                        </div>
-                      </div>
-                    </Button>
-                  </>
-                )}
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                <Settings2 className="w-4 h-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide">Actions</span>
+                <span className="text-[10px] opacity-70 ml-2">Créer et gérer</span>
+              </div>
+              <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-2">
+                <div className="grid grid-cols-4 gap-3">
+                  <TileButton
+                    onClick={handleMenuAction(onNewDiscussion)}
+                    label={'Nouveau'}
+                    icon={PlusCircle}
+                    tooltip="Démarrer une nouvelle conversation"
+                  />
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(onOpenHistory)}
+                      label={'Historique'}
+                      icon={History}
+                      tooltip="Consulter les conversations passées"
+                    />
+                  )}
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(onOpenMemory)}
+                      label={'Mémoire'}
+                      icon={Brain}
+                      tooltip="Gérer les informations mémorisées"
+                    />
+                  )}
+                </div>
               </div>
 
               {hasActiveConversation && (
                 <>
-                  <div className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Sélection</div>
-                  <div className="space-y-1 mt-1">
+                  <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mt-2">
+                    <CheckSquare className="w-4 h-4" />
+                    <span className="text-xs font-semibold uppercase tracking-wide">Sélection</span>
+                    <span className="text-[10px] opacity-70 ml-2">Choisir et supprimer</span>
+                  </div>
+                  <div className="space-y-1 mt-1 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-2">
                     <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onToggleSelectMode)}>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center">
@@ -769,91 +762,103 @@ export function Header(props: HeaderProps) {
                 </>
               )}
 
-              <div className="border-t border-slate-200/60 dark:border-slate-800/60 my-4" />
+              <div className="border-t border-slate-200/60 dark:border-slate-800/60" />
 
               {/* Section: Modes */}
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-2">Modes</div>
-              <div className="grid grid-cols-3 gap-3">
-                {!props.modeEnfant && (
-                  <TileButton
-                    onClick={handleMenuAction(handlePrivateModeToggle)}
-                    label={modePrive ? 'Privé: ON' : 'Privé: OFF'}
-                    icon={Shield}
-                    active={modePrive}
-                    intent={modePrive ? 'danger' : 'default'}
-                    tooltip="Mode privé"
-                  />
-                )}
-
-                <TileButton
-                  onClick={handleMenuAction(handleChildModeToggle)}
-                  label={props.modeEnfant ? 'Enfant: ON' : 'Enfant: OFF'}
-                  icon={Baby}
-                  active={!!props.modeEnfant}
-                  intent={props.modeEnfant ? 'info' : 'default'}
-                  tooltip="Mode enfant"
-                />
-
-                {!props.modeEnfant && (
-                  <TileButton
-                    onClick={handleMenuAction(handleRagToggle)}
-                    label={ragEnabled ? 'RAG: ON' : 'RAG: OFF'}
-                    icon={Database}
-                    active={ragEnabled}
-                    intent={ragEnabled ? 'success' : 'default'}
-                    tooltip="Recherche documentaire"
-                  />
-                )}
-
-                {!props.modeEnfant && (
-                  <TileButton
-                    onClick={handleMenuAction(handleWebToggle)}
-                    label={webEnabled ? 'Web: ON' : 'Web: OFF'}
-                    icon={Globe}
-                    active={!!webEnabled}
-                    intent={webEnabled ? 'warning' : 'default'}
-                    tooltip="Recherche web"
-                  />
-                )}
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                <Sparkles className="w-4 h-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide">Modes</span>
+                <span className="text-[10px] opacity-70 ml-2">Activer des contextes</span>
               </div>
-              
-              <div className="border-t border-slate-200/60 dark:border-slate-800/60 my-4" />
+              <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-3">
+                <div className="grid grid-cols-4 gap-3">
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(handlePrivateModeToggle)}
+                      label={modePrive ? 'Privé: ON' : 'Privé: OFF'}
+                      icon={Shield}
+                      active={modePrive}
+                      intent={modePrive ? 'danger' : 'default'}
+                      tooltip="Mode privé"
+                    />
+                  )}
+
+                  <TileButton
+                    onClick={handleMenuAction(handleChildModeToggle)}
+                    label={props.modeEnfant ? 'Enfant: ON' : 'Enfant: OFF'}
+                    icon={Baby}
+                    active={!!props.modeEnfant}
+                    intent={props.modeEnfant ? 'info' : 'default'}
+                    tooltip="Mode enfant"
+                  />
+
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(handleRagToggle)}
+                      label={ragEnabled ? 'RAG: ON' : 'RAG: OFF'}
+                      icon={Database}
+                      active={ragEnabled}
+                      intent={ragEnabled ? 'success' : 'default'}
+                      tooltip="Recherche documentaire"
+                    />
+                  )}
+
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(handleWebToggle)}
+                      label={webEnabled ? 'Web: ON' : 'Web: OFF'}
+                      icon={Globe}
+                      active={!!webEnabled}
+                      intent={webEnabled ? 'warning' : 'default'}
+                      tooltip="Recherche web"
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="border-t border-slate-200/60 dark:border-slate-800/60" />
 
               {/* Section: Paramètres */}
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-2">Paramètres</div>
-              <div className="grid grid-cols-3 gap-3 mb-3">
-                {!props.modeEnfant && (
-                  <TileButton
-                    onClick={handleMenuAction(onOpenTTSSettings)}
-                    label={'Synthèse'}
-                    icon={Settings2}
-                    tooltip="Synthèse vocale"
-                  />
-                )}
-                {!props.modeEnfant && (
-                  <TileButton
-                    onClick={handleMenuAction(onOpenRagDocs)}
-                    label={'Docs RAG'}
-                    icon={BookOpen}
-                    tooltip="Documents RAG"
-                  />
-                )}
-                {props.onOpenChildPinSettings && (
-                  <TileButton
-                    onClick={handleMenuAction(props.onOpenChildPinSettings)}
-                    label={'PIN enfant'}
-                    icon={Settings2}
-                    tooltip="PIN mode enfant"
-                  />
-                )}
-                {!props.modeEnfant && (
-                  <TileButton
-                    onClick={handleMenuAction(toggleTheme)}
-                    label={theme === 'dark' ? 'Clair' : 'Sombre'}
-                    icon={theme === 'dark' ? Sun : Moon}
-                    tooltip={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
-                  />
-                )}
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                <Settings2 className="w-4 h-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide">Paramètres</span>
+                <span className="text-[10px] opacity-70 ml-2">Personnaliser l’expérience</span>
+              </div>
+              <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-3 mb-2">
+                <div className="grid grid-cols-4 gap-3">
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(onOpenTTSSettings)}
+                      label={'Synthèse'}
+                      icon={Settings2}
+                      tooltip="Synthèse vocale"
+                    />
+                  )}
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(onOpenRagDocs)}
+                      label={'Docs RAG'}
+                      icon={BookOpen}
+                      tooltip="Documents RAG"
+                    />
+                  )}
+                  {props.onOpenChildPinSettings && (
+                    <TileButton
+                      onClick={handleMenuAction(props.onOpenChildPinSettings)}
+                      label={'PIN enfant'}
+                      icon={Settings2}
+                      tooltip="PIN mode enfant"
+                    />
+                  )}
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(toggleTheme)}
+                      label={theme === 'dark' ? 'Clair' : 'Sombre'}
+                      icon={theme === 'dark' ? Sun : Moon}
+                      tooltip={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+                    />
+                  )}
+                </div>
               </div>
 
               {/* Sélecteur de provider IA */}
