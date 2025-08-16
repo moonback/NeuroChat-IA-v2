@@ -56,6 +56,7 @@ interface HeaderProps {
   onChangeWorkspace?: (id: string) => void;
   onCreateWorkspace?: () => void;
   onRenameWorkspace?: (id: string, name: string) => void;
+  onDeleteWorkspace?: (id: string) => void;
 }
 
 // =====================
@@ -504,6 +505,22 @@ export function Header(props: HeaderProps) {
                       title="Renommer l'espace"
                     >
                       <Pencil className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {props.onDeleteWorkspace && props.workspaceId && props.workspaceId !== 'default' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                      onClick={() => {
+                        const current = props.workspaces!.find(w => w.id === props.workspaceId);
+                        if (!current) return;
+                        const ok = window.confirm(`Supprimer l'espace "${current.name}" ?\nToutes les données locales de cet espace seront perdues.`);
+                        if (ok) props.onDeleteWorkspace?.(props.workspaceId!);
+                      }}
+                      title="Supprimer l'espace"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   )}
                 </div>

@@ -1128,6 +1128,28 @@ ${lines.join('\n')}`, false);
           onRenameWorkspace={(id, name) => {
             setWorkspaces(ws => ws.map(w => w.id === id ? { ...w, name } : w));
           }}
+          onDeleteWorkspace={(id) => {
+            // Supprimer les données locales liées à l'espace et retirer de la liste
+            try {
+              // Nettoyer les clés connues
+              const keysToClear = [
+                'gemini_current_discussion',
+                'gemini_discussions',
+                'gemini_presets',
+                'rag_user_docs',
+                'rag_doc_stats',
+                'rag_doc_favorites',
+                'neurochat_user_memory_v1',
+              ];
+              for (const base of keysToClear) {
+                localStorage.removeItem(wsKey(id, base));
+              }
+            } catch {}
+            setWorkspaces(ws => ws.filter(w => w.id !== id));
+            if (workspaceId === id) {
+              setWorkspaceId('default');
+            }
+          }}
           
           stop={stop}
           modeVocalAuto={modeVocalAuto}
