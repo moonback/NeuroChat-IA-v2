@@ -33,6 +33,7 @@ interface HeaderProps {
   setRagEnabled: (v: boolean) => void;
   webEnabled?: boolean;
   setWebEnabled?: (v: boolean) => void;
+  webSearching?: boolean;
   onOpenGeminiSettings?: () => void;
   geminiConfig?: any;
   provider?: 'gemini' | 'openai';
@@ -627,7 +628,7 @@ export function Header(props: HeaderProps) {
                       tooltip="Recherche web"
                       active={!!webEnabled}
                     >
-                      <Globe className="w-4 h-4" />
+                      <Globe className={`w-4 h-4 ${props.webSearching ? 'animate-spin' : ''}`} />
                     </IconButton>
                   </>
                 )}

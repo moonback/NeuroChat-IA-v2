@@ -125,6 +125,8 @@ function App() {
   const [ragEnabled, setRagEnabled] = useState(false);
   // Ajout du state pour activer/désactiver la recherche web
   const [webEnabled, setWebEnabled] = useState<boolean>(false);
+  // État de chargement spécifique à la recherche web
+  const [isWebSearching, setIsWebSearching] = useState<boolean>(false);
   // Documents RAG utilisés dans la conversation courante
   const [usedRagDocs, setUsedRagDocs] = useState<Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }>>([]);
   // Sidebar RAG mobile
@@ -615,6 +617,7 @@ ${lines.join('\n')}`, false);
     let webSources: Array<{ title: string; url: string }> = [];
     try {
       if (webEnabled) {
+        setIsWebSearching(true);
         const { searchWeb } = await import('@/services/webSearch');
         const webResults = await searchWeb(userMessage, 5, { enrich: false });
         if (webResults.length > 0) {
@@ -643,7 +646,9 @@ ${lines.join('\n')}`, false);
           });
         }
       }
-    } catch {}
+    } catch {} finally {
+      if (webEnabled) setIsWebSearching(false);
+    }
     // Ajoute le message utilisateur localement
     const newMessage = addMessage(userMessage, true, imageFile);
     
@@ -1209,6 +1214,7 @@ ${lines.join('\n')}`, false);
           setRagEnabled={setRagEnabled}
           webEnabled={webEnabled}
           setWebEnabled={setWebEnabled}
+          webSearching={isWebSearching}
           onOpenGeminiSettings={() => { if (!modeEnfant) setShowGeminiSettings(true); }}
           geminiConfig={geminiConfig}
           provider={provider}
