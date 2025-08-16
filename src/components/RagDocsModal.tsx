@@ -9,10 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 interface RagDocsModalProps {
   open: boolean;
   onClose: () => void;
+  workspaceId?: string;
 }
 
-// Clé localStorage pour les docs utilisateur
-const LS_KEY = 'rag_user_docs';
+// Clé localStorage pour les docs utilisateur (scopée par workspace)
+function wsKey(ws: string, base: string) { return `ws:${ws}:${base}`; }
 
 // Type d'un document RAG
 interface RagDoc {
@@ -67,7 +68,7 @@ function getOriginColor(origine: string) {
   }
 }
 
-export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
+export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocsModalProps) {
   const [docs, setDocs] = useState<RagDoc[]>([]);
   const [search, setSearch] = useState('');
   const [previewDoc, setPreviewDoc] = useState<RagDoc | null>(null);
@@ -103,7 +104,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
         };
       });
       // Docs utilisateur (en filtrant d'anciens docs GitHub éventuels)
-      const userRaw = localStorage.getItem(LS_KEY);
+      const userRaw = localStorage.getItem(wsKey(workspaceId, 'rag_user_docs'));
       let userDocs: RagDoc[] = [];
       if (userRaw) {
         try {
@@ -252,7 +253,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
 
   // Traitement des fichiers (commun pour upload et drag&drop)
   const processFiles = async (files: File[]) => {
-    let userRaw = localStorage.getItem(LS_KEY);
+    let userRaw = localStorage.getItem(wsKey(workspaceId, 'rag_user_docs'));
     let userDocs: RagDoc[] = [];
     if (userRaw) {
       try { userDocs = JSON.parse(userRaw); } catch {}
@@ -286,7 +287,7 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
       userDocs.push(newDoc);
       addedCount++;
     }
-    localStorage.setItem(LS_KEY, JSON.stringify(userDocs));
+    localStorage.setItem(wsKey(workspaceId, 'rag_user_docs'), JSON.stringify(userDocs));
     setDocs(docs => [...docs, ...userDocs.filter(d => !docs.some(doc => doc.id === d.id))]);
     if (addedCount > 0) toast.success(`${addedCount} document(s) ajouté(s) !`);
   };
@@ -302,13 +303,13 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
   // Supprimer un document utilisateur
   const handleDelete = (id: string) => {
     if (!window.confirm('Supprimer ce document ?')) return;
-    const userRaw = localStorage.getItem(LS_KEY);
+    const userRaw = localStorage.getItem(wsKey(workspaceId, 'rag_user_docs'));
     let userDocs: RagDoc[] = [];
     if (userRaw) {
       try { userDocs = JSON.parse(userRaw); } catch {}
     }
     userDocs = userDocs.filter(doc => doc.id !== id);
-    localStorage.setItem(LS_KEY, JSON.stringify(userDocs));
+    localStorage.setItem(wsKey(workspaceId, 'rag_user_docs'), JSON.stringify(userDocs));
     setDocs(docs => docs.filter(doc => doc.id !== id));
     toast.success('Document supprimé.');
   };
@@ -322,13 +323,13 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
   const handleEditSave = (doc: RagDoc) => {
     const trimmed = editingValue.trim();
     if (!trimmed) return;
-    const userRaw = localStorage.getItem(LS_KEY);
+    const userRaw = localStorage.getItem(wsKey(workspaceId, 'rag_user_docs'));
     let userDocs: RagDoc[] = [];
     if (userRaw) {
       try { userDocs = JSON.parse(userRaw); } catch {}
     }
     userDocs = userDocs.map(d => d.id === doc.id ? { ...d, titre: trimmed } : d);
-    localStorage.setItem(LS_KEY, JSON.stringify(userDocs));
+    localStorage.setItem(wsKey(workspaceId, 'rag_user_docs'), JSON.stringify(userDocs));
     setDocs(docs => docs.map(d => d.id === doc.id ? { ...d, titre: trimmed } : d));
     setEditingId(null);
     setEditingValue('');
@@ -808,13 +809,13 @@ export function RagDocsModal({ open, onClose }: RagDocsModalProps) {
               <Button
                 variant="destructive"
                 onClick={() => {
-                  const userRaw = localStorage.getItem(LS_KEY);
+                  const userRaw = localStorage.getItem(wsKey(workspaceId, 'rag_user_docs'));
                   let userDocs: RagDoc[] = [];
                   if (userRaw) {
                     try { userDocs = JSON.parse(userRaw); } catch {}
                   }
                   userDocs = userDocs.filter(doc => !selectedIds.includes(doc.id));
-                  localStorage.setItem(LS_KEY, JSON.stringify(userDocs));
+                  localStorage.setItem(wsKey(workspaceId, 'rag_user_docs'), JSON.stringify(userDocs));
                   setDocs(docs => docs.filter(doc => !selectedIds.includes(doc.id)));
                   setSelectedIds([]);
                   setOpenDeleteModal(false);

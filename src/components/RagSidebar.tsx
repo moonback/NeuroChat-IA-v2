@@ -5,6 +5,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
+export interface RagSidebarProps {
+  onOpenRagDocs?: () => void;
+  usedDocs?: Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }>;
+  workspaceId?: string;
+}
+
 type RagDoc = {
   id: string;
   titre: string;
@@ -21,9 +27,7 @@ type RagDoc = {
 type SortOption = 'titre' | 'size' | 'lastUsed' | 'useCount' | 'origine';
 type FilterOption = 'all' | 'dossier' | 'utilisateur' | 'favorites' | 'recent';
 
-const LS_KEY = 'rag_user_docs';
-const LS_STATS_KEY = 'rag_doc_stats';
-const LS_FAVORITES_KEY = 'rag_doc_favorites';
+function wsKey(ws: string, base: string) { return `ws:${ws}:${base}`; }
 
 function getExtension(filename: string) {
   return filename.split('.').pop()?.toLowerCase() || '';
@@ -76,7 +80,7 @@ let docsCacheTimestamp = 0;
 const DOCS_CACHE_DURATION = 60000; // 1 minute
 
 // Utilitaires pour les statistiques et favoris
-function getDocStats(): Record<string, { useCount: number; lastUsed: string }> {
+function getDocStats(LS_STATS_KEY: string): Record<string, { useCount: number; lastUsed: string }> {
   try {
     return JSON.parse(localStorage.getItem(LS_STATS_KEY) || '{}');
   } catch {
@@ -84,11 +88,11 @@ function getDocStats(): Record<string, { useCount: number; lastUsed: string }> {
   }
 }
 
-function saveDocStats(stats: Record<string, { useCount: number; lastUsed: string }>): void {
+function saveDocStats(LS_STATS_KEY: string, stats: Record<string, { useCount: number; lastUsed: string }>): void {
   localStorage.setItem(LS_STATS_KEY, JSON.stringify(stats));
 }
 
-function getFavorites(): Set<string> {
+function getFavorites(LS_FAVORITES_KEY: string): Set<string> {
   try {
     return new Set(JSON.parse(localStorage.getItem(LS_FAVORITES_KEY) || '[]'));
   } catch {
@@ -96,21 +100,21 @@ function getFavorites(): Set<string> {
   }
 }
 
-function saveFavorites(favorites: Set<string>): void {
+function saveFavorites(LS_FAVORITES_KEY: string, favorites: Set<string>): void {
   localStorage.setItem(LS_FAVORITES_KEY, JSON.stringify([...favorites]));
 }
 
-function trackDocUsage(docId: string): void {
-  const stats = getDocStats();
+function trackDocUsage(LS_STATS_KEY: string, docId: string): void {
+  const stats = getDocStats(LS_STATS_KEY);
   const now = new Date().toISOString();
   stats[docId] = {
     useCount: (stats[docId]?.useCount || 0) + 1,
     lastUsed: now
   };
-  saveDocStats(stats);
+  saveDocStats(LS_STATS_KEY, stats);
 }
 
-export function RagSidebar({ onOpenRagDocs, usedDocs }: { onOpenRagDocs?: () => void; usedDocs?: Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }> }) {
+export function RagSidebar({ onOpenRagDocs, usedDocs, workspaceId = 'default' }: RagSidebarProps) {
   const [docs, setDocs] = useState<RagDoc[]>([]);
   const [search, setSearch] = useState('');
   const [previewDoc, setPreviewDoc] = useState<RagDoc | null>(null);
@@ -125,8 +129,9 @@ export function RagSidebar({ onOpenRagDocs, usedDocs }: { onOpenRagDocs?: () => 
 
   // Charger les favoris au démarrage
   useEffect(() => {
-    setFavorites(getFavorites());
-  }, []);
+    const LS_FAVORITES_KEY = wsKey(workspaceId, 'rag_doc_favorites');
+    setFavorites(getFavorites(LS_FAVORITES_KEY));
+  }, [workspaceId]);
 
   // Fonction de chargement optimisée avec cache
   const loadDocs = useCallback(async () => {
@@ -141,8 +146,10 @@ export function RagSidebar({ onOpenRagDocs, usedDocs }: { onOpenRagDocs?: () => 
     try {
       // @ts-ignore
       const modules = import.meta.glob('../data/rag_docs/*.{txt,md}', { as: 'raw', eager: true });
-      const stats = getDocStats();
-      const favs = getFavorites();
+      const LS_STATS_KEY = wsKey(workspaceId, 'rag_doc_stats');
+      const LS_FAVORITES_KEY = wsKey(workspaceId, 'rag_doc_favorites');
+      const stats = getDocStats(LS_STATS_KEY);
+      const favs = getFavorites(LS_FAVORITES_KEY);
       
       const dossierDocs: RagDoc[] = Object.entries(modules).map(([path, contenu], idx) => {
         const titre = path.split('/').pop()?.replace(/\.[^/.]+$/, '') || `Document ${idx + 1}`;
@@ -163,6 +170,7 @@ export function RagSidebar({ onOpenRagDocs, usedDocs }: { onOpenRagDocs?: () => 
         };
       });
       
+      const LS_KEY = wsKey(workspaceId, 'rag_user_docs');
       const userRaw = localStorage.getItem(LS_KEY);
       let userDocs: RagDoc[] = [];
       if (userRaw) {
@@ -187,7 +195,7 @@ export function RagSidebar({ onOpenRagDocs, usedDocs }: { onOpenRagDocs?: () => 
     } catch (error) {
       console.error('Erreur lors du chargement des documents:', error);
     }
-  }, []);
+  }, [workspaceId]);
 
   useEffect(() => {
     loadDocs();
@@ -195,6 +203,7 @@ export function RagSidebar({ onOpenRagDocs, usedDocs }: { onOpenRagDocs?: () => 
 
   // Gestion des favoris
   const toggleFavorite = useCallback((docId: string) => {
+    const LS_FAVORITES_KEY = wsKey(workspaceId, 'rag_doc_favorites');
     const newFavorites = new Set(favorites);
     if (newFavorites.has(docId)) {
       newFavorites.delete(docId);
@@ -202,7 +211,7 @@ export function RagSidebar({ onOpenRagDocs, usedDocs }: { onOpenRagDocs?: () => 
       newFavorites.add(docId);
     }
     setFavorites(newFavorites);
-    saveFavorites(newFavorites);
+    saveFavorites(LS_FAVORITES_KEY, newFavorites);
     
     // Mettre à jour le cache des docs
     if (docsCache) {
@@ -211,16 +220,17 @@ export function RagSidebar({ onOpenRagDocs, usedDocs }: { onOpenRagDocs?: () => 
       );
       setDocs([...docsCache]);
     }
-  }, [favorites]);
+  }, [favorites, workspaceId]);
 
   // Gestion de la prévisualisation avec tracking
   const handlePreview = useCallback((doc: RagDoc) => {
+    const LS_STATS_KEY = wsKey(workspaceId, 'rag_doc_stats');
     setPreviewDoc(doc);
-    trackDocUsage(doc.id);
+    trackDocUsage(LS_STATS_KEY, doc.id);
     // Invalider le cache pour recharger les stats
     docsCache = null;
     setTimeout(loadDocs, 100);
-  }, [loadDocs]);
+  }, [loadDocs, workspaceId]);
 
   // Filtrage et tri optimisés avec useMemo
   const processedDocs = useMemo(() => {

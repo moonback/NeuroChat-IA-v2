@@ -86,8 +86,8 @@ export async function embedText(text: string, normalize = true): Promise<Float32
   // Ajouter au cache avec gestion de la taille
   if (embeddingCache.size >= EMBEDDING_CACHE_SIZE) {
     // Supprimer le plus ancien élément (FIFO)
-    const firstKey = embeddingCache.keys().next().value;
-    embeddingCache.delete(firstKey);
+    const firstKey = embeddingCache.keys().next().value as string | undefined;
+    if (firstKey !== undefined) embeddingCache.delete(firstKey);
   }
   embeddingCache.set(cacheKey, new Float32Array(result));
   

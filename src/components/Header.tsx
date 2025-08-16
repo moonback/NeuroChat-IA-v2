@@ -5,10 +5,10 @@ import { useTheme } from '@/hooks/useTheme';
 import {
   MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, 
   PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, 
-  Trash2, Menu, X, Wifi, WifiOff, Baby, ChevronDown, Sparkles,
-  Globe, Database, MicIcon, Bell, Activity
+  Trash2, Menu, X, WifiOff, Baby, Sparkles,
+  Globe, Database, Activity, Pencil
 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
 // =====================
@@ -50,6 +50,13 @@ interface HeaderProps {
   setShowConfirmDelete: (open: boolean) => void;
   onDeleteConfirmed: () => void;
   onOpenChildPinSettings?: () => void;
+  // Workspaces
+  workspaceId?: string;
+  workspaces?: Array<{ id: string; name: string }>;
+  onChangeWorkspace?: (id: string) => void;
+  onCreateWorkspace?: () => void;
+  onRenameWorkspace?: (id: string, name: string) => void;
+  onDeleteWorkspace?: (id: string) => void;
 }
 
 // =====================
@@ -208,43 +215,7 @@ const Logo = ({ onNewDiscussion, isOnline, quality }: {
   </div>
 );
 
-const ModernBadge = ({ 
-  active, 
-  icon: Icon, 
-  tooltip, 
-  color,
-  pulse = false
-}: { 
-  active: boolean;
-  icon: any;
-  tooltip: string;
-  color: 'red' | 'green' | 'blue' | 'purple' | 'amber';
-  pulse?: boolean;
-}) => {
-  if (!active) return null;
-
-  const colorClasses = {
-    red: 'bg-red-50/80 dark:bg-red-950/40 border-red-200/60 dark:border-red-800/50 text-red-600 dark:text-red-400',
-    green: 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-800/50 text-emerald-600 dark:text-emerald-400',
-    blue: 'bg-blue-50/80 dark:bg-blue-950/40 border-blue-200/60 dark:border-blue-800/50 text-blue-600 dark:text-blue-400',
-    purple: 'bg-purple-50/80 dark:bg-purple-950/40 border-purple-200/60 dark:border-purple-800/50 text-purple-600 dark:text-purple-400',
-    amber: 'bg-amber-50/80 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-800/50 text-amber-600 dark:text-amber-400'
-  };
-
-  return (
-    <div
-      className={`
-        h-7 px-2.5 rounded-full border flex items-center justify-center shadow-sm backdrop-blur-sm
-        transition-all duration-200 hover:scale-105 ${colorClasses[color]} 
-        ${pulse ? 'animate-pulse' : ''}
-      `}
-      data-tooltip-id="header-tooltip"
-      data-tooltip-content={tooltip}
-    >
-      <Icon className="w-3.5 h-3.5" />
-    </div>
-  );
-};
+// (Badges de statut supprimés dans la nouvelle version épurée)
 
 const ActionButton = ({ 
   children, 
@@ -314,6 +285,52 @@ const IconButton = ({
   </Button>
 );
 
+const TileButton = ({
+  onClick,
+  label,
+  icon: Icon,
+  active = false,
+  intent = 'default',
+  disabled = false,
+  tooltip,
+}: {
+  onClick: () => void;
+  label: string;
+  icon: any;
+  active?: boolean;
+  intent?: 'default' | 'danger' | 'info' | 'success' | 'warning';
+  disabled?: boolean;
+  tooltip?: string;
+}) => {
+  const intents: Record<string, string> = {
+    default: 'bg-slate-50/80 dark:bg-slate-900/60 border-slate-200/60 dark:border-slate-800/60',
+    danger: 'bg-red-50/80 dark:bg-red-950/40 border-red-200/60 dark:border-red-800/50',
+    info: 'bg-indigo-50/80 dark:bg-indigo-950/40 border-indigo-200/60 dark:border-indigo-800/50',
+    success: 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-800/50',
+    warning: 'bg-amber-50/80 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-800/50',
+  };
+  const activeRing = active ? 'ring-1 ring-blue-400/40' : '';
+  const intentBg = intents[intent] || intents.default;
+  const textTone = active ? 'text-blue-700 dark:text-blue-300' : 'text-slate-700 dark:text-slate-300';
+  const iconTone = active ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400';
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      data-tooltip-id="header-tooltip"
+      data-tooltip-content={tooltip || label}
+      className={`group w-full h-24 rounded-2xl border ${intentBg} ${activeRing} flex flex-col items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.02] active:scale-95 disabled:opacity-50`}
+    >
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${active ? 'bg-blue-100/70 dark:bg-blue-900/40' : 'bg-white/70 dark:bg-slate-800/60'} shadow-sm`}>
+        <Icon className={`w-5 h-5 ${iconTone}`} />
+      </div>
+      <span className={`text-xs font-medium ${textTone}`}>{label}</span>
+    </button>
+  );
+};
+
 const ButtonGroup = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <div className={`
     flex items-center gap-1 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 
@@ -355,17 +372,11 @@ export function Header(props: HeaderProps) {
   const { isOnline, connectionQuality } = useOnlineStatus();
   const { audioRef, showPrivateIndicator } = usePrivateModeFeedback(modePrive);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  
 
   // Handlers optimisés avec feedback
-  const handleVolumeToggle = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 100)); // Micro-délai pour le feedback
-      muted ? onUnmute() : onMute();
-    } finally {
-      setIsLoading(false);
-    }
+  const handleVolumeToggle = useCallback(() => {
+    muted ? onUnmute() : onMute();
   }, [muted, onMute, onUnmute]);
 
   const handleModeVocalToggle = useCallback(() => {
@@ -462,42 +473,64 @@ export function Header(props: HeaderProps) {
           <source src="/bip2.ogg" type="audio/ogg" />
         </audio>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-12xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo et branding */}
             <div className="flex items-center gap-4">
               <Logo onNewDiscussion={onNewDiscussion} isOnline={isOnline} quality={connectionQuality} />
+              {/* Sélecteur d'espace de travail */}
+              {!props.modeEnfant && props.workspaces && props.onChangeWorkspace && (
+                <div className="hidden sm:flex items-center gap-1 bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60 rounded-xl px-2 py-1">
+                  <select
+                    value={props.workspaceId || 'default'}
+                    onChange={(e) => props.onChangeWorkspace?.(e.target.value)}
+                    className="bg-transparent text-sm text-slate-700 dark:text-slate-300 focus:outline-none"
+                    title="Espace de travail"
+                  >
+                    {props.workspaces.map(ws => (
+                      <option key={ws.id} value={ws.id}>{ws.name}</option>
+                    ))}
+                  </select>
+                  {props.onCreateWorkspace && (
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => props.onCreateWorkspace?.()} title="Créer un espace">
+                      <PlusCircle className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {props.onRenameWorkspace && props.workspaceId && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      onClick={() => {
+                        const current = props.workspaces!.find(w => w.id === (props.workspaceId || 'default'));
+                        const name = window.prompt('Renommer l\'espace', current?.name || '');
+                        if (name && name.trim()) props.onRenameWorkspace?.(props.workspaceId!, name.trim());
+                      }}
+                      title="Renommer l'espace"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {props.onDeleteWorkspace && props.workspaceId && props.workspaceId !== 'default' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                      onClick={() => {
+                        const current = props.workspaces!.find(w => w.id === props.workspaceId);
+                        if (!current) return;
+                        const ok = window.confirm(`Supprimer l'espace "${current.name}" ?\nToutes les données locales de cet espace seront perdues.`);
+                        if (ok) props.onDeleteWorkspace?.(props.workspaceId!);
+                      }}
+                      title="Supprimer l'espace"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
 
-              {/* Badges de statut modernes - Desktop */}
-              <div className="hidden lg:flex items-center gap-2">
-                <ModernBadge active={modePrive && !props.modeEnfant} icon={Shield} tooltip="Mode privé activé" color="red" pulse />
-                <ModernBadge active={!!props.modeEnfant} icon={Baby} tooltip="Mode enfant activé" color="blue" />
-                <ModernBadge active={ragEnabled} icon={Database} tooltip="RAG actif" color="green" />
-                <ModernBadge active={!!webEnabled} icon={Globe} tooltip="Recherche web active" color="purple" />
-                <ModernBadge active={modeVocalAuto} icon={MicIcon} tooltip="Mode vocal automatique" color="amber" pulse />
-              </div>
-
-              {/* Indicateurs mobiles compacts améliorés */}
-              <div className="lg:hidden flex items-center gap-1">
-                {ragEnabled && (
-                  <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium bg-emerald-50/80 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60 backdrop-blur-sm">
-                    <Database className="w-3 h-3" />
-                    RAG
-                  </div>
-                )}
-                {webEnabled && (
-                  <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium bg-purple-50/80 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/60 backdrop-blur-sm">
-                    <Globe className="w-3 h-3" />
-                    Web
-                  </div>
-                )}
-                {modePrive && !props.modeEnfant && (
-                  <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium bg-red-50/80 text-red-700 dark:bg-red-900/40 dark:text-red-300 border border-red-200/60 dark:border-red-800/60 backdrop-blur-sm animate-pulse">
-                    <Shield className="w-3 h-3" />
-                    Privé
-                  </div>
-                )}
-              </div>
+              {/* Indicateurs compacts supprimés pour un header plus épuré */}
             </div>
 
             {/* Actions principales - Desktop */}
@@ -510,17 +543,14 @@ export function Header(props: HeaderProps) {
                 </ActionButton>
 
                 {!props.modeEnfant && (
-                  <>
-                    <ActionButton onClick={onOpenHistory} tooltip="Voir l'historique">
-                      <History className="w-4 h-4 mr-2" />
-                      Historique
-                    </ActionButton>
-
-                    <ActionButton onClick={onOpenMemory} tooltip="Ouvrir la mémoire">
-                      <Brain className="w-4 h-4 mr-2" />
-                      Mémoire
-                    </ActionButton>
-                  </>
+                  <ButtonGroup>
+                    <IconButton onClick={onOpenHistory} tooltip="Historique" aria-label="Historique">
+                      <History className="w-4 h-4" />
+                    </IconButton>
+                    <IconButton onClick={onOpenMemory} tooltip="Mémoire" aria-label="Mémoire">
+                      <Brain className="w-4 h-4" />
+                    </IconButton>
+                  </ButtonGroup>
                 )}
               </div>
 
@@ -634,70 +664,69 @@ export function Header(props: HeaderProps) {
         <PrivateModeBanner show={showPrivateIndicator} />
       </header>
 
-      {/* Menu mobile modernisé */}
-      <Dialog open={showMobileMenu} onOpenChange={setShowMobileMenu}>
-        <DialogContent className="max-w-sm mx-auto p-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl rounded-3xl border border-slate-200/50 dark:border-slate-800/50 shadow-2xl">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Menu options</DialogTitle>
-          </DialogHeader>
+      {/* Panneau latéral de réglages (Sheet) */}
+      <Sheet open={showMobileMenu} onOpenChange={setShowMobileMenu}>
+        <SheetContent side="right" className="p-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-l border-slate-200/50 dark:border-slate-800/50 shadow-2xl w-[92vw] sm:w-[420px] md:w-[560px] lg:w-[720px]">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Menu options</SheetTitle>
+          </SheetHeader>
           <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
-                Options
-              </h2>
-              <Button variant="ghost" size="sm" onClick={closeMobileMenu} className="h-8 w-8 p-0 rounded-xl" aria-label="Fermer">
-                <X className="w-4 h-4" />
-              </Button>
+            <div className="mb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                    Options
+                  </h2>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Réglages rapides</p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={closeMobileMenu} className="h-8 w-8 p-0 rounded-xl" aria-label="Fermer">
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              {/* Actions principales */}
-              <div className="space-y-1">
-                <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onNewDiscussion)}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center">
-                      <PlusCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div>
-                      <div className="font-medium">Nouvelle discussion</div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">Démarrer une nouvelle conversation</div>
-                    </div>
-                  </div>
-                </Button>
-
-                {!props.modeEnfant && (
-                  <>
-                    <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onOpenHistory)}>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center">
-                          <History className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                        </div>
-                        <div>
-                          <div className="font-medium">Historique</div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">Consulter les conversations passées</div>
-                        </div>
-                      </div>
-                    </Button>
-
-                    <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onOpenMemory)}>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/40 flex items-center justify-center">
-                          <Brain className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                        </div>
-                        <div>
-                          <div className="font-medium">Mémoire</div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">Gérer les informations mémorisées</div>
-                        </div>
-                      </div>
-                    </Button>
-                  </>
-                )}
+            <div className="space-y-4">
+              {/* Section: Actions */}
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                <Settings2 className="w-4 h-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide">Actions</span>
+                <span className="text-[10px] opacity-70 ml-2">Créer et gérer</span>
+              </div>
+              <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-2">
+                <div className="grid grid-cols-4 gap-3">
+                  <TileButton
+                    onClick={handleMenuAction(onNewDiscussion)}
+                    label={'Nouveau'}
+                    icon={PlusCircle}
+                    tooltip="Démarrer une nouvelle conversation"
+                  />
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(onOpenHistory)}
+                      label={'Historique'}
+                      icon={History}
+                      tooltip="Consulter les conversations passées"
+                    />
+                  )}
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(onOpenMemory)}
+                      label={'Mémoire'}
+                      icon={Brain}
+                      tooltip="Gérer les informations mémorisées"
+                    />
+                  )}
+                </div>
               </div>
 
               {hasActiveConversation && (
                 <>
-                  <div className="border-t border-slate-200/60 dark:border-slate-800/60 my-4" />
-                  <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mt-2">
+                    <CheckSquare className="w-4 h-4" />
+                    <span className="text-xs font-semibold uppercase tracking-wide">Sélection</span>
+                    <span className="text-[10px] opacity-70 ml-2">Choisir et supprimer</span>
+                  </div>
+                  <div className="space-y-1 mt-1 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-2">
                     <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onToggleSelectMode)}>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center">
@@ -732,129 +761,107 @@ export function Header(props: HeaderProps) {
                   </div>
                 </>
               )}
-              
-              <div className="border-t border-slate-200/60 dark:border-slate-800/60 my-4" />
-              
-              {/* Modes et paramètres */}
-              <div className="space-y-1">
-                {!props.modeEnfant && (
-                  <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(handlePrivateModeToggle)}>
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${modePrive ? 'bg-red-50 dark:bg-red-950/40' : 'bg-slate-50 dark:bg-slate-800'}`}>
-                        <Shield className={`w-4 h-4 ${modePrive ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-400'}`} />
-                      </div>
-                      <div>
-                        <div className={`font-medium ${modePrive ? 'text-red-600 dark:text-red-400' : ''}`}>
-                          {modePrive ? 'Désactiver mode privé' : 'Activer mode privé'}
-                        </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">
-                          {modePrive ? 'Revenir au mode normal' : 'Aucune sauvegarde des conversations'}
-                        </div>
-                      </div>
-                    </div>
-                  </Button>
-                )}
 
-                <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(handleChildModeToggle)}>
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${props.modeEnfant ? 'bg-blue-50 dark:bg-blue-950/40' : 'bg-slate-50 dark:bg-slate-800'}`}>
-                      <Baby className={`w-4 h-4 ${props.modeEnfant ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'}`} />
-                    </div>
-                    <div>
-                      <div className={`font-medium ${props.modeEnfant ? 'text-blue-600 dark:text-blue-400' : ''}`}>
-                        {props.modeEnfant ? 'Désactiver mode enfant' : 'Activer mode enfant'}
-                      </div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">
-                        {props.modeEnfant ? 'Revenir au mode normal' : 'Interface sécurisée pour enfants'}
-                      </div>
-                    </div>
-                  </div>
-                </Button>
-                
-                {!props.modeEnfant && (
-                  <>
-                    <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(handleRagToggle)}>
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${ragEnabled ? 'bg-emerald-50 dark:bg-emerald-950/40' : 'bg-slate-50 dark:bg-slate-800'}`}>
-                          <Database className={`w-4 h-4 ${ragEnabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'}`} />
-                        </div>
-                        <div>
-                          <div className={`font-medium ${ragEnabled ? 'text-emerald-600 dark:text-emerald-400' : ''}`}>
-                            {ragEnabled ? 'Désactiver RAG' : 'Activer RAG'}
-                          </div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">
-                            {ragEnabled ? 'Désactiver la recherche documentaire' : 'Recherche dans vos documents'}
-                          </div>
-                        </div>
-                      </div>
-                    </Button>
+              <div className="border-t border-slate-200/60 dark:border-slate-800/60" />
 
-                    <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(handleWebToggle)}>
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${webEnabled ? 'bg-purple-50 dark:bg-purple-950/40' : 'bg-slate-50 dark:bg-slate-800'}`}>
-                          <Globe className={`w-4 h-4 ${webEnabled ? 'text-purple-600 dark:text-purple-400' : 'text-slate-600 dark:text-slate-400'}`} />
-                        </div>
-                        <div>
-                          <div className={`font-medium ${webEnabled ? 'text-purple-600 dark:text-purple-400' : ''}`}>
-                            {webEnabled ? 'Désactiver recherche web' : 'Activer recherche web'}
-                          </div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">
-                            {webEnabled ? 'Désactiver la recherche internet' : 'Recherche en temps réel sur le web'}
-                          </div>
-                        </div>
-                      </div>
-                    </Button>
-                  </>
-                )}
+              {/* Section: Modes */}
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                <Sparkles className="w-4 h-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide">Modes</span>
+                <span className="text-[10px] opacity-70 ml-2">Activer des contextes</span>
               </div>
-              
-              <div className="border-t border-slate-200/60 dark:border-slate-800/60 my-4" />
+              <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-3">
+                <div className="grid grid-cols-4 gap-3">
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(handlePrivateModeToggle)}
+                      label={modePrive ? 'Privé: ON' : 'Privé: OFF'}
+                      icon={Shield}
+                      active={modePrive}
+                      intent={modePrive ? 'danger' : 'default'}
+                      tooltip="Mode privé"
+                    />
+                  )}
 
-              {/* Paramètres avancés */}
-              <div className="space-y-1">
-                {!props.modeEnfant && (
-                  <>
-                    <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onOpenTTSSettings)}>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-950/40 flex items-center justify-center">
-                          <Settings2 className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-                        </div>
-                        <div>
-                          <div className="font-medium">Synthèse vocale</div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">Configurer la voix et les paramètres</div>
-                        </div>
-                      </div>
-                    </Button>
+                  <TileButton
+                    onClick={handleMenuAction(handleChildModeToggle)}
+                    label={props.modeEnfant ? 'Enfant: ON' : 'Enfant: OFF'}
+                    icon={Baby}
+                    active={!!props.modeEnfant}
+                    intent={props.modeEnfant ? 'info' : 'default'}
+                    tooltip="Mode enfant"
+                  />
 
-                    <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onOpenRagDocs)}>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-950/40 flex items-center justify-center">
-                          <BookOpen className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                        </div>
-                        <div>
-                          <div className="font-medium">Documents RAG</div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">Gérer vos documents indexés</div>
-                        </div>
-                      </div>
-                    </Button>
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(handleRagToggle)}
+                      label={ragEnabled ? 'RAG: ON' : 'RAG: OFF'}
+                      icon={Database}
+                      active={ragEnabled}
+                      intent={ragEnabled ? 'success' : 'default'}
+                      tooltip="Recherche documentaire"
+                    />
+                  )}
 
-                    {props.onOpenChildPinSettings && (
-                      <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(props.onOpenChildPinSettings)}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-pink-50 dark:bg-pink-950/40 flex items-center justify-center">
-                            <Settings2 className="w-4 h-4 text-pink-600 dark:text-pink-400" />
-                          </div>
-                          <div>
-                            <div className="font-medium">PIN mode enfant</div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400">Changer le code de sécurité</div>
-                          </div>
-                        </div>
-                      </Button>
-                    )}
-                  </>
-                )}
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(handleWebToggle)}
+                      label={webEnabled ? 'Web: ON' : 'Web: OFF'}
+                      icon={Globe}
+                      active={!!webEnabled}
+                      intent={webEnabled ? 'warning' : 'default'}
+                      tooltip="Recherche web"
+                    />
+                  )}
+                </div>
+              </div>
 
-                {/* Sélecteur de provider IA */}
+              <div className="border-t border-slate-200/60 dark:border-slate-800/60" />
+
+              {/* Section: Paramètres */}
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                <Settings2 className="w-4 h-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide">Paramètres</span>
+                <span className="text-[10px] opacity-70 ml-2">Personnaliser l’expérience</span>
+              </div>
+              <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-3 mb-2">
+                <div className="grid grid-cols-4 gap-3">
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(onOpenTTSSettings)}
+                      label={'Synthèse'}
+                      icon={Settings2}
+                      tooltip="Synthèse vocale"
+                    />
+                  )}
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(onOpenRagDocs)}
+                      label={'Docs RAG'}
+                      icon={BookOpen}
+                      tooltip="Documents RAG"
+                    />
+                  )}
+                  {props.onOpenChildPinSettings && (
+                    <TileButton
+                      onClick={handleMenuAction(props.onOpenChildPinSettings)}
+                      label={'PIN enfant'}
+                      icon={Settings2}
+                      tooltip="PIN mode enfant"
+                    />
+                  )}
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(toggleTheme)}
+                      label={theme === 'dark' ? 'Clair' : 'Sombre'}
+                      icon={theme === 'dark' ? Sun : Moon}
+                      tooltip={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Sélecteur de provider IA */}
                 {!props.modeEnfant && onChangeProvider && (
                   <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
                     <div className="text-sm font-medium mb-3 text-slate-700 dark:text-slate-300">Fournisseur IA</div>
@@ -914,25 +921,11 @@ export function Header(props: HeaderProps) {
                     </div>
                   </Button>
                 )}
-
-                <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(toggleTheme)}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-950/40 flex items-center justify-center">
-                      {theme === 'dark' ? <Sun className="w-4 h-4 text-yellow-600 dark:text-yellow-400" /> : <Moon className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />}
-                    </div>
-                    <div>
-                      <div className="font-medium">{theme === 'dark' ? 'Mode clair' : 'Mode sombre'}</div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">
-                        {theme === 'dark' ? 'Basculer vers le thème clair' : 'Basculer vers le thème sombre'}
-                      </div>
-                    </div>
-                  </div>
-                </Button>
-              </div>
+              
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* AlertDialog modernisée pour la confirmation de suppression */}
       <AlertDialog open={showConfirmDelete} onOpenChange={setShowConfirmDelete}>

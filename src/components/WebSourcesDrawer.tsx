@@ -1,4 +1,4 @@
-import React from 'react';
+// React import supprimé: non nécessaire avec JSX runtime moderne
 import { Globe, X, ExternalLink } from 'lucide-react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import type { WebSource } from './WebSourcesSidebar';
