@@ -1365,6 +1365,7 @@ ${lines.join('\n')}`, false);
             <div className="absolute right-3 bottom-28 z-40">
               <AgentStatus
                 visible
+                title={provider === 'gemini' ? 'Agent Gemini' : 'Agent Mistral'}
                 steps={{
                   web: { state: isWebSearching ? 'running' : 'idle', label: 'Recherche web' },
                   rag: { state: isRagSearching ? 'running' : 'idle', label: 'Recherche documents' },
