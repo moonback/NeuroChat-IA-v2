@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
 import { GeminiGenerationConfig } from '@/services/geminiApi';
+import type { MistralGenerationConfig } from '@/services/mistralApi';
 import { sendMessage, type LlmConfig } from '@/services/llm';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { toast } from 'sonner';
@@ -148,9 +149,15 @@ function App() {
     topP: 0.95,
     maxOutputTokens: 4096,
   });
-  const [provider, setProvider] = useState<'gemini' | 'openai'>(
-    (localStorage.getItem('llm_provider') as 'gemini' | 'openai') || 'gemini'
+  const [provider, setProvider] = useState<'gemini' | 'openai' | 'mistral'>(
+    (localStorage.getItem('llm_provider') as 'gemini' | 'openai' | 'mistral') || 'gemini'
   );
+  const [mistralConfig, _setMistralConfig] = useState<MistralGenerationConfig>({
+    temperature: 0.7,
+    top_p: 0.95,
+    max_tokens: 4096,
+    model: (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest',
+  });
   const [openaiConfig, setOpenaiConfig] = useState({
     temperature: 0.7,
     top_p: 0.95,
@@ -729,6 +736,7 @@ ${lines.join('\n')}`, false);
         provider,
         gemini: geminiConfig,
         openai: openaiConfig,
+        mistral: mistralConfig,
       };
       const response = await sendMessage(
         llmCfg,
