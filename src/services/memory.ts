@@ -17,61 +17,71 @@ export interface MemoryItem {
   lastSeenAt?: string; // ISO string of most recent occurrence
 }
 
-const STORAGE_KEY = 'neurochat_user_memory_v1';
-const CACHE_KEY = 'neurochat_memory_cache';
+// Gestion des espaces de travail: clés localStorage préfixées par workspace
+function getActiveWorkspaceId(): string {
+  try {
+    return localStorage.getItem('nc_active_workspace') || 'default';
+  } catch {
+    return 'default';
+  }
+}
 
-// Cache en mémoire pour éviter les accès répétés au localStorage
-let memoryCache: MemoryItem[] | null = null;
-let cacheTimestamp = 0;
+function wsKey(base: string): string {
+  const ws = getActiveWorkspaceId();
+  return `ws:${ws}:${base}`;
+}
+
+const STORAGE_BASE_KEY = 'neurochat_user_memory_v1';
+
+// Cache en mémoire par workspace pour éviter les accès répétés au localStorage
+type MemoryCacheEntry = { data: MemoryItem[]; timestamp: number };
+const memoryCacheMap = new Map<string, MemoryCacheEntry>();
 const CACHE_DURATION = 30000; // 30 secondes
 
 export function loadMemory(): MemoryItem[] {
-  // Utiliser le cache si disponible et récent
   const now = Date.now();
-  if (memoryCache && (now - cacheTimestamp) < CACHE_DURATION) {
-    return [...memoryCache]; // Retourner une copie pour éviter les mutations
+  const key = wsKey(STORAGE_BASE_KEY);
+  const cached = memoryCacheMap.get(key);
+  if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+    return [...cached.data];
   }
-
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) {
-      memoryCache = [];
-      cacheTimestamp = now;
+      const empty: MemoryCacheEntry = { data: [], timestamp: now };
+      memoryCacheMap.set(key, empty);
       return [];
     }
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) {
-      memoryCache = [];
-      cacheTimestamp = now;
+      const empty: MemoryCacheEntry = { data: [], timestamp: now };
+      memoryCacheMap.set(key, empty);
       return [];
     }
-    memoryCache = parsed;
-    cacheTimestamp = now;
+    const entry: MemoryCacheEntry = { data: parsed, timestamp: now };
+    memoryCacheMap.set(key, entry);
     return [...parsed];
   } catch {
-    memoryCache = [];
-    cacheTimestamp = now;
+    const empty: MemoryCacheEntry = { data: [], timestamp: now };
+    memoryCacheMap.set(key, empty);
     return [];
   }
 }
 
 export function saveMemory(memories: MemoryItem[]): void {
   try {
+    const key = wsKey(STORAGE_BASE_KEY);
     // Compression basique : supprimer les propriétés undefined
     const compressed = memories.map(m => {
       const cleaned: any = {};
-      for (const [key, value] of Object.entries(m)) {
-        if (value !== undefined) {
-          cleaned[key] = value;
-        }
+      for (const [k, value] of Object.entries(m)) {
+        if (value !== undefined) cleaned[k] = value;
       }
       return cleaned;
     });
-    
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(compressed));
+    localStorage.setItem(key, JSON.stringify(compressed));
     // Mettre à jour le cache
-    memoryCache = [...memories];
-    cacheTimestamp = Date.now();
+    memoryCacheMap.set(key, { data: [...memories], timestamp: Date.now() });
   } catch (error) {
     console.warn('Erreur lors de la sauvegarde de la mémoire:', error);
   }
@@ -79,8 +89,8 @@ export function saveMemory(memories: MemoryItem[]): void {
 
 // Fonction pour invalider le cache manuellement si nécessaire
 export function invalidateMemoryCache(): void {
-  memoryCache = null;
-  cacheTimestamp = 0;
+  const key = wsKey(STORAGE_BASE_KEY);
+  memoryCacheMap.delete(key);
 }
 
 export function addMemory(item: Omit<MemoryItem, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }): MemoryItem {

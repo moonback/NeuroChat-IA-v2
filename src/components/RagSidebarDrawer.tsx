@@ -11,7 +11,7 @@ type RagDoc = {
   origine?: 'dossier' | 'utilisateur' | string;
 };
 
-const LS_KEY = 'rag_user_docs';
+function wsKey(ws: string, base: string) { return `ws:${ws}:${base}`; }
 
 function getExtension(filename: string) {
   return filename.split('.').pop()?.toLowerCase() || '';
@@ -58,7 +58,7 @@ function OriginBadge({ origine }: { origine?: string }) {
   );
 }
 
-export function RagSidebarDrawer({ open, onClose, usedDocs, onOpenRagDocs }: { open: boolean; onClose: () => void; usedDocs?: RagDoc[]; onOpenRagDocs?: () => void; }) {
+export function RagSidebarDrawer({ open, onClose, usedDocs, onOpenRagDocs, workspaceId = 'default' }: { open: boolean; onClose: () => void; usedDocs?: RagDoc[]; onOpenRagDocs?: () => void; workspaceId?: string; }) {
   const [docs, setDocs] = useState<RagDoc[]>([]);
   const [search, setSearch] = useState('');
   const [preview, setPreview] = useState<RagDoc | null>(null);
@@ -74,7 +74,7 @@ export function RagSidebarDrawer({ open, onClose, usedDocs, onOpenRagDocs }: { o
         return { id: 'dossier-' + idx, titre, contenu: contenu as string, extension, origine: 'dossier' };
       });
       let userDocs: RagDoc[] = [];
-      const raw = localStorage.getItem(LS_KEY);
+      const raw = localStorage.getItem(wsKey(workspaceId, 'rag_user_docs'));
       if (raw) {
         try { userDocs = (JSON.parse(raw) as any[]); } catch {}
       }

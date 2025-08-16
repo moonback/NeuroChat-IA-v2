@@ -6,7 +6,7 @@ import {
   MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, 
   PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, 
   Trash2, Menu, X, Wifi, WifiOff, Baby, ChevronDown, Sparkles,
-  Globe, Database, MicIcon, Bell, Activity
+  Globe, Database, MicIcon, Bell, Activity, Pencil
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
@@ -50,6 +50,12 @@ interface HeaderProps {
   setShowConfirmDelete: (open: boolean) => void;
   onDeleteConfirmed: () => void;
   onOpenChildPinSettings?: () => void;
+  // Workspaces
+  workspaceId?: string;
+  workspaces?: Array<{ id: string; name: string }>;
+  onChangeWorkspace?: (id: string) => void;
+  onCreateWorkspace?: () => void;
+  onRenameWorkspace?: (id: string, name: string) => void;
 }
 
 // =====================
@@ -467,6 +473,41 @@ export function Header(props: HeaderProps) {
             {/* Logo et branding */}
             <div className="flex items-center gap-4">
               <Logo onNewDiscussion={onNewDiscussion} isOnline={isOnline} quality={connectionQuality} />
+              {/* Sélecteur d'espace de travail */}
+              {!props.modeEnfant && props.workspaces && props.onChangeWorkspace && (
+                <div className="hidden sm:flex items-center gap-1 bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60 rounded-xl px-2 py-1">
+                  <select
+                    value={props.workspaceId || 'default'}
+                    onChange={(e) => props.onChangeWorkspace?.(e.target.value)}
+                    className="bg-transparent text-sm text-slate-700 dark:text-slate-300 focus:outline-none"
+                    title="Espace de travail"
+                  >
+                    {props.workspaces.map(ws => (
+                      <option key={ws.id} value={ws.id}>{ws.name}</option>
+                    ))}
+                  </select>
+                  {props.onCreateWorkspace && (
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => props.onCreateWorkspace?.()} title="Créer un espace">
+                      <PlusCircle className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {props.onRenameWorkspace && props.workspaceId && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      onClick={() => {
+                        const current = props.workspaces!.find(w => w.id === (props.workspaceId || 'default'));
+                        const name = window.prompt('Renommer l\'espace', current?.name || '');
+                        if (name && name.trim()) props.onRenameWorkspace?.(props.workspaceId!, name.trim());
+                      }}
+                      title="Renommer l'espace"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
 
               {/* Badges de statut modernes - Desktop */}
               <div className="hidden lg:flex items-center gap-2">

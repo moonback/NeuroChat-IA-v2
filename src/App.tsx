@@ -65,6 +65,27 @@ type RagContextMessage = {
 // Similarité: vecteurs normalisés => cosinus = dot product
 
 function App() {
+  // --- Espaces de travail ---
+  function wsKey(ws: string, base: string): string { return `ws:${ws}:${base}`; }
+  const [workspaceId, setWorkspaceId] = useState<string>(() => {
+    try { return localStorage.getItem('nc_active_workspace') || 'default'; } catch { return 'default'; }
+  });
+  const [workspaces, setWorkspaces] = useState<Array<{ id: string; name: string }>>(() => {
+    try {
+      const raw = localStorage.getItem('nc_workspaces');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return [{ id: 'default', name: 'Par défaut' }];
+  });
+  useEffect(() => {
+    try { localStorage.setItem('nc_workspaces', JSON.stringify(workspaces)); } catch {}
+  }, [workspaces]);
+  useEffect(() => {
+    try { localStorage.setItem('nc_active_workspace', workspaceId); } catch {}
+  }, [workspaceId]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -194,8 +215,8 @@ function App() {
   }, [modeEnfant]);
 
   // --- Gestion de l'historique des discussions ---
-  const LOCALSTORAGE_KEY = 'gemini_discussions';
-  const LOCALSTORAGE_CURRENT = 'gemini_current_discussion';
+  const LOCALSTORAGE_KEY_BASE = 'gemini_discussions';
+  const LOCALSTORAGE_CURRENT_BASE = 'gemini_current_discussion';
 
   // Valeurs par défaut pour badge et reset individuel
   const DEFAULTS = {
@@ -213,7 +234,8 @@ function App() {
       setMessages([]);
       return;
     }
-    const saved = localStorage.getItem(LOCALSTORAGE_CURRENT);
+    const key = wsKey(workspaceId, LOCALSTORAGE_CURRENT_BASE);
+    const saved = localStorage.getItem(key);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -221,29 +243,34 @@ function App() {
       } catch {
         setMessages([]);
       }
+    } else {
+      setMessages([]);
     }
-  }, [modePrive]);
+  }, [modePrive, workspaceId]);
 
   // Sauvegarder la discussion courante à chaque changement
   useEffect(() => {
     if (modePrive) return; // Pas de sauvegarde en mode privé
-    localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify(messages));
-  }, [messages, modePrive]);
+    const key = wsKey(workspaceId, LOCALSTORAGE_CURRENT_BASE);
+    localStorage.setItem(key, JSON.stringify(messages));
+  }, [messages, modePrive, workspaceId]);
 
   // Charger les presets au montage
   useEffect(() => {
-    const raw = localStorage.getItem('gemini_presets');
+    const raw = localStorage.getItem(wsKey(workspaceId, 'gemini_presets'));
     if (raw) {
       try {
         setPresets(JSON.parse(raw));
       } catch {}
+    } else {
+      setPresets([]);
     }
-  }, []);
+  }, [workspaceId]);
 
   // Sauvegarder les presets à chaque modification
   useEffect(() => {
-    localStorage.setItem('gemini_presets', JSON.stringify(presets));
-  }, [presets]);
+    localStorage.setItem(wsKey(workspaceId, 'gemini_presets'), JSON.stringify(presets));
+  }, [presets, workspaceId]);
 
   // En mode enfant, forcer RAG OFF et empêcher l'ouverture des réglages
   useEffect(() => {
@@ -256,7 +283,7 @@ function App() {
   const saveDiscussionToHistory = (discussion: Message[]) => {
     if (modePrive) return; // Pas de sauvegarde en mode privé
     if (!discussion.length) return;
-    const historyRaw = localStorage.getItem(LOCALSTORAGE_KEY);
+    const historyRaw = localStorage.getItem(wsKey(workspaceId, LOCALSTORAGE_KEY_BASE));
     let history: Discussion[] = [];
     if (historyRaw) {
       try {
@@ -288,7 +315,7 @@ function App() {
         ? (firstUser.length > 40 ? firstUser.slice(0, 40) + '…' : firstUser)
         : new Date().toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
       history.push({ title: defaultTitle, messages: discussion, childMode: modeEnfant });
-      localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(history));
+      localStorage.setItem(wsKey(workspaceId, LOCALSTORAGE_KEY_BASE), JSON.stringify(history));
     }
   };
 
@@ -300,7 +327,7 @@ function App() {
     setMessages([]);
     setUsedRagDocs([]);
     setUsedWebSources([]);
-    if (!modePrive) localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify([]));
+    if (!modePrive) localStorage.setItem(wsKey(workspaceId, LOCALSTORAGE_CURRENT_BASE), JSON.stringify([]));
   };
 
   // Sauvegarde automatique à la fermeture/rafraîchissement de la page
@@ -570,7 +597,7 @@ ${lines.join('\n')}`, false);
     // Étape RAG : recherche documentaire (seulement si activé)
     let passages: Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }> = [];
     if (ragEnabled) {
-      passages = await searchDocuments(userMessage, 3);
+      passages = await searchDocuments(userMessage, 3, workspaceId);
        // Timeline retirée
       if (passages.length > 0) {
         const simplePassages = passages.map((p, idx) => ({ id: idx, titre: p.titre, contenu: p.contenu }));
@@ -757,7 +784,7 @@ ${lines.join('\n')}`, false);
 
   // Charger l'historique au démarrage ou à l'ouverture du menu
   const loadHistory = () => {
-    const historyRaw = localStorage.getItem(LOCALSTORAGE_KEY);
+    const historyRaw = localStorage.getItem(wsKey(workspaceId, LOCALSTORAGE_KEY_BASE));
     if (historyRaw) {
       try {
         const parsed = JSON.parse(historyRaw);
@@ -796,7 +823,7 @@ ${lines.join('\n')}`, false);
   // Recharger une discussion
   const handleLoadDiscussion = (discussion: DiscussionWithCategory) => {
     setMessages(discussion.messages);
-    localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify(discussion.messages));
+    localStorage.setItem(wsKey(workspaceId, LOCALSTORAGE_CURRENT_BASE), JSON.stringify(discussion.messages));
     setShowHistory(false);
   };
 
@@ -805,7 +832,7 @@ ${lines.join('\n')}`, false);
     const newHistory = [...historyList];
     newHistory.splice(idx, 1);
     setHistoryList(newHistory);
-    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newHistory));
+    localStorage.setItem(wsKey(workspaceId, LOCALSTORAGE_KEY_BASE), JSON.stringify(newHistory));
   };
 
   // Renommer une discussion (compatible avec le nouveau composant)
@@ -820,7 +847,7 @@ ${lines.join('\n')}`, false);
     }
     newHistory[idx] = { ...newHistory[idx], title: newTitle };
     setHistoryList(newHistory);
-    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newHistory));
+    localStorage.setItem(wsKey(workspaceId, LOCALSTORAGE_KEY_BASE), JSON.stringify(newHistory));
   };
 
   // Ajout d'un toast lors de la réinitialisation
@@ -957,16 +984,16 @@ ${lines.join('\n')}`, false);
     const indicesSet = new Set(indices);
     const newHistory = historyList.filter((_, idx) => !indicesSet.has(idx));
     setHistoryList(newHistory);
-    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newHistory));
+    localStorage.setItem(wsKey(workspaceId, LOCALSTORAGE_KEY_BASE), JSON.stringify(newHistory));
   };
 
   // Fonction pour supprimer un message par son id
   const handleDeleteMessage = (id: string) => {
     setMessages(prev => {
       const updated = prev.filter(msg => msg.id !== id);
-      localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify(updated));
+      localStorage.setItem(wsKey(workspaceId, LOCALSTORAGE_CURRENT_BASE), JSON.stringify(updated));
       // Mise à jour de l'historique : on retire le message de chaque discussion
-      const historyRaw = localStorage.getItem(LOCALSTORAGE_KEY);
+      const historyRaw = localStorage.getItem(wsKey(workspaceId, LOCALSTORAGE_KEY_BASE));
       if (historyRaw) {
         try {
           const history = JSON.parse(historyRaw);
@@ -974,7 +1001,7 @@ ${lines.join('\n')}`, false);
             ...discussion,
             messages: discussion.messages.filter((msg: any) => msg.id !== id)
           }));
-          localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(updatedHistory));
+          localStorage.setItem(wsKey(workspaceId, LOCALSTORAGE_KEY_BASE), JSON.stringify(updatedHistory));
         } catch {}
       }
       return updated;
@@ -1000,9 +1027,9 @@ ${lines.join('\n')}`, false);
   const handleDeleteMultipleMessages = () => {
     setMessages((prev) => {
       const updated = prev.filter((msg) => !selectedMessageIds.includes(msg.id));
-      localStorage.setItem(LOCALSTORAGE_CURRENT, JSON.stringify(updated));
+      localStorage.setItem(wsKey(workspaceId, LOCALSTORAGE_CURRENT_BASE), JSON.stringify(updated));
       // Mise à jour de l'historique : on retire les messages de chaque discussion
-      const historyRaw = localStorage.getItem(LOCALSTORAGE_KEY);
+      const historyRaw = localStorage.getItem(wsKey(workspaceId, LOCALSTORAGE_KEY_BASE));
       if (historyRaw) {
         try {
           const history = JSON.parse(historyRaw);
@@ -1010,7 +1037,7 @@ ${lines.join('\n')}`, false);
             ...discussion,
             messages: discussion.messages.filter((msg: any) => !selectedMessageIds.includes(msg.id))
           }));
-          localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(updatedHistory));
+          localStorage.setItem(wsKey(workspaceId, LOCALSTORAGE_KEY_BASE), JSON.stringify(updatedHistory));
         } catch {}
       }
       return updated;
@@ -1086,6 +1113,21 @@ ${lines.join('\n')}`, false);
           onOpenTTSSettings={() => setShowTTSSettings(true)}
           onOpenRagDocs={() => setShowRagDocs(true)}
           onOpenMemory={() => setShowMemory(true)}
+          workspaceId={workspaceId}
+          workspaces={workspaces}
+          onChangeWorkspace={(id) => setWorkspaceId(id)}
+          onCreateWorkspace={() => {
+            const name = window.prompt('Nom du nouvel espace');
+            if (!name || !name.trim()) return;
+            const id = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').slice(0, 24) || `ws-${Date.now()}`;
+            if (workspaces.some(w => w.id === id)) return;
+            const next = [...workspaces, { id, name: name.trim() }];
+            setWorkspaces(next);
+            setWorkspaceId(id);
+          }}
+          onRenameWorkspace={(id, name) => {
+            setWorkspaces(ws => ws.map(w => w.id === id ? { ...w, name } : w));
+          }}
           
           stop={stop}
           modeVocalAuto={modeVocalAuto}
@@ -1160,7 +1202,7 @@ ${lines.join('\n')}`, false);
             {ragEnabled && !modeEnfant && (
               <>
                 <div className="hidden lg:block">
-                  <RagSidebar onOpenRagDocs={() => setShowRagDocs(true)} usedDocs={usedRagDocs} />
+                  <RagSidebar onOpenRagDocs={() => setShowRagDocs(true)} usedDocs={usedRagDocs} workspaceId={workspaceId} />
                 </div>
                 {/* Bouton flottant pour mobile */}
                 <button
@@ -1175,6 +1217,7 @@ ${lines.join('\n')}`, false);
                   onClose={() => setShowRagSidebarMobile(false)}
                   usedDocs={usedRagDocs}
                   onOpenRagDocs={() => setShowRagDocs(true)}
+                  workspaceId={workspaceId}
                 />
               </>
             )}
@@ -1268,7 +1311,7 @@ ${lines.join('\n')}`, false);
       {/* Suppression de l'overlay de timeline car affichage inline dans VoiceInput */}
       {/* Modale de gestion des documents RAG */}
       <Suspense fallback={null}>
-        <RagDocsModalLazy open={modeEnfant ? false : showRagDocs} onClose={() => setShowRagDocs(false)} />
+        <RagDocsModalLazy open={modeEnfant ? false : showRagDocs} onClose={() => setShowRagDocs(false)} workspaceId={workspaceId} />
       </Suspense>
 
       {/* Modale de gestion de la mémoire */}

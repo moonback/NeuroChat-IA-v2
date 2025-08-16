@@ -2,7 +2,9 @@
 const modules = import.meta.glob('../data/rag_docs/*.{txt,md}', { as: 'raw', eager: true });
 import { embedText, cosineSimilarityNormalized } from './embeddings';
 
-function getAllDocuments() {
+function wsKey(ws: string, base: string) { return `ws:${ws}:${base}`; }
+
+function getAllDocuments(workspaceId: string) {
   const dossierDocs = Object.entries(modules).map(([path, contenu], idx) => {
     const titre = path.split('/').pop()?.replace(/\.[^/.]+$/, '') || `Document ${idx + 1}`;
     return {
@@ -14,7 +16,7 @@ function getAllDocuments() {
   // Charger les docs utilisateur depuis le localStorage
   let userDocs: any[] = [];
   try {
-    const raw = localStorage.getItem('rag_user_docs');
+    const raw = localStorage.getItem(wsKey(workspaceId, 'rag_user_docs'));
     if (raw) userDocs = JSON.parse(raw);
   } catch {}
   return [...dossierDocs, ...userDocs];
@@ -46,9 +48,9 @@ async function ensureEmbeddings(documents: any[]) {
  * @param {number} maxResults - Nombre maximum de passages à retourner
  * @returns {Promise<Array<{id: number, titre: string, contenu: string}>>}
  */
-export async function searchDocuments(query: string, maxResults = 3): Promise<any[]> {
+export async function searchDocuments(query: string, maxResults = 3, workspaceId = 'default'): Promise<any[]> {
   if (!query) return [];
-  const documents = getAllDocuments();
+  const documents = getAllDocuments(workspaceId);
   try {
     await ensureEmbeddings(documents);
     // Générer l'embedding de la question (normalisé)
