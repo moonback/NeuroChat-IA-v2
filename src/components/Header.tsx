@@ -5,7 +5,8 @@ import { useTheme } from '@/hooks/useTheme';
 import {
   MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, 
   PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, 
-  Trash2, Menu, X, Wifi, WifiOff, Baby
+  Trash2, Menu, X, Wifi, WifiOff, Baby, ChevronDown, Sparkles,
+  Globe, Database, MicIcon, Bell, Activity
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
@@ -28,7 +29,6 @@ interface HeaderProps {
   hasActiveConversation: boolean;
   ragEnabled: boolean;
   setRagEnabled: (v: boolean) => void;
-  // Nouveau: recherche web
   webEnabled?: boolean;
   setWebEnabled?: (v: boolean) => void;
   onOpenGeminiSettings?: () => void;
@@ -53,19 +53,35 @@ interface HeaderProps {
 }
 
 // =====================
-// Hooks personnalisés
+// Hooks personnalisés améliorés
 // =====================
 const useOnlineStatus = () => {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [connectionQuality, setConnectionQuality] = useState<'excellent' | 'good' | 'poor'>('excellent');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const handleOnline = () => {
+      setIsOnline(true);
+      // Test de latence simple
+      const start = Date.now();
+      fetch('/api/ping', { method: 'HEAD' }).then(() => {
+        const latency = Date.now() - start;
+        setConnectionQuality(latency < 100 ? 'excellent' : latency < 300 ? 'good' : 'poor');
+      }).catch(() => setConnectionQuality('poor'));
+    };
+    
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionQuality('poor');
+    };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+
+    // Test initial
+    handleOnline();
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -73,94 +89,155 @@ const useOnlineStatus = () => {
     };
   }, []);
 
-  return isOnline;
+  return { isOnline, connectionQuality };
 };
 
 const usePrivateModeFeedback = (modePrive: boolean) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [showPrivateIndicator, setShowPrivateIndicator] = useState(false);
 
   useEffect(() => {
-    if (!modePrive) return;
+    if (!modePrive) {
+      setShowPrivateIndicator(false);
+      return;
+    }
 
-    // Audio feedback
+    setShowPrivateIndicator(true);
+
+    // Audio feedback amélioré
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(() => {
-        // Ignore audio play errors (autoplay restrictions)
-      });
+      audioRef.current.play().catch(() => {});
     }
 
     // Haptic feedback
     if ('vibrate' in navigator) {
-      navigator.vibrate(100);
+      navigator.vibrate([100, 50, 100]);
     }
+
+    // Masquer l'indicateur après 3 secondes
+    const timer = setTimeout(() => setShowPrivateIndicator(false), 3000);
+    return () => clearTimeout(timer);
   }, [modePrive]);
 
-  return audioRef;
+  return { audioRef, showPrivateIndicator };
 };
 
 // =====================
-// Sous-composants
+// Sous-composants améliorés
 // =====================
-const StatusIndicator = ({ isOnline }: { isOnline: boolean }) => (
-  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-white dark:bg-slate-950 flex items-center justify-center">
-    <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}>
-      {isOnline && <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75" />}
-    </div>
-  </div>
-);
+const StatusIndicator = ({ isOnline, quality }: { isOnline: boolean; quality: 'excellent' | 'good' | 'poor' }) => {
+  const getQualityColor = () => {
+    if (!isOnline) return 'bg-red-500';
+    switch (quality) {
+      case 'excellent': return 'bg-emerald-500';
+      case 'good': return 'bg-yellow-500';
+      case 'poor': return 'bg-orange-500';
+      default: return 'bg-gray-500';
+    }
+  };
 
-const Logo = ({ onNewDiscussion, isOnline }: { onNewDiscussion: () => void; isOnline: boolean }) => (
+  const getSignalBars = () => {
+    if (!isOnline) return 0;
+    switch (quality) {
+      case 'excellent': return 3;
+      case 'good': return 2;
+      case 'poor': return 1;
+      default: return 0;
+    }
+  };
+
+  return (
+    <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-white dark:bg-slate-950 flex items-center justify-center shadow-sm">
+      <div className={`w-2.5 h-2.5 rounded-full ${getQualityColor()} relative`}>
+        {isOnline && quality === 'excellent' && (
+          <div className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-75" />
+        )}
+        {/* Mini signal bars */}
+        <div className="absolute -top-0.5 -right-0.5 flex gap-px">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className={`w-px h-1 ${
+                i < getSignalBars() ? getQualityColor().replace('bg-', 'bg-') : 'bg-gray-300 dark:bg-gray-600'
+              }`}
+              style={{ height: `${(i + 1) * 2}px` }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Logo = ({ onNewDiscussion, isOnline, quality }: { 
+  onNewDiscussion: () => void; 
+  isOnline: boolean; 
+  quality: 'excellent' | 'good' | 'poor';
+}) => (
   <div className="flex items-center gap-3 cursor-pointer group" onClick={onNewDiscussion}>
     <div className="relative">
-      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-        <MessageCircle className="w-5 h-5 text-white" />
+      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 group-active:scale-95 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-2xl" />
+        <MessageCircle className="w-6 h-6 text-white relative z-10" />
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-transparent via-transparent to-white/10 group-hover:to-white/20 transition-all duration-300" />
       </div>
-      <StatusIndicator isOnline={isOnline} />
+      <StatusIndicator isOnline={isOnline} quality={quality} />
     </div>
     <div className="hidden sm:block">
-      <h1 className="text-[1.35rem] sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-slate-900/90 to-slate-600/80 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+      <h1 className="text-[1.4rem] sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-slate-900/90 via-slate-800/80 to-slate-600/70 dark:from-white dark:via-slate-100 dark:to-slate-300 bg-clip-text text-transparent flex items-center gap-2">
         NeuroChat
+        <Sparkles className="w-5 h-5 text-yellow-500 animate-pulse" />
       </h1>
-      <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
         {isOnline ? (
           <>
-            <Wifi className="w-3 h-3" />
-            Connecté
+            <div className="flex items-center gap-1">
+              <Activity className="w-3 h-3" />
+              <span className="capitalize">{quality === 'excellent' ? 'Excellente' : quality === 'good' ? 'Bonne' : 'Faible'} connexion</span>
+            </div>
           </>
         ) : (
-          <>
+          <div className="flex items-center gap-1 text-red-500">
             <WifiOff className="w-3 h-3" />
             Hors ligne
-          </>
+          </div>
         )}
-      </p>
+      </div>
     </div>
   </div>
 );
 
-const StatusBadge = ({ 
+const ModernBadge = ({ 
   active, 
   icon: Icon, 
   tooltip, 
-  color 
+  color,
+  pulse = false
 }: { 
   active: boolean;
   icon: any;
   tooltip: string;
-  color: 'red' | 'green' | 'blue';
+  color: 'red' | 'green' | 'blue' | 'purple' | 'amber';
+  pulse?: boolean;
 }) => {
   if (!active) return null;
 
   const colorClasses = {
-    red: 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400',
-    green: 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800/50 text-green-600 dark:text-green-400',
-    blue: 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400'
+    red: 'bg-red-50/80 dark:bg-red-950/40 border-red-200/60 dark:border-red-800/50 text-red-600 dark:text-red-400',
+    green: 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-800/50 text-emerald-600 dark:text-emerald-400',
+    blue: 'bg-blue-50/80 dark:bg-blue-950/40 border-blue-200/60 dark:border-blue-800/50 text-blue-600 dark:text-blue-400',
+    purple: 'bg-purple-50/80 dark:bg-purple-950/40 border-purple-200/60 dark:border-purple-800/50 text-purple-600 dark:text-purple-400',
+    amber: 'bg-amber-50/80 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-800/50 text-amber-600 dark:text-amber-400'
   };
 
   return (
     <div
-      className={`w-6 h-6 rounded-full border flex items-center justify-center shadow-sm ${colorClasses[color]}`}
+      className={`
+        h-7 px-2.5 rounded-full border flex items-center justify-center shadow-sm backdrop-blur-sm
+        transition-all duration-200 hover:scale-105 ${colorClasses[color]} 
+        ${pulse ? 'animate-pulse' : ''}
+      `}
       data-tooltip-id="header-tooltip"
       data-tooltip-content={tooltip}
     >
@@ -175,18 +252,36 @@ const ActionButton = ({
   tooltip, 
   variant = "ghost",
   className = "",
+  loading = false,
   ...props 
 }: any) => (
   <Button
     variant={variant}
     size="sm"
     onClick={onClick}
+    disabled={loading}
     data-tooltip-id="header-tooltip"
     data-tooltip-content={tooltip}
-    className={`h-9 px-3 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-[1.03] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 ${className}`}
+    className={`
+      h-9 px-4 text-sm font-medium rounded-xl
+      hover:bg-slate-100/80 dark:hover:bg-slate-800/80 
+      transition-all duration-200 hover:scale-[1.02] active:scale-95 
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 
+      focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950
+      backdrop-blur-sm border-0
+      ${loading ? 'animate-pulse' : ''}
+      ${className}
+    `}
     {...props}
   >
-    {children}
+    {loading ? (
+      <div className="flex items-center gap-2">
+        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+        {children}
+      </div>
+    ) : (
+      children
+    )}
   </Button>
 );
 
@@ -196,6 +291,7 @@ const IconButton = ({
   tooltip, 
   variant = "ghost",
   className = "",
+  active = false,
   ...props 
 }: any) => (
   <Button
@@ -204,7 +300,14 @@ const IconButton = ({
     onClick={onClick}
     data-tooltip-id="header-tooltip"
     data-tooltip-content={tooltip}
-    className={`h-8 w-8 p-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 ${className}`}
+    className={`
+      h-9 w-9 p-0 rounded-xl transition-all duration-200 
+      hover:scale-105 active:scale-95 backdrop-blur-sm
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 
+      focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950
+      ${active ? 'bg-blue-50/80 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 ring-1 ring-blue-400/30' : ''}
+      ${className}
+    `}
     {...props}
   >
     {children}
@@ -212,10 +315,28 @@ const IconButton = ({
 );
 
 const ButtonGroup = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`flex items-center gap-1 rounded-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-1 shadow-sm ${className}`}>
+  <div className={`
+    flex items-center gap-1 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 
+    border border-slate-200/60 dark:border-slate-800/60 p-1.5 shadow-sm backdrop-blur-sm
+    hover:shadow-md transition-all duration-200
+    ${className}
+  `}>
     {children}
   </div>
 );
+
+const PrivateModeBanner = ({ show }: { show: boolean }) => {
+  if (!show) return null;
+
+  return (
+    <div className="absolute top-full left-0 right-0 bg-red-600 text-white text-center py-2 text-sm font-medium animate-slide-down shadow-lg">
+      <div className="flex items-center justify-center gap-2">
+        <Shield className="w-4 h-4" />
+        Mode privé activé - Aucune donnée n'est sauvegardée
+      </div>
+    </div>
+  );
+};
 
 // =====================
 // Composant principal amélioré
@@ -225,24 +346,34 @@ export function Header(props: HeaderProps) {
     muted, onMute, onUnmute, onNewDiscussion, onOpenHistory, onOpenTTSSettings,
     onOpenRagDocs, onOpenMemory, modeVocalAuto, setModeVocalAuto,
     hasActiveConversation, ragEnabled, setRagEnabled, onOpenGeminiSettings,
-    webEnabled, setWebEnabled,
-    provider, onChangeProvider, modePrive, setModePrive, selectMode,
-    onToggleSelectMode, selectedCount, totalCount, onSelectAll, onDeselectAll,
+    webEnabled, setWebEnabled, provider, onChangeProvider, modePrive, setModePrive, 
+    selectMode, onToggleSelectMode, selectedCount, totalCount, onSelectAll, onDeselectAll,
     onRequestDelete, showConfirmDelete, setShowConfirmDelete, onDeleteConfirmed
   } = props;
 
   const { theme, toggleTheme } = useTheme();
-  const isOnline = useOnlineStatus();
-  const audioRef = usePrivateModeFeedback(modePrive);
+  const { isOnline, connectionQuality } = useOnlineStatus();
+  const { audioRef, showPrivateIndicator } = usePrivateModeFeedback(modePrive);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Mémoisation des handlers pour éviter les re-renders inutiles
-  const handleVolumeToggle = useCallback(() => {
-    muted ? onUnmute() : onMute();
+  // Handlers optimisés avec feedback
+  const handleVolumeToggle = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 100)); // Micro-délai pour le feedback
+      muted ? onUnmute() : onMute();
+    } finally {
+      setIsLoading(false);
+    }
   }, [muted, onMute, onUnmute]);
 
   const handleModeVocalToggle = useCallback(() => {
     setModeVocalAuto(!modeVocalAuto);
+    // Feedback haptic
+    if ('vibrate' in navigator) {
+      navigator.vibrate(50);
+    }
   }, [modeVocalAuto, setModeVocalAuto]);
 
   const handlePrivateModeToggle = useCallback(() => {
@@ -251,10 +382,17 @@ export function Header(props: HeaderProps) {
 
   const handleRagToggle = useCallback(() => {
     setRagEnabled(!ragEnabled);
+    // Feedback visuel avec micro-délai
+    setTimeout(() => {
+      if ('vibrate' in navigator) navigator.vibrate(30);
+    }, 100);
   }, [ragEnabled, setRagEnabled]);
 
   const handleWebToggle = useCallback(() => {
-    if (setWebEnabled) setWebEnabled(!webEnabled);
+    if (setWebEnabled) {
+      setWebEnabled(!webEnabled);
+      if ('vibrate' in navigator) navigator.vibrate(30);
+    }
   }, [webEnabled, setWebEnabled]);
 
   const handleChildModeToggle = useCallback(() => {
@@ -265,7 +403,6 @@ export function Header(props: HeaderProps) {
     setShowMobileMenu(false);
   }, []);
 
-  // Actions combinées pour le menu mobile
   const handleMenuAction = useCallback((action: () => void) => {
     return () => {
       action();
@@ -273,7 +410,7 @@ export function Header(props: HeaderProps) {
     };
   }, [closeMobileMenu]);
 
-  // Mémoisation des composants coûteux
+  // Composants mémorisés
   const selectionActions = useMemo(() => {
     if (!hasActiveConversation) return null;
 
@@ -283,18 +420,20 @@ export function Header(props: HeaderProps) {
           variant={selectMode ? "default" : "ghost"}
           onClick={onToggleSelectMode}
           tooltip={selectMode ? 'Quitter la sélection' : 'Sélectionner des messages'}
+          className={selectMode ? 'bg-blue-50/80 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400' : ''}
         >
           {selectMode ? <CheckSquare className="w-4 h-4 mr-2" /> : <Square className="w-4 h-4 mr-2" />}
-          {selectMode ? 'Annuler' : 'Sélectionner'}
+          {selectMode ? 'Sélection' : 'Sélectionner'}
         </ActionButton>
 
         {selectMode && (
-          <>
+          <div className="flex items-center gap-1 animate-slide-in">
             <ActionButton
               onClick={selectedCount === totalCount ? onDeselectAll : onSelectAll}
               tooltip={selectedCount === totalCount ? 'Tout désélectionner' : 'Tout sélectionner'}
+              className="text-xs px-3"
             >
-              {selectedCount === totalCount ? 'Désélectionner tout' : 'Tout sélectionner'}
+              {selectedCount === totalCount ? 'Tout désélectionner' : 'Tout sélectionner'}
             </ActionButton>
 
             {selectedCount > 0 && (
@@ -302,354 +441,522 @@ export function Header(props: HeaderProps) {
                 variant="destructive"
                 onClick={onRequestDelete}
                 tooltip={`Supprimer ${selectedCount} message${selectedCount > 1 ? 's' : ''}`}
+                className="bg-red-50/80 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60"
               >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Supprimer ({selectedCount})
+                <Trash2 className="w-4 h-4 mr-1" />
+                <span className="text-xs">({selectedCount})</span>
               </ActionButton>
             )}
-          </>
+          </div>
         )}
       </>
     );
   }, [hasActiveConversation, selectMode, selectedCount, totalCount, onToggleSelectMode, onSelectAll, onDeselectAll, onRequestDelete]);
 
-  const mobileMenuActions = useMemo(() => (
-    <div className="md:hidden space-y-2">
-      <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onNewDiscussion)}>
-        <PlusCircle className="w-4 h-4 mr-3" />
-        Nouvelle discussion
-      </Button>
-      {!props.modeEnfant && (
-      <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onOpenHistory)}>
-        <History className="w-4 h-4 mr-3" />
-        Historique
-      </Button>
-      )}
-      {!props.modeEnfant && (
-      <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onOpenMemory)}>
-        <Brain className="w-4 h-4 mr-3" />
-        Mémoire
-      </Button>
-      )}
-      
-      {hasActiveConversation && (
-        <>
-          <div className="border-t border-slate-200 dark:border-slate-800 my-3" />
-          <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onToggleSelectMode)}>
-            {selectMode ? <CheckSquare className="w-4 h-4 mr-3" /> : <Square className="w-4 h-4 mr-3" />}
-            {selectMode ? 'Annuler sélection' : 'Sélectionner messages'}
-          </Button>
-          {selectMode && selectedCount > 0 && (
-            <Button variant="destructive" className="w-full justify-start h-10" onClick={handleMenuAction(onRequestDelete)}>
-              <Trash2 className="w-4 h-4 mr-3" />
-              Supprimer sélection ({selectedCount})
-            </Button>
-          )}
-        </>
-      )}
-      
-      <div className="border-t border-slate-200 dark:border-slate-800 my-3" />
-      
-      {!props.modeEnfant && (
-        <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(handlePrivateModeToggle)}>
-          <Shield className="w-4 h-4 mr-3" />
-          {modePrive ? 'Désactiver mode privé' : 'Activer mode privé'}
-        </Button>
-      )}
-      <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(handleChildModeToggle)}>
-        <Baby className="w-4 h-4 mr-3" />
-        {props.modeEnfant ? 'Désactiver mode enfant' : 'Activer mode enfant'}
-      </Button>
-      
-      {!props.modeEnfant && (
-      <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(handleRagToggle)}>
-        <Brain className="w-4 h-4 mr-3" />
-        {ragEnabled ? 'Désactiver RAG' : 'Activer RAG'}
-      </Button>
-      )}
-      {!props.modeEnfant && (
-      <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(handleWebToggle)}>
-        <Wifi className="w-4 h-4 mr-3" />
-        {webEnabled ? 'Désactiver recherche web' : 'Activer recherche web'}
-      </Button>
-      )}
-      
-      <div className="border-t border-slate-200 dark:border-slate-800 my-3" />
-    </div>
-  ), [hasActiveConversation, selectMode, selectedCount, modePrive, ragEnabled, props.modeEnfant, handleMenuAction, onNewDiscussion, onOpenHistory, onOpenMemory, onToggleSelectMode, onRequestDelete, handlePrivateModeToggle, handleChildModeToggle, handleRagToggle]);
-
   return (
-    <header className="w-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 sticky top-0 z-50">
-      {/* Audio bip premium */}
-      <audio ref={audioRef} preload="auto">
-        <source src="/bip2.mp3" type="audio/mpeg" />
-        <source src="/bip2.ogg" type="audio/ogg" />
-      </audio>
+    <>
+      <header className="w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 sticky top-0 z-50 relative">
+        {/* Audio amélioré */}
+        <audio ref={audioRef} preload="auto">
+          <source src="/bip2.mp3" type="audio/mpeg" />
+          <source src="/bip2.ogg" type="audio/ogg" />
+        </audio>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo et branding */}
-          <div className="flex items-center gap-4">
-            <Logo onNewDiscussion={onNewDiscussion} isOnline={isOnline} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo et branding */}
+            <div className="flex items-center gap-4">
+              <Logo onNewDiscussion={onNewDiscussion} isOnline={isOnline} quality={connectionQuality} />
 
-            {/* Indicateurs de statut - Desktop uniquement */}
-            <div className="hidden lg:flex items-center gap-2">
-              <StatusBadge active={modePrive && !props.modeEnfant} icon={Shield} tooltip="Mode privé activé" color="red" />
-              <StatusBadge active={!!props.modeEnfant} icon={Baby} tooltip="Mode enfant activé" color="blue" />
-              <StatusBadge active={ragEnabled} icon={Brain} tooltip="RAG actif" color="green" />
-              <StatusBadge active={!!webEnabled} icon={Wifi} tooltip="Recherche web active" color="blue" />
-              <StatusBadge active={modeVocalAuto} icon={Mic} tooltip="Mode vocal automatique" color="blue" />
+              {/* Badges de statut modernes - Desktop */}
+              <div className="hidden lg:flex items-center gap-2">
+                <ModernBadge active={modePrive && !props.modeEnfant} icon={Shield} tooltip="Mode privé activé" color="red" pulse />
+                <ModernBadge active={!!props.modeEnfant} icon={Baby} tooltip="Mode enfant activé" color="blue" />
+                <ModernBadge active={ragEnabled} icon={Database} tooltip="RAG actif" color="green" />
+                <ModernBadge active={!!webEnabled} icon={Globe} tooltip="Recherche web active" color="purple" />
+                <ModernBadge active={modeVocalAuto} icon={MicIcon} tooltip="Mode vocal automatique" color="amber" pulse />
+              </div>
+
+              {/* Indicateurs mobiles compacts améliorés */}
+              <div className="lg:hidden flex items-center gap-1">
+                {ragEnabled && (
+                  <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium bg-emerald-50/80 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60 backdrop-blur-sm">
+                    <Database className="w-3 h-3" />
+                    RAG
+                  </div>
+                )}
+                {webEnabled && (
+                  <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium bg-purple-50/80 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/60 backdrop-blur-sm">
+                    <Globe className="w-3 h-3" />
+                    Web
+                  </div>
+                )}
+                {modePrive && !props.modeEnfant && (
+                  <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium bg-red-50/80 text-red-700 dark:bg-red-900/40 dark:text-red-300 border border-red-200/60 dark:border-red-800/60 backdrop-blur-sm animate-pulse">
+                    <Shield className="w-3 h-3" />
+                    Privé
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Indicateurs mobiles compacts */}
-            {ragEnabled && (
-              <div className="lg:hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
-                <Brain className="w-3.5 h-3.5" /> RAG
+            {/* Actions principales - Desktop */}
+            <div className="hidden md:flex items-center gap-3">
+              {/* Actions de base */}
+              <div className="flex items-center gap-2">
+                <ActionButton onClick={onNewDiscussion} tooltip="Nouvelle discussion">
+                  <PlusCircle className="w-4 h-4 mr-2" />
+                  Nouveau
+                </ActionButton>
+
+                {!props.modeEnfant && (
+                  <>
+                    <ActionButton onClick={onOpenHistory} tooltip="Voir l'historique">
+                      <History className="w-4 h-4 mr-2" />
+                      Historique
+                    </ActionButton>
+
+                    <ActionButton onClick={onOpenMemory} tooltip="Ouvrir la mémoire">
+                      <Brain className="w-4 h-4 mr-2" />
+                      Mémoire
+                    </ActionButton>
+                  </>
+                )}
               </div>
-            )}
-            {webEnabled && (
-              <div className="lg:hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60">
-                <Wifi className="w-3.5 h-3.5" /> Web
-              </div>
-            )}
-          </div>
 
-          {/* Actions principales - Desktop */}
-          <div className="hidden md:flex items-center gap-2">
-            {/* Actions principales */}
-            <ActionButton onClick={onNewDiscussion} tooltip="Nouvelle discussion">
-              <PlusCircle className="w-4 h-4 mr-2" />
-              Nouveau
-            </ActionButton>
+              {/* Actions de sélection */}
+              {selectionActions}
 
-            <ActionButton onClick={onOpenHistory} tooltip="Voir l'historique">
-              <History className="w-4 h-4 mr-2" />
-              Historique
-            </ActionButton>
-
-            {!props.modeEnfant && (
-              <ActionButton onClick={onOpenMemory} tooltip="Ouvrir la mémoire">
-                <Brain className="w-4 h-4 mr-2" />
-                Mémoire
-              </ActionButton>
-            )}
-
-            {/* Actions de sélection */}
-            {selectionActions}
-
-            {/* Contrôles vocaux */}
-            <ButtonGroup>
-              <IconButton
-                onClick={handleVolumeToggle}
-                tooltip={muted ? 'Activer audio' : 'Désactiver audio'}
-                className={muted
-                  ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50'
-                  : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-950/50 animate-pulse'
-                }
-              >
-                {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-              </IconButton>
-
-              {!props.modeEnfant && (
-                <IconButton
-                  variant={modeVocalAuto ? 'default' : 'ghost'}
-                  onClick={handleModeVocalToggle}
-                  tooltip="Mode vocal automatique"
-                  className={modeVocalAuto 
-                    ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 ring-1 ring-blue-400/30 animate-pulse' 
-                    : ''
-                  }
-                >
-                  <Mic className="w-4 h-4" />
-                </IconButton>
-              )}
-            </ButtonGroup>
-
-            {/* Modes IA */}
-            <ButtonGroup>
-              {!props.modeEnfant && (
-                <IconButton
-                  variant={modePrive ? 'destructive' : 'ghost'}
-                  onClick={handlePrivateModeToggle}
-                  tooltip="Mode privé"
-                >
-                  <Shield className="w-4 h-4" />
-                </IconButton>
-              )}
-              <IconButton
-                variant={props.modeEnfant ? 'default' : 'ghost'}
-                onClick={handleChildModeToggle}
-                tooltip="Mode enfant"
-              >
-                <Baby className="w-4 h-4" />
-              </IconButton>
-              
-              {!props.modeEnfant && (
-                <IconButton
-                  variant={ragEnabled ? 'default' : 'ghost'}
-                  onClick={handleRagToggle}
-                  tooltip="Recherche documentaire (RAG)"
-                >
-                  <Brain className="w-4 h-4" />
-                </IconButton>
-              )}
-              {!props.modeEnfant && (
-                <IconButton
-                  variant={webEnabled ? 'default' : 'ghost'}
-                  onClick={handleWebToggle}
-                  tooltip="Recherche web"
-                >
-                  <Wifi className="w-4 h-4" />
-                </IconButton>
-              )}
-            </ButtonGroup>
-
-            {/* Réglages */}
-            {!props.modeEnfant && (
+              {/* Contrôles vocaux modernisés */}
               <ButtonGroup>
                 <IconButton
-                  onClick={toggleTheme}
-                  tooltip={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+                  onClick={handleVolumeToggle}
+                  tooltip={muted ? 'Activer audio' : 'Désactiver audio'}
+                  active={!muted}
+                  className={muted
+                    ? 'text-red-600 hover:bg-red-50/80 dark:hover:bg-red-950/50'
+                    : 'text-green-600 hover:bg-green-50/80 dark:hover:bg-green-950/50'
+                  }
                 >
-                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                 </IconButton>
+
+                {!props.modeEnfant && (
+                  <IconButton
+                    onClick={handleModeVocalToggle}
+                    tooltip="Mode vocal automatique"
+                    active={modeVocalAuto}
+                  >
+                    <Mic className="w-4 h-4" />
+                  </IconButton>
+                )}
+              </ButtonGroup>
+
+              {/* Modes IA modernisés */}
+              <ButtonGroup>
+                {!props.modeEnfant && (
+                  <IconButton
+                    onClick={handlePrivateModeToggle}
+                    tooltip="Mode privé"
+                    active={modePrive}
+                    className={modePrive 
+                      ? 'text-red-600 dark:text-red-400 bg-red-50/80 dark:bg-red-950/40' 
+                      : 'hover:bg-red-50/80 dark:hover:bg-red-950/50'
+                    }
+                  >
+                    <Shield className="w-4 h-4" />
+                  </IconButton>
+                )}
 
                 <IconButton
-                  onClick={() => setShowMobileMenu(true)}
-                  tooltip="Plus d'options"
+                  onClick={handleChildModeToggle}
+                  tooltip="Mode enfant"
+                  active={!!props.modeEnfant}
                 >
-                  <Settings2 className="w-4 h-4" />
+                  <Baby className="w-4 h-4" />
                 </IconButton>
+                
+                {!props.modeEnfant && (
+                  <>
+                    <IconButton
+                      onClick={handleRagToggle}
+                      tooltip="Recherche documentaire (RAG)"
+                      active={ragEnabled}
+                    >
+                      <Database className="w-4 h-4" />
+                    </IconButton>
+
+                    <IconButton
+                      onClick={handleWebToggle}
+                      tooltip="Recherche web"
+                      active={!!webEnabled}
+                    >
+                      <Globe className="w-4 h-4" />
+                    </IconButton>
+                  </>
+                )}
               </ButtonGroup>
-            )}
+
+              {/* Réglages */}
+              {!props.modeEnfant && (
+                <ButtonGroup>
+                  <IconButton
+                    onClick={toggleTheme}
+                    tooltip={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+                  >
+                    {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  </IconButton>
+
+                  <IconButton
+                    onClick={() => setShowMobileMenu(true)}
+                    tooltip="Plus d'options"
+                  >
+                    <Settings2 className="w-4 h-4" />
+                  </IconButton>
+                </ButtonGroup>
+              )}
+            </div>
+
+            {/* Bouton menu mobile amélioré */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowMobileMenu(true)}
+              className="md:hidden h-10 w-10 p-0 rounded-xl hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-all duration-200 hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+              aria-label="Ouvrir le menu"
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
           </div>
-
-          {/* Menu mobile button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowMobileMenu(true)}
-            className="md:hidden h-9 w-9 p-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
-            aria-label="Ouvrir le menu"
-          >
-            <Menu className="w-5 h-5" />
-          </Button>
         </div>
-      </div>
 
-      {/* Menu mobile/options */}
+        {/* Banner mode privé */}
+        <PrivateModeBanner show={showPrivateIndicator} />
+      </header>
+
+      {/* Menu mobile modernisé */}
       <Dialog open={showMobileMenu} onOpenChange={setShowMobileMenu}>
-        <DialogContent className="max-w-sm mx-auto p-0 bg-white dark:bg-slate-950 rounded-2xl border shadow-xl">
+        <DialogContent className="max-w-sm mx-auto p-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl rounded-3xl border border-slate-200/50 dark:border-slate-800/50 shadow-2xl">
           <DialogHeader className="sr-only">
             <DialogTitle>Menu options</DialogTitle>
           </DialogHeader>
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold">Options</h2>
-              <Button variant="ghost" size="sm" onClick={closeMobileMenu} className="h-8 w-8 p-0" aria-label="Fermer">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                Options
+              </h2>
+              <Button variant="ghost" size="sm" onClick={closeMobileMenu} className="h-8 w-8 p-0 rounded-xl" aria-label="Fermer">
                 <X className="w-4 h-4" />
               </Button>
             </div>
 
-            <div className="space-y-3">
-              {props.modeEnfant ? (
-                <div className="md:hidden space-y-2">
-                  <Button
-                    variant="destructive"
-                    className="w-full justify-start h-10"
-                    onClick={handleMenuAction(handleChildModeToggle)}
-                  >
-                    <Baby className="w-4 h-4 mr-3" />
-                    Désactiver mode enfant
+            <div className="space-y-2">
+              {/* Actions principales */}
+              <div className="space-y-1">
+                <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onNewDiscussion)}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center">
+                      <PlusCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <div className="font-medium">Nouvelle discussion</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">Démarrer une nouvelle conversation</div>
+                    </div>
+                  </div>
+                </Button>
+
+                {!props.modeEnfant && (
+                  <>
+                    <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onOpenHistory)}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center">
+                          <History className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div>
+                          <div className="font-medium">Historique</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">Consulter les conversations passées</div>
+                        </div>
+                      </div>
+                    </Button>
+
+                    <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onOpenMemory)}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/40 flex items-center justify-center">
+                          <Brain className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <div>
+                          <div className="font-medium">Mémoire</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">Gérer les informations mémorisées</div>
+                        </div>
+                      </div>
+                    </Button>
+                  </>
+                )}
+              </div>
+
+              {hasActiveConversation && (
+                <>
+                  <div className="border-t border-slate-200/60 dark:border-slate-800/60 my-4" />
+                  <div className="space-y-1">
+                    <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onToggleSelectMode)}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center">
+                          {selectMode ? <CheckSquare className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> : <Square className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
+                        </div>
+                        <div>
+                          <div className="font-medium">{selectMode ? 'Annuler sélection' : 'Sélectionner messages'}</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                            {selectMode ? 'Quitter le mode sélection' : 'Choisir des messages à supprimer'}
+                          </div>
+                        </div>
+                      </div>
+                    </Button>
+
+                    {selectMode && selectedCount > 0 && (
+                      <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-red-50/80 dark:hover:bg-red-950/60 transition-all duration-200" onClick={handleMenuAction(onRequestDelete)}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/40 flex items-center justify-center">
+                            <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+                          </div>
+                          <div>
+                            <div className="font-medium text-red-600 dark:text-red-400">
+                              Supprimer sélection ({selectedCount})
+                            </div>
+                            <div className="text-xs text-red-500/70 dark:text-red-400/70">
+                              Action irréversible
+                            </div>
+                          </div>
+                        </div>
+                      </Button>
+                    )}
+                  </div>
+                </>
+              )}
+              
+              <div className="border-t border-slate-200/60 dark:border-slate-800/60 my-4" />
+              
+              {/* Modes et paramètres */}
+              <div className="space-y-1">
+                {!props.modeEnfant && (
+                  <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(handlePrivateModeToggle)}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${modePrive ? 'bg-red-50 dark:bg-red-950/40' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                        <Shield className={`w-4 h-4 ${modePrive ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-400'}`} />
+                      </div>
+                      <div>
+                        <div className={`font-medium ${modePrive ? 'text-red-600 dark:text-red-400' : ''}`}>
+                          {modePrive ? 'Désactiver mode privé' : 'Activer mode privé'}
+                        </div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                          {modePrive ? 'Revenir au mode normal' : 'Aucune sauvegarde des conversations'}
+                        </div>
+                      </div>
+                    </div>
                   </Button>
-                </div>
-              ) : (
-                mobileMenuActions
-              )}
+                )}
 
-              {/* Options toujours visibles */}
-              {!props.modeEnfant && (
-                <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onOpenTTSSettings)}>
-                  <Settings2 className="w-4 h-4 mr-3" />
-                  Réglages synthèse vocale
+                <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(handleChildModeToggle)}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${props.modeEnfant ? 'bg-blue-50 dark:bg-blue-950/40' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                      <Baby className={`w-4 h-4 ${props.modeEnfant ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'}`} />
+                    </div>
+                    <div>
+                      <div className={`font-medium ${props.modeEnfant ? 'text-blue-600 dark:text-blue-400' : ''}`}>
+                        {props.modeEnfant ? 'Désactiver mode enfant' : 'Activer mode enfant'}
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        {props.modeEnfant ? 'Revenir au mode normal' : 'Interface sécurisée pour enfants'}
+                      </div>
+                    </div>
+                  </div>
                 </Button>
-              )}
+                
+                {!props.modeEnfant && (
+                  <>
+                    <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(handleRagToggle)}>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${ragEnabled ? 'bg-emerald-50 dark:bg-emerald-950/40' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                          <Database className={`w-4 h-4 ${ragEnabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'}`} />
+                        </div>
+                        <div>
+                          <div className={`font-medium ${ragEnabled ? 'text-emerald-600 dark:text-emerald-400' : ''}`}>
+                            {ragEnabled ? 'Désactiver RAG' : 'Activer RAG'}
+                          </div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                            {ragEnabled ? 'Désactiver la recherche documentaire' : 'Recherche dans vos documents'}
+                          </div>
+                        </div>
+                      </div>
+                    </Button>
 
-              {!props.modeEnfant && (
-                <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onOpenRagDocs)}>
-                  <BookOpen className="w-4 h-4 mr-3" />
-                  Documents RAG
-                </Button>
-              )}
+                    <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(handleWebToggle)}>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${webEnabled ? 'bg-purple-50 dark:bg-purple-950/40' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                          <Globe className={`w-4 h-4 ${webEnabled ? 'text-purple-600 dark:text-purple-400' : 'text-slate-600 dark:text-slate-400'}`} />
+                        </div>
+                        <div>
+                          <div className={`font-medium ${webEnabled ? 'text-purple-600 dark:text-purple-400' : ''}`}>
+                            {webEnabled ? 'Désactiver recherche web' : 'Activer recherche web'}
+                          </div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                            {webEnabled ? 'Désactiver la recherche internet' : 'Recherche en temps réel sur le web'}
+                          </div>
+                        </div>
+                      </div>
+                    </Button>
+                  </>
+                )}
+              </div>
+              
+              <div className="border-t border-slate-200/60 dark:border-slate-800/60 my-4" />
 
-              {!props.modeEnfant && props.onOpenChildPinSettings && (
-                <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(props.onOpenChildPinSettings)}>
-                  <Settings2 className="w-4 h-4 mr-3" />
-                  Changer le PIN (mode enfant)
-                </Button>
-              )}
+              {/* Paramètres avancés */}
+              <div className="space-y-1">
+                {!props.modeEnfant && (
+                  <>
+                    <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onOpenTTSSettings)}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-950/40 flex items-center justify-center">
+                          <Settings2 className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                        </div>
+                        <div>
+                          <div className="font-medium">Synthèse vocale</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">Configurer la voix et les paramètres</div>
+                        </div>
+                      </div>
+                    </Button>
 
-              {/* Sélecteur de provider IA */}
-              {!props.modeEnfant && onChangeProvider && (
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant={provider === 'gemini' ? 'default' : 'ghost'}
-                    className="flex-1 h-10"
-                    onClick={handleMenuAction(() => onChangeProvider('gemini'))}
-                  >
-                    Gemini
+                    <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onOpenRagDocs)}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-950/40 flex items-center justify-center">
+                          <BookOpen className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                        </div>
+                        <div>
+                          <div className="font-medium">Documents RAG</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">Gérer vos documents indexés</div>
+                        </div>
+                      </div>
+                    </Button>
+
+                    {props.onOpenChildPinSettings && (
+                      <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(props.onOpenChildPinSettings)}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-pink-50 dark:bg-pink-950/40 flex items-center justify-center">
+                            <Settings2 className="w-4 h-4 text-pink-600 dark:text-pink-400" />
+                          </div>
+                          <div>
+                            <div className="font-medium">PIN mode enfant</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400">Changer le code de sécurité</div>
+                          </div>
+                        </div>
+                      </Button>
+                    )}
+                  </>
+                )}
+
+                {/* Sélecteur de provider IA */}
+                {!props.modeEnfant && onChangeProvider && (
+                  <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
+                    <div className="text-sm font-medium mb-3 text-slate-700 dark:text-slate-300">Fournisseur IA</div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={provider === 'gemini' ? 'default' : 'ghost'}
+                        className="flex-1 h-10 rounded-lg text-sm"
+                        onClick={handleMenuAction(() => onChangeProvider('gemini'))}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4" />
+                          Gemini
+                        </div>
+                      </Button>
+                      <Button
+                        variant={provider === 'openai' ? 'default' : 'ghost'}
+                        className="flex-1 h-10 rounded-lg text-sm"
+                        onClick={handleMenuAction(() => onChangeProvider('openai'))}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Brain className="w-4 h-4" />
+                          OpenAI
+                        </div>
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {!props.modeEnfant && onOpenGeminiSettings && provider === 'gemini' && (
+                  <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onOpenGeminiSettings)}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 flex items-center justify-center">
+                        <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <div className="font-medium">Réglages Gemini</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">Configuration du modèle IA</div>
+                      </div>
+                    </div>
                   </Button>
+                )}
+
+                {!props.modeEnfant && provider === 'openai' && (
                   <Button
-                    variant={provider === 'openai' ? 'default' : 'ghost'}
-                    className="flex-1 h-10"
-                    onClick={handleMenuAction(() => onChangeProvider('openai'))}
+                    variant="ghost"
+                    className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200"
+                    onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('openai:settings:open')))}
                   >
-                    OpenAI
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/40 dark:to-green-950/40 flex items-center justify-center">
+                        <Brain className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <div>
+                        <div className="font-medium">Réglages OpenAI</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">Configuration du modèle IA</div>
+                      </div>
+                    </div>
                   </Button>
-                </div>
-              )}
+                )}
 
-              {!props.modeEnfant && onOpenGeminiSettings && provider === 'gemini' && (
-                <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(onOpenGeminiSettings)}>
-                  <Settings2 className="w-4 h-4 mr-3" />
-                  Réglages Gemini
+                <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(toggleTheme)}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-950/40 flex items-center justify-center">
+                      {theme === 'dark' ? <Sun className="w-4 h-4 text-yellow-600 dark:text-yellow-400" /> : <Moon className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />}
+                    </div>
+                    <div>
+                      <div className="font-medium">{theme === 'dark' ? 'Mode clair' : 'Mode sombre'}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        {theme === 'dark' ? 'Basculer vers le thème clair' : 'Basculer vers le thème sombre'}
+                      </div>
+                    </div>
+                  </div>
                 </Button>
-              )}
-
-              {!props.modeEnfant && provider === 'openai' && (
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start h-10"
-                  onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('openai:settings:open')))}
-                >
-                  <Settings2 className="w-4 h-4 mr-3" />
-                  Réglages OpenAI
-                </Button>
-              )}
-
-              <Button variant="ghost" className="w-full justify-start h-10" onClick={handleMenuAction(toggleTheme)}>
-                {theme === 'dark' ? <Sun className="w-4 h-4 mr-3" /> : <Moon className="w-4 h-4 mr-3" />}
-                {theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
-              </Button>
+              </div>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* AlertDialog pour la confirmation de suppression */}
+      {/* AlertDialog modernisée pour la confirmation de suppression */}
       <AlertDialog open={showConfirmDelete} onOpenChange={setShowConfirmDelete}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
+        <AlertDialogContent className="rounded-3xl border border-slate-200/50 dark:border-slate-800/50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl shadow-2xl max-w-md">
+          <AlertDialogHeader className="text-center pb-4">
+            <div className="mx-auto w-12 h-12 rounded-full bg-red-50 dark:bg-red-950/40 flex items-center justify-center mb-4">
+              <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+            </div>
+            <AlertDialogTitle className="text-xl font-bold">
               Supprimer {selectedCount} message{selectedCount > 1 ? 's' : ''} ?
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. Les messages sélectionnés seront définitivement supprimés de la conversation et de l'historique.
+            <AlertDialogDescription className="text-slate-600 dark:text-slate-400 mt-2">
+              Cette action est <strong>irréversible</strong>. Les messages sélectionnés seront définitivement supprimés de la conversation et de l'historique.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={onDeleteConfirmed} className="bg-red-600 hover:bg-red-700">
+          <AlertDialogFooter className="gap-3 pt-4">
+            <AlertDialogCancel className="rounded-xl h-11 px-6 font-medium">
+              Annuler
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={onDeleteConfirmed} 
+              className="rounded-xl h-11 px-6 font-medium bg-red-600 hover:bg-red-700 focus:ring-red-500/50"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
               Supprimer
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -659,8 +966,49 @@ export function Header(props: HeaderProps) {
       <ReactTooltip 
         id="header-tooltip" 
         place="bottom" 
-        className="!bg-slate-900 !text-white !text-xs !px-2 !py-1 !rounded-lg !shadow-lg !z-50" 
+        className="!bg-slate-900/90 !text-white !text-xs !px-3 !py-2 !rounded-xl !shadow-2xl !z-50 !backdrop-blur-sm !border !border-slate-700/50" 
+        style={{ 
+          backgroundColor: 'rgba(15, 23, 42, 0.9)',
+          backdropFilter: 'blur(8px)'
+        }}
       />
-    </header>
+
+      {/* Styles CSS custom pour les animations */}
+      <style>{`
+        @keyframes slide-down {
+          from {
+            opacity: 0;
+            transform: translateY(-100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes slide-in {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        .animate-slide-down {
+          animation: slide-down 0.3s ease-out;
+        }
+        
+        .animate-slide-in {
+          animation: slide-in 0.2s ease-out;
+        }
+        
+        .animate-pulse {
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+      `}</style>
+    </>
   );
 }
