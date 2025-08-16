@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Button as UIButton } from '@/components/ui/button';
-import { Info, Sliders } from 'lucide-react';
+import { Info, Sliders, Bot } from 'lucide-react';
 import { Tooltip } from 'react-tooltip';
 import type { MistralGenerationConfig } from '@/services/mistralApi';
 
@@ -16,6 +16,8 @@ interface MistralSettingsDrawerProps {
   onReset: () => void;
   onClose: () => void;
   DEFAULTS: Required<Pick<MistralGenerationConfig, 'temperature' | 'top_p' | 'max_tokens' | 'model'>>;
+  agentEnabled?: boolean;
+  onToggleAgent?: (enabled: boolean) => void;
 }
 
 export const MistralSettingsDrawer: React.FC<MistralSettingsDrawerProps> = ({
@@ -26,6 +28,8 @@ export const MistralSettingsDrawer: React.FC<MistralSettingsDrawerProps> = ({
   onReset,
   onClose,
   DEFAULTS,
+  agentEnabled,
+  onToggleAgent,
 }) => (
   <Drawer open={open} onOpenChange={onOpenChange}>
     <DrawerContent className="max-w-full w-[95vw] sm:w-[100%] px-2 py-2">
@@ -43,6 +47,26 @@ export const MistralSettingsDrawer: React.FC<MistralSettingsDrawerProps> = ({
         </div>
       </DrawerHeader>
       <div className="border-b border-slate-200 dark:border-slate-700 mb-2" />
+      {/* Agent toggle amélioré */}
+      <button
+        type="button"
+        onClick={() => onToggleAgent?.(!agentEnabled)}
+        className={`w-full mb-2 flex items-center justify-between p-3 rounded-xl border transition-all duration-200 shadow-sm ${agentEnabled ? 'border-purple-400/40 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/20' : 'border-purple-100 dark:border-purple-900/30 bg-white/70 dark:bg-slate-900/70'} hover:scale-[1.01] active:scale-100`}
+        aria-pressed={agentEnabled}
+      >
+        <div className="flex items-center gap-3">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${agentEnabled ? 'bg-purple-600 text-white' : 'bg-white dark:bg-slate-800 text-purple-600'}`}>
+            <Bot className="w-4 h-4" />
+          </div>
+          <div className="text-left">
+            <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">Agent Mistral</div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400">Orchestration auto Web/RAG et réponse guidée.</div>
+          </div>
+        </div>
+        <div className={`text-xs font-semibold px-2 py-1 rounded-lg ${agentEnabled ? 'bg-purple-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>
+          {agentEnabled ? 'Activé' : 'Désactivé'}
+        </div>
+      </button>
       <div className="p-0 space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {/* Température */}

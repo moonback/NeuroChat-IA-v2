@@ -35,6 +35,7 @@ import { RagSidebarDrawer } from '@/components/RagSidebarDrawer';
 import { WebSourcesSidebar } from '@/components/WebSourcesSidebar';
 import { WebSourcesDrawer } from '@/components/WebSourcesDrawer';
 import type { WebSource } from '@/components/WebSourcesSidebar';
+import { AgentStatus } from '@/components/AgentStatus';
 
 // Timeline retirée
 
@@ -129,6 +130,7 @@ function App() {
   const [webEnabled, setWebEnabled] = useState<boolean>(false);
   // État de chargement spécifique à la recherche web
   const [isWebSearching, setIsWebSearching] = useState<boolean>(false);
+  const [isRagSearching, setIsRagSearching] = useState<boolean>(false);
   // Documents RAG utilisés dans la conversation courante
   const [usedRagDocs, setUsedRagDocs] = useState<Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }>>([]);
   // Sidebar RAG mobile
@@ -168,6 +170,12 @@ function App() {
   const [showGeminiSettings, setShowGeminiSettings] = useState(false);
   const [showOpenAISettings, setShowOpenAISettings] = useState(false);
   const [showMistralSettings, setShowMistralSettings] = useState(false);
+  const [mistralAgentEnabled, setMistralAgentEnabled] = useState<boolean>(() => {
+    try { return localStorage.getItem('mistral_agent_enabled') === 'true'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('mistral_agent_enabled', mistralAgentEnabled ? 'true' : 'false'); } catch {}
+  }, [mistralAgentEnabled]);
   // Gestion des presets Gemini
   const [presets, setPresets] = useState<{ name: string; config: GeminiGenerationConfig }[]>([]);
 
@@ -612,27 +620,32 @@ ${lines.join('\n')}`, false);
       toast.error('Pas de connexion Internet. Vérifie ta connexion réseau.');
       return;
     }
-    // Étape RAG : recherche documentaire (seulement si activé)
+    // Étape RAG : recherche documentaire (si activé ou agent Mistral)
     let passages: Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }> = [];
-    if (ragEnabled) {
-      passages = await searchDocuments(userMessage, 3, workspaceId);
-       // Timeline retirée
-      if (passages.length > 0) {
-        const simplePassages = passages.map((p, idx) => ({ id: idx, titre: p.titre, contenu: p.contenu }));
-        addRagContextMessage(simplePassages);
-        // Mémoriser les documents utilisés (unicité par id)
-        setUsedRagDocs(prev => {
-          const byId = new Map<string, any>();
-          [...prev, ...passages].forEach(d => byId.set(String(d.id), { ...d, id: String(d.id) }));
-          return Array.from(byId.values());
-        });
+    if (ragEnabled || (provider === 'mistral' && mistralAgentEnabled)) {
+      setIsRagSearching(true);
+      try {
+        passages = await searchDocuments(userMessage, 3, workspaceId);
+        // Timeline retirée
+        if (passages.length > 0) {
+          const simplePassages = passages.map((p, idx) => ({ id: idx, titre: p.titre, contenu: p.contenu }));
+          addRagContextMessage(simplePassages);
+          // Mémoriser les documents utilisés (unicité par id)
+          setUsedRagDocs(prev => {
+            const byId = new Map<string, any>();
+            [...prev, ...passages].forEach(d => byId.set(String(d.id), { ...d, id: String(d.id) }));
+            return Array.from(byId.values());
+          });
+        }
+      } finally {
+        setIsRagSearching(false);
       }
     }
     // Étape Web : recherche en ligne (si activée)
     let webContext = '';
     let webSources: Array<{ title: string; url: string }> = [];
     try {
-      if (webEnabled) {
+      if (webEnabled || (provider === 'mistral' && mistralAgentEnabled)) {
         setIsWebSearching(true);
         const { searchWeb } = await import('@/services/webSearch');
         const webResults = await searchWeb(userMessage, 5, { enrich: false });
@@ -663,7 +676,7 @@ ${lines.join('\n')}`, false);
         }
       }
     } catch {} finally {
-      if (webEnabled) setIsWebSearching(false);
+      if (webEnabled || (provider === 'mistral' && mistralAgentEnabled)) setIsWebSearching(false);
     }
     // Ajoute le message utilisateur localement
     const newMessage = addMessage(userMessage, true, imageFile);
@@ -1341,6 +1354,19 @@ ${lines.join('\n')}`, false);
               </>
             )}
           </div>
+          {/* Indicateur Agent Mistral */}
+          {provider === 'mistral' && mistralAgentEnabled && (
+            <div className="absolute right-3 bottom-28 z-40">
+              <AgentStatus
+                visible
+                steps={{
+                  web: { state: isWebSearching ? 'running' : 'idle', label: 'Recherche web' },
+                  rag: { state: isRagSearching ? 'running' : 'idle', label: 'Recherche documents' },
+                  generate: { state: isLoading ? 'running' : 'idle', label: 'Génération de réponse' },
+                }}
+              />
+            </div>
+          )}
         </Card>
       </div>
 
@@ -1455,6 +1481,8 @@ ${lines.join('\n')}`, false);
           onReset={() => _setMistralConfig({ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest' })}
           onClose={() => setShowMistralSettings(false)}
           DEFAULTS={{ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest' }}
+          agentEnabled={mistralAgentEnabled}
+          onToggleAgent={(enabled) => setMistralAgentEnabled(enabled)}
         />
       </Suspense>
 
