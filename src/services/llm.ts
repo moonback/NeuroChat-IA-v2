@@ -36,9 +36,10 @@ export async function sendMessage(
   }
 
   const providersToTry: Provider[] = [
-    primary,
-    ...allProviders.filter((p) => p !== primary && !fallbackOrder.includes(p)),
-    ...fallbackOrder.filter((p) => p !== primary),
+    ...(fallbackOrder.length > 0
+      ? [primary, ...fallbackOrder.filter((p) => p !== primary)]
+      : [primary]
+    )
   ].filter((p, i, arr) => arr.indexOf(p) === i);
 
   let lastError: unknown = null;

@@ -25,11 +25,6 @@ export async function sendMessageToOpenAI(
   systemPrompt: string,
   generationConfig?: OpenAIGenerationConfig,
 ): Promise<string> {
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY as string | undefined;
-  if (!apiKey) {
-    throw new Error("Clé API OpenAI introuvable. Ajoute VITE_OPENAI_API_KEY dans .env.local.");
-  }
-
   const model = (generationConfig?.model || import.meta.env.VITE_OPENAI_MODEL || 'gpt-4o-mini') as string;
 
   // Construire les messages pour Chat Completions
@@ -73,11 +68,10 @@ export async function sendMessageToOpenAI(
     max_tokens: generationConfig?.max_tokens ?? 4096,
   };
 
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+  const res = await fetch('/api/openai', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify(body),
   });

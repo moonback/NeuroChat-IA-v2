@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:server": "node backend/server.js",
+    "dev:all": "concurrently \"npm:dev:server\" \"npm:dev\"",
+    "setup:server": "npm --prefix backend install",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -82,6 +85,7 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.7.0",
     "vite": "^5.4.8",
-    "vite-plugin-compression": "^0.5.1"
+    "vite-plugin-compression": "^0.5.1",
+    "concurrently": "^9.0.1"
   }
 }
