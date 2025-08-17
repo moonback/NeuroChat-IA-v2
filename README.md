@@ -1,6 +1,6 @@
 ### 🧠 NeuroChat IA v2
 
-> Assistant IA moderne (React + TypeScript) avec voix, images, mémoire utilisateur, RAG local, mode privé et mode enfant — propulsé par Gemini Pro.
+> Assistant IA moderne (React + TypeScript) avec voix, images, mémoire utilisateur, RAG local, mode privé et mode enfant — propulsé par Gemini, OpenAI et Mistral.
 
 [![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](./README.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
@@ -34,6 +34,11 @@
   - Sélection multiple et suppression groupée
   - Vue Infos: stats conversation, contexte RAG, date de début
 
+- **Agents & multi‑provider**
+  - Agent Gemini et Agent Mistral: orchestration automatique Web/RAG + style de réponse guidé
+  - Heuristiques automatiques activables (Web/RAG) avec mots‑clés configurables
+  - Multi‑fournisseurs (Gemini, OpenAI, Mistral) avec ordre de repli (fallback) en cas d’échec
+
 - **Mémoire utilisateur**
   - Extraction de faits (profil, préférences, objectifs) + fallback LLM
   - Gestion: ajout/édition/désactivation/export/import
@@ -44,6 +49,10 @@
   - Import: TXT, MD, PDF, DOCX, CSV, HTML
   - Embeddings locaux + similarité cosinus
   - Activation/désactivation à la volée
+
+- **Recherche Web**
+  - Tavily (si `VITE_TAVILY_API_KEY` présent), sinon fallback DuckDuckGo Instant Answer
+  - Enrichissement optionnel du contenu avec `r.jina.ai` (extraits lisibles)
 
 - **Sécurité & modes**
   - Mode privé: aucune persistance; alerte à la fermeture si messages présents
@@ -70,8 +79,18 @@ git clone https://github.com/moonback/NeuroChat-IA-v2.git
 cd NeuroChat-IA-v2
 npm install
 
-# 2) Configurer l’API Gemini
-echo "VITE_GEMINI_API_KEY=votre_cle_api_gemini" > .env.local
+# 2) Configurer les API (au minimum Gemini)
+cat > .env.local << EOF
+VITE_GEMINI_API_KEY=votre_cle_api_gemini
+# (Optionnel) OpenAI
+VITE_OPENAI_API_KEY=your_openai_key
+VITE_OPENAI_MODEL=gpt-4o-mini
+# (Optionnel) Mistral
+VITE_MISTRAL_API_KEY=your_mistral_key
+VITE_MISTRAL_MODEL=mistral-small-latest
+# (Optionnel) Recherche Web Tavily
+VITE_TAVILY_API_KEY=your_tavily_key
+EOF
 
 # 3) Lancer en développement
 npm run dev
@@ -93,6 +112,11 @@ Production: `npm run build` puis `npm run preview`.
 ### Chat & images
 - Saisissez du texte ou cliquez sur l’icône image pour joindre un fichier (JPG/PNG/WebP)
 - Si une image est fournie, l’analyse est intégrée à la réponse
+
+### Agents et heuristiques automatiques
+- Activez l’Agent depuis le bouton dédié dans la zone d’entrée (Gemini/Mistral) ou via les tiroirs de réglages
+- Dans les réglages du provider: cochez « Activer RAG auto » / « Activer Web auto » et renseignez les mots‑clés
+- Le modèle déclenche Web/RAG automatiquement selon votre requête
 
 ### Mémoire utilisateur
 - Ouvrez la modale « Mémoire » pour gérer vos faits
@@ -124,10 +148,11 @@ Production: `npm run build` puis `npm run preview`.
 |---|---|
 | **Frontend** | React 18, TypeScript, Vite |
 | **UI/UX** | Tailwind CSS, Radix UI, Lucide React |
-| **IA** | Google Gemini Pro API (multimodal), OpenAI (optionnel) |
+| **IA** | Google Gemini Pro API (multimodal), OpenAI (optionnel), Mistral (optionnel) |
 | **Audio** | Web Speech API (reconnaissance & synthèse) |
 | **ML local** | `@xenova/transformers` (embeddings) |
 | **Données** | LocalStorage |
+| **Recherche Web** | Tavily (optionnel), DuckDuckGo (fallback), r.jina.ai (extraits) |
 
 
 ## 📂 Architecture
@@ -184,7 +209,7 @@ src/
 - Filtres de sécurité activés côté Gemini (safetySettings)
 - Mode privé: zéro persistance de la discussion
 - Données locales (historique, mémoire, docs RAG) sur votre appareil
-- Pas de serveur applicatif tiers: appels directs à l’API Google
+- Pas de serveur applicatif tiers: appels directs aux API (Google/OpenAI/Mistral)
 - Suppression simple depuis l’interface
 
 
@@ -219,6 +244,15 @@ npm run dev
 - Réactivez le mode RAG
 
 ### Indicateur vocal figé
+### Recherche Web vide
+- Ajoutez `VITE_TAVILY_API_KEY` pour des résultats plus riches
+- Réessayez avec des requêtes plus précises, ou activez l’enrichissement si proposé
+- Vérifiez la connectivité réseau et les limitations CORS
+
+### Tous les providers échouent
+- Vérifiez vos clés dans `.env.local`
+- Réduisez temporairement `max_tokens` / `maxOutputTokens`
+- Désactivez le mode agent et réessayez en simple chat
 - Vérifiez que le mode vocal auto est activé
 - Testez sans mode privé
 - Repositionnez l’indicateur
