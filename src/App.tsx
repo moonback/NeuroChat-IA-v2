@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
 import { GeminiGenerationConfig } from '@/services/geminiApi';
@@ -89,6 +90,22 @@ function App() {
   useEffect(() => {
     try { localStorage.setItem('nc_active_workspace', workspaceId); } catch {}
   }, [workspaceId]);
+  // Modale d'animation lors du changement d'espace de travail (skip au premier rendu)
+  const firstWorkspaceLoadRef = useRef(true);
+  const [showWorkspaceOpening, setShowWorkspaceOpening] = useState<boolean>(false);
+  const [workspaceOpeningName, setWorkspaceOpeningName] = useState<string>('');
+  useEffect(() => {
+    if (firstWorkspaceLoadRef.current) {
+      firstWorkspaceLoadRef.current = false;
+      return;
+    }
+    const current = workspaces.find(w => w.id === workspaceId);
+    const name = current?.name || workspaceId;
+    setWorkspaceOpeningName(name);
+    setShowWorkspaceOpening(true);
+    const t = setTimeout(() => setShowWorkspaceOpening(false), 1000);
+    return () => clearTimeout(t);
+  }, [workspaceId, workspaces]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -1558,6 +1575,20 @@ ${lines.join('\n')}`, false);
       {/* Mémoire: gestion via modale */}
 
       
+      {/* Modale d'ouverture d'espace de travail */}
+      <Dialog open={showWorkspaceOpening} onOpenChange={setShowWorkspaceOpening}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Chargement de l’espace</DialogTitle>
+            <DialogDescription>
+              Ouverture de l’espace « {workspaceOpeningName} »…
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-center py-4">
+            <div className="h-10 w-10 rounded-full border-2 border-slate-300 border-t-indigo-500 animate-spin" />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
