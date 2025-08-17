@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { randomUUID } from 'crypto';
 import { db } from '../db/index.js';
 import { memoryItems } from '../db/schema.js';
 import { eq, and, desc, asc, sql, like } from 'drizzle-orm';
@@ -184,6 +185,7 @@ router.post('/', async (req, res) => {
     const [newItem] = await db
       .insert(memoryItems)
       .values({
+        id: randomUUID(),
         workspaceId: data.workspaceId,
         content: data.content,
         embedding: Buffer.from(JSON.stringify(embedding)),
@@ -476,6 +478,7 @@ router.post('/:workspaceId/import', async (req, res) => {
         await db
           .insert(memoryItems)
           .values({
+            id: randomUUID(),
             workspaceId,
             content: itemData.content,
             embedding: Buffer.from(JSON.stringify(embedding)),

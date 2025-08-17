@@ -687,7 +687,7 @@ router.post('/:workspaceId/import', async (req, res) => {
               id: randomUUID(),
               workspaceId,
               name: presetData.name,
-              config: JSON.stringify(presetData.settings),
+              config: JSON.stringify(presetData.config),
             });
           
           importedPresets++;
