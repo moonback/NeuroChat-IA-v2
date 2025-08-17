@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Card } from '@/components/ui/card';
+import WorkspaceOpeningDialog from '@/components/WorkspaceOpeningDialog';
 import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
 import { GeminiGenerationConfig } from '@/services/geminiApi';
 import type { MistralGenerationConfig } from '@/services/mistralApi';
-import { sendMessage, type LlmConfig } from '@/services/llm';
+import { streamMessage, type LlmConfig } from '@/services/llm';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { toast } from 'sonner';
 // Lazy-loaded components pour réduire le bundle initial
@@ -36,6 +37,7 @@ import { WebSourcesSidebar } from '@/components/WebSourcesSidebar';
 import { WebSourcesDrawer } from '@/components/WebSourcesDrawer';
 import type { WebSource } from '@/components/WebSourcesSidebar';
 import { AgentStatus } from '@/components/AgentStatus';
+import { useWorkspace, useWorkspaceOpeningModal } from '@/hooks/useWorkspace';
 
 // Timeline retirée
 
@@ -68,27 +70,9 @@ type RagContextMessage = {
 // Similarité: vecteurs normalisés => cosinus = dot product
 
 function App() {
-  // --- Espaces de travail ---
-  function wsKey(ws: string, base: string): string { return `ws:${ws}:${base}`; }
-  const [workspaceId, setWorkspaceId] = useState<string>(() => {
-    try { return localStorage.getItem('nc_active_workspace') || 'default'; } catch { return 'default'; }
-  });
-  const [workspaces, setWorkspaces] = useState<Array<{ id: string; name: string }>>(() => {
-    try {
-      const raw = localStorage.getItem('nc_workspaces');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch {}
-    return [{ id: 'default', name: 'Par défaut' }];
-  });
-  useEffect(() => {
-    try { localStorage.setItem('nc_workspaces', JSON.stringify(workspaces)); } catch {}
-  }, [workspaces]);
-  useEffect(() => {
-    try { localStorage.setItem('nc_active_workspace', workspaceId); } catch {}
-  }, [workspaceId]);
+  // --- Espaces de travail via hooks ---
+  const { workspaceId, setWorkspaceId, workspaces, createWorkspace, renameWorkspace, deleteWorkspace, wsKey } = useWorkspace();
+  const { open: workspaceOpeningOpen, setOpen: setWorkspaceOpeningOpen, name: workspaceOpeningName } = useWorkspaceOpeningModal(workspaceId, workspaces);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -796,45 +780,46 @@ ${lines.join('\n')}`, false);
         openai: openaiConfig,
         mistral: mistralConfig,
       };
-      const response = await sendMessage(
+      // Placeholder de réponse AI et streaming
+      const aiMsg = addMessage('', false, undefined, webSources.length ? webSources : undefined);
+      let acc = '';
+      await streamMessage(
         llmCfg,
         filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
         imageFile ? [imageFile] : undefined,
         prompt,
-      );
-       // Timeline retirée
-      // LOG réponse Gemini
-      // console.log('[Réponse Gemini]', response);
-      addMessage(response, false, undefined, webSources.length ? webSources : undefined);
-      
-      // Indiquer que l'IA commence à parler
-      setIsAISpeaking(true);
-      // Timeline retirée
-      console.log('[Vocal Mode] IA commence à parler - microphone coupé');
-      
-      speak(response, {
-        onEnd: () => {
-          // Indiquer que l'IA a fini de parler
-          setIsAISpeaking(false);
-          // Timeline retirée
-          console.log('[Vocal Mode] IA a fini de parler - préparation redémarrage microphone');
-          
-          // Utiliser les références pour éviter les valeurs obsolètes
-          if (modeVocalAutoRef.current && !muted) {
-            playBip();
-            // Ajouter une pause de sécurité avant de redémarrer l'écoute
-            setTimeout(() => {
-              // Vérifications supplémentaires avec les références actuelles
-              if (modeVocalAutoRef.current && !muted && !listeningAuto && !isAISpeakingRef.current) {
-                console.log('[Vocal Mode] Redémarrage du microphone après pause de sécurité');
-                startAuto();
-              } else {
-                console.log('[Vocal Mode] Redémarrage annulé - mode vocal désactivé manuellement');
+        {
+          onToken: (token) => {
+            acc += token;
+            setMessages(prev => prev.map(m => m.id === aiMsg.id ? { ...m, text: (m.text || '') + token } : m));
+          },
+          onDone: () => {
+            // Indiquer que l'IA commence à parler
+            setIsAISpeaking(true);
+            console.log('[Vocal Mode] IA commence à parler - microphone coupé');
+            speak(acc, {
+              onEnd: () => {
+                setIsAISpeaking(false);
+                console.log('[Vocal Mode] IA a fini de parler - préparation redémarrage microphone');
+                if (modeVocalAutoRef.current && !muted) {
+                  playBip();
+                  setTimeout(() => {
+                    if (modeVocalAutoRef.current && !muted && !listeningAuto && !isAISpeakingRef.current) {
+                      console.log('[Vocal Mode] Redémarrage du microphone après pause de sécurité');
+                      startAuto();
+                    } else {
+                      console.log('[Vocal Mode] Redémarrage annulé - mode vocal désactivé manuellement');
+                    }
+                  }, 2000);
+                }
               }
-            }, 2000); // 2 secondes de pause pour être sûr que le TTS s'est arrêté
+            });
+          },
+          onError: (err) => {
+            console.error('Streaming error:', err);
           }
         }
-      });
+      );
       // toast.success('Réponse reçue !', { duration: 2000 });
     } catch (error) {
       // Timeline retirée
@@ -1237,40 +1222,9 @@ ${lines.join('\n')}`, false);
           workspaceId={workspaceId}
           workspaces={workspaces}
           onChangeWorkspace={(id) => setWorkspaceId(id)}
-          onCreateWorkspace={() => {
-            const name = window.prompt('Nom du nouvel espace');
-            if (!name || !name.trim()) return;
-            const id = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').slice(0, 24) || `ws-${Date.now()}`;
-            if (workspaces.some(w => w.id === id)) return;
-            const next = [...workspaces, { id, name: name.trim() }];
-            setWorkspaces(next);
-            setWorkspaceId(id);
-          }}
-          onRenameWorkspace={(id, name) => {
-            setWorkspaces(ws => ws.map(w => w.id === id ? { ...w, name } : w));
-          }}
-          onDeleteWorkspace={(id) => {
-            // Supprimer les données locales liées à l'espace et retirer de la liste
-            try {
-              // Nettoyer les clés connues
-              const keysToClear = [
-                'gemini_current_discussion',
-                'gemini_discussions',
-                'gemini_presets',
-                'rag_user_docs',
-                'rag_doc_stats',
-                'rag_doc_favorites',
-                'neurochat_user_memory_v1',
-              ];
-              for (const base of keysToClear) {
-                localStorage.removeItem(wsKey(id, base));
-              }
-            } catch {}
-            setWorkspaces(ws => ws.filter(w => w.id !== id));
-            if (workspaceId === id) {
-              setWorkspaceId('default');
-            }
-          }}
+          onCreateWorkspace={createWorkspace}
+          onRenameWorkspace={renameWorkspace}
+          onDeleteWorkspace={deleteWorkspace}
           
           stop={stop}
           modeVocalAuto={modeVocalAuto}
@@ -1557,6 +1511,8 @@ ${lines.join('\n')}`, false);
       {/* Mémoire: gestion via modale */}
 
       
+      {/* Modale d'ouverture d'espace de travail */}
+      <WorkspaceOpeningDialog open={workspaceOpeningOpen} onOpenChange={setWorkspaceOpeningOpen} name={workspaceOpeningName} />
     </div>
   );
 }
