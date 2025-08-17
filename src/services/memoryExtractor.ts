@@ -1,381 +1,406 @@
 import type { MemorySource } from './memory';
-import { type GeminiGenerationConfig } from '@/services/geminiApi';
 import { sendMessage, type LlmConfig } from '@/services/llm';
 
 // =====================
-// Regex précompilés (performance)
+// SYSTÈME D'EXTRACTION CONTEXTUELLE DE MÉMOIRE
 // =====================
-const MONTHS_RE = '(?:jan|fev|mar|avr|mai|jun|jui|aou|sep|oct|nov|dec)';
-
-// Captures utiles uniquement → utiliser des groupes non-capturants partout ailleurs
-const NAME_RE = /\b(?:je m ?app(?:e)?l+e?s?|mon prenom est|moi c est)\s+([a-z'\-]{2,})(?:\s+([a-z'\-]{2,}))?/iu;
-const CITY_RE = /\b(?:j ?habite|je vis|je suis basee?|je suis de)\s+(?:a|en|au|aux)\s+([a-z'\-\s]{2,})/iu;
-const LANG_RE = /\b(?:je parle|je maitrise|ma langue (?:maternelle|native) est)\s+([a-z\-\s,et]+)\b/giu;
-const PREF_RE = /\b(?:jaime|je prefere|je deteste)\s+([^\.\n]{3,120})/giu;
-const RECURRENCE_DAY_RE = /\b(?:tous? les|chaque)\s+(?:lundis?|mardis?|mercredis?|jeudis?|vendredis?|samedis?|dimanches?)\b/iu;
-const RECURRENCE_DAYTIME_RE = /\b(?:le|les)\s+(?:lundis?|mardis?|mercredis?|jeudis?|vendredis?|samedis?|dimanches?)\s+(?:matin|apres-midi|soir(?:ee)?)\b/giu;
-
-const GOAL_FORMS: RegExp[] = [
-  new RegExp(`\\b(?:mon|ma|mes)\\s+(?:objectif|projet|but|priorite)s?\\s+(?:est|sont|:)\\s+([^\\.\\n]{4,160})`, 'iu'),
-  /\b(?:mon|ma)\s+(?:but|objectif)\s+(?:est|sera|devient)\s+de\s+([^\.\n]{4,160})/iu,
-  /\bje\s+(?:veux|souhaite|compte|prevois|projette|planifie)\s+([^\.\n]{4,160})/iu,
-  /\bj(?:'|e)\s+aimerais\s+([^\.\n]{4,160})/iu,
-];
-
-const LEARNING_RE = /\b(?:je veux apprendre|j apprends|je me forme a)\s+([^\.\n]{3,160})/giu;
-const BDAY_RE = /\b(?:mon anniversaire|ma date de naissance)\s+(?:est|c est|:)?\s+([^\.\n]{3,40})/iu;
-const EMAIL_RE = /[\w.+-]+@[\w-]+\.[\w.-]+/i;
-const PHONE_RE = /\b(?:\+\d{1,3}[\s.-]?)?(?:\(\d{1,4}\)[\s.-]?)?(?:\d[\s.-]?){6,14}\b/i;
-
-const JOB_RE = /\b(?:je (?:travaille|bosse) (?:comme|en tant que)\s+([a-z\-\s]{2,})|je suis\s+([a-z\-\s]{2,}))\b/giu;
-const COMPANY_RE = /\b(?:je (?:travaille|bosse) (?:chez|pour)\s+([a-z\d&' .-]{2,}))\b/giu;
-
-const ALLERGY_RE = /\b(?:je suis allergique a|allergie a)\s+([^\.\n]{3,80})/giu;
-const DIET_RE = /\b(?:je suis|je mange)\s+(vegetarien|vegane|vegan|sans gluten|halal|casher|keto|paleo)\b/giu;
-const CONSTRAINT_RE = /\b(?:je ne peux pas|je nai pas le droit de|j evite)\s+([^\.\n]{3,100})/giu;
-
-const COMM_PREF_RE = /\b(?:je prefere|preference de communication)\s+(?:par|via)\s+([a-z\s\-]{3,20})/giu;
-const TOOLS_RE = /\b(?:j utilise|je travaille avec|mon stack|ma stack)\s+([^\.\n]{3,160})/giu;
-
-const TODO_FORMS: RegExp[] = [
-  /\b(?:je dois|il faut que je|faut que je|je devrais)\s+([^\.\n]{3,160})/giu,
-  /\b(?:a\s+faire|à\s+faire|to ?do)\s*[:\-]?\s+([^\n]{3,160})/giu,
-  /\b(?:rappelle(?:-moi)?\s+de|n'?oublie pas de|pense\s+à)\s+([^\.\n]{3,160})/giu,
-  /\b(?:prevoir|prévoir|planifier|planifie|programmer)\s+([^\.\n]{3,160})/giu,
-  /\b(?:rendez[- ]vous|rdv)\s+(?:le\s+|pour\s+)?([^\.\n]{3,120})/giu,
-];
-
-const DEADLINE_FORMS: RegExp[] = [
-  /\b(?:avant|pour|d'ici|d ici|d’ici)\s+(demain|apres ?demain|la semaine prochaine|ce soir|fin de semaine)/giu,
-  /\b(?:avant|pour)\s+([0-3]?\d\/[0-1]?\d(?:\/[0-9]{2,4})?)/giu,
-  /\b(?:avant|pour|le)\s+([0-3]?\d[\.\-][0-1]?\d(?:[\.\-][0-9]{2,4})?)/giu,
-  new RegExp(`\\b(?:avant|pour|le)\\s+([0-3]?\\d\\s+${MONTHS_RE}(?:\\s+[0-9]{2,4})?)`, 'giu'),
-  /\b(\d{4}-\d{2}-\d{2})(?:[ t](\d{2}[:h]\d{2}))?/giu,
-  /\b(?:à|a|vers)\s+(\d{1,2}h(?:\d{2})?|\d{1,2}:\d{2})\b/giu,
-];
-
 
 export interface ExtractedFact {
   content: string;
+  context: string; // Phrase complète ou contexte élargi
+  category: 'identity' | 'preferences' | 'goals' | 'constraints' | 'work' | 'personal' | 'schedule' | 'health' | 'contact' | 'skills' | 'relationships';
   tags?: string[];
   importance?: number; // 1..5
+  confidence?: number; // 0..1
   source?: MemorySource;
+  timestamp?: Date;
 }
 
-// Heuristique simple pour extraire des faits personnels/actionnables
-// Note: pas de PII sensible (email/téléphone) sauf si explicitement confirmé par l'utilisateur
+// Patterns pour capturer des contextes complets
+const CONTEXTUAL_PATTERNS = {
+  identity: [
+    /(?:je (?:m'appelle|suis)|mon (?:nom|prénom) (?:est|c'est)|moi c'est)\s+([^.!?\n]+)/gi,
+    /(?:j'ai|je viens d'avoir|je fête mes)\s+(\d+)\s+ans/gi,
+    /(?:je (?:vis|habite|réside)|ma (?:ville|région) (?:est|c'est))\s+([^.!?\n]+)/gi,
+    /(?:je suis (?:né|née)|je viens)\s+(?:de|du|des)\s+([^.!?\n]+)/gi
+  ],
+  
+  preferences: [
+    /(?:j'adore|j'aime beaucoup|je préfère|ma passion (?:est|c'est))\s+([^.!?\n]+)/gi,
+    /(?:je déteste|je n'aime pas|j'évite)\s+([^.!?\n]+)/gi,
+    /(?:mon (?:style|goût|type) préféré (?:est|c'est))\s+([^.!?\n]+)/gi,
+    /(?:côté (?:musique|films|livres|cuisine))\s*[,:]*\s*([^.!?\n]+)/gi,
+    /(?:question (?:nourriture|alimentation|repas))\s*[,:]*\s*([^.!?\n]+)/gi
+  ],
+  
+  goals: [
+    /(?:mon (?:objectif|but|projet|rêve) (?:est|c'est)|je (?:veux|souhaite|compte|projette|planifie))\s+([^.!?\n]+)/gi,
+    /(?:j'aimerais|je voudrais|mon ambition (?:est|c'est))\s+([^.!?\n]+)/gi,
+    /(?:je (?:veux apprendre|me forme à|étudie))\s+([^.!?\n]+)/gi,
+    /(?:dans (?:l'avenir|le futur|quelques (?:mois|années)))\s*[,:]*\s*([^.!?\n]+)/gi
+  ],
+  
+  work: [
+    /(?:je (?:travaille|bosse) (?:comme|en tant que)|mon (?:métier|travail|job) (?:est|c'est)|je suis)\s+([^.!?\n]+)/gi,
+    /(?:je (?:travaille|bosse) (?:chez|pour|dans))\s+([^.!?\n]+)/gi,
+    /(?:mon (?:domaine|secteur) (?:d'activité|professionnel) (?:est|c'est))\s+([^.!?\n]+)/gi,
+    /(?:j'utilise|je maîtrise|mes (?:compétences|outils) (?:sont|incluent))\s+([^.!?\n]+)/gi,
+    /(?:niveau (?:professionnel|carrière))\s*[,:]*\s*([^.!?\n]+)/gi
+  ],
+  
+  constraints: [
+    /(?:je (?:ne peux pas|n'ai pas le droit de|dois éviter)|il faut que j'évite)\s+([^.!?\n]+)/gi,
+    /(?:je suis (?:allergique à|intolérant à)|allergie à)\s+([^.!?\n]+)/gi,
+    /(?:côté (?:santé|médical))\s*[,:]*\s*([^.!?\n]+)/gi,
+    /(?:mes (?:contraintes|limitations) (?:sont|incluent))\s+([^.!?\n]+)/gi
+  ],
+  
+  schedule: [
+    /(?:(?:tous les|chaque)\s+(?:lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)s?)\s+([^.!?\n]*)/gi,
+    /(?:le (?:matin|après-midi|soir))\s*[,:]*\s*([^.!?\n]+)/gi,
+    /(?:mes (?:horaires|disponibilités) (?:sont|c'est))\s+([^.!?\n]+)/gi,
+    /(?:question (?:planning|agenda|emploi du temps))\s*[,:]*\s*([^.!?\n]+)/gi
+  ],
+  
+  relationships: [
+    /(?:(?:mon|ma)\s+(?:conjoint|mari|femme|partenaire|copain|copine|fiancé|fiancée))\s+([^.!?\n]*)/gi,
+    /(?:j'ai|nous avons)\s+(?:un|une|des|\d+)\s+(?:enfant|enfants|fils|fille)\s*([^.!?\n]*)/gi,
+    /(?:ma (?:famille|situation familiale))\s*[,:]*\s*([^.!?\n]+)/gi,
+    /(?:côté (?:famille|personnel))\s*[,:]*\s*([^.!?\n]+)/gi
+  ],
+  
+  skills: [
+    /(?:je (?:maîtrise|connais|sais faire)|mes (?:compétences|talents) (?:sont|incluent))\s+([^.!?\n]+)/gi,
+    /(?:je suis (?:doué|forte|bon|bonne) (?:en|pour))\s+([^.!?\n]+)/gi,
+    /(?:niveau (?:technique|compétences))\s*[,:]*\s*([^.!?\n]+)/gi
+  ]
+};
+
+// Fonction principale d'extraction contextuelle
 export function extractFactsFromText(text: string, opts?: { source?: MemorySource }): ExtractedFact[] {
   const facts: ExtractedFact[] = [];
-  if (!text || text.length < 3) return facts;
-  const norm = normalizeForMatch(text);
-
-  // Nom / prénom
-  const nameMatch = NAME_RE.exec(norm);
-  if (nameMatch) {
-    const grp = [nameMatch[1], nameMatch[2]].filter(Boolean).join(' ');
-    const orig = recoverOriginal(text, grp) || grp;
-    facts.push({ content: `Prénom/Nom: ${capitalize(orig)}`, tags: ['profil', 'identité'], importance: 5, source: opts?.source });
-  }
-
-  // Localisation
-  const cityMatch = CITY_RE.exec(norm);
-  if (cityMatch) {
-    const grp = cleanTrailing(cityMatch[1]);
-    const orig = recoverOriginal(text, grp) || grp;
-    facts.push({ content: `Ville: ${capitalize(orig)}`, tags: ['profil', 'localisation'], importance: 4, source: opts?.source });
-  }
-
-  // Langues (multi)
-  for (const m of matchAll(LANG_RE, norm)) {
-    const grp = cleanTrailing(m[1]);
-    const orig = recoverOriginal(text, grp) || grp;
-    const langs = splitList(orig);
-    if (langs.length) facts.push({ content: `Langues: ${langs.map(capitalize).join(', ')}`, tags: ['profil', 'langue'], importance: 3, source: opts?.source });
-  }
-
-  // Préférences (aime/préfère/déteste) — multi éléments
-  for (const m of matchAll(PREF_RE, norm)) {
-    const verbText = m[0].toLowerCase();
-    const verb = verbText.includes('deteste') ? 'deteste' : verbText.includes('prefere') ? 'prefere' : 'aime';
-    const grp = cleanTrailing(m[1]);
-    const orig = recoverOriginal(text, grp) || grp;
-    const list = splitList(orig);
-    const sentiment = verb.includes('deteste') ? 'n’aime pas' : verb.includes('prefere') ? 'préfère' : 'aime';
-    for (const item of list) {
-      facts.push({ content: `Préférence: ${sentiment} ${capitalize(item)}`, tags: ['préférences'], importance: 3, source: opts?.source });
+  if (!text || text.length < 10) return facts;
+  
+  // Nettoyer et préparer le texte
+  const cleanText = text.replace(/\s+/g, ' ').trim();
+  
+  // Extraire des faits contextuels pour chaque catégorie
+  for (const [category, patterns] of Object.entries(CONTEXTUAL_PATTERNS)) {
+    for (const pattern of patterns) {
+      const matches = [...cleanText.matchAll(pattern)];
+      
+      for (const match of matches) {
+        const extractedContent = match[1]?.trim();
+        if (!extractedContent || extractedContent.length < 3) continue;
+        
+        // Trouver la phrase complète qui contient ce match
+        const fullContext = findFullContext(cleanText, match.index || 0);
+        
+        // Calculer l'importance et la confiance
+        const importance = calculateImportance(category as keyof typeof CONTEXTUAL_PATTERNS, extractedContent);
+        const confidence = calculateConfidence(match[0], extractedContent);
+        
+        // Créer le fait avec contexte complet
+        const fact: ExtractedFact = {
+          content: formatFactContent(category, extractedContent),
+          context: fullContext,
+          category: category as ExtractedFact['category'],
+          tags: generateTags(category, extractedContent),
+          importance,
+          confidence,
+          source: opts?.source,
+          timestamp: new Date()
+        };
+        
+        facts.push(fact);
+      }
     }
   }
+  
+  // Déduplication intelligente basée sur le contenu et le contexte
+  return deduplicateContextualFacts(facts);
+}
 
-  // Disponibilités/date récurrente simple
-  const dayMatch = RECURRENCE_DAY_RE.exec(norm);
-  if (dayMatch) {
-    facts.push({ content: `Récurrence: ${capitalize(dayMatch[0])}`, tags: ['agenda'], importance: 3, source: opts?.source });
-  }
-  for (const m of matchAll(RECURRENCE_DAYTIME_RE, norm)) {
-    facts.push({ content: `Disponibilité: ${capitalize(m[0])}`, tags: ['agenda'], importance: 3, source: opts?.source });
-  }
 
-  // Rappel objectif / projet (formes variées)
-  for (const re of GOAL_FORMS) {
-    const m = re.exec(norm);
-    if (m) {
-      const grp = cleanTrailing(m[1] || m[m.length - 1]);
-      const orig = recoverOriginal(text, grp) || grp;
-      facts.push({ content: `Objectif: ${capitalize(orig)}`, tags: ['objectif'], importance: 4, source: opts?.source });
-      break;
+
+// Trouver le contexte complet autour d'un match
+function findFullContext(text: string, matchIndex: number): string {
+  // Trouver le début et la fin de la phrase
+  let start = matchIndex;
+  let end = matchIndex;
+  
+  // Chercher le début de la phrase (ou du paragraphe)
+  while (start > 0 && !/[.!?\n]/.test(text[start - 1])) {
+    start--;
+  }
+  
+  // Chercher la fin de la phrase
+  while (end < text.length && !/[.!?\n]/.test(text[end])) {
+    end++;
+  }
+  
+  // Inclure la ponctuation finale
+  if (end < text.length) end++;
+  
+  return text.slice(start, end).trim();
+}
+
+// Calculer l'importance d'un fait selon sa catégorie
+function calculateImportance(category: keyof typeof CONTEXTUAL_PATTERNS, content: string): number {
+  const baseImportance = {
+    identity: 5,
+    work: 4,
+    goals: 4,
+    constraints: 5,
+    health: 5,
+    preferences: 3,
+    schedule: 3,
+    relationships: 4,
+    skills: 3,
+    contact: 2,
+    personal: 3
+  };
+  
+  let importance = baseImportance[category] || 3;
+  
+  // Ajuster selon la longueur et la spécificité du contenu
+  if (content.length > 50) importance += 1;
+  if (content.includes('très') || content.includes('vraiment') || content.includes('absolument')) {
+    importance += 1;
+  }
+  
+  return Math.min(5, Math.max(1, importance));
+}
+
+// Calculer la confiance d'extraction
+function calculateConfidence(fullMatch: string, extractedContent: string): number {
+  let confidence = 0.7; // Base
+  
+  // Plus le match est long et spécifique, plus la confiance est élevée
+  if (fullMatch.length > 20) confidence += 0.1;
+  if (extractedContent.length > 30) confidence += 0.1;
+  
+  // Présence d'indicateurs de certitude
+  if (/\b(toujours|jamais|très|vraiment|absolument|certainement)\b/i.test(fullMatch)) {
+    confidence += 0.1;
+  }
+  
+  return Math.min(1, Math.max(0.3, confidence));
+}
+
+// Formater le contenu du fait selon sa catégorie
+function formatFactContent(category: string, content: string): string {
+  const prefixes = {
+    identity: 'Identité',
+    preferences: 'Préférence',
+    goals: 'Objectif',
+    work: 'Professionnel',
+    constraints: 'Contrainte',
+    schedule: 'Planning',
+    relationships: 'Relationnel',
+    skills: 'Compétence',
+    health: 'Santé',
+    contact: 'Contact',
+    personal: 'Personnel'
+  };
+  
+  const prefix = prefixes[category as keyof typeof prefixes] || 'Info';
+  return `${prefix}: ${content.charAt(0).toUpperCase() + content.slice(1)}`;
+}
+
+// Générer des tags pertinents
+function generateTags(category: string, content: string): string[] {
+  const baseTags = [category];
+  
+  // Tags spécifiques selon le contenu
+  const contentLower = content.toLowerCase();
+  
+  if (contentLower.includes('travail') || contentLower.includes('job') || contentLower.includes('métier')) {
+    baseTags.push('travail');
+  }
+  if (contentLower.includes('famille') || contentLower.includes('enfant') || contentLower.includes('conjoint')) {
+    baseTags.push('famille');
+  }
+  if (contentLower.includes('santé') || contentLower.includes('médical') || contentLower.includes('allergie')) {
+    baseTags.push('santé');
+  }
+  if (contentLower.includes('apprendre') || contentLower.includes('formation') || contentLower.includes('étude')) {
+    baseTags.push('apprentissage');
+  }
+  
+  return baseTags.slice(0, 4); // Limiter à 4 tags
+}
+
+// Déduplication intelligente des faits
+function deduplicateContextualFacts(facts: ExtractedFact[]): ExtractedFact[] {
+  const seen = new Map<string, ExtractedFact>();
+  
+  for (const fact of facts) {
+    // Créer une clé basée sur le contenu normalisé
+    const normalizedContent = fact.content.toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    const key = `${fact.category}-${normalizedContent}`;
+    
+    // Garder le fait avec la plus haute confiance
+    if (!seen.has(key) || (fact.confidence || 0) > (seen.get(key)?.confidence || 0)) {
+      seen.set(key, fact);
     }
   }
-  for (const m of matchAll(LEARNING_RE, norm)) {
-    const grp = cleanTrailing(m[1]);
-    const orig = recoverOriginal(text, grp) || grp;
-    facts.push({ content: `Apprentissage: ${capitalize(orig)}`, tags: ['objectif', 'apprentissage'], importance: 4, source: opts?.source });
-  }
-
-  // Anniversaire (non sensible au jour précis si non nécessaire)
-  const bday = BDAY_RE.exec(norm);
-  if (bday) {
-    const grp = cleanTrailing(bday[1]);
-    const orig = recoverOriginal(text, grp) || grp;
-    facts.push({ content: `Anniversaire: ${capitalize(orig)}`, tags: ['profil'], importance: 3, source: opts?.source });
-  }
-
-  // Email/téléphone — on évite de stocker sans confirmation explicite
-  const email = EMAIL_RE.exec(text);
-  if (email && (norm.includes('tu peux retenir') || norm.includes('garde en memoire') || norm.includes('sauvegarde mon email'))) {
-    facts.push({ content: `Email: ${email[0]}`, tags: ['contact'], importance: 2, source: opts?.source });
-  }
-  const phone = PHONE_RE.exec(text);
-  if (phone && (norm.includes('tu peux retenir') || norm.includes('garde en memoire') || norm.includes('sauvegarde mon numero'))) {
-    facts.push({ content: `Téléphone: ${phone[0]}`, tags: ['contact'], importance: 2, source: opts?.source });
-  }
-
-  // Métier / rôle
-  for (const m of matchAll(JOB_RE, norm)) {
-    const roleNorm = (m[1] || m[2] || '').trim();
-    if (roleNorm) {
-      const orig = recoverOriginal(text, roleNorm) || roleNorm;
-      facts.push({ content: `Métier: ${capitalize(cleanTrailing(orig))}`, tags: ['profil', 'métier'], importance: 4, source: opts?.source });
-    }
-  }
-  for (const m of matchAll(COMPANY_RE, norm)) {
-    const grp = cleanTrailing(m[1]);
-    const orig = recoverOriginal(text, grp) || grp;
-    if (grp) facts.push({ content: `Société: ${capitalize(orig)}`, tags: ['profil', 'travail'], importance: 3, source: opts?.source });
-  }
-
-  // Contraintes / santé / régime
-  for (const m of matchAll(ALLERGY_RE, norm)) {
-    const grp = cleanTrailing(m[1]);
-    const orig = recoverOriginal(text, grp) || grp;
-    facts.push({ content: `Allergie: ${capitalize(orig)}`, tags: ['santé', 'contrainte'], importance: 5, source: opts?.source });
-  }
-  for (const m of matchAll(DIET_RE, norm)) {
-    facts.push({ content: `Régime: ${capitalize(m[1])}`, tags: ['santé', 'régime'], importance: 4, source: opts?.source });
-  }
-  for (const m of matchAll(CONSTRAINT_RE, norm)) {
-    const grp = cleanTrailing(m[1]);
-    const orig = recoverOriginal(text, grp) || grp;
-    facts.push({ content: `Contrainte: ${capitalize(orig)}`, tags: ['contrainte'], importance: 4, source: opts?.source });
-  }
-
-  // Préférence de communication / outils
-  for (const m of matchAll(COMM_PREF_RE, norm)) {
-    const grp = cleanTrailing(m[1]);
-    const orig = recoverOriginal(text, grp) || grp;
-    facts.push({ content: `Communication: ${capitalize(orig)}`, tags: ['préférences', 'communication'], importance: 3, source: opts?.source });
-  }
-  for (const m of matchAll(TOOLS_RE, norm)) {
-    const grp = cleanTrailing(m[1]);
-    const orig = recoverOriginal(text, grp) || grp;
-    const items = splitList(orig);
-    if (items.length) facts.push({ content: `Outils: ${items.map(capitalize).join(', ')}`, tags: ['travail', 'outils'], importance: 3, source: opts?.source });
-  }
-
-  // Tâches / rappels (formes étendues) + deadlines
-  for (const re of TODO_FORMS) {
-    for (const m of matchAll(re, norm)) {
-      const grp = cleanTrailing(m[1]);
-      const orig = recoverOriginal(text, grp) || grp;
-      facts.push({ content: `Tâche: ${capitalize(orig)}`, tags: ['tâche'], importance: 3, source: opts?.source });
-    }
-  }
-  // Deadlines étendues (formats de date variés, mots-clés)
-  for (const re of DEADLINE_FORMS) {
-    for (const m of matchAll(re, norm)) {
-      const whole = m[0];
-      const orig = recoverOriginal(text, cleanTrailing(whole)) || cleanTrailing(whole);
-      facts.push({ content: `Deadline: ${capitalize(orig)}`, tags: ['agenda', 'deadline'], importance: 3, source: opts?.source });
-    }
-  }
-
-  // Préférence de réponse (style)
-  const styleRegex = /\b(reponds|parle|jaime les reponses)\s+([^\.\n]{3,80})/gi;
-  for (const m of matchAll(styleRegex, norm)) {
-    const grp = cleanTrailing(m[2]);
-    const orig = recoverOriginal(text, grp) || grp;
-    facts.push({ content: `Style de réponse: ${capitalize(orig)}`, tags: ['préférences', 'style-réponse'], importance: 2, source: opts?.source });
-  }
-
-  // Fuseau horaire / âge / enfants / relation
-  const tz = /(gmt|utc)\s*([+-]\d{1,2})/i.exec(norm);
-  if (tz) facts.push({ content: `Fuseau horaire: ${tz[1].toUpperCase()}${tz[2]}`, tags: ['profil', 'temps'], importance: 2, source: opts?.source });
-  const age = /\bj ai\s+(\d{1,2})\s+ans\b/i.exec(norm);
-  if (age) facts.push({ content: `Âge: ${age[1]} ans`, tags: ['profil'], importance: 2, source: opts?.source });
-  const kids = /\bj ai\s+(un|\d+)\s+enfant(s)?\b/i.exec(norm);
-  if (kids) facts.push({ content: `Enfants: ${kids[1].replace('un','1')}`, tags: ['profil', 'famille'], importance: 2, source: opts?.source });
-  const relationship = /\b(mon|ma)\s+(conjoint|mari|femme|partenaire|copain|copine|fiance|fiancee)\b/i.exec(norm);
-  if (relationship) facts.push({ content: 'Relation: en couple', tags: ['profil', 'famille'], importance: 2, source: opts?.source });
-
-  return dedupeFacts(facts);
+  
+  return Array.from(seen.values())
+    .sort((a, b) => (b.importance || 0) - (a.importance || 0))
+    .slice(0, 15); // Limiter à 15 faits les plus importants
 }
 
-function cleanTrailing(s: string): string {
-  return s.replace(/[\s,;.:!?]+$/, '').trim();
-}
-
-function capitalize(s: string): string {
-  return s.length ? s[0].toUpperCase() + s.slice(1) : s;
-}
-
-function normalizeForMatch(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/[’`]/g, "'")
-    .normalize('NFD')
-    .replace(/\p{M}+/gu, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function normalizeWithMap(input: string): { n: string; map: number[] } {
-  const map: number[] = [];
-  let n = '';
-  for (let i = 0; i < input.length; i += 1) {
-    const ch = input[i];
-    const repl = ch.replace(/[’`]/g, "'");
-    const decomp = repl.normalize('NFD');
-    let base = '';
-    for (const c of decomp) {
-      // keep only base chars, drop diacritics
-      if (!/\p{M}/u.test(c)) base += c;
-    }
-    for (const c of base) {
-      n += c.toLowerCase();
-      map.push(i);
-    }
-  }
-  return { n, map };
-}
-
-function recoverOriginal(original: string, normFragment: string): string | null {
-  if (!normFragment) return null;
-  const { n, map } = normalizeWithMap(original);
-  const start = n.indexOf(normFragment.toLowerCase());
-  if (start === -1) return null;
-  const end = start + normFragment.length;
-  const startOrig = map[start];
-  const endOrig = map[Math.max(0, end - 1)] + 1;
-  return original.slice(startOrig, endOrig);
-}
-
-function matchAll(re: RegExp, text: string): RegExpExecArray[] {
-  const results: RegExpExecArray[] = [];
-  const flags = re.flags.includes('g') ? re.flags : re.flags + 'g';
-  const r = new RegExp(re.source, flags);
-  let m: RegExpExecArray | null;
-  // eslint-disable-next-line no-cond-assign
-  while ((m = r.exec(text)) !== null) {
-    results.push(m);
-    if (m.index === r.lastIndex) r.lastIndex++; // avoid zero-length match loop
-  }
-  return results;
-}
-
-function splitList(s: string): string[] {
-  return s
-    .split(/,| et /i)
-    .map((x) => cleanTrailing(x).trim())
-    .filter((x) => x.length > 0)
-    .slice(0, 10);
-}
-
-function dedupeFacts(facts: ExtractedFact[]): ExtractedFact[] {
-  const seen = new Set<string>();
-  const out: ExtractedFact[] = [];
-  for (const f of facts) {
-    const key = f.content.toLowerCase();
-    if (!seen.has(key)) {
-      seen.add(key);
-      out.push(f);
-    }
-  }
-  return out;
-}
-
-// --- LLM fallback extraction (si heuristiques ne trouvent rien) ---
+// Extraction LLM pour des contextes complexes
 export async function extractFactsLLM(text: string): Promise<ExtractedFact[]> {
-  if (!text || text.trim().length < 3) return [];
-  const system = [
-    'Tu es un extracteur de faits. Retourne STRICTEMENT un JSON array de faits pertinents concernant le profil, préférences, objectifs, contraintes, outils, agenda, contact (uniquement si autorisé explicitement).',
-    'Format: [{"content":"...","tags":["profil"],"importance":3}]',
-    'Règles:',
-    '- Pas d’invention, uniquement ce qui est dans le texte.',
-    '- 0-6 items max, concis.',
-    '- importance: 1..5 (5 = très important).',
-    '- Pas de données sensibles sauf consentement explicite (email/tel).',
-  ].join('\n');
-  const gen: GeminiGenerationConfig = { temperature: 0.2, maxOutputTokens: 512, topK: 20, topP: 0.9 };
+  if (!text || text.trim().length < 10) return [];
+  
+  const system = `Tu es un extracteur de mémoire contextuelle. Analyse le texte et retourne un JSON array de faits importants avec leur contexte complet.
+
+Format attendu:
+[{
+  "content": "Description du fait",
+  "context": "Phrase ou contexte complet",
+  "category": "identity|preferences|goals|work|constraints|schedule|relationships|skills|health|contact|personal",
+  "importance": 1-5,
+  "confidence": 0.0-1.0
+}]
+
+Règles:
+- Capture des informations complètes, pas des fragments
+- Inclus le contexte complet de chaque fait
+- Priorise les informations stables et importantes
+- Maximum 10 faits
+- Pas d'invention, seulement ce qui est explicitement mentionné`;
+
   try {
-    // Si mode privé, ne pas interroger la mémoire/LLM pour extraction
     if (localStorage.getItem('mode_prive') === 'true') return [];
+    
     const stored = (localStorage.getItem('llm_provider') as 'gemini' | 'openai' | 'mistral') || 'gemini';
-    const llmCfg: LlmConfig = {
+    const llmConfig: LlmConfig = {
       provider: stored,
-      gemini: gen,
-      openai: { temperature: gen.temperature, top_p: gen.topP, max_tokens: gen.maxOutputTokens, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' },
-      mistral: { temperature: gen.temperature, top_p: gen.topP, max_tokens: gen.maxOutputTokens, model: (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest' },
+      gemini: { temperature: 0.2, maxOutputTokens: 1024, topK: 20, topP: 0.9 },
+      openai: { temperature: 0.2, top_p: 0.9, max_tokens: 1024, model: 'gpt-4o-mini' },
+      mistral: { temperature: 0.2, top_p: 0.9, max_tokens: 1024, model: 'mistral-small-latest' },
     };
-    const response = await sendMessage(llmCfg, [{ text, isUser: true }], undefined, system, { soft: true });
+    
+    const response = await sendMessage(llmConfig, [{ text, isUser: true }], undefined, system, { soft: true });
+    
     const jsonStart = response.indexOf('[');
     const jsonEnd = response.lastIndexOf(']');
     if (jsonStart === -1 || jsonEnd === -1) return [];
+    
     const raw = response.slice(jsonStart, jsonEnd + 1);
     const parsed = JSON.parse(raw);
+    
     if (!Array.isArray(parsed)) return [];
+    
     return parsed
-      .filter((x: any) => x && typeof x.content === 'string')
+      .filter((x: any) => x && typeof x.content === 'string' && typeof x.context === 'string')
       .map((x: any) => ({
         content: String(x.content).trim(),
-        tags: Array.isArray(x.tags) ? x.tags.map((t: any) => String(t)).slice(0, 5) : [],
-        importance: Number(x.importance) || 3,
-      }));
-  } catch {
+        context: String(x.context).trim(),
+        category: x.category || 'personal',
+        importance: Math.min(5, Math.max(1, Number(x.importance) || 3)),
+        confidence: Math.min(1, Math.max(0, Number(x.confidence) || 0.7)),
+        timestamp: new Date()
+      }))
+      .slice(0, 10);
+      
+  } catch (error) {
+    console.warn('Erreur extraction LLM:', error);
     return [];
   }
 }
 
-export async function summarizeUserProfileLLM(messages: string[], maxChars = 500): Promise<string> {
+// Résumé contextuel du profil utilisateur
+export async function summarizeUserProfileLLM(messages: string[], maxChars = 800): Promise<string> {
   if (!messages || messages.length === 0) return '';
-  const system = [
-    'Tu es un synthétiseur de profil. Résume en français, en puces courtes, les infos stables de l’utilisateur (profil, préférences, objectifs, contraintes, outils, agenda).',
-    `Contraintes: ${maxChars} caractères max.`,
-    'Pas de données sensibles sans consentement explicite.',
-  ].join('\n');
-  const body = messages.slice(-10).join('\n- ');
-  const gen: GeminiGenerationConfig = { temperature: 0.2, maxOutputTokens: 512, topK: 20, topP: 0.9 };
+  
+  const system = `Tu es un synthétiseur de profil utilisateur. Crée un résumé contextuel et structuré du profil de l'utilisateur basé sur ses messages.
+
+Structure attendue:
+• **Identité**: Informations personnelles de base
+• **Professionnel**: Travail, compétences, outils
+• **Préférences**: Goûts, styles, préférences
+• **Objectifs**: Projets, apprentissages, ambitions
+• **Contraintes**: Limitations, allergies, contraintes
+• **Personnel**: Famille, relations, situation
+
+Règles:
+- Maximum ${maxChars} caractères
+- Informations factuelles uniquement
+- Pas de données sensibles sans consentement
+- Style concis mais informatif`;
+
+  const recentMessages = messages.slice(-15).join('\n\n');
+  
   try {
     const stored = (localStorage.getItem('llm_provider') as 'gemini' | 'openai' | 'mistral') || 'gemini';
-    const llmCfg: LlmConfig = {
+    const llmConfig: LlmConfig = {
       provider: stored,
-      gemini: gen,
-      openai: { temperature: gen.temperature, top_p: gen.topP, max_tokens: gen.maxOutputTokens, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' },
-      mistral: { temperature: gen.temperature, top_p: gen.topP, max_tokens: gen.maxOutputTokens, model: (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest' },
+      gemini: { temperature: 0.3, maxOutputTokens: 1024, topK: 30, topP: 0.9 },
+      openai: { temperature: 0.3, top_p: 0.9, max_tokens: 1024, model: 'gpt-4o-mini' },
+      mistral: { temperature: 0.3, top_p: 0.9, max_tokens: 1024, model: 'mistral-small-latest' },
     };
-    const response = await sendMessage(llmCfg, [{ text: body, isUser: true }], undefined, system);
+    
+    const response = await sendMessage(llmConfig, [{ text: recentMessages, isUser: true }], undefined, system);
     return response.trim().slice(0, maxChars);
-  } catch {
+    
+  } catch (error) {
+    console.warn('Erreur résumé profil:', error);
     return '';
   }
 }
+
+// =====================
+// EXPORTED FUNCTIONS FOR COMPATIBILITY
+// =====================
+
+// Standalone function exports for backward compatibility
+
+// Export standalone functions for backward compatibility
+export { extractFactsFromText as extractFactsFromTextContextual };
+export { extractFactsLLM as extractFactsLLMContextual };
+
+// =====================
+// ENHANCED FACT EXTRACTOR CLASS
+// =====================
+
+export class EnhancedFactExtractor {
+  private readonly confidenceThreshold = 0.6;
+  
+  async extractFactsFromText(text: string, opts?: { 
+    source?: MemorySource;
+    includeContext?: boolean;
+    maxFacts?: number;
+  }): Promise<ExtractedFact[]> {
+    // Utiliser la nouvelle extraction contextuelle
+    const contextualFacts = extractFactsFromText(text, opts);
+    
+    // Si pas assez de faits trouvés, utiliser l'extraction LLM
+    if (contextualFacts.length < 3 && opts?.includeContext) {
+      const llmFacts = await extractFactsLLM(text);
+      contextualFacts.push(...llmFacts);
+    }
+    
+    // Filtrer par confiance et limiter le nombre
+    return contextualFacts
+      .filter(fact => (fact.confidence || 0) >= this.confidenceThreshold)
+      .slice(0, opts?.maxFacts || 10);
+  }
+}
+
+// Export par défaut pour compatibilité
+export default {
+  extractFactsFromText,
+  extractFactsLLM,
+  summarizeUserProfileLLM,
+  EnhancedFactExtractor
+};
 
 
