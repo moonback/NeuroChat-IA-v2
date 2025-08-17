@@ -167,6 +167,31 @@ function App() {
     max_tokens: 4096,
     model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini',
   });
+  // Heuristiques automatiques RAG/Web + mots-clés
+  const [autoRagEnabled, setAutoRagEnabled] = useState<boolean>(() => {
+    try { return localStorage.getItem('auto_rag_enabled') === 'true'; } catch { return true; }
+  });
+  const [autoWebEnabled, setAutoWebEnabled] = useState<boolean>(() => {
+    try { return localStorage.getItem('auto_web_enabled') === 'true'; } catch { return true; }
+  });
+  const [ragKeywords, setRagKeywords] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem('auto_rag_keywords');
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return ['doc', 'docs', 'pdf', 'mémoire', 'memoire', 'note', 'dossier', 'annexe', 'rapport', 'spécification', 'spec', 'slides', 'présentation'];
+  });
+  const [webKeywords, setWebKeywords] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem('auto_web_keywords');
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return ["aujourd'hui", 'actualité', 'dernière', 'récent', 'prix', 'combien', 'qui', 'depuis', 'quand', 'météo', 'news', 'mise à jour', 'release', 'version', 'source', 'citation', 'référence'];
+  });
+  useEffect(() => { try { localStorage.setItem('auto_rag_enabled', autoRagEnabled ? 'true' : 'false'); } catch {} }, [autoRagEnabled]);
+  useEffect(() => { try { localStorage.setItem('auto_web_enabled', autoWebEnabled ? 'true' : 'false'); } catch {} }, [autoWebEnabled]);
+  useEffect(() => { try { localStorage.setItem('auto_rag_keywords', JSON.stringify(ragKeywords)); } catch {} }, [ragKeywords]);
+  useEffect(() => { try { localStorage.setItem('auto_web_keywords', JSON.stringify(webKeywords)); } catch {} }, [webKeywords]);
   const [showGeminiSettings, setShowGeminiSettings] = useState(false);
   const [showOpenAISettings, setShowOpenAISettings] = useState(false);
   const [showMistralSettings, setShowMistralSettings] = useState(false);
@@ -626,9 +651,14 @@ ${lines.join('\n')}`, false);
       toast.error('Pas de connexion Internet. Vérifie ta connexion réseau.');
       return;
     }
-    // Étape RAG : recherche documentaire (si activé ou agent Mistral)
+    // Heuristiques d'activation automatique RAG/Web selon la requête
+    const lower = userMessage.toLowerCase();
+    const autoUseRag = autoRagEnabled && ragKeywords.some(kw => new RegExp(`(^|\b)${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\b|$)`, 'i').test(lower));
+    const autoUseWeb = autoWebEnabled && webKeywords.some(kw => new RegExp(`(^|\b)${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\b|$)`, 'i').test(lower));
+
+    // Étape RAG : recherche documentaire (si activé, auto, ou agent provider)
     let passages: Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }> = [];
-    if (ragEnabled || (provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) {
+    if (ragEnabled || autoUseRag || (provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) {
       setIsRagSearching(true);
       try {
         passages = await searchDocuments(userMessage, 3, workspaceId);
@@ -647,11 +677,11 @@ ${lines.join('\n')}`, false);
         setIsRagSearching(false);
       }
     }
-    // Étape Web : recherche en ligne (si activée)
+    // Étape Web : recherche en ligne (si activée ou auto)
     let webContext = '';
     let webSources: Array<{ title: string; url: string }> = [];
     try {
-      if (webEnabled || (provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) {
+      if (webEnabled || autoUseWeb || (provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) {
         setIsWebSearching(true);
         const { searchWeb } = await import('@/services/webSearch');
         const webResults = await searchWeb(userMessage, 5, { enrich: false });
@@ -682,7 +712,7 @@ ${lines.join('\n')}`, false);
         }
       }
     } catch {} finally {
-      if (webEnabled || (provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) setIsWebSearching(false);
+      if (webEnabled || autoUseWeb || (provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) setIsWebSearching(false);
     }
     // Ajoute le message utilisateur localement
     const newMessage = addMessage(userMessage, true, imageFile);
@@ -757,7 +787,7 @@ ${lines.join('\n')}`, false);
 
       // Important: ne pas inclure à nouveau la question utilisateur dans le prompt système
       // pour éviter qu'elle soit envoyée deux fois au modèle.
-      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memoryContext}${ragEnabled ? ragContext : ""}${webContext}`;
+      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memoryContext}${(ragEnabled || autoUseRag) ? ragContext : ""}${webContext}`;
        // Timeline retirée
       // LOG prompt final
       const llmCfg: LlmConfig = {
@@ -1314,8 +1344,8 @@ ${lines.join('\n')}`, false);
               modePrive={modePrive || modeEnfant}
               modeEnfant={modeEnfant}
             />
-            {/* Sidebar RAG à droite (desktop) quand RAG actif et non en mode enfant */}
-            {ragEnabled && !modeEnfant && (
+            {/* Sidebar RAG à droite (desktop) quand RAG/Web actif, agent actif, recherche en cours, ou résultats présents */}
+            {((ragEnabled || ((provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) || isRagSearching || usedRagDocs.length > 0) && !modeEnfant) && (
               <>
                 <div className="hidden lg:block">
                   <RagSidebar onOpenRagDocs={() => setShowRagDocs(true)} usedDocs={usedRagDocs} workspaceId={workspaceId} />
@@ -1338,8 +1368,8 @@ ${lines.join('\n')}`, false);
               </>
             )}
 
-            {/* Sidebar Web Sources à gauche (desktop) quand recherche web active et non en mode enfant */}
-            {webEnabled && !modeEnfant && (
+            {/* Sidebar Web Sources à gauche (desktop) quand Web actif, agent actif, recherche en cours, ou sources présentes */}
+            {((webEnabled || ((provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) || isWebSearching || usedWebSources.length > 0) && !modeEnfant) && (
               <>
                 <div className="hidden lg:block">
                   <WebSourcesSidebar usedSources={usedWebSources} />
@@ -1469,6 +1499,14 @@ ${lines.join('\n')}`, false);
           DEFAULTS={DEFAULTS}
           agentEnabled={geminiAgentEnabled}
           onToggleAgent={(enabled) => setGeminiAgentEnabled(enabled)}
+          autoRagEnabled={autoRagEnabled}
+          autoWebEnabled={autoWebEnabled}
+          ragKeywords={ragKeywords}
+          webKeywords={webKeywords}
+          onToggleAutoRag={setAutoRagEnabled}
+          onToggleAutoWeb={setAutoWebEnabled}
+          onChangeRagKeywords={setRagKeywords}
+          onChangeWebKeywords={setWebKeywords}
         />
       </Suspense>
 
@@ -1482,6 +1520,14 @@ ${lines.join('\n')}`, false);
           onReset={() => setOpenaiConfig({ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' })}
           onClose={() => setShowOpenAISettings(false)}
           DEFAULTS={{ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' }}
+          autoRagEnabled={autoRagEnabled}
+          autoWebEnabled={autoWebEnabled}
+          ragKeywords={ragKeywords}
+          webKeywords={webKeywords}
+          onToggleAutoRag={setAutoRagEnabled}
+          onToggleAutoWeb={setAutoWebEnabled}
+          onChangeRagKeywords={setRagKeywords}
+          onChangeWebKeywords={setWebKeywords}
         />
       </Suspense>
 
@@ -1497,6 +1543,14 @@ ${lines.join('\n')}`, false);
           DEFAULTS={{ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest' }}
           agentEnabled={mistralAgentEnabled}
           onToggleAgent={(enabled) => setMistralAgentEnabled(enabled)}
+          autoRagEnabled={autoRagEnabled}
+          autoWebEnabled={autoWebEnabled}
+          ragKeywords={ragKeywords}
+          webKeywords={webKeywords}
+          onToggleAutoRag={setAutoRagEnabled}
+          onToggleAutoWeb={setAutoWebEnabled}
+          onChangeRagKeywords={setRagKeywords}
+          onChangeWebKeywords={setWebKeywords}
         />
       </Suspense>
 

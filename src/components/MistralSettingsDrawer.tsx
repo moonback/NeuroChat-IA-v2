@@ -18,6 +18,14 @@ interface MistralSettingsDrawerProps {
   DEFAULTS: Required<Pick<MistralGenerationConfig, 'temperature' | 'top_p' | 'max_tokens' | 'model'>>;
   agentEnabled?: boolean;
   onToggleAgent?: (enabled: boolean) => void;
+  autoRagEnabled?: boolean;
+  autoWebEnabled?: boolean;
+  ragKeywords?: string[];
+  webKeywords?: string[];
+  onToggleAutoRag?: (enabled: boolean) => void;
+  onToggleAutoWeb?: (enabled: boolean) => void;
+  onChangeRagKeywords?: (keywords: string[]) => void;
+  onChangeWebKeywords?: (keywords: string[]) => void;
 }
 
 export const MistralSettingsDrawer: React.FC<MistralSettingsDrawerProps> = ({
@@ -30,6 +38,14 @@ export const MistralSettingsDrawer: React.FC<MistralSettingsDrawerProps> = ({
   DEFAULTS,
   agentEnabled,
   onToggleAgent,
+  autoRagEnabled,
+  autoWebEnabled,
+  ragKeywords,
+  webKeywords,
+  onToggleAutoRag,
+  onToggleAutoWeb,
+  onChangeRagKeywords,
+  onChangeWebKeywords,
 }) => (
   <Drawer open={open} onOpenChange={onOpenChange}>
     <DrawerContent className="max-w-full w-[95vw] sm:w-[100%] px-2 py-2">
@@ -68,6 +84,28 @@ export const MistralSettingsDrawer: React.FC<MistralSettingsDrawerProps> = ({
         </div>
       </button>
       <div className="p-0 space-y-3">
+        {/* Heuristiques automatiques Web/RAG */}
+        <div className="bg-white/80 dark:bg-slate-900/80 rounded-xl border border-purple-100 dark:border-purple-900/30 p-2 shadow-sm">
+          <div className="text-xs font-semibold mb-2 text-slate-700 dark:text-slate-200">Heuristiques automatiques</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="flex items-center gap-2">
+              <input id="auto-rag-mis" type="checkbox" checked={!!autoRagEnabled} onChange={() => onToggleAutoRag?.(!autoRagEnabled)} />
+              <Label htmlFor="auto-rag-mis" className="text-xs">Activer RAG auto</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <input id="auto-web-mis" type="checkbox" checked={!!autoWebEnabled} onChange={() => onToggleAutoWeb?.(!autoWebEnabled)} />
+              <Label htmlFor="auto-web-mis" className="text-xs">Activer Web auto</Label>
+            </div>
+            <div className="col-span-1 sm:col-span-1">
+              <Label htmlFor="rag-kw-mis" className="text-xs">Mots-clés RAG (séparés par virgule)</Label>
+              <Input id="rag-kw-mis" type="text" value={(ragKeywords || []).join(', ')} onChange={e => onChangeRagKeywords?.(e.target.value.split(',').map(s => s.trim()).filter(Boolean))} placeholder="doc, pdf, rapport, mémoire" className="mt-1 text-xs" />
+            </div>
+            <div className="col-span-1 sm:col-span-1">
+              <Label htmlFor="web-kw-mis" className="text-xs">Mots-clés Web (séparés par virgule)</Label>
+              <Input id="web-kw-mis" type="text" value={(webKeywords || []).join(', ')} onChange={e => onChangeWebKeywords?.(e.target.value.split(',').map(s => s.trim()).filter(Boolean))} placeholder="aujourd'hui, actualité, prix, version" className="mt-1 text-xs" />
+            </div>
+          </div>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {/* Température */}
           <div className="bg-white/80 dark:bg-slate-900/80 rounded-xl border border-purple-100 dark:border-purple-900/30 p-2 flex flex-col gap-1 shadow-sm">

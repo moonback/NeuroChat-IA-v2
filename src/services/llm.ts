@@ -18,13 +18,47 @@ export async function sendMessage(
   systemPrompt: string,
   options?: { soft?: boolean },
 ): Promise<string> {
-  if (cfg.provider === 'gemini') {
-    return sendMessageToGemini(messages, images, systemPrompt, cfg.gemini, options);
+  // Tentative primaire + fallback multi-fournisseurs en cas d'échec
+  const allProviders: Provider[] = ['gemini', 'openai', 'mistral'];
+  const primary = cfg.provider;
+  let fallbackOrder: Provider[] = [];
+
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('llm_fallback_order') : null;
+    const parsed = raw ? (JSON.parse(raw) as Provider[]) : null;
+    if (parsed && Array.isArray(parsed)) {
+      const cleaned = parsed.filter((p) => allProviders.includes(p));
+      const deduped = cleaned.filter((p, i) => cleaned.indexOf(p) === i);
+      fallbackOrder = deduped as Provider[];
+    }
+  } catch {
+    // ignore parsing error
   }
-  if (cfg.provider === 'openai') {
-    return sendMessageToOpenAI(messages, images, systemPrompt, cfg.openai);
+
+  const providersToTry: Provider[] = [
+    primary,
+    ...allProviders.filter((p) => p !== primary && !fallbackOrder.includes(p)),
+    ...fallbackOrder.filter((p) => p !== primary),
+  ].filter((p, i, arr) => arr.indexOf(p) === i);
+
+  let lastError: unknown = null;
+  for (const provider of providersToTry) {
+    try {
+      if (provider === 'gemini') {
+        return await sendMessageToGemini(messages, images, systemPrompt, cfg.gemini, options);
+      }
+      if (provider === 'openai') {
+        return await sendMessageToOpenAI(messages, images, systemPrompt, cfg.openai);
+      }
+      return await sendMessageToMistral(messages, images, systemPrompt, cfg.mistral);
+    } catch (err) {
+      lastError = err;
+      // Essayer le prochain provider
+      continue;
+    }
   }
-  return sendMessageToMistral(messages, images, systemPrompt, cfg.mistral);
+  // Si tous les providers ont échoué, relancer la dernière erreur
+  throw lastError instanceof Error ? lastError : new Error('Tous les fournisseurs LLM ont échoué');
 }
 
 
