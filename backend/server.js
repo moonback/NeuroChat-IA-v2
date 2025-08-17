@@ -76,6 +76,8 @@ app.post('/api/mistral', async (req, res) => {
   }
 });
 
+
+
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
