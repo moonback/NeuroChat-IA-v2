@@ -53,7 +53,8 @@ export function loadMemory(): MemoryItem[] {
     void (async () => {
       try {
         const ws = getActiveWorkspaceId();
-        const res = await fetch(`/api/memory?workspace=${encodeURIComponent(ws)}`);
+        const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) || '';
+        const res = await fetch(`${API_BASE}/api/memory?workspace=${encodeURIComponent(ws)}`);
         if (res.ok) {
           const data = await res.json();
           const list = Array.isArray(data.memories) ? data.memories : [];
@@ -97,7 +98,8 @@ export function saveMemory(memories: MemoryItem[]): void {
       void (async () => {
         try {
           const ws = getActiveWorkspaceId();
-          await fetch('/api/memory/save', {
+          const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) || '';
+          await fetch(`${API_BASE}/api/memory/save`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ workspace: ws, memories: compressed }),

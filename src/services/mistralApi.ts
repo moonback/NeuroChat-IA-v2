@@ -31,7 +31,8 @@ export async function sendMessageToMistral(
     max_tokens: generationConfig?.max_tokens ?? 4096,
   };
 
-  const res = await fetch('/api/mistral', {
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) || '';
+  const res = await fetch(`${API_BASE}/api/mistral`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -10,7 +10,8 @@ interface GeminiResponse {
   }>;
 }
 
-const API_URL = '/api/gemini';
+const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) || '';
+const API_URL = `${API_BASE}/api/gemini`;
 
 export interface GeminiGenerationConfig {
   temperature?: number;

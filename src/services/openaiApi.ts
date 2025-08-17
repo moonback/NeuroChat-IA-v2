@@ -68,7 +68,8 @@ export async function sendMessageToOpenAI(
     max_tokens: generationConfig?.max_tokens ?? 4096,
   };
 
-  const res = await fetch('/api/openai', {
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) || '';
+  const res = await fetch(`${API_BASE}/api/openai`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
