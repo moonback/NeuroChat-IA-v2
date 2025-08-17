@@ -69,7 +69,7 @@
 
 ### Prérequis
 - Node.js 18+ (recommandé)
-- Clés API (à stocker côté serveur): `GEMINI_API_KEY`, `OPENAI_API_KEY`, `MISTRAL_API_KEY`
+- Clé API Google Gemini (gratuite via `https://makersuite.google.com/app/apikey`)
 
 ### Installation rapide
 
@@ -79,16 +79,21 @@ git clone https://github.com/moonback/NeuroChat-IA-v2.git
 cd NeuroChat-IA-v2
 npm install
 
-# 2) Configurer les API côté backend (variables d'environnement)
-cat > backend/.env << EOF
-GEMINI_API_KEY=votre_cle_api_gemini
-OPENAI_API_KEY=your_openai_key
-MISTRAL_API_KEY=your_mistral_key
-PORT=8787
+# 2) Configurer les API (au minimum Gemini)
+cat > .env.local << EOF
+VITE_GEMINI_API_KEY=votre_cle_api_gemini
+# (Optionnel) OpenAI
+VITE_OPENAI_API_KEY=your_openai_key
+VITE_OPENAI_MODEL=gpt-4o-mini
+# (Optionnel) Mistral
+VITE_MISTRAL_API_KEY=your_mistral_key
+VITE_MISTRAL_MODEL=mistral-small-latest
+# (Optionnel) Recherche Web Tavily
+VITE_TAVILY_API_KEY=your_tavily_key
 EOF
 
-# 3) Lancer en développement (backend + frontend)
-npm run dev:server & npm run dev
+# 3) Lancer en développement
+npm run dev
 ```
 
 Ouvrez `http://localhost:5173` dans votre navigateur.
@@ -200,7 +205,7 @@ src/
 
 ## 🔒 Sécurité & vie privée
 
-- Clés API sécurisées côté serveur (backend Express proxy `/api/*`)
+- Clé API locale via `VITE_GEMINI_API_KEY` (fichier `.env.local`)
 - Filtres de sécurité activés côté Gemini (safetySettings)
 - Mode privé: zéro persistance de la discussion
 - Données locales (historique, mémoire, docs RAG) sur votre appareil

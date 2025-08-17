@@ -32,7 +32,6 @@ function wsKey(base: string): string {
 }
 
 const STORAGE_BASE_KEY = 'neurochat_user_memory_v1';
-const USE_BACKEND_STORAGE = true;
 
 // Cache en mémoire par workspace pour éviter les accès répétés au localStorage
 type MemoryCacheEntry = { data: MemoryItem[]; timestamp: number };
@@ -46,28 +45,19 @@ export function loadMemory(): MemoryItem[] {
   if (cached && (now - cached.timestamp) < CACHE_DURATION) {
     return [...cached.data];
   }
-  // En mode privé, ne jamais charger depuis le backend; rester local-only
-  const isPrivate = (() => { try { return localStorage.getItem('mode_prive') === 'true'; } catch { return false; } })();
-  if (USE_BACKEND_STORAGE && !isPrivate) {
-    // Déclencher un rafraîchissement async sans bloquer l’UI
-    void (async () => {
-      try {
-        const ws = getActiveWorkspaceId();
-        const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) || '';
-        const res = await fetch(`${API_BASE}/api/memory?workspace=${encodeURIComponent(ws)}`);
-        if (res.ok) {
-          const data = await res.json();
-          const list = Array.isArray(data.memories) ? data.memories : [];
-          memoryCacheMap.set(key, { data: list, timestamp: Date.now() });
-          try { localStorage.setItem(key, JSON.stringify(list)); } catch {}
-        }
-      } catch {}
-    })();
-  }
   try {
     const raw = localStorage.getItem(key);
-    const parsed = raw ? JSON.parse(raw) : [];
-    if (!Array.isArray(parsed)) return [];
+    if (!raw) {
+      const empty: MemoryCacheEntry = { data: [], timestamp: now };
+      memoryCacheMap.set(key, empty);
+      return [];
+    }
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      const empty: MemoryCacheEntry = { data: [], timestamp: now };
+      memoryCacheMap.set(key, empty);
+      return [];
+    }
     const entry: MemoryCacheEntry = { data: parsed, timestamp: now };
     memoryCacheMap.set(key, entry);
     return [...parsed];
@@ -92,21 +82,6 @@ export function saveMemory(memories: MemoryItem[]): void {
     localStorage.setItem(key, JSON.stringify(compressed));
     // Mettre à jour le cache
     memoryCacheMap.set(key, { data: [...memories], timestamp: Date.now() });
-    // Envoi au backend si non privé
-    const isPrivate = (() => { try { return localStorage.getItem('mode_prive') === 'true'; } catch { return false; } })();
-    if (USE_BACKEND_STORAGE && !isPrivate) {
-      void (async () => {
-        try {
-          const ws = getActiveWorkspaceId();
-          const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) || '';
-          await fetch(`${API_BASE}/api/memory/save`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ workspace: ws, memories: compressed }),
-          });
-        } catch {}
-      })();
-    }
   } catch (error) {
     console.warn('Erreur lors de la sauvegarde de la mémoire:', error);
   }

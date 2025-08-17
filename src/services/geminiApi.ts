@@ -10,8 +10,8 @@ interface GeminiResponse {
   }>;
 }
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) || '';
-const API_URL = `${API_BASE}/api/gemini`;
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 export interface GeminiGenerationConfig {
   temperature?: number;
@@ -29,6 +29,10 @@ export async function sendMessageToGemini(
   generationConfig?: GeminiGenerationConfig,
   options?: { soft?: boolean }
 ): Promise<string> {
+  if (!API_KEY) {
+    throw new Error('Clé API Gemini introuvable. Merci d\'ajouter VITE_GEMINI_API_KEY dans ton fichier .env.local.');
+  }
+
   const systemMessage = { role: 'user', text: systemPrompt || SYSTEM_PROMPT };
   const formattedMessages = [systemMessage, ...messages.map(msg => ({
     role: msg.isUser ? 'user' : 'model',
@@ -61,7 +65,7 @@ export async function sendMessageToGemini(
   ];
 
   try {
-    const response = await fetch(`${API_URL}`, {
+    const response = await fetch(`${API_URL}?key=${API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
