@@ -1,6 +1,6 @@
 import { sendMessageToGemini, type GeminiGenerationConfig } from '@/services/geminiApi';
-import { sendMessageToOpenAI, type OpenAIGenerationConfig } from '@/services/openaiApi';
-import { sendMessageToMistral, type MistralGenerationConfig } from '@/services/mistralApi';
+import { sendMessageToOpenAI, type OpenAIGenerationConfig, streamMessageToOpenAI } from '@/services/openaiApi';
+import { sendMessageToMistral, type MistralGenerationConfig, streamMessageToMistral } from '@/services/mistralApi';
 
 export type Provider = 'gemini' | 'openai' | 'mistral';
 
@@ -59,6 +59,41 @@ export async function sendMessage(
   }
   // Si tous les providers ont échoué, relancer la dernière erreur
   throw lastError instanceof Error ? lastError : new Error('Tous les fournisseurs LLM ont échoué');
+}
+
+
+export async function streamMessage(
+  cfg: LlmConfig,
+  messages: Array<{ text: string; isUser: boolean }>,
+  images: File[] | undefined,
+  systemPrompt: string,
+  callbacks: { onToken: (token: string) => void; onDone?: () => void; onError?: (err: any) => void },
+): Promise<void> {
+  const provider = cfg.provider;
+  try {
+    if (provider === 'openai') {
+      await streamMessageToOpenAI(messages, images, systemPrompt, cfg.openai, callbacks);
+      return;
+    }
+    if (provider === 'mistral') {
+      await streamMessageToMistral(messages, images, systemPrompt, cfg.mistral, callbacks);
+      return;
+    }
+    // Gemini: fallback non-streaming pour l’instant
+    const full = await sendMessageToGemini(messages, images, systemPrompt, cfg.gemini);
+    if (full) callbacks.onToken(full);
+    callbacks.onDone?.();
+  } catch (err) {
+    // Fallback: non-streaming via pipeline standard
+    try {
+      const full = await sendMessage(cfg, messages, images, systemPrompt);
+      if (full) callbacks.onToken(full);
+      callbacks.onDone?.();
+    } catch (e) {
+      callbacks.onError?.(e);
+      throw e;
+    }
+  }
 }
 
 

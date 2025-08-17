@@ -63,3 +63,86 @@ export async function sendMessageToMistral(
 }
 
 
+// Streaming SSE pour Chat Completions Mistral
+export async function streamMessageToMistral(
+  messages: ChatMessage[],
+  _images: File[] | undefined,
+  systemPrompt: string,
+  generationConfig: MistralGenerationConfig | undefined,
+  callbacks: { onToken: (token: string) => void; onDone?: () => void; onError?: (err: any) => void },
+): Promise<void> {
+  const apiKey = ensureApiKey();
+  const model = (generationConfig?.model || (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest') as string;
+
+  const mistralMessages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [];
+  if (systemPrompt && systemPrompt.trim().length > 0) {
+    mistralMessages.push({ role: 'system', content: systemPrompt });
+  }
+  for (const m of messages) {
+    mistralMessages.push({ role: m.isUser ? 'user' : 'assistant', content: m.text });
+  }
+
+  const body: any = {
+    model,
+    messages: mistralMessages,
+    temperature: generationConfig?.temperature ?? 0.7,
+    top_p: generationConfig?.top_p ?? 0.95,
+    max_tokens: generationConfig?.max_tokens ?? 4096,
+    stream: true,
+  };
+
+  const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Mistral API ${res.status} ${res.statusText} – ${text}`);
+  }
+
+  const reader = res.body?.getReader();
+  if (!reader) throw new Error('Streaming non supporté par le navigateur');
+  const decoder = new TextDecoder('utf-8');
+  let buffer = '';
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const events = buffer.split('\n\n');
+      buffer = events.pop() || '';
+      for (const evt of events) {
+        const lines = evt.split('\n');
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data:')) continue;
+          const data = trimmed.slice(5).trim();
+          if (data === '[DONE]') {
+            callbacks.onDone?.();
+            return;
+          }
+          try {
+            const json = JSON.parse(data);
+            const token = json?.choices?.[0]?.delta?.content;
+            if (typeof token === 'string' && token.length > 0) {
+              callbacks.onToken(token);
+            }
+          } catch {
+            // ignorer
+          }
+        }
+      }
+    }
+    callbacks.onDone?.();
+  } catch (err) {
+    callbacks.onError?.(err);
+    throw err;
+  }
+}
+
+

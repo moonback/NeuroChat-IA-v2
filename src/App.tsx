@@ -4,7 +4,7 @@ import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
 import { GeminiGenerationConfig } from '@/services/geminiApi';
 import type { MistralGenerationConfig } from '@/services/mistralApi';
-import { sendMessage, type LlmConfig } from '@/services/llm';
+import { streamMessage, type LlmConfig } from '@/services/llm';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { toast } from 'sonner';
 // Lazy-loaded components pour réduire le bundle initial
@@ -796,45 +796,46 @@ ${lines.join('\n')}`, false);
         openai: openaiConfig,
         mistral: mistralConfig,
       };
-      const response = await sendMessage(
+      // Placeholder de réponse AI et streaming
+      const aiMsg = addMessage('', false, undefined, webSources.length ? webSources : undefined);
+      let acc = '';
+      await streamMessage(
         llmCfg,
         filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
         imageFile ? [imageFile] : undefined,
         prompt,
-      );
-       // Timeline retirée
-      // LOG réponse Gemini
-      // console.log('[Réponse Gemini]', response);
-      addMessage(response, false, undefined, webSources.length ? webSources : undefined);
-      
-      // Indiquer que l'IA commence à parler
-      setIsAISpeaking(true);
-      // Timeline retirée
-      console.log('[Vocal Mode] IA commence à parler - microphone coupé');
-      
-      speak(response, {
-        onEnd: () => {
-          // Indiquer que l'IA a fini de parler
-          setIsAISpeaking(false);
-          // Timeline retirée
-          console.log('[Vocal Mode] IA a fini de parler - préparation redémarrage microphone');
-          
-          // Utiliser les références pour éviter les valeurs obsolètes
-          if (modeVocalAutoRef.current && !muted) {
-            playBip();
-            // Ajouter une pause de sécurité avant de redémarrer l'écoute
-            setTimeout(() => {
-              // Vérifications supplémentaires avec les références actuelles
-              if (modeVocalAutoRef.current && !muted && !listeningAuto && !isAISpeakingRef.current) {
-                console.log('[Vocal Mode] Redémarrage du microphone après pause de sécurité');
-                startAuto();
-              } else {
-                console.log('[Vocal Mode] Redémarrage annulé - mode vocal désactivé manuellement');
+        {
+          onToken: (token) => {
+            acc += token;
+            setMessages(prev => prev.map(m => m.id === aiMsg.id ? { ...m, text: (m.text || '') + token } : m));
+          },
+          onDone: () => {
+            // Indiquer que l'IA commence à parler
+            setIsAISpeaking(true);
+            console.log('[Vocal Mode] IA commence à parler - microphone coupé');
+            speak(acc, {
+              onEnd: () => {
+                setIsAISpeaking(false);
+                console.log('[Vocal Mode] IA a fini de parler - préparation redémarrage microphone');
+                if (modeVocalAutoRef.current && !muted) {
+                  playBip();
+                  setTimeout(() => {
+                    if (modeVocalAutoRef.current && !muted && !listeningAuto && !isAISpeakingRef.current) {
+                      console.log('[Vocal Mode] Redémarrage du microphone après pause de sécurité');
+                      startAuto();
+                    } else {
+                      console.log('[Vocal Mode] Redémarrage annulé - mode vocal désactivé manuellement');
+                    }
+                  }, 2000);
+                }
               }
-            }, 2000); // 2 secondes de pause pour être sûr que le TTS s'est arrêté
+            });
+          },
+          onError: (err) => {
+            console.error('Streaming error:', err);
           }
         }
-      });
+      );
       // toast.success('Réponse reçue !', { duration: 2000 });
     } catch (error) {
       // Timeline retirée
