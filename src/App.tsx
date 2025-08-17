@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import WorkspaceOpeningDialog from '@/components/WorkspaceOpeningDialog';
 import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
 import { GeminiGenerationConfig } from '@/services/geminiApi';
@@ -37,6 +37,7 @@ import { WebSourcesSidebar } from '@/components/WebSourcesSidebar';
 import { WebSourcesDrawer } from '@/components/WebSourcesDrawer';
 import type { WebSource } from '@/components/WebSourcesSidebar';
 import { AgentStatus } from '@/components/AgentStatus';
+import { useWorkspace, useWorkspaceOpeningModal } from '@/hooks/useWorkspace';
 
 // Timeline retirée
 
@@ -69,43 +70,9 @@ type RagContextMessage = {
 // Similarité: vecteurs normalisés => cosinus = dot product
 
 function App() {
-  // --- Espaces de travail ---
-  function wsKey(ws: string, base: string): string { return `ws:${ws}:${base}`; }
-  const [workspaceId, setWorkspaceId] = useState<string>(() => {
-    try { return localStorage.getItem('nc_active_workspace') || 'default'; } catch { return 'default'; }
-  });
-  const [workspaces, setWorkspaces] = useState<Array<{ id: string; name: string }>>(() => {
-    try {
-      const raw = localStorage.getItem('nc_workspaces');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch {}
-    return [{ id: 'default', name: 'Par défaut' }];
-  });
-  useEffect(() => {
-    try { localStorage.setItem('nc_workspaces', JSON.stringify(workspaces)); } catch {}
-  }, [workspaces]);
-  useEffect(() => {
-    try { localStorage.setItem('nc_active_workspace', workspaceId); } catch {}
-  }, [workspaceId]);
-  // Modale d'animation lors du changement d'espace de travail (skip au premier rendu)
-  const firstWorkspaceLoadRef = useRef(true);
-  const [showWorkspaceOpening, setShowWorkspaceOpening] = useState<boolean>(false);
-  const [workspaceOpeningName, setWorkspaceOpeningName] = useState<string>('');
-  useEffect(() => {
-    if (firstWorkspaceLoadRef.current) {
-      firstWorkspaceLoadRef.current = false;
-      return;
-    }
-    const current = workspaces.find(w => w.id === workspaceId);
-    const name = current?.name || workspaceId;
-    setWorkspaceOpeningName(name);
-    setShowWorkspaceOpening(true);
-    const t = setTimeout(() => setShowWorkspaceOpening(false), 2000);
-    return () => clearTimeout(t);
-  }, [workspaceId, workspaces]);
+  // --- Espaces de travail via hooks ---
+  const { workspaceId, setWorkspaceId, workspaces, createWorkspace, renameWorkspace, deleteWorkspace, wsKey } = useWorkspace();
+  const { open: workspaceOpeningOpen, setOpen: setWorkspaceOpeningOpen, name: workspaceOpeningName } = useWorkspaceOpeningModal(workspaceId, workspaces);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -1255,40 +1222,9 @@ ${lines.join('\n')}`, false);
           workspaceId={workspaceId}
           workspaces={workspaces}
           onChangeWorkspace={(id) => setWorkspaceId(id)}
-          onCreateWorkspace={() => {
-            const name = window.prompt('Nom du nouvel espace');
-            if (!name || !name.trim()) return;
-            const id = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').slice(0, 24) || `ws-${Date.now()}`;
-            if (workspaces.some(w => w.id === id)) return;
-            const next = [...workspaces, { id, name: name.trim() }];
-            setWorkspaces(next);
-            setWorkspaceId(id);
-          }}
-          onRenameWorkspace={(id, name) => {
-            setWorkspaces(ws => ws.map(w => w.id === id ? { ...w, name } : w));
-          }}
-          onDeleteWorkspace={(id) => {
-            // Supprimer les données locales liées à l'espace et retirer de la liste
-            try {
-              // Nettoyer les clés connues
-              const keysToClear = [
-                'gemini_current_discussion',
-                'gemini_discussions',
-                'gemini_presets',
-                'rag_user_docs',
-                'rag_doc_stats',
-                'rag_doc_favorites',
-                'neurochat_user_memory_v1',
-              ];
-              for (const base of keysToClear) {
-                localStorage.removeItem(wsKey(id, base));
-              }
-            } catch {}
-            setWorkspaces(ws => ws.filter(w => w.id !== id));
-            if (workspaceId === id) {
-              setWorkspaceId('default');
-            }
-          }}
+          onCreateWorkspace={createWorkspace}
+          onRenameWorkspace={renameWorkspace}
+          onDeleteWorkspace={deleteWorkspace}
           
           stop={stop}
           modeVocalAuto={modeVocalAuto}
@@ -1576,25 +1512,7 @@ ${lines.join('\n')}`, false);
 
       
       {/* Modale d'ouverture d'espace de travail */}
-      <Dialog open={showWorkspaceOpening} onOpenChange={setShowWorkspaceOpening}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
-              Chargement de l'espace de travail
-            </DialogTitle>
-            <DialogDescription className="text-gray-600 dark:text-gray-400">
-              Ouverture de l'espace « {workspaceOpeningName} » en cours...
-              Veuillez patienter quelques instants.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col items-center justify-center py-6 space-y-4">
-            <div className="h-12 w-12 rounded-full border-3 border-slate-200 border-t-indigo-600 animate-spin dark:border-slate-700" />
-            <p className="text-sm text-gray-500 animate-pulse">
-              Chargement des données...
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <WorkspaceOpeningDialog open={workspaceOpeningOpen} onOpenChange={setWorkspaceOpeningOpen} name={workspaceOpeningName} />
     </div>
   );
 }
