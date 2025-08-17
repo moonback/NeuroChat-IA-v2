@@ -320,21 +320,22 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
                         onClick={onToggleAgent}
                         disabled={isLoading}
                         className={cn(
-                          "h-9 px-3 rounded-xl border transition-all duration-300 flex items-center gap-2",
+                          "h-9 px-3 rounded-xl border transition-all duration-300 flex items-center gap-2 relative group overflow-hidden",
                           agentEnabled
                             ? provider === 'gemini'
-                              ? 'bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/40 border-indigo-300/60 text-indigo-700 dark:text-indigo-300'
-                              : 'bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/40 dark:to-pink-950/40 border-purple-300/60 text-purple-700 dark:text-purple-300'
+                              ? 'bg-gradient-to-r from-indigo-50 via-blue-50 to-indigo-50 dark:from-indigo-950/40 dark:via-blue-950/40 dark:to-indigo-950/40 border-indigo-300/60 text-indigo-700 dark:text-indigo-300 shadow-lg shadow-indigo-500/10'
+                              : 'bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 dark:from-purple-950/40 dark:via-pink-950/40 dark:to-purple-950/40 border-purple-300/60 text-purple-700 dark:text-purple-300 shadow-lg shadow-purple-500/10'
                             : 'bg-white/80 dark:bg-slate-800/80 border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-50/90 dark:hover:bg-slate-700/90'
                         )}
                         title={agentEnabled ? `Désactiver ${provider === 'gemini' ? 'Agent Gemini' : 'Agent Mistral'}` : `Activer ${provider === 'gemini' ? 'Agent Gemini' : 'Agent Mistral'}`}
                       >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                         {provider === 'gemini' ? (
-                          <Sparkles className={cn("w-4 h-4", agentEnabled ? 'text-indigo-600 dark:text-indigo-300' : 'text-slate-500 dark:text-slate-400')} />
+                          <Sparkles className={cn("w-4 h-4 relative", agentEnabled ? 'text-indigo-600 dark:text-indigo-300 animate-pulse' : 'text-slate-500 dark:text-slate-400')} />
                         ) : (
-                          <Bot className={cn("w-4 h-4", agentEnabled ? 'text-purple-600 dark:text-purple-300' : 'text-slate-500 dark:text-slate-400')} />
+                          <Bot className={cn("w-4 h-4 relative", agentEnabled ? 'text-purple-600 dark:text-purple-300 animate-pulse' : 'text-slate-500 dark:text-slate-400')} />
                         )}
-                        <span className="text-xs font-medium">
+                        <span className="text-xs font-medium relative">
                           {agentEnabled ? 'Agent: ON' : 'Activer agent'}
                         </span>
                       </Button>
