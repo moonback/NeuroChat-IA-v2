@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '../db/index.js';
 import { userSettings, configurationPresets } from '../db/schema.js';
 import { eq, and, desc, asc, sql } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
 
 const router = Router();
 
@@ -11,9 +12,6 @@ const createSettingSchema = z.object({
   workspaceId: z.string().min(1),
   key: z.string().min(1),
   value: z.any(),
-  type: z.enum(['string', 'number', 'boolean', 'object', 'array']),
-  category: z.string().optional(),
-  description: z.string().optional(),
 });
 
 const updateSettingSchema = z.object({
@@ -24,25 +22,18 @@ const updateSettingSchema = z.object({
 const createPresetSchema = z.object({
   workspaceId: z.string().min(1),
   name: z.string().min(1),
-  description: z.string().optional(),
   settings: z.record(z.any()),
-  isDefault: z.boolean().default(false),
 });
 
 const updatePresetSchema = z.object({
   name: z.string().min(1).optional(),
-  description: z.string().optional(),
   settings: z.record(z.any()).optional(),
-  isDefault: z.boolean().optional(),
 });
 
 const bulkUpdateSettingsSchema = z.object({
   settings: z.array(z.object({
     key: z.string().min(1),
     value: z.any(),
-    type: z.enum(['string', 'number', 'boolean', 'object', 'array']),
-    category: z.string().optional(),
-    description: z.string().optional(),
   })),
 });
 
@@ -93,37 +84,20 @@ function deserializeValue(value: string, type: string): any {
 router.get('/:workspaceId', async (req, res) => {
   try {
     const { workspaceId } = req.params;
-    const category = req.query.category as string;
     
     let whereConditions = [eq(userSettings.workspaceId, workspaceId)];
-    
-    if (category) {
-      whereConditions.push(eq(userSettings.category, category));
-    }
     
     const settings = await db
       .select()
       .from(userSettings)
       .where(and(...whereConditions))
-      .orderBy(asc(userSettings.category), asc(userSettings.key));
+      .orderBy(asc(userSettings.key));
     
     // Désérialiser les valeurs
     const deserializedSettings = settings.map(setting => ({
       ...setting,
-      value: deserializeValue(setting.value, setting.type),
+      value: deserializeValue(setting.value, 'string'),
     }));
-    
-    // Grouper par catégorie si demandé
-    if (req.query.grouped === 'true') {
-      const grouped = deserializedSettings.reduce((acc, setting) => {
-        const cat = setting.category || 'general';
-        if (!acc[cat]) acc[cat] = [];
-        acc[cat].push(setting);
-        return acc;
-      }, {} as Record<string, typeof deserializedSettings>);
-      
-      return res.json({ settings: grouped });
-    }
     
     res.json({ settings: deserializedSettings });
   } catch (error) {
@@ -155,7 +129,7 @@ router.get('/:workspaceId/:key', async (req, res) => {
     
     res.json({
       ...setting,
-      value: deserializeValue(setting.value, setting.type),
+      value: deserializeValue(setting.value, 'string'),
     });
   } catch (error) {
     console.error('Erreur récupération paramètre:', error);
@@ -191,15 +165,12 @@ router.post('/', async (req, res) => {
         workspaceId: data.workspaceId,
         key: data.key,
         value: serializeValue(data.value),
-        type: data.type,
-        category: data.category || 'general',
-        description: data.description,
       })
       .returning();
     
     res.status(201).json({
       ...newSetting,
-      value: deserializeValue(newSetting.value, newSetting.type),
+      value: deserializeValue(newSetting.value, 'string'),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -236,15 +207,10 @@ router.put('/:workspaceId/:key', async (req, res) => {
       return res.status(404).json({ error: 'Paramètre non trouvé' });
     }
     
-    // Déterminer le type si la valeur change
-    const newType = data.value !== undefined ? getValueType(data.value) : existingSetting.type;
-    
     const [updatedSetting] = await db
       .update(userSettings)
       .set({
         value: data.value !== undefined ? serializeValue(data.value) : existingSetting.value,
-        type: newType,
-        description: data.description !== undefined ? data.description : existingSetting.description,
         updatedAt: new Date(),
       })
       .where(and(
@@ -255,7 +221,7 @@ router.put('/:workspaceId/:key', async (req, res) => {
     
     res.json({
       ...updatedSetting,
-      value: deserializeValue(updatedSetting.value, updatedSetting.type),
+      value: deserializeValue(updatedSetting.value, 'string'),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -304,8 +270,8 @@ router.post('/:workspaceId/bulk', async (req, res) => {
     const { workspaceId } = req.params;
     const data = bulkUpdateSettingsSchema.parse(req.body);
     
-    const results = [];
-    const errors = [];
+    const results: any[] = [];
+    const errors: { key: string; error: string }[] = [];
     
     for (const settingData of data.settings) {
       try {
@@ -327,9 +293,6 @@ router.post('/:workspaceId/bulk', async (req, res) => {
             .update(userSettings)
             .set({
               value: serializeValue(settingData.value),
-              type: settingData.type,
-              category: settingData.category || existingSetting.category,
-              description: settingData.description || existingSetting.description,
               updatedAt: new Date(),
             })
             .where(and(
@@ -345,16 +308,13 @@ router.post('/:workspaceId/bulk', async (req, res) => {
               workspaceId,
               key: settingData.key,
               value: serializeValue(settingData.value),
-              type: settingData.type,
-              category: settingData.category || 'general',
-              description: settingData.description,
             })
             .returning();
         }
         
         results.push({
           ...result,
-          value: deserializeValue(result.value, result.type),
+          value: deserializeValue(result.value, 'string'),
         });
       } catch (error) {
         errors.push({
@@ -395,12 +355,12 @@ router.get('/:workspaceId/presets', async (req, res) => {
       .select()
       .from(configurationPresets)
       .where(eq(configurationPresets.workspaceId, workspaceId))
-      .orderBy(desc(configurationPresets.isDefault), asc(configurationPresets.name));
+      .orderBy(asc(configurationPresets.name));
     
     // Désérialiser les paramètres
     const deserializedPresets = presets.map(preset => ({
       ...preset,
-      settings: preset.settings ? JSON.parse(preset.settings) : {},
+      settings: preset.config ? JSON.parse(preset.config) : {},
     }));
     
     res.json({ presets: deserializedPresets });
@@ -430,7 +390,7 @@ router.get('/preset/:presetId', async (req, res) => {
     
     res.json({
       ...preset,
-      settings: preset.settings ? JSON.parse(preset.settings) : {},
+      settings: preset.config ? JSON.parse(preset.config) : {},
     });
   } catch (error) {
     console.error('Erreur récupération preset:', error);
@@ -446,28 +406,19 @@ router.post('/presets', async (req, res) => {
   try {
     const data = createPresetSchema.parse(req.body);
     
-    // Si c'est le preset par défaut, désactiver les autres
-    if (data.isDefault) {
-      await db
-        .update(configurationPresets)
-        .set({ isDefault: false })
-        .where(eq(configurationPresets.workspaceId, data.workspaceId));
-    }
-    
     const [newPreset] = await db
       .insert(configurationPresets)
       .values({
+        id: randomUUID(),
         workspaceId: data.workspaceId,
         name: data.name,
-        description: data.description,
-        settings: JSON.stringify(data.settings),
-        isDefault: data.isDefault,
+        config: JSON.stringify(data.settings),
       })
       .returning();
     
     res.status(201).json({
       ...newPreset,
-      settings: JSON.parse(newPreset.settings),
+      settings: JSON.parse(newPreset.config),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -501,22 +452,10 @@ router.put('/preset/:presetId', async (req, res) => {
       return res.status(404).json({ error: 'Preset non trouvé' });
     }
     
-    // Si c'est le nouveau preset par défaut, désactiver les autres
-    if (data.isDefault === true) {
-      await db
-        .update(configurationPresets)
-        .set({ isDefault: false })
-        .where(eq(configurationPresets.workspaceId, existingPreset.workspaceId));
-    }
-    
-    const updateData: any = {
-      updatedAt: new Date(),
-    };
+    const updateData: any = {};
     
     if (data.name !== undefined) updateData.name = data.name;
-    if (data.description !== undefined) updateData.description = data.description;
-    if (data.settings !== undefined) updateData.settings = JSON.stringify(data.settings);
-    if (data.isDefault !== undefined) updateData.isDefault = data.isDefault;
+    if (data.settings !== undefined) updateData.config = JSON.stringify(data.settings);
     
     const [updatedPreset] = await db
       .update(configurationPresets)
@@ -526,7 +465,7 @@ router.put('/preset/:presetId', async (req, res) => {
     
     res.json({
       ...updatedPreset,
-      settings: JSON.parse(updatedPreset.settings),
+      settings: JSON.parse(updatedPreset.config),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -582,9 +521,9 @@ router.post('/preset/:presetId/apply', async (req, res) => {
       return res.status(404).json({ error: 'Preset non trouvé' });
     }
     
-    const presetSettings = JSON.parse(preset.settings);
-    const results = [];
-    const errors = [];
+    const presetSettings = JSON.parse(preset.config);
+    const results: any[] = [];
+    const errors: { key: string; error: string }[] = [];
     
     // Appliquer chaque paramètre du preset
     for (const [key, value] of Object.entries(presetSettings)) {
@@ -609,7 +548,6 @@ router.post('/preset/:presetId/apply', async (req, res) => {
             .update(userSettings)
             .set({
               value: serializeValue(value),
-              type: valueType,
               updatedAt: new Date(),
             })
             .where(and(
@@ -625,16 +563,13 @@ router.post('/preset/:presetId/apply', async (req, res) => {
               workspaceId: preset.workspaceId,
               key,
               value: serializeValue(value),
-              type: valueType,
-              category: 'preset',
-              description: `Appliqué depuis le preset: ${preset.name}`,
             })
             .returning();
         }
         
         results.push({
           ...result,
-          value: deserializeValue(result.value, result.type),
+          value: deserializeValue(result.value, 'string'),
         });
       } catch (error) {
         errors.push({
@@ -670,7 +605,7 @@ router.get('/:workspaceId/export', async (req, res) => {
       .select()
       .from(userSettings)
       .where(eq(userSettings.workspaceId, workspaceId))
-      .orderBy(asc(userSettings.category), asc(userSettings.key));
+      .orderBy(asc(userSettings.key));
     
     const presets = await db
       .select()
@@ -681,11 +616,11 @@ router.get('/:workspaceId/export', async (req, res) => {
     res.json({
       settings: settings.map(setting => ({
         ...setting,
-        value: deserializeValue(setting.value, setting.type),
+        value: deserializeValue(setting.value, 'string'),
       })),
       presets: presets.map(preset => ({
         ...preset,
-        settings: JSON.parse(preset.settings),
+        settings: JSON.parse(preset.config),
       })),
       exportedAt: new Date(),
       workspaceId,
@@ -732,9 +667,6 @@ router.post('/:workspaceId/import', async (req, res) => {
               workspaceId,
               key: settingData.key,
               value: serializeValue(settingData.value),
-              type: settingData.type || getValueType(settingData.value),
-              category: settingData.category || 'general',
-              description: settingData.description,
             });
           
           importedSettings++;
@@ -752,11 +684,10 @@ router.post('/:workspaceId/import', async (req, res) => {
           await db
             .insert(configurationPresets)
             .values({
+              id: randomUUID(),
               workspaceId,
               name: presetData.name,
-              description: presetData.description,
-              settings: JSON.stringify(presetData.settings),
-              isDefault: presetData.isDefault || false,
+              config: JSON.stringify(presetData.settings),
             });
           
           importedPresets++;
@@ -787,17 +718,8 @@ router.get('/:workspaceId/categories', async (req, res) => {
   try {
     const { workspaceId } = req.params;
     
-    const categories = await db
-      .select({
-        category: userSettings.category,
-        count: sql<number>`count(*)`,
-      })
-      .from(userSettings)
-      .where(eq(userSettings.workspaceId, workspaceId))
-      .groupBy(userSettings.category)
-      .orderBy(asc(userSettings.category));
-    
-    res.json({ categories });
+    // Since category field doesn't exist in schema, return empty categories
+    res.json({ categories: [] });
   } catch (error) {
     console.error('Erreur récupération catégories:', error);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -816,9 +738,7 @@ router.post('/:workspaceId/reset', async (req, res) => {
     // Supprimer les paramètres
     let whereConditions = [eq(userSettings.workspaceId, workspaceId)];
     
-    if (category) {
-      whereConditions.push(eq(userSettings.category, category));
-    }
+    // Category filtering removed as field doesn't exist in schema
     
     const settingsResult = await db
       .delete(userSettings)
