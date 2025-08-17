@@ -327,12 +327,12 @@ const TileButton = ({
       disabled={disabled}
       data-tooltip-id="header-tooltip"
       data-tooltip-content={tooltip || label}
-      className={`group w-full h-24 rounded-2xl border ${intentBg} ${activeRing} flex flex-col items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.02] active:scale-95 disabled:opacity-50`}
+      className={`group w-full h-16 rounded-xl border ${intentBg} ${activeRing} flex flex-col items-center justify-center gap-1 transition-all duration-200 hover:scale-[1.02] active:scale-95 disabled:opacity-50`}
     >
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${active ? 'bg-blue-100/70 dark:bg-blue-900/40' : 'bg-white/70 dark:bg-slate-800/60'} shadow-sm`}>
-        <Icon className={`w-5 h-5 ${iconTone}`} />
+      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${active ? 'bg-blue-100/70 dark:bg-blue-900/40' : 'bg-white/70 dark:bg-slate-800/60'} shadow-sm`}>
+        <Icon className={`w-4 h-4 ${iconTone}`} />
       </div>
-      <span className={`text-xs font-medium ${textTone}`}>{label}</span>
+      <span className={`text-[10px] font-medium ${textTone} truncate w-full px-1 text-center`}>{label}</span>
     </button>
   );
 };
@@ -711,12 +711,12 @@ export function Header(props: HeaderProps) {
 
       {/* Panneau latéral de réglages (Sheet) */}
       <Sheet open={showMobileMenu} onOpenChange={setShowMobileMenu}>
-        <SheetContent side="right" className="p-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-l border-slate-200/50 dark:border-slate-800/50 shadow-2xl w-[90vw] max-w-[400px] sm:w-[380px] md:w-[420px]">
+        <SheetContent side="right" className="p-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-l border-slate-200/50 dark:border-slate-800/50 shadow-2xl w-[95vw] max-w-[360px] sm:w-[340px] md:w-[380px]">
           <SheetHeader className="sr-only">
             <SheetTitle>Menu options</SheetTitle>
           </SheetHeader>
-          <div className="p-6">
-            <div className="mb-4">
+          <div className="p-4">
+            <div className="mb-3">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
@@ -730,15 +730,20 @@ export function Header(props: HeaderProps) {
             </div>
                     </div>
 
-            <div className="space-y-4">
+            <div className="space-y-2">
               {/* Section: Actions */}
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                <Settings2 className="w-4 h-4" />
-                <span className="text-xs font-semibold uppercase tracking-wide">Actions</span>
-                <span className="text-[10px] opacity-70 ml-2">Créer et gérer</span>
+              <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 mb-1">
+                <Settings2 className="w-3.5 h-3.5" />
+                <span className="text-[11px] font-semibold uppercase tracking-wide">Actions</span>
+                <span className="text-[9px] opacity-70 ml-1">Créer et gérer</span>
               </div>
-              <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-2">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+              <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 mb-1 mt-1.5">
+                <CheckSquare className="w-3.5 h-3.5" />
+                <span className="text-[11px] font-semibold uppercase tracking-wide">Sélection</span>
+                <span className="text-[9px] opacity-70 ml-1">Choisir et supprimer</span>
+              </div>
+              <div className="rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-2">
+                <div className="grid grid-cols-3 gap-1.5">
                 {!props.modeEnfant && (
                     <TileButton
                       onClick={handleMenuAction(handleModeVocalToggle)}
@@ -780,15 +785,15 @@ export function Header(props: HeaderProps) {
                     <span className="text-xs font-semibold uppercase tracking-wide">Sélection</span>
                     <span className="text-[10px] opacity-70 ml-2">Choisir et supprimer</span>
                   </div>
-                  <div className="space-y-1 mt-1 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-2">
-                    <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onToggleSelectMode)}>
+                  <div className="space-y-1 mt-1 rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-2">
+                    <Button variant="ghost" className="w-full justify-start h-10 rounded-lg text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onToggleSelectMode)}>
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center">
-                          {selectMode ? <CheckSquare className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> : <Square className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
+                        <div className="w-7 h-7 rounded-md bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center">
+                          {selectMode ? <CheckSquare className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" /> : <Square className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />}
                         </div>
                         <div>
-                          <div className="font-medium">{selectMode ? 'Annuler sélection' : 'Sélectionner messages'}</div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                          <div className="text-sm font-medium">{selectMode ? 'Annuler sélection' : 'Sélectionner messages'}</div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
                             {selectMode ? 'Quitter le mode sélection' : 'Choisir des messages à supprimer'}
                           </div>
                         </div>
@@ -796,16 +801,16 @@ export function Header(props: HeaderProps) {
                     </Button>
 
                     {selectMode && selectedCount > 0 && (
-                      <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-red-50/80 dark:hover:bg-red-950/60 transition-all duration-200" onClick={handleMenuAction(onRequestDelete)}>
+                      <Button variant="ghost" className="w-full justify-start h-10 rounded-lg text-left font-medium hover:bg-red-50/80 dark:hover:bg-red-950/60 transition-all duration-200" onClick={handleMenuAction(onRequestDelete)}>
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/40 flex items-center justify-center">
-                            <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+                          <div className="w-7 h-7 rounded-md bg-red-50 dark:bg-red-950/40 flex items-center justify-center">
+                            <Trash2 className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
                           </div>
                           <div>
-                            <div className="font-medium text-red-600 dark:text-red-400">
+                            <div className="text-sm font-medium text-red-600 dark:text-red-400">
                               Supprimer sélection ({selectedCount})
                             </div>
-                            <div className="text-xs text-red-500/70 dark:text-red-400/70">
+                            <div className="text-[11px] text-red-500/70 dark:text-red-400/70">
                               Action irréversible
                             </div>
                           </div>
@@ -816,7 +821,7 @@ export function Header(props: HeaderProps) {
                 </>
               )}
               
-              <div className="border-t border-slate-200/60 dark:border-slate-800/60" />
+              <div className="border-t border-slate-200/60 dark:border-slate-800/60 my-2" />
 
               {/* Section: Modes */}
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
@@ -824,8 +829,8 @@ export function Header(props: HeaderProps) {
                 <span className="text-xs font-semibold uppercase tracking-wide">Modes</span>
                 <span className="text-[10px] opacity-70 ml-2">Activer des contextes</span>
                       </div>
-              <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-3">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+              <div className="rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-2">
+                <div className="grid grid-cols-3 gap-1.5">
                   {!props.modeEnfant && (
                     <TileButton
                       onClick={handleMenuAction(handlePrivateModeToggle)}
@@ -876,10 +881,10 @@ export function Header(props: HeaderProps) {
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                 <Settings2 className="w-4 h-4" />
                 <span className="text-xs font-semibold uppercase tracking-wide">Paramètres</span>
-                <span className="text-[10px] opacity-70 ml-2">Personnaliser l’expérience</span>
+                <span className="text-[10px] opacity-70 ml-2">Personnaliser l'expérience</span>
                         </div>
-              <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-3 mb-2">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+              <div className="rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-2 mb-2">
+                <div className="grid grid-cols-3 gap-1.5">
                   {!props.modeEnfant && (
                     <TileButton
                       onClick={handleMenuAction(onOpenTTSSettings)}
