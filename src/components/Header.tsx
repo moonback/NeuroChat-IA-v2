@@ -6,10 +6,11 @@ import {
   MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, 
   PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, 
   Trash2, Menu, X, WifiOff, Baby, Sparkles,
-  Globe, Database, Activity, Pencil
+  Globe, Database, Activity, Pencil, HelpCircle
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
+import { HelpModal } from '@/components/HelpModal';
 // import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
@@ -379,6 +380,7 @@ export function Header(props: HeaderProps) {
   const { audioRef, showPrivateIndicator } = usePrivateModeFeedback(modePrive);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showVocalSettings, setShowVocalSettings] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
   
 
   // Handlers optimisés avec feedback
@@ -948,7 +950,13 @@ export function Header(props: HeaderProps) {
                       icon={theme === 'dark' ? Sun : Moon}
                       tooltip={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
                     />
-                )}
+                  )}
+                  <TileButton
+                    onClick={handleMenuAction(() => setShowHelpModal(true))}
+                    label={'Aide'}
+                    icon={HelpCircle}
+                    tooltip="Besoin d'aide ? Consultez la documentation complète"
+                  />
               </div>
                 {/* Réglages du mode vocal automatique */}
                 {/* {!props.modeEnfant && props.autoVoiceConfig && props.onUpdateAutoVoiceConfig && (
@@ -1092,6 +1100,12 @@ export function Header(props: HeaderProps) {
           }}
         />
       )}
+
+      {/* Modal d'aide */}
+      <HelpModal
+        isOpen={showHelpModal}
+        onClose={() => setShowHelpModal(false)}
+      />
 
       {/* AlertDialog modernisée pour la confirmation de suppression */}
       <AlertDialog open={showConfirmDelete} onOpenChange={setShowConfirmDelete}>
