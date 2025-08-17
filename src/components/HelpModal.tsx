@@ -5,8 +5,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   MessageCircle, Settings, Mic, Brain, Shield, Globe, 
-  Database, Baby, History, BookOpen, Volume2, Palette,
-  HelpCircle, Zap, Users, Lock, Search, FileText
+  Database, Baby, History, Volume2, Palette,
+  HelpCircle, Zap, Users, Lock
 } from 'lucide-react';
 
 interface HelpModalProps {
