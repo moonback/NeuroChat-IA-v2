@@ -103,7 +103,7 @@ function App() {
     const name = current?.name || workspaceId;
     setWorkspaceOpeningName(name);
     setShowWorkspaceOpening(true);
-    const t = setTimeout(() => setShowWorkspaceOpening(false), 1000);
+    const t = setTimeout(() => setShowWorkspaceOpening(false), 2000);
     return () => clearTimeout(t);
   }, [workspaceId, workspaces]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -1577,15 +1577,21 @@ ${lines.join('\n')}`, false);
       
       {/* Modale d'ouverture d'espace de travail */}
       <Dialog open={showWorkspaceOpening} onOpenChange={setShowWorkspaceOpening}>
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Chargement de l’espace</DialogTitle>
-            <DialogDescription>
-              Ouverture de l’espace « {workspaceOpeningName} »…
+            <DialogTitle className="text-xl font-semibold">
+              Chargement de l'espace de travail
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
+              Ouverture de l'espace « {workspaceOpeningName} » en cours...
+              Veuillez patienter quelques instants.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center justify-center py-4">
-            <div className="h-10 w-10 rounded-full border-2 border-slate-300 border-t-indigo-500 animate-spin" />
+          <div className="flex flex-col items-center justify-center py-6 space-y-4">
+            <div className="h-12 w-12 rounded-full border-3 border-slate-200 border-t-indigo-600 animate-spin dark:border-slate-700" />
+            <p className="text-sm text-gray-500 animate-pulse">
+              Chargement des données...
+            </p>
           </div>
         </DialogContent>
       </Dialog>
