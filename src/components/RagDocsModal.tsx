@@ -127,7 +127,7 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
         const pdfModule: any = await import('pdfjs-dist');
         const pdfjsLib = pdfModule?.default ?? pdfModule;
         // @ts-ignore
-        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.mjs';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('/pdf.worker.mjs', import.meta.url).href;
         const arrayBuffer = await file.arrayBuffer();
         // @ts-ignore
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;

@@ -91,7 +91,7 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
         const arrayBuffer = await file.arrayBuffer();
         const pdfModule: any = await import('pdfjs-dist');
         const pdfjsLib = pdfModule?.default ?? pdfModule;
-        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.mjs';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('/pdf.worker.mjs', import.meta.url).href;
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         setFileInfo({ kind: 'pdf', pages: pdf.numPages });
         // Extraction légère: première page texte (optionnel, court)

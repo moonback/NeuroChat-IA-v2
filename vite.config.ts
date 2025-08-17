@@ -17,6 +17,7 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  assetsInclude: ['**/*.mjs'],
   build: {
     rollupOptions: {
       output: {

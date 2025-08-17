@@ -90,6 +90,20 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Ping endpoint for connection testing
+app.get('/api/ping', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    latency: Date.now(),
+  });
+});
+
+// HEAD method for ping (used by frontend for latency testing)
+app.head('/api/ping', (req, res) => {
+  res.status(200).end();
+});
+
 // API Info
 app.get('/api', (req, res) => {
   res.json({
