@@ -256,13 +256,14 @@ router.post('/:discussionId/messages', async (req, res) => {
     const createdMessage = createdMessageResult[0];
     
     // Récupérer les sources du message
+    let messageWithSources: any = createdMessage;
     if (createdMessage) {
       const sourcesResult = await db.select().from(messageSources)
         .where(eq(messageSources.messageId, messageId));
-      createdMessage.sources = sourcesResult;
+      messageWithSources = { ...createdMessage, sources: sourcesResult } as any;
     }
     
-    res.status(201).json(createdMessage);
+    res.status(201).json(messageWithSources);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Données invalides', details: error.errors });

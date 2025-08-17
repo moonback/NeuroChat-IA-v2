@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { randomUUID } from 'crypto';
 import multer from 'multer';
 import { db } from '../db/index.js';
 import { ragDocuments, documentStats } from '../db/schema.js';
@@ -306,6 +307,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     const [newDocument] = await db
       .insert(ragDocuments)
       .values({
+        id: randomUUID(),
         workspaceId,
         title: req.file.originalname,
         content,
@@ -354,6 +356,7 @@ router.post('/', async (req, res) => {
     const [newDocument] = await db
       .insert(ragDocuments)
       .values({
+        id: randomUUID(),
         workspaceId: data.workspaceId,
         title: data.title,
         content: data.content,
@@ -573,14 +576,12 @@ router.get('/:workspaceId/stats', async (req, res) => {
     const stats = await db
       .select({
         documentId: documentStats.documentId,
-        usageCount: documentStats.usageCount,
+        useCount: documentStats.useCount,
         lastUsedAt: documentStats.lastUsedAt,
-        averageRelevanceScore: documentStats.averageRelevanceScore,
-        totalQueries: documentStats.totalQueries,
+        isFavorite: documentStats.isFavorite,
       })
       .from(documentStats)
-      .where(eq(documentStats.workspaceId, workspaceId))
-      .orderBy(desc(documentStats.usageCount));
+      .orderBy(desc(documentStats.useCount));
     
     res.json(stats);
   } catch (error) {
@@ -620,24 +621,13 @@ router.post('/document/:documentId/stats', async (req, res) => {
     
     if (existingStats) {
       // Mettre à jour les statistiques existantes
-      const newUsageCount = existingStats.usageCount + 1;
-      const newTotalQueries = existingStats.totalQueries + 1;
-      let newAverageScore = existingStats.averageRelevanceScore;
-      
-      if (relevanceScore !== undefined) {
-        newAverageScore = (
-          (existingStats.averageRelevanceScore * existingStats.totalQueries + relevanceScore) /
-          newTotalQueries
-        );
-      }
+      const newUseCount = (existingStats.useCount || 0) + 1;
       
       [updatedStats] = await db
         .update(documentStats)
         .set({
-          usageCount: newUsageCount,
+          useCount: newUseCount,
           lastUsedAt: new Date(),
-          averageRelevanceScore: newAverageScore,
-          totalQueries: newTotalQueries,
         })
         .where(eq(documentStats.documentId, documentId))
         .returning();
@@ -647,11 +637,8 @@ router.post('/document/:documentId/stats', async (req, res) => {
         .insert(documentStats)
         .values({
           documentId,
-          workspaceId: document.workspaceId,
-          usageCount: 1,
+          useCount: 1,
           lastUsedAt: new Date(),
-          averageRelevanceScore: relevanceScore || 0,
-          totalQueries: 1,
         })
         .returning();
     }
@@ -685,8 +672,7 @@ router.get('/:workspaceId/export', async (req, res) => {
     
     const stats = await db
       .select()
-      .from(documentStats)
-      .where(eq(documentStats.workspaceId, workspaceId));
+      .from(documentStats);
     
     res.json({
       documents,
@@ -717,10 +703,6 @@ router.post('/:workspaceId/import', async (req, res) => {
     // Supprimer les données existantes si demandé
     if (importData.replaceExisting) {
       await db
-        .delete(documentStats)
-        .where(eq(documentStats.workspaceId, workspaceId));
-      
-      await db
         .delete(ragDocuments)
         .where(eq(ragDocuments.workspaceId, workspaceId));
     }
@@ -731,6 +713,7 @@ router.post('/:workspaceId/import', async (req, res) => {
         await db
           .insert(ragDocuments)
           .values({
+            id: randomUUID(),
             workspaceId,
             title: docData.title,
             content: docData.content,
@@ -803,21 +786,22 @@ router.get('/:workspaceId/overview', async (req, res) => {
     const [mostUsedResult] = await db
       .select({
         document: ragDocuments,
-        usageCount: documentStats.usageCount,
+        useCount: documentStats.useCount,
       })
       .from(ragDocuments)
       .leftJoin(documentStats, eq(ragDocuments.id, documentStats.documentId))
       .where(eq(ragDocuments.workspaceId, workspaceId))
-      .orderBy(desc(documentStats.usageCount))
+      .orderBy(desc(documentStats.useCount))
       .limit(1);
     
     // Total d'usage
     const [{ totalUsage }] = await db
       .select({
-        totalUsage: sql<number>`coalesce(sum(${documentStats.usageCount}), 0)`,
+        totalUsage: sql<number>`coalesce(sum(${documentStats.useCount}), 0)`,
       })
       .from(documentStats)
-      .where(eq(documentStats.workspaceId, workspaceId));
+      .leftJoin(ragDocuments, eq(documentStats.documentId, ragDocuments.id))
+      .where(eq(ragDocuments.workspaceId, workspaceId));
     
     res.json({
       totalDocuments: overview.totalDocuments || 0,

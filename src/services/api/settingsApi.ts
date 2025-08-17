@@ -1,4 +1,4 @@
-import { z } from 'zod';
+// Removed unused import
 
 // Types pour l'API des paramètres
 export interface ApiUserSetting {
@@ -188,7 +188,7 @@ export class SettingsApiService {
     defaultValue?: T
   ): Promise<T> {
     const setting = await this.getUserSetting(workspaceId, key);
-    return setting ? setting.value : defaultValue;
+    return setting ? setting.value : (defaultValue as T);
   }
   
   /**

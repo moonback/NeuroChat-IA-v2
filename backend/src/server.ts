@@ -165,8 +165,7 @@ app.post('/api/migrate', async (req, res) => {
     
     const migrationService = new MigrationService();
     const result = await migrationService.migrateFromLocalStorage(
-      localStorageData,
-      workspaceId
+      localStorageData
     );
     
     res.json({
@@ -195,7 +194,7 @@ app.post('/api/migrate/validate', async (req, res) => {
     }
     
     const migrationService = new MigrationService();
-    const validation = await migrationService.validateMigration(workspaceId);
+    const validation = await migrationService.validateMigration();
     
     res.json({
       valid: validation.isValid,

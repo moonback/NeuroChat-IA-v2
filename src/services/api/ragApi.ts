@@ -1,4 +1,4 @@
-import { z } from 'zod';
+// Removed unused import
 
 // Types pour l'API RAG
 export interface ApiRagDocument {
@@ -616,7 +616,7 @@ export class RagMigrationService {
       const favorites = localStorage.getItem(favoritesKey);
       if (favorites) {
         try {
-          const favoriteIds = JSON.parse(favorites);
+          JSON.parse(favorites);
           // Note: Les favoris seront gérés lors de la création des documents
           // ou via une API séparée pour mettre à jour les favoris existants
         } catch (error) {
@@ -629,7 +629,7 @@ export class RagMigrationService {
       const stats = localStorage.getItem(statsKey);
       if (stats) {
         try {
-          const statsData = JSON.parse(stats);
+          JSON.parse(stats);
           // Note: Les statistiques seront recalculées côté serveur
           // ou migrées via une API séparée
         } catch (error) {

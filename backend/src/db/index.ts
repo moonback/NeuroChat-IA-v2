@@ -34,13 +34,10 @@ export const db = drizzle(sqlite, { schema });
 
 // Fonction pour fermer la base de données proprement
 export async function closeDatabase() {
-  return new Promise<void>((resolve, reject) => {
-    sqlite.close((err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
+  try {
+    sqlite.close();
+  } catch (error) {
+    console.error('Erreur lors de la fermeture de la base de données:', error);
+    throw error;
+  }
 }

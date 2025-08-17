@@ -1,4 +1,4 @@
-import { z } from 'zod';
+// Removed unused import
 
 // Types pour l'API
 export interface ApiDiscussion {
@@ -407,7 +407,7 @@ export class DiscussionsMigrationService {
               isUser: message.isUser,
               imageUrl: message.imageUrl,
               memoryFactsCount: message.memoryFactsCount || 0,
-              sources: message.sources?.map(s => ({
+              sources: message.sources?.map((s: any) => ({
                 title: s.title,
                 url: s.url,
                 type: s.url?.includes('http') ? 'web' as const : 'rag' as const,
