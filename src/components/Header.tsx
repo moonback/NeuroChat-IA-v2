@@ -188,32 +188,32 @@ const Logo = ({ onNewDiscussion, isOnline, quality }: {
   isOnline: boolean; 
   quality: 'excellent' | 'good' | 'poor';
 }) => (
-  <div className="flex items-center gap-3 cursor-pointer group" onClick={onNewDiscussion}>
+  <div className="flex items-center gap-2 sm:gap-3 cursor-pointer group" onClick={onNewDiscussion}>
     <div className="relative">
-      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 group-active:scale-95 relative overflow-hidden">
+      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 group-active:scale-95 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-2xl" />
-        <MessageCircle className="w-6 h-6 text-white relative z-10" />
+        <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white relative z-10" />
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-transparent via-transparent to-white/10 group-hover:to-white/20 transition-all duration-300" />
       </div>
       <StatusIndicator isOnline={isOnline} quality={quality} />
     </div>
-    <div className="hidden sm:block">
-      <h1 className="text-[1.4rem] sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-slate-900/90 via-slate-800/80 to-slate-600/70 dark:from-white dark:via-slate-100 dark:to-slate-300 bg-clip-text text-transparent flex items-center gap-2">
-        NeuroChat
-        <Sparkles className="w-5 h-5 text-yellow-500 animate-pulse" />
+    <div className="min-w-0 flex-1">
+      <h1 className="text-lg sm:text-[1.4rem] md:text-2xl font-bold tracking-tight bg-gradient-to-r from-slate-900/90 via-slate-800/80 to-slate-600/70 dark:from-white dark:via-slate-100 dark:to-slate-300 bg-clip-text text-transparent flex items-center gap-1 sm:gap-2">
+        <span className="truncate">NeuroChat</span>
+        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 animate-pulse flex-shrink-0" />
       </h1>
-      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+      <div className="hidden xs:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
         {isOnline ? (
           <>
             <div className="flex items-center gap-1">
               <Activity className="w-3 h-3" />
-              <span className="capitalize">{quality === 'excellent' ? 'Excellente' : quality === 'good' ? 'Bonne' : 'Faible'} connexion</span>
+              <span className="capitalize truncate">{quality === 'excellent' ? 'Excellente' : quality === 'good' ? 'Bonne' : 'Faible'} connexion</span>
             </div>
           </>
         ) : (
           <div className="flex items-center gap-1 text-red-500">
             <WifiOff className="w-3 h-3" />
-            Hors ligne
+            <span className="truncate">Hors ligne</span>
           </div>
         )}
       </div>
@@ -483,15 +483,16 @@ export function Header(props: HeaderProps) {
         <div className="max-w-12xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo et branding */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
               <Logo onNewDiscussion={onNewDiscussion} isOnline={isOnline} quality={connectionQuality} />
-              {/* Sélecteur d'espace de travail */}
+              
+              {/* Sélecteur d'espace de travail - Responsive */}
               {!props.modeEnfant && props.workspaces && props.onChangeWorkspace && (
-                <div className="hidden sm:flex items-center gap-1 bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60 rounded-xl px-2 py-1">
+                <div className="flex items-center gap-1 bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60 rounded-xl px-2 py-1 max-w-[200px] sm:max-w-none">
                   <select
                     value={props.workspaceId || 'default'}
                     onChange={(e) => props.onChangeWorkspace?.(e.target.value)}
-                    className="bg-transparent text-sm text-slate-700 dark:text-slate-300 focus:outline-none"
+                    className="bg-transparent text-xs sm:text-sm text-slate-700 dark:text-slate-300 focus:outline-none min-w-0 truncate"
                     title="Espace de travail"
                   >
                     {props.workspaces.map(ws => (
@@ -499,45 +500,45 @@ export function Header(props: HeaderProps) {
                     ))}
                   </select>
                   {props.onCreateWorkspace && (
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => props.onCreateWorkspace?.()} title="Créer un espace">
-                      <PlusCircle className="w-4 h-4" />
+                    <Button variant="ghost" size="sm" className="h-6 w-6 sm:h-7 sm:w-7 p-0 flex-shrink-0" onClick={() => props.onCreateWorkspace?.()} title="Créer un espace">
+                      <PlusCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>
                   )}
-                  {props.onRenameWorkspace && props.workspaceId && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0"
-                      onClick={() => {
-                        const current = props.workspaces!.find(w => w.id === (props.workspaceId || 'default'));
-                        const name = window.prompt('Renommer l\'espace', current?.name || '');
-                        if (name && name.trim()) props.onRenameWorkspace?.(props.workspaceId!, name.trim());
-                      }}
-                      title="Renommer l'espace"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                  )}
-                  {props.onDeleteWorkspace && props.workspaceId && props.workspaceId !== 'default' && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
-                      onClick={() => {
-                        const current = props.workspaces!.find(w => w.id === props.workspaceId);
-                        if (!current) return;
-                        const ok = window.confirm(`Supprimer l'espace "${current.name}" ?\nToutes les données locales de cet espace seront perdues.`);
-                        if (ok) props.onDeleteWorkspace?.(props.workspaceId!);
-                      }}
-                      title="Supprimer l'espace"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  )}
+                  <div className="hidden sm:flex items-center gap-1">
+                    {props.onRenameWorkspace && props.workspaceId && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0"
+                        onClick={() => {
+                          const current = props.workspaces!.find(w => w.id === (props.workspaceId || 'default'));
+                          const name = window.prompt('Renommer l\'espace', current?.name || '');
+                          if (name && name.trim()) props.onRenameWorkspace?.(props.workspaceId!, name.trim());
+                        }}
+                        title="Renommer l'espace"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {props.onDeleteWorkspace && props.workspaceId && props.workspaceId !== 'default' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                        onClick={() => {
+                          const current = props.workspaces!.find(w => w.id === props.workspaceId);
+                          if (!current) return;
+                          const ok = window.confirm(`Supprimer l'espace "${current.name}" ?\nToutes les données locales de cet espace seront perdues.`);
+                          if (ok) props.onDeleteWorkspace?.(props.workspaceId!);
+                        }}
+                        title="Supprimer l'espace"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
-
-              {/* Indicateurs compacts supprimés pour un header plus épuré */}
             </div>
 
             {/* Actions principales - Desktop */}
@@ -654,16 +655,53 @@ export function Header(props: HeaderProps) {
               )}
             </div>
 
-            {/* Bouton menu mobile amélioré */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowMobileMenu(true)}
-              className="md:hidden h-10 w-10 p-0 rounded-xl hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-all duration-200 hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-              aria-label="Ouvrir le menu"
-            >
-              <Menu className="w-5 h-5" />
-            </Button>
+            {/* Actions mobiles essentielles */}
+            <div className="flex items-center gap-2">
+              {/* Contrôles rapides mobile */}
+              <div className="md:hidden flex items-center gap-1">
+                {/* Bouton Nouveau - toujours visible */}
+                <IconButton onClick={onNewDiscussion} tooltip="Nouvelle discussion" className="h-9 w-9">
+                  <PlusCircle className="w-4 h-4" />
+                </IconButton>
+                
+                {/* Contrôle audio - toujours visible */}
+                <IconButton
+                  onClick={handleVolumeToggle}
+                  tooltip={muted ? 'Activer audio' : 'Désactiver audio'}
+                  active={!muted}
+                  className={`h-9 w-9 ${
+                    muted
+                      ? 'text-red-600 hover:bg-red-50/80 dark:hover:bg-red-950/50'
+                      : 'text-green-600 hover:bg-green-50/80 dark:hover:bg-green-950/50'
+                  }`}
+                >
+                  {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                </IconButton>
+                
+                {/* Mode vocal auto - visible si pas en mode enfant */}
+                {!props.modeEnfant && (
+                  <IconButton
+                    onClick={handleModeVocalToggle}
+                    tooltip="Mode vocal automatique"
+                    active={modeVocalAuto}
+                    className="h-9 w-9"
+                  >
+                    <Mic className="w-4 h-4" />
+                  </IconButton>
+                )}
+              </div>
+
+              {/* Bouton menu mobile amélioré */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowMobileMenu(true)}
+                className="md:hidden h-10 w-10 p-0 rounded-xl hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-all duration-200 hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                aria-label="Ouvrir le menu"
+              >
+                <Menu className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -673,7 +711,7 @@ export function Header(props: HeaderProps) {
 
       {/* Panneau latéral de réglages (Sheet) */}
       <Sheet open={showMobileMenu} onOpenChange={setShowMobileMenu}>
-        <SheetContent side="right" className="p-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-l border-slate-200/50 dark:border-slate-800/50 shadow-2xl w-[96vw] sm:w-[520px] md:w-[720px] lg:w-[920px]">
+        <SheetContent side="right" className="p-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-l border-slate-200/50 dark:border-slate-800/50 shadow-2xl w-[90vw] max-w-[400px] sm:w-[380px] md:w-[420px]">
           <SheetHeader className="sr-only">
             <SheetTitle>Menu options</SheetTitle>
           </SheetHeader>
@@ -700,7 +738,7 @@ export function Header(props: HeaderProps) {
                 <span className="text-[10px] opacity-70 ml-2">Créer et gérer</span>
               </div>
               <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-2">
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                 {!props.modeEnfant && (
                     <TileButton
                       onClick={handleMenuAction(handleModeVocalToggle)}
@@ -787,7 +825,7 @@ export function Header(props: HeaderProps) {
                 <span className="text-[10px] opacity-70 ml-2">Activer des contextes</span>
                       </div>
               <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-3">
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                   {!props.modeEnfant && (
                     <TileButton
                       onClick={handleMenuAction(handlePrivateModeToggle)}
@@ -841,7 +879,7 @@ export function Header(props: HeaderProps) {
                 <span className="text-[10px] opacity-70 ml-2">Personnaliser l’expérience</span>
                         </div>
               <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-3 mb-2">
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                   {!props.modeEnfant && (
                     <TileButton
                       onClick={handleMenuAction(onOpenTTSSettings)}
@@ -1089,7 +1127,7 @@ export function Header(props: HeaderProps) {
         }}
       />
 
-      {/* Styles CSS custom pour les animations */}
+      {/* Styles CSS custom pour les animations et responsive */}
       <style>{`
         @keyframes slide-down {
           from {
@@ -1123,6 +1161,13 @@ export function Header(props: HeaderProps) {
         
         .animate-pulse {
           animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        /* Breakpoint xs personnalisé pour très petits écrans */
+        @media (min-width: 475px) {
+          .xs\:flex {
+            display: flex;
+          }
         }
       `}</style>
     </>
