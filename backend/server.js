@@ -84,6 +84,7 @@ app.get('/api/ping', (_req, res) => {
   res.type('text/plain').send('pong');
 });
 
+
 // ==========================
 // Mémoire utilisateur (persistée côté serveur)
 // ==========================
