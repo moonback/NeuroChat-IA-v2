@@ -7,21 +7,12 @@ export interface MistralGenerationConfig {
 
 type ChatMessage = { text: string; isUser: boolean };
 
-function ensureApiKey(): string {
-  const key = import.meta.env.VITE_MISTRAL_API_KEY as string | undefined;
-  if (!key) {
-    throw new Error("Clé API Mistral introuvable. Ajoute VITE_MISTRAL_API_KEY dans .env.local.");
-  }
-  return key;
-}
-
 export async function sendMessageToMistral(
   messages: ChatMessage[],
   _images: File[] | undefined,
   systemPrompt: string,
   generationConfig?: MistralGenerationConfig,
 ): Promise<string> {
-  const apiKey = ensureApiKey();
   const model = (generationConfig?.model || (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest') as string;
 
   const mistralMessages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [];
@@ -40,11 +31,11 @@ export async function sendMessageToMistral(
     max_tokens: generationConfig?.max_tokens ?? 4096,
   };
 
-  const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) || '';
+  const res = await fetch(`${API_BASE}/api/mistral`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify(body),
   });
