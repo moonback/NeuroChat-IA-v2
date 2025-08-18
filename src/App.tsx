@@ -93,8 +93,8 @@ function App() {
         // Test d'auto-vérification du chiffrement
         const cryptoTest = await cryptoSelfTest();
         if (!cryptoTest) {
-          console.error('⚠️ Échec du test de chiffrement - Fonctionnalités de sécurité désactivées');
-          toast.error('Système de chiffrement non disponible - Évitez le mode privé');
+          // console.error('⚠️ Échec du test de chiffrement - Fonctionnalités de sécurité désactivées');
+          // toast.error('Système de chiffrement non disponible - Évitez le mode privé');
           return;
         }
         
@@ -103,30 +103,30 @@ function App() {
         initializeSecureMemory();
         initializeKeyManager();
         
-        // Le chiffrement est maintenant obligatoire - pas de diagnostic nécessaire
-        console.log('🔐 Initialisation du chiffrement obligatoire...');
+        // // Le chiffrement est maintenant obligatoire - pas de diagnostic nécessaire
+        // console.log('🔐 Initialisation du chiffrement obligatoire...');
         
         // Initialisation du chiffrement persistant pour mode normal
         const persistentInitialized = await initializePersistentEncryption();
         setPersistentEncryptionEnabled(persistentInitialized);
         
         if (persistentInitialized) {
-          console.log('✅ Chiffrement persistant activé avec succès');
-          toast.success('🔐 Chiffrement AES-256 activé', {
-            description: 'Vos conversations sont maintenant protégées par défaut',
-            duration: 3000,
-          });
+          // console.log('✅ Chiffrement persistant activé avec succès');
+          // toast.success('🔐 Chiffrement AES-256 activé', {
+          //   description: 'Vos conversations sont maintenant protégées par défaut',
+          //   duration: 3000,
+          // });
         } else {
-          console.error('❌ ÉCHEC CRITIQUE: Le chiffrement obligatoire n\'a pas pu être activé');
+          // console.error('❌ ÉCHEC CRITIQUE: Le chiffrement obligatoire n\'a pas pu être activé');
           toast.error('Erreur système critique', {
             description: 'Le chiffrement AES-256 obligatoire n\'a pas pu être initialisé',
             duration: 10000,
           });
         }
         
-        console.log('🔐 Système de sécurité AES-256 initialisé avec succès');
+        // console.log('🔐 Système de sécurité AES-256 initialisé avec succès');
       } catch (error) {
-        console.error('Erreur d\'initialisation de la sécurité:', error);
+        // console.error('Erreur d\'initialisation de la sécurité:', error);
         toast.error('Erreur lors de l\'initialisation du système de sécurité');
       }
     };
