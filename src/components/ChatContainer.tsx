@@ -493,20 +493,32 @@ export function ChatContainer({
                   <div className="p-6 bg-gradient-to-r from-red-50/80 to-purple-50/80 dark:from-red-950/40 dark:to-purple-950/40 rounded-2xl border border-red-200/50 dark:border-red-800/50">
                     <h4 className="font-black text-base text-red-800 dark:text-red-200 mb-3 flex items-center gap-2">
                       <Shield className="w-5 h-5" />
-                      Sécurité Active
+                      Protection Gouvernementale AES-256
                     </h4>
                     <div className="space-y-2 text-xs text-red-600 dark:text-red-400">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        Chiffrement AES-256 actif
+                        Chiffrement AES-256-GCM niveau militaire
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        Aucun log conservé
+                        PBKDF2 600,000 itérations (résistant force brute)
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        Auto-destruction programmée
+                        Authentification AEAD intégrée
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        Gestion sécurisée des clés en mémoire
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        Auto-destruction à la fermeture
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        Zéro persistance sur disque
                       </div>
                     </div>
                   </div>
@@ -938,10 +950,10 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
             {[
               { 
                 icon: Shield, 
-                title: "Chiffrement Militaire", 
-                desc: "Protection AES-256 de niveau gouvernemental", 
+                title: "Protection Gouvernementale", 
+                desc: "AES-256-GCM + PBKDF2 600k itérations + AEAD", 
                 color: "from-red-500 via-red-600 to-red-700",
-                detail: "🔐 AES-256",
+                detail: "🔐 MIL-GRADE",
                 bgGradient: "from-red-500/20 to-red-600/20"
               },
               { 

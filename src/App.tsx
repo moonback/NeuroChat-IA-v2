@@ -8,6 +8,11 @@ import type { MistralGenerationConfig } from '@/services/mistralApi';
 import { streamMessage, type LlmConfig } from '@/services/llm';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { toast } from 'sonner';
+// 🔐 Services de sécurité AES-256 niveau gouvernemental
+import { enableSecureStorage, disableSecureStorage, initializeSecureStorage } from '@/services/secureStorage';
+import { enablePrivateMode, disablePrivateMode, initializeSecureMemory } from '@/services/secureMemory';
+import { initializeKeyManager, shutdownKeyManager, getKeyManagerStats } from '@/services/keyManager';
+import { selfTest as cryptoSelfTest } from '@/services/encryption';
 // Lazy-loaded components pour réduire le bundle initial
 const TTSSettingsModalLazy = lazy(() => import('@/components/TTSSettingsModal').then(m => ({ default: m.TTSSettingsModal })));
 import { Header } from '@/components/Header';
@@ -70,6 +75,38 @@ type RagContextMessage = {
 // Similarité: vecteurs normalisés => cosinus = dot product
 
 function App() {
+  // 🔐 Initialisation du système de sécurité au démarrage
+  useEffect(() => {
+    const initializeSecurity = async () => {
+      try {
+        // Test d'auto-vérification du chiffrement
+        const cryptoTest = await cryptoSelfTest();
+        if (!cryptoTest) {
+          console.error('⚠️ Échec du test de chiffrement - Fonctionnalités de sécurité désactivées');
+          toast.error('Système de chiffrement non disponible - Évitez le mode privé');
+          return;
+        }
+        
+        // Initialisation des services de sécurité
+        initializeSecureStorage();
+        initializeSecureMemory();
+        initializeKeyManager();
+        
+        console.log('🔐 Système de sécurité AES-256 initialisé avec succès');
+      } catch (error) {
+        console.error('Erreur d\'initialisation de la sécurité:', error);
+        toast.error('Erreur lors de l\'initialisation du système de sécurité');
+      }
+    };
+    
+    initializeSecurity();
+    
+    // Nettoyage à la fermeture du composant
+    return () => {
+      shutdownKeyManager();
+    };
+  }, []);
+
   // --- Espaces de travail via hooks ---
   const { workspaceId, setWorkspaceId, workspaces, createWorkspace, renameWorkspace, deleteWorkspace, wsKey } = useWorkspace();
   const { open: workspaceOpeningOpen, setOpen: setWorkspaceOpeningOpen, name: workspaceOpeningName } = useWorkspaceOpeningModal(workspaceId, workspaces);
@@ -235,15 +272,60 @@ function App() {
   const [showChildChangePinDialog, setShowChildChangePinDialog] = useState<boolean>(false);
   // --- Timeline de raisonnement ---
   // Timeline retirée
-  // Affichage d'un toast d'avertissement lors de l'activation
+  // 🔐 Gestion du mode privé avec chiffrement AES-256
   useEffect(() => {
-    if (modePrive) {
-      // toast.warning('Mode privé activé : les messages ne seront pas sauvegardés et seront effacés à la fermeture.');
-    }
-    // Exposer l'état pour d'autres services (ex: memoryExtractor)
-    try {
-      localStorage.setItem('mode_prive', modePrive ? 'true' : 'false');
-    } catch {}
+    const handlePrivateModeChange = async () => {
+      if (modePrive) {
+        try {
+          // Activation du mode privé sécurisé
+          enableSecureStorage();
+          enablePrivateMode();
+          
+          // Effacer les messages actuels pour sécurité
+          setMessages([]);
+          setUsedRagDocs([]);
+          setUsedWebSources([]);
+          
+          // Toast de confirmation avec détails de sécurité
+          toast.success('🔐 Mode Privé Ultra-Sécurisé Activé', {
+            description: 'Protection AES-256 • Auto-destruction • Zéro persistance',
+            duration: 3000,
+          });
+          
+          // Afficher les stats de sécurité
+          const keyStats = getKeyManagerStats();
+          if (keyStats) {
+            console.log('🔐 Statistiques de sécurité:', keyStats);
+          }
+          
+        } catch (error) {
+          console.error('Erreur activation mode privé:', error);
+          toast.error('Échec de l\'activation du mode privé sécurisé');
+          setModePrive(false); // Revenir en mode normal
+        }
+      } else {
+        try {
+          // Désactivation du mode privé
+          disablePrivateMode();
+          disableSecureStorage();
+          
+          toast.info('🔓 Mode Privé Désactivé', {
+            description: 'Toutes les données temporaires ont été détruites',
+            duration: 2000,
+          });
+          
+        } catch (error) {
+          console.error('Erreur désactivation mode privé:', error);
+        }
+      }
+      
+      // Exposer l'état pour d'autres services (ex: memoryExtractor)
+      try {
+        localStorage.setItem('mode_prive', modePrive ? 'true' : 'false');
+      } catch {}
+    };
+    
+    handlePrivateModeChange();
   }, [modePrive]);
 
   // Persistance du mode enfant
