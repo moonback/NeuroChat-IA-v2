@@ -232,70 +232,7 @@ export function clearPersistentCache(): void {
 // UTILITAIRES DE MIGRATION ET MAINTENANCE
 // ========================================================================================
 
-/**
- * Déchiffre toutes les données chiffrées vers le format normal
- * @param password - Mot de passe de déchiffrement
- */
-async function decryptAllPersistentData(password: string): Promise<void> {
-  console.log('🔄 Migration des données chiffrées vers format normal...');
-  
-  const keysToMigrate: string[] = [];
-  
-  // Identifier toutes les clés chiffrées
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key) {
-      const value = localStorage.getItem(key);
-      if (value && value.startsWith(PERSISTENT_ENCRYPTED_PREFIX)) {
-        keysToMigrate.push(key);
-      }
-    }
-  }
-  
-  let migratedCount = 0;
-  
-  // Déchiffrer et reconvertir chaque clé
-  for (const key of keysToMigrate) {
-    try {
-      const encryptedData = localStorage.getItem(key);
-      if (encryptedData) {
-        const encryptedBlob = JSON.parse(encryptedData.slice(PERSISTENT_ENCRYPTED_PREFIX.length));
-        const decryptedData = await decrypt(encryptedBlob, password);
-        
-        // Sauvegarder en format normal
-        localStorage.setItem(key, decryptedData);
-        migratedCount++;
-      }
-    } catch (error) {
-      console.error(`Erreur migration clé ${key}:`, error);
-    }
-  }
-  
-  console.log(`✅ Migration terminée: ${migratedCount} clés déchiffrées`);
-}
-
-/**
- * Supprime toutes les données chiffrées
- */
-function clearAllEncryptedData(): void {
-  console.log('🗑️ Suppression des données chiffrées...');
-  
-  const keysToDelete: string[] = [];
-  
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key) {
-      const value = localStorage.getItem(key);
-      if (value && value.startsWith(PERSISTENT_ENCRYPTED_PREFIX)) {
-        keysToDelete.push(key);
-      }
-    }
-  }
-  
-  keysToDelete.forEach(key => localStorage.removeItem(key));
-  
-  console.log(`🗑️ Suppression terminée: ${keysToDelete.length} clés supprimées`);
-}
+// ⚠️ FONCTIONS SUPPRIMÉES: Plus nécessaires avec le chiffrement permanent
 
 /**
  * Obtient les statistiques du chiffrement persistant

@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Shield, Lock, Activity, Eye, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Shield, Activity, Eye, AlertTriangle, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
