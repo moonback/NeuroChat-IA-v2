@@ -317,6 +317,58 @@ Règles:
   }
 }
 
+// Version avec mode soft pour éviter les erreurs fatales
+export async function extractFactsLLMSoft(text: string): Promise<ExtractedFact[]> {
+  if (!text || text.trim().length < 10) return [];
+  
+  const system = `Tu es un extracteur de faits personnels. Analyse le texte et extrait UNIQUEMENT les informations factuelles importantes sur l'utilisateur.
+
+Règles strictes :
+- Extrais seulement les faits personnels concrets (identité, préférences, objectifs, contraintes, travail, etc.)
+- Ignore les questions, demandes d'aide, conversations générales
+- Chaque fait doit être une information durable et réutilisable
+- Format JSON strict : [{"content": "fait", "category": "identity|preferences|goals|constraints|work|personal|schedule|health|contact|skills|relationships", "importance": 1-5, "confidence": 0.0-1.0, "tags": ["tag1", "tag2"]}]
+- Maximum 10 faits par analyse
+- Si aucun fait personnel détecté, retourne []`;
+
+  try {
+    if (localStorage.getItem('mode_prive') === 'true') return [];
+    
+    const stored = (localStorage.getItem('llm_provider') as 'gemini' | 'openai' | 'mistral') || 'gemini';
+    const llmConfig: LlmConfig = {
+      provider: stored,
+      gemini: { temperature: 0.2, maxOutputTokens: 2048, topK: 20, topP: 0.8 },
+      openai: { temperature: 0.2, top_p: 0.8, max_tokens: 2048, model: 'gpt-4o-mini' },
+      mistral: { temperature: 0.2, top_p: 0.8, max_tokens: 2048, model: 'mistral-small-latest' },
+    };
+    
+    const response = await sendMessage(llmConfig, [{ text, isUser: true }], undefined, system, { soft: true });
+    if (!response || response.trim().length === 0) {
+      console.warn('Réponse vide de l\'API pour l\'extraction de faits');
+      return [];
+    }
+    
+    const parsed = JSON.parse(response.trim());
+    
+    if (!Array.isArray(parsed)) return [];
+    
+    return parsed.map((fact: any) => ({
+      content: String(fact.content || '').trim(),
+      context: String(fact.content || '').trim(),
+      category: fact.category || 'personal',
+      importance: Math.min(5, Math.max(1, Number(fact.importance) || 3)),
+      confidence: Math.min(1, Math.max(0, Number(fact.confidence) || 0.7)),
+      tags: Array.isArray(fact.tags) ? fact.tags.slice(0, 5) : [],
+      source: 'llm' as MemorySource,
+      timestamp: new Date()
+    })).filter((f: ExtractedFact) => f.content.length > 5);
+    
+  } catch (error) {
+    console.warn('Erreur extraction LLM (mode soft):', error);
+    return [];
+  }
+}
+
 // Résumé contextuel du profil utilisateur
 export async function summarizeUserProfileLLM(messages: string[], maxChars = 800): Promise<string> {
   if (!messages || messages.length === 0) return '';
@@ -354,6 +406,76 @@ Règles:
   } catch (error) {
     console.warn('Erreur résumé profil:', error);
     return '';
+  }
+}
+
+// =====================
+// SYSTÈME DE RÉSUMÉ AUTOMATIQUE
+// =====================
+
+// Génère un résumé automatique des derniers messages
+export async function generateConversationSummary(messages: string[], maxChars = 600): Promise<string> {
+  if (!messages || messages.length === 0) return '';
+  
+  const system = `Tu es un assistant spécialisé dans la création de résumés de conversation. Analyse les messages fournis et crée un résumé structuré qui capture les informations importantes.
+
+Structure attendue:
+• **Sujets principaux**: Les thèmes abordés
+• **Informations clés**: Faits importants, décisions, conclusions
+• **Actions**: Ce qui a été fait ou planifié
+• **Contexte**: Éléments de contexte pertinents
+
+Règles:
+- Maximum ${maxChars} caractères
+- Style concis mais informatif
+- Capture l'essentiel sans détails superflus
+- Préserve les informations importantes pour la suite de la conversation`;
+
+  const conversationText = messages.join('\n\n');
+  
+  try {
+    if (localStorage.getItem('mode_prive') === 'true') return '';
+    
+    const stored = (localStorage.getItem('llm_provider') as 'gemini' | 'openai' | 'mistral') || 'gemini';
+    const llmConfig: LlmConfig = {
+      provider: stored,
+      gemini: { temperature: 0.3, maxOutputTokens: 1024, topK: 30, topP: 0.9 },
+      openai: { temperature: 0.3, top_p: 0.9, max_tokens: 1024, model: 'gpt-4o-mini' },
+      mistral: { temperature: 0.3, top_p: 0.9, max_tokens: 1024, model: 'mistral-small-latest' },
+    };
+    
+    const response = await sendMessage(llmConfig, [{ text: conversationText, isUser: true }], undefined, system, { soft: true });
+    if (!response || response.trim().length === 0) {
+      console.warn('Réponse vide de l\'API pour le résumé');
+      return '';
+    }
+    return response.trim().slice(0, maxChars);
+    
+  } catch (error) {
+    console.warn('Erreur génération résumé:', error);
+    return '';
+  }
+}
+
+// Extrait les informations importantes des derniers messages
+export async function extractImportantInfo(messages: string[]): Promise<ExtractedFact[]> {
+  if (!messages || messages.length === 0) return [];
+  
+  const conversationText = messages.join('\n\n');
+  
+  try {
+    // Utiliser l'extraction LLM existante avec mode soft
+    const facts = await extractFactsLLMSoft(conversationText);
+    
+    // Filtrer pour ne garder que les faits les plus importants
+    return facts
+      .filter(fact => (fact.importance || 3) >= 3 && (fact.confidence || 0.7) >= 0.6)
+      .sort((a, b) => (b.importance || 3) - (a.importance || 3))
+      .slice(0, 5); // Maximum 5 faits importants
+      
+  } catch (error) {
+    console.warn('Erreur extraction faits importants:', error);
+    return [];
   }
 }
 

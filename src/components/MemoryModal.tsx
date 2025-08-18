@@ -15,6 +15,8 @@ interface MemoryModalProps {
 
 export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
   const [items, setItems] = useState<MemoryItem[]>([]);
+  const [summaries, setSummaries] = useState<MemoryItem[]>([]);
+  const [activeTab, setActiveTab] = useState<'facts' | 'summaries'>('facts');
   const [query, setQuery] = useState('');
   const [newContent, setNewContent] = useState('');
   const [newTags, setNewTags] = useState('');
@@ -29,12 +31,21 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
 
   useEffect(() => {
     if (open) {
-      setItems(loadMemory());
+      refresh();
     }
   }, [open]);
 
+  function refresh() {
+    const memory = loadMemory();
+    const factItems = memory.filter(item => !item.tags?.includes('résumé-auto'));
+    const summaryItems = memory.filter(item => item.tags?.includes('résumé-auto'));
+    setItems(factItems);
+    setSummaries(summaryItems);
+  }
+
   const filtered = useMemo(() => {
-    let result = items;
+    const currentItems = activeTab === 'facts' ? items : summaries;
+    let result = currentItems;
     
     // Filtrage par recherche
     if (query.trim()) {
@@ -62,7 +73,7 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
     });
     
     return result;
-  }, [items, query, sortBy]);
+  }, [items, summaries, query, sortBy, activeTab]);
 
   // Pagination
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
@@ -72,11 +83,7 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
   // Réinitialiser la page lors du changement de filtre
   useEffect(() => {
     setCurrentPage(1);
-  }, [query, sortBy]);
-
-  function refresh() {
-    setItems(loadMemory());
-  }
+  }, [query, sortBy, activeTab]);
 
   function handleAdd() {
     if (!newContent.trim()) return;
@@ -146,13 +153,31 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
               <X className="w-6 h-6" />
             </button>
           </div>
+          
+          {/* Onglets */}
+          <div className="flex gap-2 mt-4">
+            <Button
+              variant={activeTab === 'facts' ? 'default' : 'outline'}
+              onClick={() => { setActiveTab('facts'); setCurrentPage(1); }}
+              className="flex-1"
+            >
+              Faits ({items.length})
+            </Button>
+            <Button
+              variant={activeTab === 'summaries' ? 'default' : 'outline'}
+              onClick={() => { setActiveTab('summaries'); setCurrentPage(1); }}
+              className="flex-1"
+            >
+              Résumés automatiques ({summaries.length})
+            </Button>
+          </div>
         </DrawerHeader>
 
         <div className="flex-1 overflow-auto p-6 space-y-4">
           <div className="flex flex-col gap-3">
             <div className="flex flex-col sm:flex-row gap-2">
               <Input 
-                placeholder="Rechercher (texte ou tag)…" 
+                placeholder={activeTab === 'facts' ? "Rechercher dans les faits..." : "Rechercher dans les résumés..."}
                 value={query} 
                 onChange={(e) => setQuery(e.target.value)} 
                 className="flex-1"
@@ -203,23 +228,26 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
             </div>
           </div>
 
-          <div className="p-3 border rounded-xl bg-slate-50 dark:bg-slate-900/40">
-            <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-              <Textarea
-                className="sm:col-span-3"
-                placeholder="Ajouter un fait important (ex: Je vis à Lyon; J’aime le tennis…)"
-                value={newContent}
-                onChange={(e) => setNewContent(e.target.value)}
-              />
-              <Input className="sm:col-span-1" placeholder="Tags (séparés par ,)" value={newTags} onChange={(e) => setNewTags(e.target.value)} />
-              <div className="sm:col-span-1 flex items-center gap-2">
-                <Input type="number" min={1} max={5} value={newImportance} onChange={(e) => setNewImportance(Number(e.target.value) || 3)} />
-                <Button onClick={handleAdd}>
-                  <Plus className="w-4 h-4 mr-1" /> Ajouter
-                </Button>
+          {/* Formulaire d'ajout - seulement pour les faits */}
+          {activeTab === 'facts' && (
+            <div className="p-3 border rounded-xl bg-slate-50 dark:bg-slate-900/40">
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+                <Textarea
+                  className="sm:col-span-3"
+                  placeholder="Ajouter un fait important (ex: Je vis à Lyon; J'aime le tennis…)"
+                  value={newContent}
+                  onChange={(e) => setNewContent(e.target.value)}
+                />
+                <Input className="sm:col-span-1" placeholder="Tags (séparés par ,)" value={newTags} onChange={(e) => setNewTags(e.target.value)} />
+                <div className="sm:col-span-1 flex items-center gap-2">
+                  <Input type="number" min={1} max={5} value={newImportance} onChange={(e) => setNewImportance(Number(e.target.value) || 3)} />
+                  <Button onClick={handleAdd}>
+                    <Plus className="w-4 h-4 mr-1" /> Ajouter
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -250,7 +278,7 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
                 </div>
               )}
             </div>
-            {items.length > 0 && (
+            {(activeTab === 'facts' ? items : summaries).length > 0 && (
               <Button variant="destructive" onClick={() => { clearAllMemory(); refresh(); }}>
                 <Trash2 className="w-4 h-4 mr-2" /> Tout effacer
               </Button>
@@ -261,7 +289,11 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
             {paginatedItems.map((m) => (
               <div
                 key={m.id}
-                className="p-4 border border-slate-200 dark:border-slate-800 rounded-xl flex items-start gap-3 bg-white/80 dark:bg-slate-900/60 shadow-sm hover:shadow-md transition-shadow"
+                className={`p-4 border rounded-xl flex items-start gap-3 shadow-sm hover:shadow-md transition-shadow ${
+                  activeTab === 'summaries' 
+                    ? 'border-blue-200 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-900/20' 
+                    : 'border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/60'
+                }`}
               >
                 <div className="mt-1">
                   {m.disabled ? <ToggleLeft className="w-5 h-5 text-slate-400" /> : <ToggleRight className="w-5 h-5 text-emerald-500" />}
@@ -291,7 +323,15 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
                         <div className="flex flex-wrap gap-1">
                           {(m.tags || []).length > 0 ? (
                             (m.tags || []).map((t) => (
-                              <Badge key={t} variant="secondary" className="text-[10px] py-0.5 px-1.5">{t}</Badge>
+                              <Badge 
+                                key={t} 
+                                variant={t === 'résumé-auto' ? 'default' : 'secondary'} 
+                                className={`text-[10px] py-0.5 px-1.5 ${
+                                  t === 'résumé-auto' ? 'bg-blue-500 text-white' : ''
+                                }`}
+                              >
+                                {t}
+                              </Badge>
                             ))
                           ) : (
                             <span className="text-xs text-slate-500">—</span>
@@ -304,7 +344,7 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  {editingId !== m.id && (
+                  {editingId !== m.id && activeTab === 'facts' && (
                     <Button size="sm" variant="outline" onClick={() => handleStartEdit(m)} title="Modifier"><Edit3 className="w-4 h-4" /></Button>
                   )}
                   <Button size="sm" variant="outline" onClick={() => handleToggle(m.id, !!m.disabled)} title={m.disabled ? 'Activer' : 'Désactiver'}>
@@ -316,7 +356,10 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
             ))}
             {paginatedItems.length === 0 && (
               <div className="text-sm text-slate-500 text-center py-10">
-                {filtered.length === 0 ? 'Aucun élément de mémoire' : 'Aucun résultat sur cette page'}
+                {filtered.length === 0 ? 
+                  (activeTab === 'facts' ? 'Aucun fait mémorisé' : 'Aucun résumé automatique généré') : 
+                  'Aucun résultat sur cette page'
+                }
               </div>
             )}
           </div>

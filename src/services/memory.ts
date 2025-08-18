@@ -315,6 +315,54 @@ export function upsertMany(facts: Array<{ content: string; tags?: string[]; impo
   return results;
 }
 
+// =====================
+// SYSTÈME DE RÉSUMÉ AUTOMATIQUE
+// =====================
+
+// Ajoute un résumé de conversation à la mémoire
+export function addConversationSummary(summary: string, messageCount: number): MemoryItem {
+  const now = new Date().toISOString();
+  const item: MemoryItem = {
+    id: `summary-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    content: summary,
+    tags: ['résumé', 'conversation', `${messageCount}-messages`],
+    importance: 4, // Importance élevée pour les résumés
+    createdAt: now,
+    updatedAt: now,
+    source: 'system',
+    disabled: false,
+  };
+  
+  const list = loadMemory();
+  list.push(item);
+  saveMemory(list);
+  return item;
+}
+
+// Récupère les résumés de conversation récents
+export function getRecentSummaries(limit = 3): MemoryItem[] {
+  const memories = loadMemory();
+  return memories
+    .filter(m => !m.disabled && m.tags?.includes('résumé'))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, limit);
+}
+
+// Nettoie les anciens résumés (garde seulement les 10 plus récents)
+export function cleanupOldSummaries(): void {
+  const memories = loadMemory();
+  const summaries = memories.filter(m => m.tags?.includes('résumé'));
+  
+  if (summaries.length > 10) {
+    // Trier par date de création et garder les 10 plus récents
+    const sorted = summaries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const toDelete = sorted.slice(10); // Supprimer les anciens
+    
+    const updatedMemories = memories.filter(m => !toDelete.some(d => d.id === m.id));
+    saveMemory(updatedMemories);
+  }
+}
+
 export function countActiveMemories(): number {
   return loadMemory().filter((m) => !m.disabled).length;
 }

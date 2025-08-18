@@ -19,8 +19,8 @@ const MemoryModalLazy = lazy(() => import('@/components/MemoryModal').then(m => 
 import type { DiscussionWithCategory } from '@/components/HistoryModal';
 
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
-import { getRelevantMemories, upsertMany, buildMemorySummary, addMemory, deleteMemory, loadMemory } from '@/services/memory';
-import { extractFactsFromText, extractFactsLLM } from '@/services/memoryExtractor';
+import { getRelevantMemories, upsertMany, buildMemorySummary, addMemory, deleteMemory, loadMemory, addConversationSummary, cleanupOldSummaries } from '@/services/memory';
+import { extractFactsFromText, extractFactsLLM, generateConversationSummary, extractImportantInfo } from '@/services/memoryExtractor';
 const GeminiSettingsDrawerLazy = lazy(() => import('@/components/GeminiSettingsDrawer').then(m => ({ default: m.GeminiSettingsDrawer })));
 const OpenAISettingsDrawerLazy = lazy(() => import('@/components/OpenAISettingsDrawer').then(m => ({ default: m.OpenAISettingsDrawer })));
 const MistralSettingsDrawerLazy = lazy(() => import('@/components/MistralSettingsDrawer').then(m => ({ default: m.MistralSettingsDrawer })));
@@ -724,6 +724,58 @@ ${lines.join('\n')}`, false);
         setMessages(prev => prev.map(m => m.id === newMessage.id ? { ...m, memoryFactsCount: userFacts.length } : m));
       }
     } catch {}
+
+    // Système de résumé automatique tous les 5 messages
+    try {
+      if (!modePrive && !modeEnfant) {
+        const currentMessageCount = messages.length + 1; // +1 pour le nouveau message
+        
+        // Vérifier si on doit générer un résumé (tous les 5 messages)
+        if (currentMessageCount > 0 && currentMessageCount % 5 === 0) {
+          console.log(`[Résumé Auto] Génération d'un résumé après ${currentMessageCount} messages`);
+          
+          // Récupérer les 5 derniers messages pour le résumé
+          const recentMessages = [...messages, newMessage]
+            .slice(-5)
+            .filter(m => typeof m.text === 'string' && m.text.trim().length > 0)
+            .map(m => `${m.isUser ? 'Utilisateur' : 'Assistant'}: ${m.text}`);
+          
+          if (recentMessages.length >= 3) { // Au moins 3 messages pour faire un résumé
+            // Générer le résumé
+            const summary = await generateConversationSummary(recentMessages, 600);
+            
+            if (summary && summary.trim().length > 50) {
+              // Ajouter le résumé à la mémoire
+               addConversationSummary(summary, recentMessages.length);
+               
+               // Extraire les informations importantes des derniers messages
+               const importantFacts = await extractImportantInfo(recentMessages);
+               if (importantFacts.length > 0) {
+                 upsertMany(importantFacts.map(f => ({
+                   content: f.content,
+                   tags: [...(f.tags || []), 'auto-extrait'],
+                   importance: f.importance || 4,
+                   source: 'system' as const
+                 })));
+               }
+               
+               // Nettoyer les anciens résumés
+               cleanupOldSummaries();
+               
+               // Notification à l'utilisateur
+               toast.success(`🧠 Résumé automatique généré ! ${importantFacts.length} informations importantes extraites.`, {
+                 duration: 4000,
+                 description: 'La conversation a été résumée et les informations clés sauvegardées en mémoire.'
+               });
+               
+               console.log(`[Résumé Auto] Résumé généré et ${importantFacts.length} faits importants extraits`);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('[Résumé Auto] Erreur lors de la génération du résumé:', error);
+    }
     setIsLoading(true);
     try {
       // On prépare l'historique complet (y compris le message utilisateur tout juste ajouté)

@@ -57,7 +57,11 @@ export async function sendMessage(
       continue;
     }
   }
-  // Si tous les providers ont échoué, relancer la dernière erreur
+  // Si tous les providers ont échoué
+  if (options?.soft) {
+    console.warn('Tous les fournisseurs LLM ont échoué (mode soft):', lastError);
+    return '';
+  }
   throw lastError instanceof Error ? lastError : new Error('Tous les fournisseurs LLM ont échoué');
 }
 
