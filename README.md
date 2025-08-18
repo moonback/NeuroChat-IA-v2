@@ -2,16 +2,16 @@
 
 > Assistant IA moderne (React + TypeScript) avec voix, images, mémoire utilisateur, RAG local, mode privé et mode enfant — propulsé par Gemini, OpenAI et Mistral.
 
+[![Build](https://github.com/moonback/NeuroChat-IA-v2/actions/workflows/ci.yml/badge.svg)](https://github.com/moonback/NeuroChat-IA-v2/actions)
 [![Version](https://img.shields.io/badge/version-2.2.0-blue.svg)](./README.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
-[![Build](https://github.com/moonback/NeuroChat-IA-v2/actions/workflows/ci.yml/badge.svg)](https://github.com/moonback/NeuroChat-IA-v2/actions)
 [![React](https://img.shields.io/badge/react-18.3.1-61dafb.svg)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/typescript-5.5.3-3178c6.svg)](https://www.typescriptlang.org/)
 [![Security](https://img.shields.io/badge/security-AES--256%20Encrypted-red.svg)](./README.md)
 [![Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://chat-gemini-coral.vercel.app)
+[![Deploy](https://img.shields.io/badge/deploy-Vercel-black.svg)](https://vercel.com/)
 [![Stars](https://img.shields.io/github/stars/moonback/NeuroChat-IA-v2.svg?style=social)](https://github.com/moonback/NeuroChat-IA-v2)
 [![Contributors](https://img.shields.io/github/contributors/moonback/NeuroChat-IA-v2.svg)](https://github.com/moonback/NeuroChat-IA-v2/graphs/contributors)
-[![Deploy](https://img.shields.io/badge/deploy-Vercel-black.svg)](https://vercel.com/)
 
 <div align="center">
 
@@ -380,28 +380,4 @@ git push origin feature/ma-nouvelle-fonctionnalite
 Projet sous licence MIT — voir `LICENSE`.
 
 
-## 📞 Support
 
-- Ouvrez une issue sur le dépôt GitHub
-
-
----
-
-### 🔖 Badges suggérés (à placer en haut)
-
-```md
-[![Build](https://github.com/moonback/NeuroChat-IA-v2/actions/workflows/ci.yml/badge.svg)](https://github.com/moonback/NeuroChat-IA-v2/actions)
-[![Version](https://img.shields.io/badge/version-2.2.0-blue.svg)](./README.md)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
-[![React](https://img.shields.io/badge/react-18.3.1-61dafb.svg)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/typescript-5.5.3-3178c6.svg)](https://www.typescriptlang.org/)
-[![Security](https://img.shields.io/badge/security-AES--256%20Encrypted-red.svg)](./README.md)
-[![Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://chat-gemini-coral.vercel.app)
-[![Deploy](https://img.shields.io/badge/deploy-Vercel-black.svg)](https://vercel.com/)
-[![Stars](https://img.shields.io/github/stars/moonback/NeuroChat-IA-v2.svg?style=social)](https://github.com/moonback/NeuroChat-IA-v2)
-[![Contributors](https://img.shields.io/github/contributors/moonback/NeuroChat-IA-v2.svg)](https://github.com/moonback/NeuroChat-IA-v2/graphs/contributors)
-```
-
-Liens utiles: dépôt GitHub `moonback/NeuroChat-IA-v2` et démo hébergée sur Vercel.
-
- 
