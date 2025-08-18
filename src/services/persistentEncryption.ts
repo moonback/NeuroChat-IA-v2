@@ -87,7 +87,8 @@ export async function initializePersistentEncryption(userPassword?: string): Pro
     // Le chiffrement est maintenant OBLIGATOIRE - toujours activé
     if (isEnabled !== 'true') {
       console.log('🔐 Activation obligatoire du chiffrement AES-256');
-      return await enablePersistentEncryption(); // Force l'activation
+      await enablePersistentEncryption(); // Force l'activation
+      return true; // Retourner true car l'activation a réussi
     }
     
     // Tenter de récupérer le mot de passe stocké
