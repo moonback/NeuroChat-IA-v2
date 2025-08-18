@@ -8,7 +8,7 @@
  * - Audit trail des accès
  */
 
-import { generateSecurePassword, encrypt, decrypt, clearKeyCache } from './encryption';
+import { generateSecurePassword, clearKeyCache } from './encryption';
 
 // ========================================================================================
 // CONFIGURATION DE SÉCURITÉ DES CLÉS
@@ -240,9 +240,8 @@ class SecureKeyRegistry {
       // La valeur de la clé dérivée est basée sur la clé parente + purpose
       const derivedKey = this.keys.get(derivedKeyId);
       if (derivedKey) {
-        // Dérivation simple basée sur hash (en production, utiliser HKDF)
-        const combined = parentKey.value + purpose + Date.now();
-        derivedKey.value = generateSecurePassword(derivedKey.value.length);
+              // Dérivation simple basée sur hash (en production, utiliser HKDF)
+      derivedKey.value = generateSecurePassword(derivedKey.value.length);
       }
       
       return derivedKeyId;

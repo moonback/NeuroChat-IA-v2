@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Shield, Lock, Key, Activity, Zap, Eye, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Shield, Lock, Activity, Eye, AlertTriangle, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,8 +18,6 @@ import { getKeyManagerStats, getKeyAuditTrail } from '@/services/keyManager';
 import { getCryptoStats } from '@/services/encryption';
 
 interface SecurityStatusIndicatorProps {
-  /** Position de l'indicateur */
-  position?: 'header' | 'sidebar' | 'modal';
   /** Affichage compact ou détaillé */
   compact?: boolean;
   /** Callback lors de clic sur l'indicateur */
@@ -40,7 +38,6 @@ interface SecurityMetrics {
  * Composant principal d'indicateur de sécurité
  */
 export const SecurityStatusIndicator: React.FC<SecurityStatusIndicatorProps> = ({
-  position = 'header',
   compact = false,
   onClick
 }) => {

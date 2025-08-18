@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Shield, Key, Lock, Eye, EyeOff, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { Shield, Lock, Eye, EyeOff, CheckCircle, AlertTriangle, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface EncryptionSetupModalProps {
