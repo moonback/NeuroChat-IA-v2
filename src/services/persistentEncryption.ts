@@ -352,12 +352,14 @@ export async function forceEnablePersistentEncryption(): Promise<boolean> {
   console.log('🔧 Activation forcée du chiffrement AES-256...');
   try {
     const result = await enablePersistentEncryption();
-    if (result) {
+    // result est une string (le mot de passe), pas un boolean
+    if (result && result.length > 0) {
       console.log('✅ Chiffrement forcé activé avec succès');
+      return true;
     } else {
       console.error('❌ Échec de l\'activation forcée');
+      return false;
     }
-    return result;
   } catch (error) {
     console.error('❌ Erreur lors de l\'activation forcée:', error);
     return false;
