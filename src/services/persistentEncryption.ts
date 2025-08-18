@@ -316,13 +316,13 @@ export async function changePersistentPassword(currentPassword: string, newPassw
  * Diagnostique l'état du chiffrement persistant pour débogage
  */
 export function diagnosePersistentEncryption(): {
-  enabled: string | null;
+  enabled: boolean;
   hasPassword: boolean;
   hasDerivationKey: boolean;
   hasEncryptedData: boolean;
   encryptedDataCount: number;
 } {
-  const enabled = localStorage.getItem(ENCRYPTION_ENABLED_KEY);
+  const enabled = localStorage.getItem(ENCRYPTION_ENABLED_KEY) === 'true';
   const hasPassword = !!localStorage.getItem(MASTER_PASSWORD_KEY);
   const hasDerivationKey = !!localStorage.getItem('nc_derivation_key');
   
