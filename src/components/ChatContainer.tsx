@@ -1,11 +1,555 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+// Composant principal amélioré avec design ultra-moderne
+export function ChatContainer({ 
+  messages, 
+  isLoading, 
+  onEditMessage, 
+  onDeleteMessage, 
+  onReplyToMessage, 
+  selectMode = false, 
+  selectedMessageIds = [], 
+  onSelectMessage, 
+  modePrive = false, 
+  modeEnfant = false 
+}: ChatContainerProps) {
+  // Éviter les warnings pour les paramètres non utilisés dans cette version
+  void selectedMessageIds;
+  void onSelectMessage;
+  
+  const {
+    virtuosoRef,
+    showScrollButton,
+    scrollProgress,
+    handleAtBottomChange,
+    handleRangeChange,
+    scrollToBottom,
+    scrollToTop
+  } = useSmartScroll(messages, isLoading);
+
+  const [showAllPassages, setShowAllPassages] = useState<{ [id: string]: boolean }>({});
+  const [showChatInfo, setShowChatInfo] = useState(false);
+  const [ragFilter, setRagFilter] = useState<'all' | 'messages' | 'rag'>('all');
+  const [headerHovered, setHeaderHovered] = useState(false);
+
+  const togglePassagesVisibility = useCallback((id: string) => {
+    setShowAllPassages(prev => ({ ...prev, [id]: !prev[id] }));
+  }, []);
+
+  const handleShowChatInfo = useCallback(() => setShowChatInfo(true), []);
+  const handleCloseChatInfo = useCallback(() => setShowChatInfo(false), []);
+
+  // Filtrer les messages selon le filtre RAG
+  const filteredMessages = messages.filter(msg => {
+    if (ragFilter === 'all') return true;
+    if (ragFilter === 'rag') return (msg as RagContextMessage).isRagContext;
+    return !(msg as RagContextMessage).isRagContext;
+  });
+
+  return (
+    <div
+      className={cn(
+        "flex-1 relative transition-all duration-700 group",
+        modePrive 
+          ? "bg-gradient-to-br from-red-50/40 via-purple-50/50 to-blue-50/40 dark:from-red-950/30 dark:via-purple-950/40 dark:to-blue-950/30" 
+          : modeEnfant
+          ? "bg-gradient-to-br from-pink-50/50 via-yellow-50/60 to-orange-50/50 dark:from-pink-950/30 dark:via-yellow-950/40 dark:to-orange-950/30"
+          : "bg-gradient-to-br from-slate-50/70 via-white/90 to-blue-50/50 dark:from-slate-900/70 dark:via-slate-900/90 dark:to-slate-800/50",
+        "backdrop-blur-2xl"
+      )}
+      style={{ minHeight: '0', height: '100%', maxHeight: '100vh' }}
+    >
+      {/* Effets de particules globaux */}
+      <FloatingParticles 
+        count={modePrive ? 8 : modeEnfant ? 12 : 6} 
+        mode={modePrive ? 'prive' : modeEnfant ? 'enfant' : 'normal'} 
+      />
+      
+      <div className="flex-1 h-full p-3 sm:p-6 pb-28">
+        <div className="space-y-4 sm:space-y-6 min-h-[calc(60vh)] sm:min-h-0">
+          {messages.length === 0 ? (
+            <HeroSection modeEnfant={modeEnfant} modePrive={modePrive} />
+          ) : (
+            <>
+              <Virtuoso
+                ref={virtuosoRef}
+                style={{ height: 'calc(100vh - 180px)' }}
+                atBottomStateChange={handleAtBottomChange}
+                rangeChanged={handleRangeChange}
+                atBottomThreshold={200}
+                followOutput="smooth"
+                totalCount={filteredMessages.length + (isLoading ? 1 : 0)}
+                components={{
+                  Header: () => (
+                    <div className="sticky top-0 z-30 mb-6 animate-in slide-in-from-top-2 duration-700">
+                      <div 
+                        className={cn(
+                          "flex items-center justify-between p-6 rounded-3xl border backdrop-blur-2xl shadow-2xl hover:shadow-3xl transition-all duration-500 group relative overflow-hidden",
+                          modePrive 
+                            ? "bg-gradient-to-r from-red-50/90 via-purple-50/90 to-blue-50/90 dark:from-red-950/60 dark:via-purple-950/60 dark:to-blue-950/60 border-red-200/50 dark:border-red-800/50"
+                            : modeEnfant
+                            ? "bg-gradient-to-r from-pink-50/90 via-yellow-50/90 to-orange-50/90 dark:from-pink-950/60 dark:via-yellow-950/60 dark:to-orange-950/60 border-pink-200/50 dark:border-pink-800/50"
+                            : "bg-white/95 dark:bg-slate-900/95 border-white/60 dark:border-slate-800/60"
+                        )}
+                        onMouseEnter={() => setHeaderHovered(true)}
+                        onMouseLeave={() => setHeaderHovered(false)}
+                      >
+                        {/* Effet de brillance au hover */}
+                        <div className={cn(
+                          "absolute inset-0 transition-opacity duration-500",
+                          headerHovered ? "opacity-100" : "opacity-0",
+                          modePrive 
+                            ? "bg-gradient-to-r from-red-400/10 via-purple-400/10 to-blue-400/10"
+                            : modeEnfant
+                            ? "bg-gradient-to-r from-pink-400/10 via-yellow-400/10 to-orange-400/10"
+                            : "bg-gradient-to-r from-blue-400/10 via-indigo-400/10 to-purple-400/10"
+                        )} />
+                        
+                        <div className="flex items-center gap-6 min-w-0 flex-1 relative z-10">
+                          <div className="flex items-center gap-4">
+                            <div className="relative">
+                              <div className={cn(
+                                "w-4 h-4 rounded-full animate-pulse shadow-lg",
+                                modePrive ? "bg-red-500 shadow-red-500/50" : 
+                                modeEnfant ? "bg-pink-500 shadow-pink-500/50" : 
+                                "bg-emerald-500 shadow-emerald-500/50"
+                              )} />
+                              <div className={cn(
+                                "absolute inset-0 rounded-full animate-ping opacity-40",
+                                modePrive ? "bg-red-500" : 
+                                modeEnfant ? "bg-pink-500" : 
+                                "bg-emerald-500"
+                              )} />
+                            </div>
+                            <div>
+                              <div className="text-base font-black text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                {messages.filter(msg => !(msg as RagContextMessage).isRagContext).length} message{messages.length !== 1 ? 's' : ''}
+                                {modePrive && <Shield className="w-4 h-4 text-red-500" />}
+                                {modeEnfant && <Heart className="w-4 h-4 text-pink-500" />}
+                              </div>
+                              <div className={cn(
+                                "text-xs font-medium flex items-center gap-2",
+                                modePrive ? "text-red-600 dark:text-red-400" :
+                                modeEnfant ? "text-pink-600 dark:text-pink-400" :
+                                "text-emerald-600 dark:text-emerald-400"
+                              )}>
+                                <Activity className="w-4 h-4" />
+                                {modePrive ? "Session Ultra-Sécurisée" : 
+                                 modeEnfant ? "Mode Enfant Actif" : 
+                                 "Conversation Active"}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Barre de progression du scroll ultra-stylée */}
+                          <div className="hidden md:flex items-center gap-3 flex-1 max-w-40">
+                            <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden shadow-inner">
+                              <div 
+                                className={cn(
+                                  "h-full rounded-full transition-all duration-300 shadow-sm",
+                                  modePrive 
+                                    ? "bg-gradient-to-r from-red-500 via-purple-500 to-blue-500"
+                                    : modeEnfant
+                                    ? "bg-gradient-to-r from-pink-500 via-yellow-500 to-orange-500"
+                                    : "bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"
+                                )}
+                                style={{ width: `${scrollProgress}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-mono text-slate-500 dark:text-slate-400 min-w-fit px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-md">
+                              {Math.round(scrollProgress)}%
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 relative z-10">
+                          {/* Filtre RAG ultra-amélioré */}
+                          {messages.some(msg => (msg as RagContextMessage).isRagContext) && (
+                            <div className="hidden sm:flex items-center gap-1 p-1.5 bg-slate-100/80 dark:bg-slate-800/80 rounded-xl shadow-inner backdrop-blur-sm">
+                              {[
+                                { key: 'all', icon: Layers, tooltip: 'Tout', color: 'text-slate-500' },
+                                { key: 'messages', icon: MessageSquare, tooltip: 'Messages', color: 'text-blue-500' },
+                                { key: 'rag', icon: Database, tooltip: 'RAG', color: 'text-emerald-500' }
+                              ].map(filter => (
+                                <button
+                                  key={filter.key}
+                                  onClick={() => setRagFilter(filter.key as any)}
+                                  className={cn(
+                                    "p-2 rounded-lg transition-all duration-300 relative group",
+                                    ragFilter === filter.key
+                                      ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg scale-105"
+                                      : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+                                  )}
+                                  title={filter.tooltip}
+                                >
+                                  <filter.icon className="w-4 h-4" />
+                                  {ragFilter === filter.key && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-lg animate-pulse" />
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+
+                          <Button 
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                              "h-10 w-10 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 backdrop-blur-sm group",
+                              modePrive 
+                                ? "hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600"
+                                : modeEnfant
+                                ? "hover:bg-pink-100 dark:hover:bg-pink-900/30 text-pink-600"
+                                : "hover:bg-blue-100 dark:hover:bg-slate-800 text-blue-600"
+                            )}
+                            onClick={handleShowChatInfo}
+                            title="Informations de conversation"
+                          >
+                            <Info className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                }}
+                itemContent={(index) => {
+                  if (index >= filteredMessages.length) {
+                    return (
+                      <div className="animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
+                        <TypingIndicator />
+                      </div>
+                    );
+                  }
+                  
+                  const msg = filteredMessages[index];
+                  
+                  if ((msg as RagContextMessage).isRagContext) {
+                    const ragMsg = msg as RagContextMessage;
+                    const isExpanded = showAllPassages[ragMsg.id] || false;
+                    const visiblePassages = isExpanded ? ragMsg.passages : ragMsg.passages.slice(0, 2);
+                    
+                    return (
+                      <div className="mb-6 animate-in slide-in-from-left-2 duration-500 group" style={{ animationDelay: `${index * 100}ms` }}>
+                        <div className="p-6 bg-gradient-to-br from-emerald-50/90 via-teal-50/90 to-cyan-50/90 dark:from-emerald-950/50 dark:via-teal-950/50 dark:to-cyan-950/50 rounded-3xl border border-emerald-200/60 dark:border-emerald-800/60 backdrop-blur-xl shadow-xl hover:shadow-2xl group-hover:scale-[1.02] transition-all duration-500 relative overflow-hidden">
+                          {/* Effet de brillance */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                          
+                          <div className="relative z-10">
+                            <div className="flex items-center gap-4 mb-4">
+                              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:rotate-12 group-hover:scale-110 transition-all duration-300">
+                                <Database className="w-6 h-6 text-white drop-shadow-sm" />
+                              </div>
+                              <div>
+                                <h3 className="text-base font-black text-emerald-800 dark:text-emerald-200 flex items-center gap-2">
+                                  Contexte RAG Premium
+                                  <Sparkles className="w-4 h-4 text-yellow-500 animate-spin" />
+                                </h3>
+                                <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                  {ragMsg.passages.length} document{ragMsg.passages.length > 1 ? 's' : ''} trouvé{ragMsg.passages.length > 1 ? 's' : ''} • 
+                                  <span className="ml-1 px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900 rounded-full text-xs">
+                                    Pertinence élevée
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-3">
+                              {visiblePassages.map((passage, idx) => (
+                                <div key={idx} className="group/item p-4 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-emerald-100/80 dark:border-emerald-800/50 backdrop-blur-sm hover:shadow-lg hover:scale-[1.01] transition-all duration-300 relative overflow-hidden">
+                                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/5 to-teal-400/5 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />
+                                  
+                                  <div className="flex items-start gap-3 relative z-10">
+                                    <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl shadow-sm group-hover/item:rotate-12 transition-transform duration-300">
+                                      <BookOpen className="w-4 h-4 text-white" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate mb-2 group-hover/item:text-emerald-700 dark:group-hover/item:text-emerald-300 transition-colors">
+                                        {passage.titre}
+                                      </h4>
+                                      <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-4 leading-relaxed">
+                                        {passage.contenu.slice(0, 200)}...
+                                      </p>
+                                      <div className="mt-2 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                                        📄 Document source • {passage.contenu.length} caractères
+                                      </div>
+                                    </div>
+                                    {passage.sourceUrl && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-xl group-hover/item:scale-110 transition-all duration-300"
+                                        onClick={() => window.open(passage.sourceUrl, '_blank')}
+                                      >
+                                        <ExternalLink className="w-4 h-4" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            
+                            {ragMsg.passages.length > 2 && (
+                              <div className="mt-4 flex justify-center">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => togglePassagesVisibility(ragMsg.id)}
+                                  className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-xl px-6 py-3 font-semibold shadow-sm hover:shadow-md transition-all duration-300 group/button"
+                                >
+                                  {isExpanded ? (
+                                    <>
+                                      <ChevronUp className="w-5 h-5 mr-2 group-hover/button:animate-bounce" />
+                                      Voir moins
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ChevronDown className="w-5 h-5 mr-2 group-hover/button:animate-bounce" />
+                                      Voir {ragMsg.passages.length - 2} document{ragMsg.passages.length - 2 > 1 ? 's' : ''} de plus
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  const messageData = msg as Message;
+                  return (
+                    <div 
+                      className={cn(
+                        "animate-in slide-in-from-bottom-3 fade-in-0 duration-500 group/message",
+                        selectMode && "hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-2xl p-3 -m-3 transition-all duration-300"
+                      )} 
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      <MessageBubble
+                        key={messageData.id}
+                        message={messageData.text}
+                        isUser={messageData.isUser}
+                        timestamp={messageData.timestamp}
+                        imageUrl={messageData.imageUrl}
+                        memoryFactsCount={messageData.memoryFactsCount}
+                        sources={messageData.sources}
+                        onEdit={onEditMessage ? (newText: string) => onEditMessage(messageData.id, newText) : undefined}
+                        onDelete={onDeleteMessage ? () => onDeleteMessage(messageData.id) : undefined}
+                        onReply={onReplyToMessage}
+                      />
+                    </div>
+                  );
+                }}
+              />
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Boutons de navigation flottants ultra-stylés */}
+      {showScrollButton && (
+        <div className="fixed bottom-36 right-8 z-50 flex flex-col gap-3 animate-in slide-in-from-right-3 duration-500">
+          <Button
+            onClick={scrollToTop}
+            className={cn(
+              "h-14 w-14 rounded-2xl text-white shadow-2xl hover:shadow-3xl transition-all duration-500 group relative overflow-hidden backdrop-blur-sm",
+              modePrive 
+                ? "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+                : modeEnfant
+                ? "bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-700 hover:to-pink-800"
+                : "bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800"
+            )}
+            title="Aller au début"
+          >
+            <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <ChevronUp className="w-6 h-6 group-hover:scale-125 group-hover:-translate-y-1 transition-all duration-300 relative z-10" />
+          </Button>
+          <Button
+            onClick={scrollToBottom}
+            className={cn(
+              "h-14 w-14 rounded-2xl text-white shadow-2xl hover:shadow-3xl transition-all duration-500 group relative overflow-hidden backdrop-blur-sm",
+              modePrive 
+                ? "bg-gradient-to-r from-purple-600 to-blue-700 hover:from-purple-700 hover:to-blue-800"
+                : modeEnfant
+                ? "bg-gradient-to-r from-yellow-600 to-orange-700 hover:from-yellow-700 hover:to-orange-800"
+                : "bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800"
+            )}
+            title="Aller à la fin"
+          >
+            <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <ArrowDown className="w-6 h-6 group-hover:scale-125 group-hover:translate-y-1 transition-all duration-300 relative z-10" />
+          </Button>
+        </div>
+      )}
+
+      {/* Modal d'informations ultra-améliorée */}
+      {showChatInfo && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-in fade-in-0 duration-300 backdrop-blur-sm">
+          <div 
+            className={cn(
+              "rounded-3xl p-8 max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-3xl border backdrop-blur-2xl animate-in slide-in-from-bottom-4 zoom-in-95 duration-500 relative overflow-hidden",
+              modePrive 
+                ? "bg-gradient-to-br from-red-50/95 via-purple-50/95 to-blue-50/95 dark:from-red-950/90 dark:via-purple-950/90 dark:to-blue-950/90 border-red-200/50 dark:border-red-800/50"
+                : modeEnfant
+                ? "bg-gradient-to-br from-pink-50/95 via-yellow-50/95 to-orange-50/95 dark:from-pink-950/90 dark:via-yellow-950/90 dark:to-orange-950/90 border-pink-200/50 dark:border-pink-800/50"
+                : "bg-white/95 dark:bg-slate-900/95 border-white/60 dark:border-slate-800/60"
+            )}
+          >
+            {/* Effet de brillance */}
+            <div className={cn(
+              "absolute inset-0 opacity-30",
+              modePrive 
+                ? "bg-gradient-to-br from-red-400/10 via-purple-400/10 to-blue-400/10"
+                : modeEnfant
+                ? "bg-gradient-to-br from-pink-400/10 via-yellow-400/10 to-orange-400/10"
+                : "bg-gradient-to-br from-blue-400/10 via-indigo-400/10 to-purple-400/10"
+            )} />
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-xl font-black text-slate-800 dark:text-slate-200 flex items-center gap-3">
+                  <div className={cn(
+                    "w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg",
+                    modePrive 
+                      ? "bg-gradient-to-r from-red-500 to-purple-500"
+                      : modeEnfant
+                      ? "bg-gradient-to-r from-pink-500 to-orange-500"
+                      : "bg-gradient-to-r from-blue-500 to-indigo-500"
+                  )}>
+                    <Info className="w-5 h-5 text-white" />
+                  </div>
+                  Informations
+                  {modePrive && <Shield className="w-5 h-5 text-red-500" />}
+                  {modeEnfant && <Heart className="w-5 h-5 text-pink-500" />}
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleCloseChatInfo}
+                  className="h-10 w-10 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 group transition-all duration-300"
+                >
+                  <X className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                </Button>
+              </div>
+              
+              <div className="space-y-8">
+                <ConversationStats messages={messages} />
+                
+                <div className={cn(
+                  "p-6 rounded-2xl border backdrop-blur-sm",
+                  modePrive 
+                    ? "bg-red-50/80 dark:bg-red-950/40 border-red-200/50 dark:border-red-800/50"
+                    : modeEnfant
+                    ? "bg-pink-50/80 dark:bg-pink-950/40 border-pink-200/50 dark:border-pink-800/50"
+                    : "bg-slate-50/80 dark:bg-slate-800/80 border-slate-200/50 dark:border-slate-700/50"
+                )}>
+                  <h4 className="font-black text-base text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-3">
+                    <div className={cn(
+                      "w-8 h-8 rounded-xl flex items-center justify-center",
+                      modePrive 
+                        ? "bg-gradient-to-r from-red-500 to-purple-500"
+                        : modeEnfant
+                        ? "bg-gradient-to-r from-pink-500 to-orange-500"
+                        : "bg-gradient-to-r from-blue-500 to-indigo-500"
+                    )}>
+                      <Clock className="w-4 h-4 text-white" />
+                    </div>
+                    Activité récente
+                  </h4>
+                  <div className="text-xs text-slate-600 dark:text-slate-400 space-y-3">
+                    {messages.length > 0 ? (
+                      <>
+                        <div className="flex items-center justify-between p-3 bg-white/60 dark:bg-slate-700/60 rounded-xl">
+                          <span>Dernier message:</span>
+                          <span className="font-medium">{messages[messages.length - 1]?.timestamp.toLocaleTimeString()}</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-white/60 dark:bg-slate-700/60 rounded-xl">
+                          <span>Durée conversation:</span>
+                          <span className="font-medium">{Math.round((Date.now() - messages[0]?.timestamp.getTime()) / 60000)} min</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-white/60 dark:bg-slate-700/60 rounded-xl">
+                          <span>Mode actuel:</span>
+                          <span className={cn(
+                            "font-medium px-2 py-1 rounded-full text-xs",
+                            modePrive 
+                              ? "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300"
+                              : modeEnfant
+                              ? "bg-pink-100 dark:bg-pink-900 text-pink-700 dark:text-pink-300"
+                              : "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
+                          )}>
+                            {modePrive ? "🔒 Ultra-Privé" : modeEnfant ? "👶 Enfant" : "💼 Enterprise"}
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center p-6 text-slate-500">
+                        <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        Aucune activité pour le moment
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Section bonus selon le mode */}
+                {modePrive && (
+                  <div className="p-6 bg-gradient-to-r from-red-50/80 to-purple-50/80 dark:from-red-950/40 dark:to-purple-950/40 rounded-2xl border border-red-200/50 dark:border-red-800/50">
+                    <h4 className="font-black text-base text-red-800 dark:text-red-200 mb-3 flex items-center gap-2">
+                      <Shield className="w-5 h-5" />
+                      Sécurité Active
+                    </h4>
+                    <div className="space-y-2 text-xs text-red-600 dark:text-red-400">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        Chiffrement AES-256 actif
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        Aucun log conservé
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        Auto-destruction programmée
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {modeEnfant && (
+                  <div className="p-6 bg-gradient-to-r from-pink-50/80 to-orange-50/80 dark:from-pink-950/40 dark:to-orange-950/40 rounded-2xl border border-pink-200/50 dark:border-pink-800/50">
+                    <h4 className="font-black text-base text-pink-800 dark:text-pink-200 mb-3 flex items-center gap-2">
+                      <Heart className="w-5 h-5" />
+                      Zone Sécurisée
+                    </h4>
+                    <div className="space-y-2 text-xs text-pink-600 dark:text-pink-400">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        Contenu adapté à l'âge
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        Surveillance parentale active
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        Environnement 100% sûr
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}import { useCallback, useEffect, useRef, useState } from 'react';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
 import { 
-  ArrowDown, Zap, Brain, Clock, Info, ExternalLink, Shield, X, Smile, BookOpen, 
+  ArrowDown, Zap, Brain, Clock, Info, ExternalLink, Shield, X, BookOpen, 
   Sparkles, Activity, MessageSquare, Bot, User, ChevronUp, ChevronDown,
-  Layers, Database, Globe, Eye
+  Layers, Database, Globe, Eye, Wand2, Stars, Heart,
+  Rocket, Crown, Diamond, Flame
 } from 'lucide-react';
 import { TypingIndicator } from './TypingIndicator';
 import { cn } from '@/lib/utils';
@@ -96,6 +640,50 @@ const useSmartScroll = (messages: ChatMessage[], isLoading: boolean) => {
   };
 };
 
+// Composant de particules flottantes
+const FloatingParticles = ({ count = 15, mode }: { count?: number; mode?: string }) => {
+  const particles = Array.from({ length: count }, (_, i) => {
+    const size = Math.random() * 4 + 2;
+    const left = Math.random() * 100;
+    const animationDelay = Math.random() * 10;
+    const duration = Math.random() * 8 + 12;
+    
+    let color = 'bg-blue-400/20';
+    if (mode === 'enfant') color = 'bg-pink-400/30';
+    if (mode === 'prive') color = 'bg-red-400/20';
+    
+    return { size, left, animationDelay, duration, color, id: i };
+  });
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map((particle) => (
+        <div
+          key={particle.id}
+          className={`absolute rounded-full ${particle.color} animate-pulse opacity-60`}
+          style={{
+            width: `${particle.size}px`,
+            height: `${particle.size}px`,
+            left: `${particle.left}%`,
+            animation: `float ${particle.duration}s ease-in-out infinite`,
+            animationDelay: `${particle.animationDelay}s`,
+          }}
+        />
+      ))}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes float {
+            0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            50% { transform: translateY(-50vh) rotate(180deg); }
+          }
+        `
+      }} />
+    </div>
+  );
+};
+
 // Composant amélioré pour les statistiques de conversation
 const ConversationStats = ({ messages }: { messages: ChatMessage[] }) => {
   const userMessages = messages.filter(msg => !(msg as RagContextMessage).isRagContext && (msg as Message).isUser);
@@ -107,41 +695,56 @@ const ConversationStats = ({ messages }: { messages: ChatMessage[] }) => {
       icon: User,
       label: 'Vos messages',
       value: userMessages.length,
-      color: 'from-blue-500 to-cyan-500',
-      bgColor: 'bg-blue-50/80 dark:bg-blue-950/40'
+      color: 'from-violet-500 via-purple-500 to-indigo-500',
+      bgColor: 'bg-gradient-to-br from-violet-50/80 to-purple-50/80 dark:from-violet-950/40 dark:to-purple-950/40',
+      sparkles: true
     },
     {
       icon: Bot,
       label: 'Réponses IA',
       value: aiMessages.length,
-      color: 'from-purple-500 to-pink-500',
-      bgColor: 'bg-purple-50/80 dark:bg-purple-950/40'
+      color: 'from-emerald-500 via-teal-500 to-cyan-500',
+      bgColor: 'bg-gradient-to-br from-emerald-50/80 to-teal-50/80 dark:from-emerald-950/40 dark:to-teal-950/40',
+      sparkles: true
     },
     {
       icon: Database,
       label: 'Contextes RAG',
       value: ragContexts.length,
-      color: 'from-emerald-500 to-teal-500',
-      bgColor: 'bg-emerald-50/80 dark:bg-emerald-950/40'
+      color: 'from-orange-500 via-red-500 to-pink-500',
+      bgColor: 'bg-gradient-to-br from-orange-50/80 to-pink-50/80 dark:from-orange-950/40 dark:to-pink-950/40',
+      sparkles: true
     }
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-3 gap-4">
       {stats.map((stat, index) => (
         <div 
           key={stat.label}
-          className={`${stat.bgColor} p-4 rounded-xl border border-white/60 dark:border-slate-700/60 backdrop-blur-sm hover:scale-105 transition-all duration-300 group animate-in slide-in-from-bottom-4`}
-          style={{ animationDelay: `${index * 100}ms` }}
+          className={`${stat.bgColor} p-5 rounded-2xl border border-white/80 dark:border-slate-700/60 backdrop-blur-md hover:scale-105 hover:rotate-1 transition-all duration-500 group relative overflow-hidden shadow-lg hover:shadow-2xl`}
+          style={{ animationDelay: `${index * 150}ms` }}
         >
-          <div className={`w-8 h-8 bg-gradient-to-r ${stat.color} rounded-lg flex items-center justify-center mb-2 group-hover:rotate-12 transition-transform duration-300`}>
-            <stat.icon className="w-4 h-4 text-white" />
-          </div>
-          <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
-            {stat.value}
-          </div>
-          <div className="text-xs text-slate-600 dark:text-slate-400">
-            {stat.label}
+          {/* Effet de brillance */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+          
+          {/* Sparkles animées */}
+          {stat.sparkles && (
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <Sparkles className="w-3 h-3 text-yellow-400 animate-spin" />
+            </div>
+          )}
+          
+          <div className="relative z-10">
+            <div className={`w-10 h-10 bg-gradient-to-r ${stat.color} rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 group-hover:scale-110 transition-all duration-300 shadow-lg`}>
+              <stat.icon className="w-5 h-5 text-white drop-shadow-sm" />
+            </div>
+            <div className="text-xl font-black text-slate-900 dark:text-slate-100 mb-1">
+              {stat.value}
+            </div>
+            <div className="text-xs font-medium text-slate-600 dark:text-slate-400">
+              {stat.label}
+            </div>
           </div>
         </div>
       ))}
@@ -149,15 +752,25 @@ const ConversationStats = ({ messages }: { messages: ChatMessage[] }) => {
   );
 };
 
-// Composant Hero amélioré avec animations et interactivité
+// Composant Hero ultra-amélioré
 const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive: boolean }) => {
   const [currentFeature, setCurrentFeature] = useState(0);
+  void currentFeature; // Avoiding unused variable warning
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   useEffect(() => {
     if (!modeEnfant && !modePrive) {
       const interval = setInterval(() => {
         setCurrentFeature(prev => (prev + 1) % 3);
-      }, 3000);
+      }, 4000);
       return () => clearInterval(interval);
     }
   }, [modeEnfant, modePrive]);
@@ -165,77 +778,121 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
   if (modeEnfant) {
     const features = [
       { 
-        icon: Smile, 
-        title: 'Amusant', 
-        desc: 'Jeux, histoires et activités créatives', 
-        color: 'from-pink-500 to-rose-500',
-        emoji: '🎮'
+        icon: Heart, 
+        title: 'Super Amusant', 
+        desc: 'Jeux magiques, histoires fantastiques et défis créatifs !', 
+        color: 'from-pink-500 via-rose-500 to-red-500',
+        emoji: '🎮',
+        bgGradient: 'from-pink-400/20 to-rose-400/20'
       },
       { 
-        icon: BookOpen, 
-        title: 'Éducatif', 
-        desc: 'Apprentissage adapté à votre âge', 
-        color: 'from-violet-500 to-indigo-500',
-        emoji: '📚'
+        icon: Stars, 
+        title: 'Apprentissage Magique', 
+        desc: 'Découvre le monde avec des aventures éducatives !', 
+        color: 'from-violet-500 via-purple-500 to-indigo-500',
+        emoji: '✨',
+        bgGradient: 'from-violet-400/20 to-purple-400/20'
       },
       { 
         icon: Shield, 
-        title: 'Sécurisé', 
-        desc: 'Environnement protégé et bienveillant', 
-        color: 'from-emerald-500 to-teal-500',
-        emoji: '🛡️'
+        title: 'Zone Ultra-Safe', 
+        desc: 'Un cocon protégé où tu peux explorer en toute sécurité !', 
+        color: 'from-emerald-500 via-teal-500 to-cyan-500',
+        emoji: '🛡️',
+        bgGradient: 'from-emerald-400/20 to-teal-400/20'
       }
     ];
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[400px] text-center px-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
-        <div className="max-w-lg mx-auto space-y-8">
-          {/* Titre avec animation rainbow */}
-          <div className="space-y-4">
+      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 relative overflow-hidden">
+        <FloatingParticles count={20} mode="enfant" />
+        
+        {/* Effets de fond dynamiques */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-1/4 w-40 h-40 bg-gradient-to-r from-pink-400/30 to-yellow-400/30 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-20 right-1/4 w-32 h-32 bg-gradient-to-r from-purple-400/30 to-pink-400/30 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 left-1/2 w-24 h-24 bg-gradient-to-r from-orange-400/30 to-red-400/30 rounded-full blur-xl animate-pulse" style={{ animationDelay: '2s' }} />
+        </div>
+
+        <div className="max-w-4xl mx-auto space-y-12 relative z-10">
+          {/* Titre avec effet rainbow et animations */}
+          <div className="space-y-6">
             <div className="relative">
-              <h2 className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-pink-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent tracking-tight animate-pulse">
-                🌈 Espace Enfants 🌈
+              <div className="absolute inset-0 bg-gradient-to-r from-pink-600 via-orange-500 via-yellow-500 via-green-500 via-blue-500 via-indigo-500 to-purple-600 blur-2xl opacity-30 animate-pulse" />
+              <h2 className="relative text-3xl sm:text-5xl font-black bg-gradient-to-r from-pink-600 via-orange-500 via-yellow-500 via-green-500 via-blue-500 via-indigo-500 to-purple-600 bg-clip-text text-transparent tracking-tight flex items-center justify-center gap-4">
+                🌈 Espace Magique des Enfants 🌈
+                <div className="animate-bounce">
+                  <Wand2 className="w-8 h-8 sm:w-12 sm:h-12 text-yellow-500" />
+                </div>
               </h2>
-              <div className="absolute -top-2 -right-2 text-2xl animate-bounce">✨</div>
+              <div className="absolute -top-4 -right-4 text-3xl animate-bounce" style={{ animationDelay: '0.5s' }}>✨</div>
+              <div className="absolute -bottom-2 -left-2 text-2xl animate-bounce" style={{ animationDelay: '1s' }}>🎭</div>
             </div>
-            <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg leading-relaxed">
-              Un endroit <span className="font-bold text-pink-600 dark:text-pink-400 animate-pulse">magique</span> pour 
-              apprendre, jouer et découvrir ensemble !
+            <p className="text-slate-600 dark:text-slate-300 text-lg sm:text-xl leading-relaxed max-w-3xl mx-auto">
+              Bienvenue dans ton <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600 animate-pulse">univers personnel</span> où 
+              l'apprentissage devient une <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">aventure extraordinaire</span> !
             </p>
           </div>
 
-          {/* Features avec animations staggered */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {/* Features avec animations ultra-dynamiques */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {features.map((feature, idx) => (
               <div 
                 key={feature.title}
-                className="group p-6 bg-white/90 dark:bg-slate-800/90 rounded-3xl border-2 border-white/80 dark:border-slate-700/80 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-500 animate-in slide-in-from-bottom-4 cursor-pointer relative overflow-hidden"
-                style={{ animationDelay: `${idx * 200}ms` }}
+                className="group relative"
+                style={{ animationDelay: `${idx * 300}ms` }}
               >
-                {/* Effet de brillance au hover */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                {/* Effet de halo */}
+                <div className={`absolute inset-0 bg-gradient-to-r ${feature.bgGradient} rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 scale-110`} />
                 
-                <div className="relative z-10">
-                  <div className="text-3xl mb-3 animate-bounce" style={{ animationDelay: `${idx * 0.2}s` }}>
-                    {feature.emoji}
+                <div className="relative p-8 bg-white/95 dark:bg-slate-800/95 rounded-3xl border-4 border-white/90 dark:border-slate-700/90 backdrop-blur-xl shadow-2xl hover:shadow-4xl hover:scale-110 hover:-rotate-2 transition-all duration-700 cursor-pointer overflow-hidden">
+                  {/* Effet de brillance rainbow */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-rainbow-gradient to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" 
+                       style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)' }} />
+                  
+                  <div className="relative z-10">
+                    <div className="text-5xl mb-6 animate-bounce group-hover:scale-125 transition-transform duration-300" 
+                         style={{ animationDelay: `${idx * 0.3}s` }}>
+                      {feature.emoji}
+                    </div>
+                    <div className={`w-16 h-16 bg-gradient-to-r ${feature.color} rounded-3xl flex items-center justify-center mb-6 mx-auto group-hover:rotate-[360deg] group-hover:scale-125 transition-all duration-1000 shadow-2xl`}>
+                      <feature.icon className="w-8 h-8 text-white drop-shadow-lg" />
+                    </div>
+                    <h3 className="font-black text-lg text-slate-800 dark:text-slate-200 mb-4">{feature.title}</h3>
+                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed">{feature.desc}</p>
                   </div>
-                  <div className={`w-12 h-12 bg-gradient-to-r ${feature.color} rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:rotate-[360deg] transition-transform duration-700`}>
-                    <feature.icon className="w-6 h-6 text-white" />
+
+                  {/* Sparkles décoratives */}
+                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="flex gap-1">
+                      <Stars className="w-4 h-4 text-yellow-400 animate-spin" />
+                      <Sparkles className="w-3 h-3 text-pink-400 animate-pulse" />
+                    </div>
                   </div>
-                  <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200 mb-2">{feature.title}</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{feature.desc}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Call to action amusant */}
-          <div className="animate-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: '600ms' }}>
-            <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 rounded-2xl border-2 border-yellow-200/60 dark:border-yellow-800/60">
-              <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                👋 <strong>Salut !</strong> Je suis ton assistant virtuel. 
-                Raconte-moi ce que tu aimerais faire aujourd'hui !
-              </p>
+          {/* Call to action super-interactif */}
+          <div className="animate-in slide-in-from-bottom-4 duration-1000" style={{ animationDelay: '900ms' }}>
+            <div className="relative p-8 bg-gradient-to-r from-yellow-50/90 via-orange-50/90 to-pink-50/90 dark:from-yellow-950/30 dark:via-orange-950/30 dark:to-pink-950/30 rounded-3xl border-4 border-gradient-to-r border-yellow-200/80 dark:border-yellow-800/80 backdrop-blur-md shadow-2xl hover:shadow-4xl hover:scale-105 transition-all duration-500 group cursor-pointer">
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-pink-400/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              
+              <div className="relative z-10 text-center">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <div className="text-3xl animate-bounce">👋</div>
+                  <Rocket className="w-8 h-8 text-orange-600 animate-pulse" />
+                  <div className="text-3xl animate-bounce" style={{ animationDelay: '0.5s' }}>🚀</div>
+                </div>
+                <p className="text-lg font-bold text-slate-700 dark:text-slate-300 mb-3">
+                  Salut petit explorateur ! Je suis ton assistant magique !
+                </p>
+                <p className="text-slate-600 dark:text-slate-400">
+                  Raconte-moi quel type d'aventure tu veux vivre aujourd'hui ! 
+                  Histoire, jeu, découverte... tout est possible ! ✨
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -245,78 +902,113 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
 
   if (modePrive) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[400px] text-center px-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-700 relative overflow-hidden">
-        {/* Effets de fond animés */}
-        <div className="absolute inset-0 bg-gradient-to-br from-red-900/10 via-purple-900/10 to-blue-900/10 animate-pulse" />
-        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-red-500/10 rounded-full blur-3xl animate-ping" style={{ animationDuration: '3s' }} />
-        <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl animate-ping" style={{ animationDuration: '4s' }} />
+      <div 
+        className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 relative overflow-hidden"
+        style={{
+          background: `radial-gradient(circle at ${mousePosition.x / window.innerWidth * 100}% ${mousePosition.y / window.innerHeight * 100}%, rgba(220, 38, 127, 0.1), transparent 50%)`
+        }}
+      >
+        <FloatingParticles count={25} mode="prive" />
         
-        <div className="max-w-lg mx-auto space-y-8 relative z-10">
-          <div className="space-y-4">
+        {/* Effets de fond ultra-dynamiques */}
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-red-600/20 via-purple-600/20 to-blue-600/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-red-600/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-gradient-to-r from-blue-600/20 via-indigo-600/20 to-purple-600/20 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }} />
+        </div>
+        
+        <div className="max-w-4xl mx-auto space-y-12 relative z-10">
+          <div className="space-y-8">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 blur-lg opacity-30 animate-pulse" />
-              <h2 className="relative text-3xl sm:text-4xl font-black bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">
-                🔒 Session Ultra-Privée
+              <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-purple-600 via-pink-600 to-blue-600 blur-3xl opacity-40 animate-pulse" />
+              <h2 className="relative text-3xl sm:text-5xl font-black bg-gradient-to-r from-red-600 via-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent tracking-tight flex items-center justify-center gap-6">
+                <Shield className="w-12 h-12 sm:w-16 sm:h-16 text-red-500 animate-pulse" />
+                Session Ultra-Privée
+                <Crown className="w-12 h-12 sm:w-16 sm:h-16 text-purple-500 animate-pulse" />
               </h2>
             </div>
-            <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg leading-relaxed">
-              Maximum de <span className="font-bold text-emerald-600 dark:text-emerald-400">confidentialité</span> 
-              {' '}• Zéro <span className="font-bold text-blue-600 dark:text-blue-400">traçage</span> 
-              {' '}• Auto-<span className="font-bold text-purple-600 dark:text-purple-400">destruction</span>
+            <p className="text-slate-600 dark:text-slate-300 text-lg sm:text-xl leading-relaxed max-w-4xl mx-auto">
+              <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-purple-600">Maximum Sécurité</span> 
+              {' '}• <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">Zero Traçage</span> 
+              {' '}• <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-pink-600">Auto-Destruction</span>
             </p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { 
                 icon: Shield, 
-                title: "Chiffrement", 
-                desc: "Protection militaire", 
-                color: "from-red-500 to-red-600",
-                detail: "AES-256"
+                title: "Chiffrement Militaire", 
+                desc: "Protection AES-256 de niveau gouvernemental", 
+                color: "from-red-500 via-red-600 to-red-700",
+                detail: "🔐 AES-256",
+                bgGradient: "from-red-500/20 to-red-600/20"
               },
               { 
                 icon: Zap, 
-                title: "Éphémère", 
-                desc: "Suppression immédiate", 
-                color: "from-purple-500 to-purple-600",
-                detail: "Auto-delete"
+                title: "Suppression Immédiate", 
+                desc: "Auto-destruction en temps réel des données", 
+                color: "from-purple-500 via-purple-600 to-purple-700",
+                detail: "⚡ Instant Delete",
+                bgGradient: "from-purple-500/20 to-purple-600/20"
               },
               { 
                 icon: Eye, 
-                title: "Invisible", 
-                desc: "Aucune trace", 
-                color: "from-blue-500 to-blue-600",
-                detail: "Ghost mode"
+                title: "Mode Fantôme", 
+                desc: "Invisibilité totale - aucune trace laissée", 
+                color: "from-blue-500 via-blue-600 to-blue-700",
+                detail: "👻 Ghost Mode",
+                bgGradient: "from-blue-500/20 to-blue-600/20"
               }
             ].map((feature, idx) => (
               <div 
                 key={feature.title}
-                className="group p-6 bg-white/10 dark:bg-slate-800/20 rounded-2xl border border-white/20 dark:border-slate-700/20 backdrop-blur-xl shadow-2xl hover:shadow-red-500/20 hover:scale-110 transition-all duration-500 animate-in slide-in-from-bottom-4 relative overflow-hidden"
-                style={{ animationDelay: `${idx * 150}ms` }}
+                className="group relative"
+                style={{ animationDelay: `${idx * 200}ms` }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent group-hover:from-white/10 transition-all duration-500" />
+                <div className={`absolute inset-0 bg-gradient-to-r ${feature.bgGradient} rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 scale-110`} />
                 
-                <div className={`w-10 h-10 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:rotate-12 transition-transform duration-300 relative z-10`}>
-                  <feature.icon className="w-5 h-5 text-white drop-shadow-sm" />
-                </div>
-                <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200 mb-1">{feature.title}</h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">{feature.desc}</p>
-                <div className="text-[10px] text-slate-500 dark:text-slate-500 font-mono bg-slate-100/50 dark:bg-slate-800/50 px-2 py-1 rounded">
-                  {feature.detail}
+                <div className="relative p-8 bg-white/10 dark:bg-slate-800/20 rounded-2xl border border-white/20 dark:border-slate-700/20 backdrop-blur-2xl shadow-2xl hover:shadow-red-500/20 hover:scale-110 hover:rotate-2 transition-all duration-700 overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 group-hover:from-white/15 transition-all duration-500" />
+                  
+                  <div className="relative z-10">
+                    <div className={`w-16 h-16 bg-gradient-to-r ${feature.color} rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:rotate-12 group-hover:scale-125 transition-all duration-500 shadow-2xl`}>
+                      <feature.icon className="w-8 h-8 text-white drop-shadow-lg" />
+                    </div>
+                    <h3 className="font-black text-base text-slate-800 dark:text-slate-200 mb-3">{feature.title}</h3>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">{feature.desc}</p>
+                    <div className="text-xs text-slate-500 dark:text-slate-500 font-mono bg-slate-100/50 dark:bg-slate-800/50 px-3 py-2 rounded-lg border">
+                      {feature.detail}
+                    </div>
+                  </div>
+
+                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <Diamond className="w-5 h-5 text-yellow-400 animate-spin" />
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Indicateur de sécurité en temps réel */}
-          <div className="animate-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: '500ms' }}>
-            <div className="p-4 bg-gradient-to-r from-red-50/80 via-purple-50/80 to-blue-50/80 dark:from-red-950/20 dark:via-purple-950/20 dark:to-blue-950/20 rounded-xl border border-red-200/30 dark:border-red-800/30">
-              <div className="flex items-center justify-center gap-2 text-sm">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                <span className="font-medium text-slate-700 dark:text-slate-300">
-                  Sécurité active • Session chiffrée • Aucun log
+          {/* Indicateur de sécurité en temps réel ultra-stylé */}
+          <div className="animate-in slide-in-from-bottom-4 duration-1000" style={{ animationDelay: '700ms' }}>
+            <div className="relative p-8 bg-gradient-to-r from-red-50/20 via-purple-50/20 via-pink-50/20 to-blue-50/20 dark:from-red-950/30 dark:via-purple-950/30 dark:via-pink-950/30 dark:to-blue-950/30 rounded-2xl border border-red-200/30 dark:border-red-800/30 backdrop-blur-md shadow-2xl hover:shadow-4xl group transition-all duration-500">
+              <div className="absolute inset-0 bg-gradient-to-r from-red-400/10 via-purple-400/10 to-blue-400/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              
+              <div className="relative z-10 flex items-center justify-center gap-4 text-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-lg shadow-green-500/50" />
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }} />
+                  <div className="w-1 h-1 bg-green-300 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+                </div>
+                <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <Flame className="w-5 h-5 text-red-500 animate-pulse" />
+                  Sécurité Ultra-Active
+                  <Zap className="w-5 h-5 text-blue-500 animate-pulse" />
                 </span>
+                <div className="text-sm text-slate-500 dark:text-slate-400 font-mono bg-slate-800/20 px-3 py-1 rounded-full">
+                  SESSION_ENCRYPTED_🔐
+                </div>
               </div>
             </div>
           </div>
@@ -325,417 +1017,90 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
     );
   }
 
-  // Mode normal avec features rotatives
+  // Mode normal avec features rotatives ultra-amélioré
   const normalFeatures = [
     {
       icon: Brain,
-      title: "IA Avancée",
-      desc: "Compréhension contextuelle et mémoire intelligente",
-      color: "from-purple-500 to-indigo-500"
+      title: "IA Nouvelle Génération",
+      desc: "Intelligence artificielle avec compréhension contextuelle avancée et mémoire émotionnelle",
+      color: "from-purple-500 via-indigo-500 to-blue-500",
+      accent: "🧠",
+      bgEffect: "from-purple-400/20 to-indigo-400/20"
     },
     {
       icon: Globe,
-      title: "Recherche Web",
-      desc: "Informations en temps réel depuis internet",
-      color: "from-blue-500 to-cyan-500"
+      title: "Recherche Web Instantanée",
+      desc: "Accès en temps réel aux informations mondiales avec analyse de fiabilité automatique",
+      color: "from-blue-500 via-cyan-500 to-teal-500",
+      accent: "🌐",
+      bgEffect: "from-blue-400/20 to-cyan-400/20"
     },
     {
       icon: Database,
-      title: "RAG Premium",
-      desc: "Recherche dans vos documents personnels",
-      color: "from-emerald-500 to-teal-500"
+      title: "RAG Enterprise Premium",
+      desc: "Recherche intelligente dans vos documents avec indexation sémantique et suggestions contextuelles",
+      color: "from-emerald-500 via-teal-500 to-cyan-500",
+      accent: "📚",
+      bgEffect: "from-emerald-400/20 to-teal-400/20"
     }
   ];
+  void normalFeatures; // Avoiding unused variable warning
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[400px] text-center px-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-700 relative overflow-hidden">
-      {/* Effets de fond animés */}
-      <div className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-10 right-10 w-64 h-64 bg-gradient-to-r from-indigo-400/20 to-cyan-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+    <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 relative overflow-hidden">
+      <FloatingParticles count={15} mode="normal" />
       
-      <div className="max-w-3xl mx-auto pt-40 space-y-10 relative z-10">
-        <div className="space-y-6">
+      <div className="max-w-4xl mx-auto space-y-8 relative z-10">
+        <div className="space-y-4">
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 blur-2xl opacity-20 animate-pulse" />
-            <h1 className="relative text-4xl sm:text-6xl font-black bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight flex items-center justify-center gap-4">
-              NeuroChat
-              <Sparkles className="w-8 h-8 sm:w-12 sm:h-12 text-yellow-500 animate-spin" style={{ animationDuration: '3s' }} />
-            </h1>
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-blue-600 via-indigo-600 to-cyan-600 blur-2xl opacity-20 animate-pulse" />
+            <h2 className="relative text-2xl sm:text-3xl font-black bg-gradient-to-r from-purple-600 via-blue-600 via-indigo-600 to-cyan-600 bg-clip-text text-transparent tracking-tight flex items-center justify-center gap-3">
+              <Brain className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500 animate-pulse" />
+              NeuroChat Enterprise
+              <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 animate-spin" />
+            </h2>
           </div>
-          <p className="text-slate-600 dark:text-slate-300 text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto">
-            L'IA conversationnelle <span className="font-bold text-indigo-600 dark:text-indigo-400">nouvelle génération</span> avec 
-            support vocal, visuel et recherche documentaire <span className="font-bold text-purple-600 dark:text-purple-400">avancée</span>
+          <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed max-w-3xl mx-auto">
+            <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">IA Avancée</span> 
+            {' '}• <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">RAG Premium</span> 
+            {' '}• <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-cyan-600">Web Intelligence</span>
           </p>
         </div>
         
-        {/* Feature rotatif avec indicateur */}
-        <div className="relative">
-          <div className="flex justify-center mb-4">
-            <div className="flex gap-2">
-              {normalFeatures.map((_, idx) => (
-                <div
-                  key={idx}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    idx === currentFeature ? 'bg-blue-500 w-6' : 'bg-slate-300 dark:bg-slate-600'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-          
-          <div className="h-32 flex items-center justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {normalFeatures.map((feature, idx) => (
             <div 
-              key={currentFeature}
-              className="animate-in slide-in-from-bottom-4 fade-in-0 duration-500 text-center max-w-md"
+              key={feature.title}
+              className="group relative"
+              style={{ animationDelay: `${idx * 150}ms` }}
             >
-              <div className={`w-16 h-16 bg-gradient-to-r ${normalFeatures[currentFeature].color} rounded-2xl flex items-center justify-center mb-4 mx-auto hover:rotate-12 transition-transform duration-300`}>
-                {React.createElement(normalFeatures[currentFeature].icon, { className: "w-8 h-8 text-white" })}
-              </div>
-              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">
-                {normalFeatures[currentFeature].title}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                {normalFeatures[currentFeature].desc}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Call to action */}
-        <div className="animate-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: '800ms' }}>
-          <div className="p-6 bg-gradient-to-r from-blue-50/80 via-indigo-50/80 to-purple-50/80 dark:from-blue-950/20 dark:via-indigo-950/20 dark:to-purple-950/20 rounded-2xl border border-blue-200/30 dark:border-blue-800/30 backdrop-blur-sm">
-            <p className="text-lg text-slate-700 dark:text-slate-300 mb-2">
-              <strong>Prêt à commencer ?</strong> 🚀
-            </p>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Posez votre première question ou téléchargez un document pour débuter !
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Composant principal amélioré
-export function ChatContainer({ 
-  messages, 
-  isLoading, 
-  onEditMessage, 
-  onDeleteMessage, 
-  onReplyToMessage, 
-  selectMode = false, 
-  selectedMessageIds = [], 
-  onSelectMessage, 
-  modePrive = false, 
-  modeEnfant = false 
-}: ChatContainerProps) {
-  // Éviter les warnings pour les paramètres non utilisés dans cette version
-  void selectedMessageIds;
-  void onSelectMessage;
-  const {
-    virtuosoRef,
-    showScrollButton,
-    scrollProgress,
-    handleAtBottomChange,
-    handleRangeChange,
-    scrollToBottom,
-    scrollToTop
-  } = useSmartScroll(messages, isLoading);
-
-  const [showAllPassages, setShowAllPassages] = useState<{ [id: string]: boolean }>({});
-  const [showChatInfo, setShowChatInfo] = useState(false);
-  const [ragFilter, setRagFilter] = useState<'all' | 'messages' | 'rag'>('all');
-
-  const togglePassagesVisibility = useCallback((id: string) => {
-    setShowAllPassages(prev => ({ ...prev, [id]: !prev[id] }));
-  }, []);
-
-  const handleShowChatInfo = useCallback(() => setShowChatInfo(true), []);
-  const handleCloseChatInfo = useCallback(() => setShowChatInfo(false), []);
-
-  // Filtrer les messages selon le filtre RAG
-  const filteredMessages = messages.filter(msg => {
-    if (ragFilter === 'all') return true;
-    if (ragFilter === 'rag') return (msg as RagContextMessage).isRagContext;
-    return !(msg as RagContextMessage).isRagContext;
-  });
-
-  return (
-    <div
-      className={cn(
-        "flex-1 relative transition-all duration-500",
-        modePrive 
-          ? "bg-gradient-to-br from-red-50/30 via-purple-50/40 to-blue-50/30 dark:from-red-950/20 dark:via-purple-950/30 dark:to-blue-950/20 ring-2 ring-red-400/20 shadow-2xl shadow-red-400/10" 
-          : modeEnfant
-          ? "bg-gradient-to-br from-pink-50/40 via-yellow-50/50 to-orange-50/40 dark:from-pink-950/20 dark:via-yellow-950/30 dark:to-orange-950/20"
-          : "bg-gradient-to-br from-slate-50/60 via-white/80 to-blue-50/40 dark:from-slate-900/60 dark:via-slate-900/80 dark:to-slate-800/40",
-        "backdrop-blur-xl"
-      )}
-      style={{ minHeight: '0', height: '100%', maxHeight: '100vh' }}
-    >
-      <div className="flex-1 h-full p-2 sm:p-4 pb-24">
-        <div className="space-y-3 sm:space-y-4 min-h-[calc(60vh)] sm:min-h-0">
-          {messages.length === 0 ? (
-            <HeroSection modeEnfant={modeEnfant} modePrive={modePrive} />
-          ) : (
-            <>
-              <Virtuoso
-                ref={virtuosoRef}
-                style={{ height: 'calc(100vh - 160px)' }}
-                atBottomStateChange={handleAtBottomChange}
-                rangeChanged={handleRangeChange}
-                atBottomThreshold={200}
-                followOutput="smooth"
-                totalCount={filteredMessages.length + (isLoading ? 1 : 0)}
-                components={{
-                  Header: () => (
-                    <div className="sticky top-0 z-20 mb-4 animate-in slide-in-from-top-2 duration-500">
-                      <div className="flex items-center justify-between p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-slate-800/60 shadow-xl hover:shadow-2xl transition-all duration-300 group">
-                        <div className="flex items-center gap-4 min-w-0 flex-1">
-                          <div className="flex items-center gap-3">
-                            <div className="relative">
-                              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-                              <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-30" />
-                            </div>
-                            <div>
-                              <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                {messages.filter(msg => !(msg as RagContextMessage).isRagContext).length} message{messages.length !== 1 ? 's' : ''}
-                              </div>
-                              <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                                <Activity className="w-3 h-3" />
-                                Conversation active
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Barre de progression du scroll */}
-                          <div className="hidden sm:flex items-center gap-2 flex-1 max-w-32">
-                            <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-300"
-                                style={{ width: `${scrollProgress}%` }}
-                              />
-                            </div>
-                            <span className="text-[10px] text-slate-400 min-w-fit">
-                              {Math.round(scrollProgress)}%
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          {/* Filtre RAG */}
-                          {messages.some(msg => (msg as RagContextMessage).isRagContext) && (
-                            <div className="hidden sm:flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                              {[
-                                { key: 'all', icon: Layers, tooltip: 'Tout' },
-                                { key: 'messages', icon: MessageSquare, tooltip: 'Messages' },
-                                { key: 'rag', icon: Database, tooltip: 'RAG' }
-                              ].map(filter => (
-                                <button
-                                  key={filter.key}
-                                  onClick={() => setRagFilter(filter.key as any)}
-                                  className={cn(
-                                    "p-1.5 rounded transition-all duration-200",
-                                    ragFilter === filter.key
-                                      ? "bg-blue-500 text-white shadow-sm"
-                                      : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                                  )}
-                                  title={filter.tooltip}
-                                >
-                                  <filter.icon className="w-3.5 h-3.5" />
-                                </button>
-                              ))}
-                            </div>
-                          )}
-
-                          <Button 
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-xl hover:bg-blue-100 dark:hover:bg-slate-800"
-                            onClick={handleShowChatInfo}
-                            title="Informations de conversation"
-                          >
-                            <Info className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                }}
-                itemContent={(index) => {
-                  if (index >= filteredMessages.length) {
-                    return <TypingIndicator />;
-                  }
-                  
-                  const msg = filteredMessages[index];
-                  
-                  if ((msg as RagContextMessage).isRagContext) {
-                    const ragMsg = msg as RagContextMessage;
-                    const isExpanded = showAllPassages[ragMsg.id] || false;
-                    const visiblePassages = isExpanded ? ragMsg.passages : ragMsg.passages.slice(0, 2);
-                    
-                    return (
-                      <div className="mb-4 animate-in slide-in-from-left-2 duration-300" style={{ animationDelay: `${index * 50}ms` }}>
-                        <div className="p-4 bg-gradient-to-r from-emerald-50/80 to-teal-50/80 dark:from-emerald-950/40 dark:to-teal-950/40 rounded-2xl border border-emerald-200/60 dark:border-emerald-800/60 backdrop-blur-sm">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
-                              <Database className="w-4 h-4 text-white" />
-                            </div>
-                            <div>
-                              <h3 className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
-                                Contexte RAG
-                              </h3>
-                              <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                                {ragMsg.passages.length} document{ragMsg.passages.length > 1 ? 's' : ''} trouvé{ragMsg.passages.length > 1 ? 's' : ''}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            {visiblePassages.map((passage, idx) => (
-                              <div key={idx} className="p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-emerald-100 dark:border-emerald-800">
-                                <div className="flex items-start gap-2">
-                                  <BookOpen className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
-                                  <div className="min-w-0 flex-1">
-                                    <h4 className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
-                                      {passage.titre}
-                                    </h4>
-                                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-3">
-                                      {passage.contenu.slice(0, 150)}...
-                                    </p>
-                                  </div>
-                                  {passage.sourceUrl && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-6 w-6 text-emerald-600 hover:text-emerald-700"
-                                      onClick={() => window.open(passage.sourceUrl, '_blank')}
-                                    >
-                                      <ExternalLink className="w-3 h-3" />
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          
-                          {ragMsg.passages.length > 2 && (
-                            <div className="mt-3 flex justify-center">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => togglePassagesVisibility(ragMsg.id)}
-                                className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
-                              >
-                                {isExpanded ? (
-                                  <>
-                                    <ChevronUp className="w-4 h-4 mr-1" />
-                                    Voir moins
-                                  </>
-                                ) : (
-                                  <>
-                                    <ChevronDown className="w-4 h-4 mr-1" />
-                                    Voir {ragMsg.passages.length - 2} de plus
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  }
-                  
-                  const messageData = msg as Message;
-                  return (
-                    <div className={cn(
-                      "animate-in slide-in-from-bottom-2 duration-300",
-                      selectMode && "hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-lg p-2 -m-2 transition-colors"
-                    )} style={{ animationDelay: `${index * 50}ms` }}>
-                      <MessageBubble
-                        key={messageData.id}
-                        message={messageData.text}
-                        isUser={messageData.isUser}
-                        timestamp={messageData.timestamp}
-                        imageUrl={messageData.imageUrl}
-                        memoryFactsCount={messageData.memoryFactsCount}
-                        sources={messageData.sources}
-                        onEdit={onEditMessage ? (newText: string) => onEditMessage(messageData.id, newText) : undefined}
-                        onDelete={onDeleteMessage ? () => onDeleteMessage(messageData.id) : undefined}
-                        onReply={onReplyToMessage}
-                      />
-                    </div>
-                  );
-                }}
-              />
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Boutons de navigation flottants */}
-      {showScrollButton && (
-        <div className="fixed bottom-32 right-6 z-50 flex flex-col gap-2 animate-in slide-in-from-right-2 duration-300">
-          <Button
-            onClick={scrollToTop}
-            className="h-12 w-12 rounded-full bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 group"
-            title="Aller au début"
-          >
-            <ChevronUp className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          </Button>
-          <Button
-            onClick={scrollToBottom}
-            className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 group"
-            title="Aller à la fin"
-          >
-            <ArrowDown className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          </Button>
-        </div>
-      )}
-
-      {/* Modal d'informations de conversation */}
-      {showChatInfo && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in-0 duration-200">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto animate-in slide-in-from-bottom-4 duration-300">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                <Info className="w-5 h-5 text-blue-500" />
-                Informations
-              </h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleCloseChatInfo}
-                className="h-8 w-8 rounded-lg"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            
-            <div className="space-y-6">
-              <ConversationStats messages={messages} />
+              <div className={`absolute inset-0 bg-gradient-to-r ${feature.bgEffect} rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 scale-105`} />
               
-              <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-blue-500" />
-                  Activité récente
-                </h4>
-                <div className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
-                  {messages.length > 0 ? (
-                    <>
-                      <div>Dernier message: {messages[messages.length - 1]?.timestamp.toLocaleTimeString()}</div>
-                      <div>Durée de la conversation: {Math.round((Date.now() - messages[0]?.timestamp.getTime()) / 60000)} min</div>
-                    </>
-                  ) : (
-                    <div>Aucune activité</div>
-                  )}
+              <div className="relative p-4 bg-white/95 dark:bg-slate-800/95 rounded-2xl border border-white/60 dark:border-slate-700/60 backdrop-blur-lg shadow-lg hover:shadow-xl hover:scale-102 transition-all duration-500 overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 group-hover:from-white/15 transition-all duration-300" />
+                
+                <div className="relative z-10">
+                  <div className="text-2xl mb-3 group-hover:scale-110 transition-transform duration-300" 
+                       style={{ animationDelay: `${idx * 0.2}s` }}>
+                    {feature.accent}
+                  </div>
+                  <div className={`w-10 h-10 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:rotate-6 group-hover:scale-110 transition-all duration-300 shadow-lg`}>
+                    <feature.icon className="w-5 h-5 text-white drop-shadow-sm" />
+                  </div>
+                  <h3 className="font-black text-sm text-slate-800 dark:text-slate-200 mb-2">{feature.title}</h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{feature.desc}</p>
+                </div>
+
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <Stars className="w-3 h-3 text-yellow-400 animate-spin" />
                 </div>
               </div>
             </div>
-          </div>
+          ))}
         </div>
-      )}
+
+
+      </div>
     </div>
   );
 }
