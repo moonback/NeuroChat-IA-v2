@@ -16,6 +16,7 @@ import { searchDocuments } from '@/services/ragSearch';
 const RagDocsModalLazy = lazy(() => import('@/components/RagDocsModal').then(m => ({ default: m.RagDocsModal })));
 const HistoryModalLazy = lazy(() => import('@/components/HistoryModal').then(m => ({ default: m.HistoryModal })));
 const MemoryModalLazy = lazy(() => import('@/components/MemoryModal').then(m => ({ default: m.MemoryModal })));
+const TemplateModalLazy = lazy(() => import('@/components/TemplateModal').then(m => ({ default: m.TemplateModal })));
 import type { DiscussionWithCategory } from '@/components/HistoryModal';
 
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
@@ -108,6 +109,8 @@ function App() {
   // Ajout du state pour la modale de gestion des documents RAG
   const [showRagDocs, setShowRagDocs] = useState(false);
   const [showMemory, setShowMemory] = useState(false);
+  // Ajout du state pour la modale des templates
+  const [showTemplates, setShowTemplates] = useState(false);
   // Ajout du state pour activer/désactiver le RAG
   const [ragEnabled, setRagEnabled] = useState(false);
   // Ajout du state pour activer/désactiver la recherche web
@@ -607,6 +610,23 @@ ${lines.join('\n')}`, false);
     }
     return false;
   }
+
+  const handleTemplateSelect = (_template: any, filledPrompt: string, settings: any) => {
+    // Appliquer les settings du template
+    if (settings.ragEnabled !== undefined) setRagEnabled(settings.ragEnabled);
+    if (settings.webEnabled !== undefined) setWebEnabled(settings.webEnabled);
+    if (settings.agentEnabled !== undefined) {
+      if (provider === 'gemini') setGeminiAgentEnabled(settings.agentEnabled);
+      if (provider === 'mistral') setMistralAgentEnabled(settings.agentEnabled);
+    }
+    if (settings.provider && settings.provider !== provider) {
+      setProvider(settings.provider);
+      localStorage.setItem('llm_provider', settings.provider);
+    }
+
+    // Envoyer le message pré-rempli
+    handleSendMessage(filledPrompt);
+  };
 
   const handleSendMessage = async (userMessage: string, imageFile?: File) => {
     // Intercepter et gérer les commandes mémoire avant tout
@@ -1219,6 +1239,7 @@ ${lines.join('\n')}`, false);
           onOpenTTSSettings={() => setShowTTSSettings(true)}
           onOpenRagDocs={() => setShowRagDocs(true)}
           onOpenMemory={() => setShowMemory(true)}
+          onOpenTemplates={() => setShowTemplates(true)}
           workspaceId={workspaceId}
           workspaces={workspaces}
           onChangeWorkspace={(id) => setWorkspaceId(id)}
@@ -1394,6 +1415,7 @@ ${lines.join('\n')}`, false);
             if (provider === 'gemini') setGeminiAgentEnabled(!geminiAgentEnabled);
             if (provider === 'mistral') setMistralAgentEnabled(!mistralAgentEnabled);
           }}
+          onOpenTemplates={() => setShowTemplates(true)}
         />
       </div>
 
@@ -1511,6 +1533,16 @@ ${lines.join('\n')}`, false);
       {/* Mémoire: gestion via modale */}
 
       
+      {/* Modale des templates */}
+      <Suspense fallback={null}>
+        <TemplateModalLazy
+          isOpen={showTemplates}
+          onClose={() => setShowTemplates(false)}
+          onSelectTemplate={handleTemplateSelect}
+          workspaceId={workspaceId}
+        />
+      </Suspense>
+
       {/* Modale d'ouverture d'espace de travail */}
       <WorkspaceOpeningDialog open={workspaceOpeningOpen} onOpenChange={setWorkspaceOpeningOpen} name={workspaceOpeningName} />
     </div>

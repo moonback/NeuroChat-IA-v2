@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Mic, MicOff, ImageIcon, X, Command, Paperclip, FileText, Sparkles, Bot } from 'lucide-react';
+import { Send, Loader2, Mic, MicOff, ImageIcon, X, Command, Paperclip, FileText, Sparkles, Bot, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -12,9 +12,10 @@ interface VoiceInputProps {
   provider?: Provider;
   agentEnabled?: boolean;
   onToggleAgent?: () => void;
+  onOpenTemplates?: () => void;
 }
 
-export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agentEnabled = false, onToggleAgent }: VoiceInputProps) {
+export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agentEnabled = false, onToggleAgent, onOpenTemplates }: VoiceInputProps) {
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -310,6 +311,27 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
                       <Paperclip className="h-5 w-5 text-slate-600 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                     </Button>
+
+                    {onOpenTemplates && (
+                      <Button
+                        type="button"
+                        onClick={onOpenTemplates}
+                        disabled={isLoading}
+                        size="icon"
+                        variant="ghost"
+                        className={cn(
+                          "h-10 w-10 rounded-xl transition-all duration-300 relative overflow-hidden group",
+                          "bg-gradient-to-br from-purple-100/90 to-purple-200/90 dark:from-purple-900/50 dark:to-purple-800/50",
+                          "hover:from-purple-200/90 hover:to-purple-300/90 dark:hover:from-purple-800/70 dark:hover:to-purple-700/70",
+                          "border border-purple-200/60 dark:border-purple-700/60 hover:border-purple-300/60 dark:hover:border-purple-600/60",
+                          "shadow-lg hover:shadow-xl shadow-purple-500/10 dark:shadow-purple-500/20"
+                        )}
+                        title="Utiliser un template de conversation"
+                      >
+                        <Zap className="h-5 w-5 text-purple-600 dark:text-purple-300 group-hover:text-purple-700 dark:group-hover:text-purple-200 transition-colors" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                      </Button>
+                    )}
 
                     {/* Toggle Agent (Gemini/Mistral) */}
                     {(provider === 'gemini' || provider === 'mistral') && (

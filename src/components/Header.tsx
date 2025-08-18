@@ -6,7 +6,7 @@ import {
   MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, 
   PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, 
   Trash2, Menu, X, WifiOff, Baby, Sparkles,
-  Globe, Database, Activity, Pencil, HelpCircle
+  Globe, Database, Activity, Pencil, HelpCircle, FileText
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
@@ -64,6 +64,8 @@ interface HeaderProps {
   onCreateWorkspace?: () => void;
   onRenameWorkspace?: (id: string, name: string) => void;
   onDeleteWorkspace?: (id: string) => void;
+  // Templates
+  onOpenTemplates?: () => void;
 }
 
 // =====================
@@ -552,6 +554,13 @@ export function Header(props: HeaderProps) {
                   Nouveau
                 </ActionButton>
 
+                {props.onOpenTemplates && (
+                  <ActionButton onClick={props.onOpenTemplates} tooltip="Templates de conversation">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Templates
+                  </ActionButton>
+                )}
+
                 {!props.modeEnfant && (
                   <ButtonGroup>
                     <IconButton onClick={onOpenHistory} tooltip="Historique" aria-label="Historique">
@@ -746,7 +755,21 @@ export function Header(props: HeaderProps) {
               </div>
               <div className="rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-2">
                 <div className="grid grid-cols-3 gap-1.5">
-                {!props.modeEnfant && (
+                  <TileButton
+                    onClick={handleMenuAction(onNewDiscussion)}
+                    label={'Nouveau'}
+                    icon={PlusCircle}
+                    tooltip="Démarrer une nouvelle conversation"
+                  />
+                  {props.onOpenTemplates && (
+                    <TileButton
+                      onClick={handleMenuAction(props.onOpenTemplates)}
+                      label={'Templates'}
+                      icon={FileText}
+                      tooltip="Utiliser un template de conversation"
+                    />
+                  )}
+                  {!props.modeEnfant && (
                     <TileButton
                       onClick={handleMenuAction(handleModeVocalToggle)}
                       label={'Vocal'}
@@ -755,12 +778,6 @@ export function Header(props: HeaderProps) {
                       tooltip="Activer/désactiver le mode vocal auto"
                     />
                   )}
-                  <TileButton
-                    onClick={handleMenuAction(onNewDiscussion)}
-                    label={'Nouveau'}
-                    icon={PlusCircle}
-                    tooltip="Démarrer une nouvelle conversation"
-                  />
                   {!props.modeEnfant && (
                     <TileButton
                       onClick={handleMenuAction(onOpenHistory)}
