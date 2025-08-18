@@ -481,7 +481,7 @@ if (typeof window !== 'undefined') {
   let devtoolsOpen = false;
   setInterval(() => {
     const start = Date.now();
-    debugger; // eslint-disable-line no-debugger
+    // debugger; // eslint-disable-line no-debugger
     const end = Date.now();
     
     if (end - start > 100 && !devtoolsOpen) {

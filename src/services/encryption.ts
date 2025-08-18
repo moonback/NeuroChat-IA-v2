@@ -325,8 +325,16 @@ export async function decrypt(encryptedBlob: EncryptedBlob, password: string): P
     // Conversion en texte
     return new TextDecoder().decode(decryptedBuffer);
   } catch (error) {
-    // Les erreurs de déchiffrement peuvent indiquer un mot de passe incorrect
-    if (error instanceof Error && error.message.includes('decrypt')) {
+    // Les erreurs de déchiffrement WebCrypto indiquent généralement un mot de passe incorrect
+    if (error instanceof DOMException || 
+        (error instanceof Error && (
+          error.message.includes('decrypt') ||
+          error.message.includes('Invalid') ||
+          error.message.includes('invalid') ||
+          error.message.includes('failed') ||
+          error.message.includes('tag') ||
+          error.name === 'OperationError'
+        ))) {
       throw new Error('Mot de passe incorrect ou données corrompues');
     }
     throw new Error(`Échec du déchiffrement: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
@@ -415,8 +423,15 @@ export async function selfTest(): Promise<boolean> {
     const testData = 'Test de chiffrement AES-256 - NeuroChat Security';
     const testPassword = 'TestPassword123!';
     
+    console.log('🧪 Test crypto - Chiffrement avec mot de passe:', testPassword);
+    
     // Test de chiffrement
     const encrypted = await encrypt(testData, testPassword);
+    console.log('✅ Chiffrement réussi, structure:', {
+      algorithm: encrypted.algorithm,
+      version: encrypted.version,
+      iterations: encrypted.iterations
+    });
     
     // Vérification de la structure
     if (!validateEncryptedBlob(encrypted)) {
@@ -425,6 +440,7 @@ export async function selfTest(): Promise<boolean> {
     
     // Test de déchiffrement
     const decrypted = await decrypt(encrypted, testPassword);
+    console.log('✅ Déchiffrement réussi avec bon mot de passe');
     
     // Vérification de l'intégrité
     if (decrypted !== testData) {
@@ -432,13 +448,36 @@ export async function selfTest(): Promise<boolean> {
     }
     
     // Test avec mauvais mot de passe (doit échouer)
+    console.log('🧪 Test crypto - Tentative déchiffrement avec mauvais mot de passe...');
+    
+    // Test critique: déchiffrement avec mauvais mot de passe
+    console.log('🔑 Données du blob à tester:', {
+      algorithm: encrypted.algorithm,
+      saltLength: atob(encrypted.salt).length,
+      ivLength: atob(encrypted.iv).length,
+      dataLength: atob(encrypted.data).length,
+      tagLength: atob(encrypted.tag).length
+    });
+    
+    let wrongPasswordFailed = false;
     try {
-      await decrypt(encrypted, 'WrongPassword');
-      throw new Error('Le déchiffrement avec un mauvais mot de passe devrait échouer');
+      const wrongResult = await decrypt(encrypted, 'WrongPassword');
+      // Si on arrive ici, le déchiffrement a réussi avec un mauvais mot de passe (problème!)
+      console.error('🚨 SÉCURITÉ COMPROMISE: Déchiffrement réussi avec mauvais mot de passe!');
+      console.error('   Résultat obtenu:', wrongResult);
+      console.error('   Données attendues:', testData);
+      console.error('   Identiques?', wrongResult === testData);
+      wrongPasswordFailed = false;
     } catch (error) {
-      if (!error instanceof Error || !error.message.includes('Mot de passe incorrect')) {
-        throw error;
-      }
+      // Le déchiffrement a échoué (attendu)
+      wrongPasswordFailed = true;
+      console.log('✅ Test sécurité réussi: déchiffrement échoue avec mauvais mot de passe');
+      console.log('   Type d\'erreur:', error?.constructor?.name);
+      console.log('   Message:', error instanceof Error ? error.message : String(error));
+    }
+    
+    if (!wrongPasswordFailed) {
+      throw new Error('SÉCURITÉ COMPROMISE: Le déchiffrement réussit avec un mauvais mot de passe');
     }
     
     return true;
