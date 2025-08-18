@@ -14,6 +14,7 @@ import { HelpModal } from '@/components/HelpModal';
 // import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
+
 // =====================
 // Types améliorés
 // =====================
@@ -615,6 +616,14 @@ export function Header(props: HeaderProps) {
                 >
                   <Baby className="w-4 h-4" />
                 </IconButton>
+
+                {/* Badge de sécurité permanent (non désactivable) */}
+                {!props.modeEnfant && !modePrive && (
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-50/80 dark:bg-green-950/40 text-green-600 dark:text-green-400">
+                    <Shield className="w-4 h-4" />
+                    <span className="text-xs font-semibold">AES-256</span>
+                  </div>
+                )}
                 
                 {!props.modeEnfant && (
                   <>

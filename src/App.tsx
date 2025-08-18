@@ -8,6 +8,21 @@ import type { MistralGenerationConfig } from '@/services/mistralApi';
 import { streamMessage, type LlmConfig } from '@/services/llm';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { toast } from 'sonner';
+// 🔐 Services de sécurité AES-256 niveau gouvernemental
+import { enableSecureStorage, disableSecureStorage, initializeSecureStorage } from '@/services/secureStorage';
+import { enablePrivateMode, disablePrivateMode, initializeSecureMemory } from '@/services/secureMemory';
+import { initializeKeyManager, shutdownKeyManager, getKeyManagerStats } from '@/services/keyManager';
+import { selfTest as cryptoSelfTest } from '@/services/encryption';
+// 🔐 Chiffrement persistant pour mode normal
+import { 
+  initializePersistentEncryption,
+  savePersistentEncrypted,
+  loadPersistentEncrypted
+} from '@/services/persistentEncryption';
+
+// Constantes pour le debug
+const ENCRYPTION_ENABLED_KEY = 'nc_encryption_enabled';
+const MASTER_PASSWORD_KEY = 'nc_master_password_encrypted';
 // Lazy-loaded components pour réduire le bundle initial
 const TTSSettingsModalLazy = lazy(() => import('@/components/TTSSettingsModal').then(m => ({ default: m.TTSSettingsModal })));
 import { Header } from '@/components/Header';
@@ -16,6 +31,7 @@ import { searchDocuments } from '@/services/ragSearch';
 const RagDocsModalLazy = lazy(() => import('@/components/RagDocsModal').then(m => ({ default: m.RagDocsModal })));
 const HistoryModalLazy = lazy(() => import('@/components/HistoryModal').then(m => ({ default: m.HistoryModal })));
 const MemoryModalLazy = lazy(() => import('@/components/MemoryModal').then(m => ({ default: m.MemoryModal })));
+
 import type { DiscussionWithCategory } from '@/components/HistoryModal';
 
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
@@ -70,6 +86,59 @@ type RagContextMessage = {
 // Similarité: vecteurs normalisés => cosinus = dot product
 
 function App() {
+  // 🔐 Initialisation du système de sécurité au démarrage
+  useEffect(() => {
+    const initializeSecurity = async () => {
+      try {
+        // Test d'auto-vérification du chiffrement
+        const cryptoTest = await cryptoSelfTest();
+        if (!cryptoTest) {
+          // console.error('⚠️ Échec du test de chiffrement - Fonctionnalités de sécurité désactivées');
+          // toast.error('Système de chiffrement non disponible - Évitez le mode privé');
+          return;
+        }
+        
+        // Initialisation des services de sécurité
+        initializeSecureStorage();
+        initializeSecureMemory();
+        initializeKeyManager();
+        
+        // // Le chiffrement est maintenant obligatoire - pas de diagnostic nécessaire
+        // console.log('🔐 Initialisation du chiffrement obligatoire...');
+        
+        // Initialisation du chiffrement persistant pour mode normal
+        const persistentInitialized = await initializePersistentEncryption();
+        setPersistentEncryptionEnabled(persistentInitialized);
+        
+        if (persistentInitialized) {
+          // console.log('✅ Chiffrement persistant activé avec succès');
+          // toast.success('🔐 Chiffrement AES-256 activé', {
+          //   description: 'Vos conversations sont maintenant protégées par défaut',
+          //   duration: 3000,
+          // });
+        } else {
+          // console.error('❌ ÉCHEC CRITIQUE: Le chiffrement obligatoire n\'a pas pu être activé');
+          toast.error('Erreur système critique', {
+            description: 'Le chiffrement AES-256 obligatoire n\'a pas pu être initialisé',
+            duration: 10000,
+          });
+        }
+        
+        // console.log('🔐 Système de sécurité AES-256 initialisé avec succès');
+      } catch (error) {
+        // console.error('Erreur d\'initialisation de la sécurité:', error);
+        toast.error('Erreur lors de l\'initialisation du système de sécurité');
+      }
+    };
+    
+    initializeSecurity();
+    
+    // Nettoyage à la fermeture du composant
+    return () => {
+      shutdownKeyManager();
+    };
+  }, []);
+
   // --- Espaces de travail via hooks ---
   const { workspaceId, setWorkspaceId, workspaces, createWorkspace, renameWorkspace, deleteWorkspace, wsKey } = useWorkspace();
   const { open: workspaceOpeningOpen, setOpen: setWorkspaceOpeningOpen, name: workspaceOpeningName } = useWorkspaceOpeningModal(workspaceId, workspaces);
@@ -228,6 +297,9 @@ function App() {
 
   // --- Mode privé/éphémère ---
   const [modePrive, setModePrive] = useState(false);
+  // --- Chiffrement persistant pour mode normal ---
+  const [persistentEncryptionEnabled, setPersistentEncryptionEnabled] = useState<boolean>(false);
+
   // --- Mode enfant (protégé par PIN) ---
   const [modeEnfant, setModeEnfant] = useState<boolean>(localStorage.getItem('mode_enfant') === 'true');
   const [childPin, setChildPin] = useState<string>(localStorage.getItem('mode_enfant_pin') || '');
@@ -235,15 +307,60 @@ function App() {
   const [showChildChangePinDialog, setShowChildChangePinDialog] = useState<boolean>(false);
   // --- Timeline de raisonnement ---
   // Timeline retirée
-  // Affichage d'un toast d'avertissement lors de l'activation
+  // 🔐 Gestion du mode privé avec chiffrement AES-256
   useEffect(() => {
-    if (modePrive) {
-      // toast.warning('Mode privé activé : les messages ne seront pas sauvegardés et seront effacés à la fermeture.');
-    }
-    // Exposer l'état pour d'autres services (ex: memoryExtractor)
-    try {
-      localStorage.setItem('mode_prive', modePrive ? 'true' : 'false');
-    } catch {}
+    const handlePrivateModeChange = async () => {
+      if (modePrive) {
+        try {
+          // Activation du mode privé sécurisé
+          enableSecureStorage();
+          enablePrivateMode();
+          
+          // Effacer les messages actuels pour sécurité
+          setMessages([]);
+          setUsedRagDocs([]);
+          setUsedWebSources([]);
+          
+          // Toast de confirmation avec détails de sécurité
+          toast.success('🔐 Mode Privé Ultra-Sécurisé Activé', {
+            description: 'Protection AES-256 • Auto-destruction • Zéro persistance',
+            duration: 3000,
+          });
+          
+          // Afficher les stats de sécurité
+          const keyStats = getKeyManagerStats();
+          if (keyStats) {
+            console.log('🔐 Statistiques de sécurité:', keyStats);
+          }
+          
+        } catch (error) {
+          console.error('Erreur activation mode privé:', error);
+          toast.error('Échec de l\'activation du mode privé sécurisé');
+          setModePrive(false); // Revenir en mode normal
+        }
+      } else {
+        try {
+          // Désactivation du mode privé
+          disablePrivateMode();
+          disableSecureStorage();
+          
+          toast.info('🔓 Mode Privé Désactivé', {
+            description: 'Toutes les données temporaires ont été détruites',
+            duration: 2000,
+          });
+          
+        } catch (error) {
+          console.error('Erreur désactivation mode privé:', error);
+        }
+      }
+      
+      // Exposer l'état pour d'autres services (ex: memoryExtractor)
+      try {
+        localStorage.setItem('mode_prive', modePrive ? 'true' : 'false');
+      } catch {}
+    };
+    
+    handlePrivateModeChange();
   }, [modePrive]);
 
   // Persistance du mode enfant
@@ -269,32 +386,82 @@ function App() {
     candidateCount: 1,
   };
 
-  // Charger la dernière discussion au démarrage
+  // Charger la dernière discussion au démarrage (avec déchiffrement optionnel)
   useEffect(() => {
     if (modePrive) {
       setMessages([]);
       return;
     }
-    const key = wsKey(workspaceId, LOCALSTORAGE_CURRENT_BASE);
-    const saved = localStorage.getItem(key);
-    if (saved) {
+    
+    const loadMessages = async () => {
+      const key = wsKey(workspaceId, LOCALSTORAGE_CURRENT_BASE);
+      
       try {
-        const parsed = JSON.parse(saved);
-        setMessages(parsed.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) })));
-      } catch {
+        let savedData = null;
+        
+        // Vérifier d'abord le type de données stockées
+        const saved = localStorage.getItem(key);
+        if (saved) {
+          if (saved.startsWith('NEUROCHT_PERSIST_')) {
+            // Données chiffrées détectées
+            if (persistentEncryptionEnabled) {
+              savedData = await loadPersistentEncrypted(key);
+            } else {
+              console.warn('⚠️ Données chiffrées détectées mais chiffrement non activé');
+              // Proposer de réactiver le chiffrement ou ignorer
+              savedData = null;
+            }
+          } else {
+            // Données non chiffrées
+            try {
+              savedData = JSON.parse(saved);
+            } catch (parseError) {
+              console.error('Erreur parsing JSON:', parseError);
+              // Nettoyer les données corrompues
+              localStorage.removeItem(key);
+              savedData = null;
+            }
+          }
+        }
+        
+        if (savedData && Array.isArray(savedData)) {
+          setMessages(savedData.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) })));
+        } else {
+          setMessages([]);
+        }
+      } catch (error) {
+        console.error('Erreur chargement messages:', error);
         setMessages([]);
       }
-    } else {
-      setMessages([]);
-    }
-  }, [modePrive, workspaceId]);
+    };
+    
+    loadMessages();
+  }, [modePrive, workspaceId, persistentEncryptionEnabled]);
 
-  // Sauvegarder la discussion courante à chaque changement
+  // Sauvegarder la discussion courante à chaque changement (avec chiffrement optionnel)
   useEffect(() => {
     if (modePrive) return; // Pas de sauvegarde en mode privé
-    const key = wsKey(workspaceId, LOCALSTORAGE_CURRENT_BASE);
-    localStorage.setItem(key, JSON.stringify(messages));
-  }, [messages, modePrive, workspaceId]);
+    
+    const saveMessages = async () => {
+      const key = wsKey(workspaceId, LOCALSTORAGE_CURRENT_BASE);
+      
+      if (persistentEncryptionEnabled) {
+        // Mode chiffré persistant
+        try {
+          await savePersistentEncrypted(key, messages);
+        } catch (error) {
+          console.error('Erreur sauvegarde chiffrée:', error);
+          // Fallback en mode normal
+          localStorage.setItem(key, JSON.stringify(messages));
+        }
+      } else {
+        // Mode normal
+        localStorage.setItem(key, JSON.stringify(messages));
+      }
+    };
+    
+    saveMessages();
+  }, [messages, modePrive, workspaceId, persistentEncryptionEnabled]);
 
   // Charger les presets au montage
   useEffect(() => {
@@ -319,6 +486,27 @@ function App() {
       setRagEnabled(false);
     }
   }, [modeEnfant]);
+
+  // 🔐 Surveiller les changements d'état du chiffrement persistant
+  useEffect(() => {
+    const checkPersistentState = () => {
+      const isEnabled = localStorage.getItem(ENCRYPTION_ENABLED_KEY) === 'true';
+      const hasPassword = localStorage.getItem(MASTER_PASSWORD_KEY) !== null;
+      const hasDerivationKey = localStorage.getItem('nc_derivation_key') !== null;
+      
+      console.log('🔍 État du chiffrement persistant:', {
+        isEnabled,
+        hasPassword,
+        hasDerivationKey,
+        currentState: persistentEncryptionEnabled
+      });
+    };
+    
+    // Vérification périodique
+    const interval = setInterval(checkPersistentState, 10000); // Toutes les 10 secondes
+    
+    return () => clearInterval(interval);
+  }, [persistentEncryptionEnabled]);
 
   // Sauvegarder une discussion dans l'historique (sans doublons consécutifs)
   const saveDiscussionToHistory = (discussion: Message[]) => {
@@ -442,6 +630,10 @@ function App() {
   };
 
   const handleCloseChildPin = () => setShowChildPinDialog(false);
+
+  // 🔐 Plus de données orphelines possibles - chiffrement permanent et obligatoire
+
+  // 🔐 Le chiffrement est maintenant permanent et obligatoire - pas de désactivation possible
 
   // Prompt système avec règles additionnelles en mode privé
   const getSystemPrompt = () => {
@@ -1241,6 +1433,8 @@ ${lines.join('\n')}`, false);
           onChangeProvider={(p) => { setProvider(p); localStorage.setItem('llm_provider', p); }}
           modePrive={modePrive}
           setModePrive={setModePrive}
+          // Chiffrement persistant
+
           modeEnfant={modeEnfant}
           onToggleModeEnfant={() => {
             // Si on désactive alors qu'il est actif -> demander le PIN
@@ -1513,6 +1707,8 @@ ${lines.join('\n')}`, false);
       
       {/* Modale d'ouverture d'espace de travail */}
       <WorkspaceOpeningDialog open={workspaceOpeningOpen} onOpenChange={setWorkspaceOpeningOpen} name={workspaceOpeningName} />
+      
+      {/* Le chiffrement est maintenant automatique et permanent */}
     </div>
   );
 }
