@@ -19,7 +19,9 @@ import {
   disablePersistentEncryption, 
   initializePersistentEncryption,
   savePersistentEncrypted,
-  loadPersistentEncrypted
+  loadPersistentEncrypted,
+  diagnosePersistentEncryption,
+  forceEnablePersistentEncryption
 } from '@/services/persistentEncryption';
 
 // Constantes pour le debug
@@ -105,6 +107,10 @@ function App() {
         initializeSecureMemory();
         initializeKeyManager();
         
+        // Diagnostic pré-initialisation
+        console.log('🔍 État pré-initialisation:');
+        diagnosePersistentEncryption();
+        
         // Initialisation du chiffrement persistant pour mode normal
         const persistentInitialized = await initializePersistentEncryption();
         setPersistentEncryptionEnabled(persistentInitialized);
@@ -117,6 +123,24 @@ function App() {
           });
         } else {
           console.log('ℹ️ Chiffrement persistant non disponible');
+          console.log('🔧 Pour forcer l\'activation, utilisez: window.forceEncryption()');
+          
+          // Exposer des fonctions de débogage globales
+          (window as any).forceEncryption = async () => {
+            console.log('🔧 Activation forcée via console...');
+            const forced = await forceEnablePersistentEncryption();
+            if (forced) {
+              setPersistentEncryptionEnabled(true);
+              toast.success('🔐 Chiffrement activé manuellement');
+              window.location.reload(); // Recharger pour appliquer les changements
+            }
+          };
+          
+          (window as any).diagnoseEncryption = () => {
+            console.log('🔍 Diagnostic complet:');
+            return diagnosePersistentEncryption();
+          };
+          
           // Vérifier s'il y a des données chiffrées orphelines
           setTimeout(() => detectOrphanedEncryptedData(), 2000);
         }

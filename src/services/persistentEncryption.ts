@@ -118,13 +118,26 @@ export async function initializePersistentEncryption(userPassword?: string): Pro
   try {
     const isEnabled = localStorage.getItem(ENCRYPTION_ENABLED_KEY);
     
-    // Si pas encore configuré, activer automatiquement le chiffrement par défaut
+    // Si pas encore configuré OU explicitement désactivé, proposer activation automatique
     if (isEnabled === null) {
       console.log('🔐 Premier démarrage - Activation automatique du chiffrement AES-256');
       return await enablePersistentEncryption(); // Auto-génère un mot de passe
     }
     
+    // Si désactivé mais pas de données chiffrées existantes, proposer activation
+    if (isEnabled === 'false') {
+      const hasEncryptedData = Object.keys(localStorage).some(key => 
+        localStorage.getItem(key)?.startsWith('NEUROCHT_PERSIST_')
+      );
+      
+      if (!hasEncryptedData) {
+        console.log('🔐 Activation automatique du chiffrement AES-256 (première utilisation)');
+        return await enablePersistentEncryption();
+      }
+    }
+    
     if (isEnabled !== 'true') {
+      console.log('ℹ️ Chiffrement persistant désactivé par l\'utilisateur');
       return false;
     }
     
@@ -407,6 +420,61 @@ export async function changePersistentPassword(currentPassword: string, newPassw
   localStorage.setItem(MASTER_PASSWORD_KEY, PERSISTENT_ENCRYPTED_PREFIX + JSON.stringify(encryptedPassword));
   
   console.log('✅ Mot de passe de chiffrement changé avec succès');
+}
+
+// ========================================================================================
+// FONCTIONS DE DIAGNOSTIC
+// ========================================================================================
+
+/**
+ * Diagnostique l'état du chiffrement persistant pour débogage
+ */
+export function diagnosePersistentEncryption(): {
+  enabled: string | null;
+  hasPassword: boolean;
+  hasDerivationKey: boolean;
+  hasEncryptedData: boolean;
+  encryptedDataCount: number;
+} {
+  const enabled = localStorage.getItem(ENCRYPTION_ENABLED_KEY);
+  const hasPassword = !!localStorage.getItem(MASTER_PASSWORD_KEY);
+  const hasDerivationKey = !!localStorage.getItem('nc_derivation_key');
+  
+  const encryptedKeys = Object.keys(localStorage).filter(key => 
+    localStorage.getItem(key)?.startsWith('NEUROCHT_PERSIST_')
+  );
+  
+  const diagnosis = {
+    enabled,
+    hasPassword,
+    hasDerivationKey,
+    hasEncryptedData: encryptedKeys.length > 0,
+    encryptedDataCount: encryptedKeys.length
+  };
+  
+  console.log('🔍 Diagnostic chiffrement persistant:', diagnosis);
+  console.log('🔍 Clés chiffrées trouvées:', encryptedKeys);
+  
+  return diagnosis;
+}
+
+/**
+ * Force l'activation du chiffrement (pour débogage)
+ */
+export async function forceEnablePersistentEncryption(): Promise<boolean> {
+  console.log('🔧 Activation forcée du chiffrement AES-256...');
+  try {
+    const result = await enablePersistentEncryption();
+    if (result) {
+      console.log('✅ Chiffrement forcé activé avec succès');
+    } else {
+      console.error('❌ Échec de l\'activation forcée');
+    }
+    return result;
+  } catch (error) {
+    console.error('❌ Erreur lors de l\'activation forcée:', error);
+    return false;
+  }
 }
 
 // ========================================================================================

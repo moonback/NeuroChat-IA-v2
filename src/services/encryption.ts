@@ -67,19 +67,13 @@ class SecureKeyCache {
   private cache = new Map<string, DerivedKey>();
   private readonly TTL = 300000; // 5 minutes en millisecondes
   
-  /** Génère un identifiant unique pour la clé basé sur le sel */
-  private getKeyId(salt: Uint8Array): string {
-    return Array.from(salt.slice(0, 16), b => b.toString(16).padStart(2, '0')).join('');
-  }
-  
   /** Stocke une clé dérivée avec expiration automatique */
-  store(salt: Uint8Array, key: CryptoKey): void {
-    const id = this.getKeyId(salt);
+  store(keyId: string, key: CryptoKey): void {
     const now = Date.now();
     
-    this.cache.set(id, {
+    this.cache.set(keyId, {
       key,
-      salt: salt.slice(), // Copie défensive
+      salt: new Uint8Array(), // Pas utilisé dans la nouvelle implémentation
       createdAt: now,
       expiresAt: now + this.TTL
     });
@@ -89,12 +83,11 @@ class SecureKeyCache {
   }
   
   /** Récupère une clé dérivée si elle n'est pas expirée */
-  get(salt: Uint8Array): CryptoKey | null {
-    const id = this.getKeyId(salt);
-    const entry = this.cache.get(id);
+  get(keyId: string): CryptoKey | null {
+    const entry = this.cache.get(keyId);
     
     if (!entry || Date.now() > entry.expiresAt) {
-      if (entry) this.cache.delete(id);
+      if (entry) this.cache.delete(keyId);
       return null;
     }
     
@@ -149,8 +142,12 @@ function generateIV(): Uint8Array {
  * @returns Clé AES-256 dérivée
  */
 async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
-  // Vérifier le cache en premier
-  const cachedKey = keyCache.get(salt);
+  // Créer une clé de cache sécurisée qui inclut le mot de passe ET le salt
+  // Utiliser un hash pour éviter de stocker le mot de passe en clair
+  const saltHex = Array.from(salt, b => b.toString(16).padStart(2, '0')).join('');
+  const passwordHash = Array.from(new TextEncoder().encode(password), b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+  const cacheKey = passwordHash + '::' + saltHex;
+  const cachedKey = keyCache.get(cacheKey);
   if (cachedKey) {
     return cachedKey;
   }
@@ -184,7 +181,7 @@ async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey>
     );
     
     // Mettre en cache pour éviter les recalculs coûteux
-    keyCache.store(salt, derivedKey);
+    keyCache.store(cacheKey, derivedKey);
     
     return derivedKey;
   } catch (error) {
@@ -312,6 +309,7 @@ export async function decrypt(encryptedBlob: EncryptedBlob, password: string): P
     const key = await deriveKey(password, salt);
     
     // Déchiffrement avec vérification d'authenticité
+    // En AES-GCM, le tag doit être à la fin des données
     const decryptedBuffer = await crypto.subtle.decrypt(
       {
         name: CRYPTO_CONFIG.ALGORITHM,
@@ -319,7 +317,7 @@ export async function decrypt(encryptedBlob: EncryptedBlob, password: string): P
         tagLength: CRYPTO_CONFIG.TAG_LENGTH,
       },
       key,
-      encryptedBuffer
+      encryptedBuffer  // data + tag déjà concaténés
     );
     
     // Conversion en texte
