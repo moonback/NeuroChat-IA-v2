@@ -37,6 +37,8 @@ import { WebSourcesSidebar } from '@/components/WebSourcesSidebar';
 import { WebSourcesDrawer } from '@/components/WebSourcesDrawer';
 import type { WebSource } from '@/components/WebSourcesSidebar';
 import { AgentStatus } from '@/components/AgentStatus';
+import { SuggestedReplies } from '@/components/SuggestedReplies';
+import { SuggestionsSettingsModal } from '@/components/SuggestionsSettingsModal';
 import { useWorkspace, useWorkspaceOpeningModal } from '@/hooks/useWorkspace';
 
 // Timeline retirée
@@ -101,6 +103,7 @@ function App() {
   const [historyList, setHistoryList] = useState<DiscussionWithCategory[]>([]);
   
   const [showTTSSettings, setShowTTSSettings] = useState(false);
+  const [showSuggestionsSettings, setShowSuggestionsSettings] = useState(false);
   
   // Personnalités retirées
   // Ajout du state pour le mode vocal automatique
@@ -128,6 +131,33 @@ function App() {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedMessageIds, setSelectedMessageIds] = useState<string[]>([]);
   const [showConfirmDeleteMultiple, setShowConfirmDeleteMultiple] = useState(false);
+
+  // --- Suggestions de réponses ---
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [lastLlmMessage, setLastLlmMessage] = useState<string>('');
+  const [suggestionsEnabled, setSuggestionsEnabled] = useState(() => {
+    try {
+      return localStorage.getItem('suggestions_enabled') !== 'false';
+    } catch {
+      return true;
+    }
+  });
+  
+  // Préférences utilisateur pour les suggestions
+  const [userSuggestionPreferences, setUserSuggestionPreferences] = useState(() => {
+    try {
+      const saved = localStorage.getItem('user_suggestion_preferences');
+      return saved ? JSON.parse(saved) : {
+        detailLevel: 'detailed' as const,
+        interactionStyle: 'casual' as const
+      };
+    } catch {
+      return {
+        detailLevel: 'detailed' as const,
+        interactionStyle: 'casual' as const
+      };
+    }
+  });
 
   // Hyperparamètres Gemini
   const [geminiConfig, setGeminiConfig] = useState<GeminiGenerationConfig>({
@@ -794,6 +824,12 @@ ${lines.join('\n')}`, false);
             setMessages(prev => prev.map(m => m.id === aiMsg.id ? { ...m, text: (m.text || '') + token } : m));
           },
           onDone: () => {
+            // Capturer le message LLM pour les suggestions
+            if (suggestionsEnabled && acc.trim() && !modeEnfant) {
+              setLastLlmMessage(acc.trim());
+              setShowSuggestions(true);
+            }
+            
             // Indiquer que l'IA commence à parler
             setIsAISpeaking(true);
             console.log('[Vocal Mode] IA commence à parler - microphone coupé');
@@ -1153,7 +1189,36 @@ ${lines.join('\n')}`, false);
     setShowConfirmDeleteMultiple(false);
   };
 
+  // --- Gestion des suggestions ---
+  const handleSelectSuggestion = (suggestion: string) => {
+    // Masquer les suggestions
+    setShowSuggestions(false);
+    
+    // Envoyer automatiquement la suggestion comme message
+    handleSendMessage(suggestion);
+  };
 
+  const handleCloseSuggestions = () => {
+    setShowSuggestions(false);
+  };
+
+  const handleToggleSuggestions = (enabled: boolean) => {
+    setSuggestionsEnabled(enabled);
+    try {
+      localStorage.setItem('suggestions_enabled', enabled.toString());
+    } catch {}
+    
+    if (!enabled) {
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleUpdateSuggestionPreferences = (newPreferences: typeof userSuggestionPreferences) => {
+    setUserSuggestionPreferences(newPreferences);
+    try {
+      localStorage.setItem('user_suggestion_preferences', JSON.stringify(newPreferences));
+    } catch {}
+  };
 
   // Handler pour modifier un hyperparamètre Gemini
   const handleGeminiConfigChange = (key: keyof GeminiGenerationConfig, value: any) => {
@@ -1271,6 +1336,9 @@ ${lines.join('\n')}`, false);
           showConfirmDelete={showConfirmDeleteMultiple}
           setShowConfirmDelete={setShowConfirmDeleteMultiple}
           onDeleteConfirmed={handleDeleteMultipleMessages}
+          suggestionsEnabled={suggestionsEnabled}
+          onToggleSuggestions={handleToggleSuggestions}
+          onOpenSuggestionsSettings={() => setShowSuggestionsSettings(true)}
         />
 
         {/* Indicateur visuel du mode privé SOUS le header, centré (caché en mode enfant) */}
@@ -1382,6 +1450,26 @@ ${lines.join('\n')}`, false);
           toast.success('PIN mis à jour.');
         }}
       />
+
+      {/* Suggestions de réponses */}
+      {showSuggestions && suggestionsEnabled && !modeEnfant && (
+        <div className="fixed bottom-20 left-0 right-0 z-40 px-4 py-2">
+          <SuggestedReplies
+            lastLlmMessage={lastLlmMessage}
+            onSelectSuggestion={handleSelectSuggestion}
+            visible={showSuggestions}
+            onClose={handleCloseSuggestions}
+            maxSuggestions={4}
+            compact={false}
+            conversationHistory={messages
+              .filter((m: any) => !m.isRagContext && typeof m.text === 'string')
+              .slice(-10) // Les 10 derniers messages pour le contexte
+              .map((m: any) => ({ text: m.text, isUser: m.isUser }))
+            }
+            userPreferences={userSuggestionPreferences}
+          />
+        </div>
+      )}
 
       {/* Zone de saisie fixée en bas de l'écran */}
       <div id="voice-input-wrapper" ref={voiceInputContainerRef} className="fixed bottom-0 left-0 w-full z-50 bg-white/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-700 px-2 pt-2 pb-2 backdrop-blur-xl">
@@ -1513,6 +1601,14 @@ ${lines.join('\n')}`, false);
       
       {/* Modale d'ouverture d'espace de travail */}
       <WorkspaceOpeningDialog open={workspaceOpeningOpen} onOpenChange={setWorkspaceOpeningOpen} name={workspaceOpeningName} />
+
+      {/* Modal de configuration des suggestions */}
+      <SuggestionsSettingsModal
+        open={showSuggestionsSettings}
+        onClose={() => setShowSuggestionsSettings(false)}
+        preferences={userSuggestionPreferences}
+        onUpdatePreferences={handleUpdateSuggestionPreferences}
+      />
     </div>
   );
 }

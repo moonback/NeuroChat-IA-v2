@@ -64,6 +64,10 @@ interface HeaderProps {
   onCreateWorkspace?: () => void;
   onRenameWorkspace?: (id: string, name: string) => void;
   onDeleteWorkspace?: (id: string) => void;
+  // Suggestions
+  suggestionsEnabled?: boolean;
+  onToggleSuggestions?: (enabled: boolean) => void;
+  onOpenSuggestionsSettings?: () => void;
 }
 
 // =====================
@@ -419,6 +423,13 @@ export function Header(props: HeaderProps) {
     props.onToggleModeEnfant?.();
   }, [props.onToggleModeEnfant]);
 
+  const handleSuggestionsToggle = useCallback(() => {
+    if (props.onToggleSuggestions) {
+      props.onToggleSuggestions(!props.suggestionsEnabled);
+      if ('vibrate' in navigator) navigator.vibrate(30);
+    }
+  }, [props.suggestionsEnabled, props.onToggleSuggestions]);
+
   const closeMobileMenu = useCallback(() => {
     setShowMobileMenu(false);
   }, []);
@@ -632,6 +643,14 @@ export function Header(props: HeaderProps) {
                       active={!!webEnabled}
                     >
                       <Globe className={`w-4 h-4 ${props.webSearching ? 'animate-spin' : ''}`} />
+                    </IconButton>
+
+                    <IconButton
+                      onClick={handleSuggestionsToggle}
+                      tooltip="Suggestions de réponses"
+                      active={!!props.suggestionsEnabled}
+                    >
+                      <Sparkles className="w-4 h-4" />
                     </IconButton>
                   </>
                 )}
@@ -874,6 +893,17 @@ export function Header(props: HeaderProps) {
                       tooltip="Recherche web"
                     />
                   )}
+
+                  {!props.modeEnfant && (
+                    <TileButton
+                      onClick={handleMenuAction(handleSuggestionsToggle)}
+                      label={props.suggestionsEnabled ? 'Suggestions: ON' : 'Suggestions: OFF'}
+                      icon={Sparkles}
+                      active={!!props.suggestionsEnabled}
+                      intent={props.suggestionsEnabled ? 'info' : 'default'}
+                      tooltip="Suggestions de réponses"
+                    />
+                  )}
                         </div>
                           </div>
 
@@ -941,6 +971,14 @@ export function Header(props: HeaderProps) {
                       label={'PIN enfant'}
                       icon={Settings2}
                       tooltip="PIN mode enfant"
+                    />
+                  )}
+                  {!props.modeEnfant && props.onOpenSuggestionsSettings && (
+                    <TileButton
+                      onClick={handleMenuAction(props.onOpenSuggestionsSettings)}
+                      label={'Suggestions'}
+                      icon={Sparkles}
+                      tooltip="Paramètres des suggestions"
                     />
                   )}
                   {!props.modeEnfant && (
