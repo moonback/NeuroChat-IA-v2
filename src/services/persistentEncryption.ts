@@ -73,42 +73,8 @@ export async function enablePersistentEncryption(userPassword?: string): Promise
   }
 }
 
-/**
- * Désactive le chiffrement persistant
- * @param password - Mot de passe pour vérification
- * @param keepData - Garder les données (les déchiffrer) ou les supprimer
- */
-export async function disablePersistentEncryption(password: string, keepData: boolean = true): Promise<void> {
-  try {
-    // Vérifier le mot de passe
-    if (password !== masterPassword) {
-      throw new Error('Mot de passe incorrect');
-    }
-    
-    if (keepData) {
-      // Déchiffrer toutes les données avant désactivation
-      await decryptAllPersistentData(password);
-    } else {
-      // Supprimer toutes les données chiffrées
-      clearAllEncryptedData();
-    }
-    
-    // Réinitialiser l'état
-    masterPassword = null;
-    persistentEncryptionEnabled = false;
-    persistentCache.clear();
-    
-    // Nettoyer le localStorage
-    localStorage.removeItem(ENCRYPTION_ENABLED_KEY);
-    localStorage.removeItem(MASTER_PASSWORD_KEY);
-    localStorage.removeItem('nc_derivation_key');
-    
-    console.log('🔓 Chiffrement persistant désactivé');
-  } catch (error) {
-    console.error('Erreur désactivation chiffrement persistant:', error);
-    throw new Error(`Échec de la désactivation: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-  }
-}
+// ⚠️ FONCTION SUPPRIMÉE: La désactivation du chiffrement n'est plus possible
+// Le chiffrement AES-256 est maintenant permanent et obligatoire
 
 /**
  * Initialise le chiffrement persistant au démarrage de l'app
@@ -118,27 +84,10 @@ export async function initializePersistentEncryption(userPassword?: string): Pro
   try {
     const isEnabled = localStorage.getItem(ENCRYPTION_ENABLED_KEY);
     
-    // Si pas encore configuré OU explicitement désactivé, proposer activation automatique
-    if (isEnabled === null) {
-      console.log('🔐 Premier démarrage - Activation automatique du chiffrement AES-256');
-      return await enablePersistentEncryption(); // Auto-génère un mot de passe
-    }
-    
-    // Si désactivé mais pas de données chiffrées existantes, proposer activation
-    if (isEnabled === 'false') {
-      const hasEncryptedData = Object.keys(localStorage).some(key => 
-        localStorage.getItem(key)?.startsWith('NEUROCHT_PERSIST_')
-      );
-      
-      if (!hasEncryptedData) {
-        console.log('🔐 Activation automatique du chiffrement AES-256 (première utilisation)');
-        return await enablePersistentEncryption();
-      }
-    }
-    
+    // Le chiffrement est maintenant OBLIGATOIRE - toujours activé
     if (isEnabled !== 'true') {
-      console.log('ℹ️ Chiffrement persistant désactivé par l\'utilisateur');
-      return false;
+      console.log('🔐 Activation obligatoire du chiffrement AES-256');
+      return await enablePersistentEncryption(); // Force l'activation
     }
     
     // Tenter de récupérer le mot de passe stocké
@@ -484,7 +433,7 @@ export async function forceEnablePersistentEncryption(): Promise<boolean> {
 export default {
   isPersistentEncryptionEnabled,
   enablePersistentEncryption,
-  disablePersistentEncryption,
+  // disablePersistentEncryption, // SUPPRIMÉ - Chiffrement permanent
   initializePersistentEncryption,
   savePersistentEncrypted,
   loadPersistentEncrypted,

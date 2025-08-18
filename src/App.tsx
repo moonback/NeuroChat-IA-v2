@@ -15,13 +15,9 @@ import { initializeKeyManager, shutdownKeyManager, getKeyManagerStats } from '@/
 import { selfTest as cryptoSelfTest } from '@/services/encryption';
 // 🔐 Chiffrement persistant pour mode normal
 import { 
-  enablePersistentEncryption, 
-  disablePersistentEncryption, 
   initializePersistentEncryption,
   savePersistentEncrypted,
-  loadPersistentEncrypted,
-  diagnosePersistentEncryption,
-  forceEnablePersistentEncryption
+  loadPersistentEncrypted
 } from '@/services/persistentEncryption';
 
 // Constantes pour le debug
@@ -35,7 +31,7 @@ import { searchDocuments } from '@/services/ragSearch';
 const RagDocsModalLazy = lazy(() => import('@/components/RagDocsModal').then(m => ({ default: m.RagDocsModal })));
 const HistoryModalLazy = lazy(() => import('@/components/HistoryModal').then(m => ({ default: m.HistoryModal })));
 const MemoryModalLazy = lazy(() => import('@/components/MemoryModal').then(m => ({ default: m.MemoryModal })));
-const EncryptionSetupModalLazy = lazy(() => import('@/components/EncryptionSetupModal').then(m => ({ default: m.EncryptionSetupModal })));
+
 import type { DiscussionWithCategory } from '@/components/HistoryModal';
 
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
@@ -107,9 +103,8 @@ function App() {
         initializeSecureMemory();
         initializeKeyManager();
         
-        // Diagnostic pré-initialisation
-        console.log('🔍 État pré-initialisation:');
-        diagnosePersistentEncryption();
+        // Le chiffrement est maintenant obligatoire - pas de diagnostic nécessaire
+        console.log('🔐 Initialisation du chiffrement obligatoire...');
         
         // Initialisation du chiffrement persistant pour mode normal
         const persistentInitialized = await initializePersistentEncryption();
@@ -122,27 +117,11 @@ function App() {
             duration: 3000,
           });
         } else {
-          console.log('ℹ️ Chiffrement persistant non disponible');
-          console.log('🔧 Pour forcer l\'activation, utilisez: window.forceEncryption()');
-          
-          // Exposer des fonctions de débogage globales
-          (window as any).forceEncryption = async () => {
-            console.log('🔧 Activation forcée via console...');
-            const forced = await forceEnablePersistentEncryption();
-            if (forced) {
-              setPersistentEncryptionEnabled(true);
-              toast.success('🔐 Chiffrement activé manuellement');
-              window.location.reload(); // Recharger pour appliquer les changements
-            }
-          };
-          
-          (window as any).diagnoseEncryption = () => {
-            console.log('🔍 Diagnostic complet:');
-            return diagnosePersistentEncryption();
-          };
-          
-          // Vérifier s'il y a des données chiffrées orphelines
-          setTimeout(() => detectOrphanedEncryptedData(), 2000);
+          console.error('❌ ÉCHEC CRITIQUE: Le chiffrement obligatoire n\'a pas pu être activé');
+          toast.error('Erreur système critique', {
+            description: 'Le chiffrement AES-256 obligatoire n\'a pas pu être initialisé',
+            duration: 10000,
+          });
         }
         
         console.log('🔐 Système de sécurité AES-256 initialisé avec succès');
@@ -320,7 +299,7 @@ function App() {
   const [modePrive, setModePrive] = useState(false);
   // --- Chiffrement persistant pour mode normal ---
   const [persistentEncryptionEnabled, setPersistentEncryptionEnabled] = useState<boolean>(false);
-  const [showEncryptionSetup, setShowEncryptionSetup] = useState<boolean>(false);
+
   // --- Mode enfant (protégé par PIN) ---
   const [modeEnfant, setModeEnfant] = useState<boolean>(localStorage.getItem('mode_enfant') === 'true');
   const [childPin, setChildPin] = useState<string>(localStorage.getItem('mode_enfant_pin') || '');
@@ -652,93 +631,9 @@ function App() {
 
   const handleCloseChildPin = () => setShowChildPinDialog(false);
 
-  // 🔐 Fonction utilitaire pour détecter des données chiffrées orphelines
-  const detectOrphanedEncryptedData = () => {
-    const orphanedKeys: string[] = [];
-    
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key) {
-        const value = localStorage.getItem(key);
-        if (value && value.startsWith('NEUROCHT_PERSIST_') && !persistentEncryptionEnabled) {
-          orphanedKeys.push(key);
-        }
-      }
-    }
-    
-    if (orphanedKeys.length > 0) {
-      console.warn('⚠️ Données chiffrées orphelines détectées:', orphanedKeys);
-      toast.warning('Données chiffrées détectées', {
-        description: `${orphanedKeys.length} éléments nécessitent le chiffrement pour être lus. Cliquez pour réactiver ou ignorez pour supprimer.`,
-        duration: 10000,
-        action: {
-          label: 'Réactiver',
-          onClick: () => setShowEncryptionSetup(true),
-        },
-      });
-      
-      // Toast séparé pour l'option de nettoyage
-      setTimeout(() => {
-        toast.error('Nettoyer les données chiffrées?', {
-          description: 'Supprime définitivement les données non accessibles',
-          action: {
-            label: 'Nettoyer',
-            onClick: () => {
-              orphanedKeys.forEach(key => localStorage.removeItem(key));
-              toast.success(`${orphanedKeys.length} données orphelines supprimées`);
-              window.location.reload();
-            },
-          },
-        });
-      }, 2000);
-    }
-    
-    return orphanedKeys;
-  };
+  // 🔐 Plus de données orphelines possibles - chiffrement permanent et obligatoire
 
-  // 🔐 Gestionnaire pour le chiffrement persistant
-  const handleTogglePersistentEncryption = async () => {
-    if (persistentEncryptionEnabled) {
-      // Désactiver le chiffrement
-      const password = window.prompt('Entrez votre mot de passe de chiffrement pour désactiver:');
-      if (password) {
-        try {
-          await disablePersistentEncryption(password, true); // Garder les données déchiffrées
-          setPersistentEncryptionEnabled(false);
-          toast.success('🔓 Chiffrement persistant désactivé', {
-            description: 'Vos données ont été déchiffrées et conservées',
-          });
-        } catch (error) {
-          toast.error('Erreur lors de la désactivation du chiffrement');
-        }
-      }
-    } else {
-      // Activer le chiffrement
-      setShowEncryptionSetup(true);
-    }
-  };
-
-  const handleSetupEncryption = async (userPassword?: string) => {
-    try {
-      const generatedPassword = await enablePersistentEncryption(userPassword);
-      setPersistentEncryptionEnabled(true);
-      setShowEncryptionSetup(false);
-      
-      if (!userPassword) {
-        // Afficher le mot de passe généré
-        toast.success('🔐 Chiffrement AES-256 Activé!', {
-          description: `Mot de passe généré: ${generatedPassword.substring(0, 8)}... (sauvegardé automatiquement)`,
-          duration: 5000,
-        });
-      } else {
-        toast.success('🔐 Chiffrement AES-256 Activé!', {
-          description: 'Vos conversations sont maintenant chiffrées de manière persistante',
-        });
-      }
-    } catch (error) {
-      toast.error('Erreur lors de l\'activation du chiffrement');
-    }
-  };
+  // 🔐 Le chiffrement est maintenant permanent et obligatoire - pas de désactivation possible
 
   // Prompt système avec règles additionnelles en mode privé
   const getSystemPrompt = () => {
@@ -1539,8 +1434,7 @@ ${lines.join('\n')}`, false);
           modePrive={modePrive}
           setModePrive={setModePrive}
           // Chiffrement persistant
-          persistentEncryptionEnabled={persistentEncryptionEnabled}
-          onTogglePersistentEncryption={handleTogglePersistentEncryption}
+
           modeEnfant={modeEnfant}
           onToggleModeEnfant={() => {
             // Si on désactive alors qu'il est actif -> demander le PIN
@@ -1814,14 +1708,7 @@ ${lines.join('\n')}`, false);
       {/* Modale d'ouverture d'espace de travail */}
       <WorkspaceOpeningDialog open={workspaceOpeningOpen} onOpenChange={setWorkspaceOpeningOpen} name={workspaceOpeningName} />
       
-      {/* Modale de configuration du chiffrement */}
-      <Suspense fallback={null}>
-        <EncryptionSetupModalLazy
-          open={showEncryptionSetup}
-          onClose={() => setShowEncryptionSetup(false)}
-          onSetup={handleSetupEncryption}
-        />
-      </Suspense>
+      {/* Le chiffrement est maintenant automatique et permanent */}
     </div>
   );
 }

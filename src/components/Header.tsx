@@ -6,15 +6,14 @@ import {
   MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, 
   PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, 
   Trash2, Menu, X, WifiOff, Baby, Sparkles,
-  Globe, Database, Activity, Pencil, HelpCircle,
-  Key
+  Globe, Database, Activity, Pencil, HelpCircle
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
 import { HelpModal } from '@/components/HelpModal';
 // import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
-import { SecurityBadge } from './SecurityStatusIndicator';
+
 
 // =====================
 // Types améliorés
@@ -43,9 +42,6 @@ interface HeaderProps {
   onChangeProvider?: (p: 'gemini' | 'openai' | 'mistral') => void;
   modePrive: boolean;
   setModePrive: (v: boolean) => void;
-  // Chiffrement persistant
-  persistentEncryptionEnabled?: boolean;
-  onTogglePersistentEncryption?: () => void;
   modeEnfant?: boolean;
   onToggleModeEnfant?: () => void;
   selectMode: boolean;
@@ -621,22 +617,12 @@ export function Header(props: HeaderProps) {
                   <Baby className="w-4 h-4" />
                 </IconButton>
 
-                {/* Badge de sécurité et chiffrement persistant */}
+                {/* Badge de sécurité permanent (non désactivable) */}
                 {!props.modeEnfant && !modePrive && (
-                  <>
-                    <SecurityBadge onClick={props.onTogglePersistentEncryption} />
-                    <IconButton
-                      onClick={props.onTogglePersistentEncryption}
-                      tooltip={props.persistentEncryptionEnabled ? "Désactiver le chiffrement AES-256" : "Activer le chiffrement AES-256"}
-                      active={props.persistentEncryptionEnabled}
-                      className={props.persistentEncryptionEnabled 
-                        ? 'text-green-600 dark:text-green-400 bg-green-50/80 dark:bg-green-950/40' 
-                        : 'hover:bg-green-50/80 dark:hover:bg-green-950/50'
-                      }
-                    >
-                      <Key className="w-4 h-4" />
-                    </IconButton>
-                  </>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-50/80 dark:bg-green-950/40 text-green-600 dark:text-green-400">
+                    <Shield className="w-4 h-4" />
+                    <span className="text-xs font-semibold">AES-256</span>
+                  </div>
                 )}
                 
                 {!props.modeEnfant && (
