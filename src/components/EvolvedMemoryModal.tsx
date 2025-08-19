@@ -38,6 +38,7 @@ import {
   Clock,
   Star
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { evolvedMemory } from '@/services/evolvedMemory';
 import { personalityAnalyzer } from '@/services/personalityAnalyzer';
 import { 
@@ -78,18 +79,21 @@ export const EvolvedMemoryModal: React.FC<EvolvedMemoryModalProps> = ({
       const learningMetrics = evolvedMemory.getLearningMetrics();
       setMetrics(learningMetrics);
 
-      // Chargement des préférences (simulation - à adapter selon l'implémentation)
-      // setPreferences(evolvedMemory.getAllPreferences());
+      // Chargement des préférences
+      const allPreferences = evolvedMemory.getAllPreferences();
+      setPreferences(allPreferences);
 
       // Chargement de la personnalité
       const personalityProfile = evolvedMemory.getPersonalityProfile();
       setPersonality(Object.values(personalityProfile));
 
-      // Chargement des patterns (simulation - à adapter selon l'implémentation)
-      // setConversationPatterns(evolvedMemory.getAllPatterns());
+      // Chargement des patterns
+      const allPatterns = evolvedMemory.getAllPatterns();
+      setConversationPatterns(allPatterns);
 
-      // Chargement des mémoires contextuelles (simulation - à adapter selon l'implémentation)
-      // setContextualMemories(evolvedMemory.getAllContextualMemories());
+      // Chargement des mémoires contextuelles
+      const allContextualMemories = evolvedMemory.getAllContextualMemories();
+      setContextualMemories(allContextualMemories);
 
       // Génération du rapport d'analyse
       const report = personalityAnalyzer.generatePersonalAnalysisReport();
@@ -250,23 +254,72 @@ export const EvolvedMemoryModal: React.FC<EvolvedMemoryModalProps> = ({
         </Card>
       )}
 
-      {/* Dernière mise à jour */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Dernière Mise à Jour
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            {metrics?.lastLearningUpdate ? 
-              new Date(metrics.lastLearningUpdate).toLocaleString('fr-FR') : 
-              'Aucune donnée disponible'
-            }
-          </p>
-        </CardContent>
-      </Card>
+             {/* Dernière mise à jour */}
+       <Card>
+         <CardHeader>
+           <CardTitle className="flex items-center gap-2">
+             <Clock className="h-5 w-5" />
+             Dernière Mise à Jour
+           </CardTitle>
+         </CardHeader>
+         <CardContent>
+           <p className="text-sm text-muted-foreground">
+             {metrics?.lastLearningUpdate ? 
+               new Date(metrics.lastLearningUpdate).toLocaleString('fr-FR') : 
+               'Aucune donnée disponible'
+             }
+           </p>
+         </CardContent>
+       </Card>
+
+       {/* Bouton de démonstration */}
+       <Card>
+         <CardHeader>
+           <CardTitle className="flex items-center gap-2">
+             <Brain className="h-5 w-5" />
+             Démonstration
+           </CardTitle>
+           <CardDescription>
+             Testez le système d'apprentissage avec des données d'exemple
+           </CardDescription>
+         </CardHeader>
+         <CardContent className="space-y-4">
+           <p className="text-sm text-muted-foreground">
+             Vous pouvez tester le système en envoyant des messages variés à l'assistant. 
+             L'analyse se fait automatiquement et les données apparaîtront progressivement ici.
+           </p>
+           <div className="flex gap-2">
+             <Button 
+               variant="outline" 
+               size="sm"
+               onClick={() => {
+                 // Simuler l'apprentissage d'une préférence
+                 evolvedMemory.observePreference('communication', 'style', 'formel', 'test');
+                 evolvedMemory.observePersonalityTrait('formality', 0.8, 'test');
+                 evolvedMemory.learnConversationPattern('Bonjour, comment allez-vous ?', 'salutation', true);
+                 evolvedMemory.updateContextualMemory('salutation', ['msg1', 'msg2'], 0.9);
+                 loadEvolvedMemoryData();
+                 toast.success('Données de démonstration ajoutées !');
+               }}
+             >
+               <Star className="w-4 h-4 mr-2" />
+               Ajouter des données de test
+             </Button>
+             <Button 
+               variant="outline" 
+               size="sm"
+               onClick={() => {
+                 evolvedMemory.clearAll();
+                 loadEvolvedMemoryData();
+                 toast.success('Données effacées !');
+               }}
+             >
+               <Trash2 className="w-4 h-4 mr-2" />
+               Effacer tout
+             </Button>
+           </div>
+         </CardContent>
+       </Card>
     </div>
   );
 
@@ -282,11 +335,29 @@ export const EvolvedMemoryModal: React.FC<EvolvedMemoryModalProps> = ({
       {preferences.length === 0 ? (
         <Card>
           <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">
-              Aucune préférence n'a encore été apprise.
-              <br />
-              Continuez à utiliser l'assistant pour qu'il apprenne vos préférences !
-            </p>
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 mx-auto bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                <User className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                  Aucune préférence apprise pour le moment
+                </h4>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  L'assistant apprendra automatiquement vos préférences en analysant vos messages.
+                  <br /><br />
+                  <strong>Comment ça marche :</strong>
+                  <br />• Envoyez des messages pour que l'IA observe vos habitudes
+                  <br />• L'analyse se fait automatiquement en arrière-plan
+                  <br />• Vos préférences apparaîtront ici progressivement
+                </p>
+              </div>
+              <div className="pt-2">
+                <Badge variant="outline" className="text-xs">
+                  Apprentissage automatique actif
+                </Badge>
+              </div>
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -353,11 +424,30 @@ export const EvolvedMemoryModal: React.FC<EvolvedMemoryModalProps> = ({
       {personality.length === 0 ? (
         <Card>
           <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">
-              Aucun trait de personnalité n'a encore été détecté.
-              <br />
-              L'assistant apprendra votre style de communication au fil du temps !
-            </p>
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 mx-auto bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center">
+                <Brain className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                  Profil de personnalité en cours d'analyse
+                </h4>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  L'assistant analyse votre style de communication pour détecter vos traits de personnalité.
+                  <br /><br />
+                  <strong>Traits analysés :</strong>
+                  <br />• Niveau de formalité (formel vs informel)
+                  <br />• Style d'humour et de détails
+                  <br />• Niveau de politesse
+                  <br />• Complexité du langage
+                </p>
+              </div>
+              <div className="pt-2">
+                <Badge variant="outline" className="text-xs">
+                  Analyse en temps réel
+                </Badge>
+              </div>
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -456,11 +546,30 @@ export const EvolvedMemoryModal: React.FC<EvolvedMemoryModalProps> = ({
       {patterns.length === 0 ? (
         <Card>
           <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">
-              Aucun pattern de conversation n'a encore été identifié.
-              <br />
-              Les patterns se développent au fur et à mesure des conversations !
-            </p>
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 mx-auto bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
+                <BarChart3 className="w-8 h-8 text-green-600 dark:text-green-400" />
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                  Patterns de conversation en cours d'identification
+                </h4>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  L'assistant identifie automatiquement vos habitudes de conversation et leur taux de succès.
+                  <br /><br />
+                  <strong>Types de patterns analysés :</strong>
+                  <br />• Questions fréquentes et leur formulation
+                  <br />• Sujets de prédilection
+                  <br />• Styles de réponse préférés
+                  <br />• Contexte des conversations réussies
+                </p>
+              </div>
+              <div className="pt-2">
+                <Badge variant="outline" className="text-xs">
+                  Détection automatique
+                </Badge>
+              </div>
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -528,11 +637,30 @@ export const EvolvedMemoryModal: React.FC<EvolvedMemoryModalProps> = ({
       {contextualMemories.length === 0 ? (
         <Card>
           <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">
-              Aucune mémoire contextuelle n'a encore été créée.
-              <br />
-              Les contextes se développent avec l'utilisation de l'assistant !
-            </p>
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 mx-auto bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center">
+                <MessageSquare className="w-8 h-8 text-orange-600 dark:text-orange-400" />
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                  Mémoires contextuelles en cours de développement
+                </h4>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  L'assistant crée automatiquement des associations entre vos conversations et les informations pertinentes.
+                  <br /><br />
+                  <strong>Fonctionnement :</strong>
+                  <br />• Association automatique des sujets liés
+                  <br />• Création de liens entre conversations
+                  <br />• Amélioration de la pertinence des réponses
+                  <br />• Mémoire à long terme contextuelle
+                </p>
+              </div>
+              <div className="pt-2">
+                <Badge variant="outline" className="text-xs">
+                  Création automatique
+                </Badge>
+              </div>
+            </div>
           </CardContent>
         </Card>
       ) : (

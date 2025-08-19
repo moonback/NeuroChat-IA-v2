@@ -370,6 +370,27 @@ class EvolvedMemoryService {
   }
 
   /**
+   * Récupère toutes les préférences
+   */
+  getAllPreferences(): UserPreference[] {
+    return Array.from(this.preferences.values());
+  }
+
+  /**
+   * Récupère tous les patterns
+   */
+  getAllPatterns(): ConversationPattern[] {
+    return Array.from(this.patterns.values());
+  }
+
+  /**
+   * Récupère toutes les mémoires contextuelles
+   */
+  getAllContextualMemories(): ContextualMemory[] {
+    return Array.from(this.contextualMemories.values());
+  }
+
+  /**
    * Génère un ID unique pour un contexte
    */
   private generateContextId(context: string): string {
@@ -698,6 +719,16 @@ export const evolvedMemory = {
   
   getContextualMemories: (context: string, limit?: number) =>
     evolvedMemoryService.getContextualMemories(context, limit),
+  
+  // Méthodes pour récupérer toutes les données
+  getAllPreferences: () =>
+    evolvedMemoryService.getAllPreferences(),
+  
+  getAllPatterns: () =>
+    evolvedMemoryService.getAllPatterns(),
+  
+  getAllContextualMemories: () =>
+    evolvedMemoryService.getAllContextualMemories(),
   
   // Métriques
   getLearningMetrics: () =>
