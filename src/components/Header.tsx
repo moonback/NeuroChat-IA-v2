@@ -205,19 +205,19 @@ const Logo = ({ onNewDiscussion, isOnline, quality }: {
         />
         
         {/* Effets de brillance */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-2xl" />
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-transparent via-transparent to-white/10 group-hover:to-white/20 transition-all duration-300" />
+        {/* <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-2xl" /> */}
+        {/* <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-transparent via-transparent to-white/10 group-hover:to-white/20 transition-all duration-300" /> */}
         
         {/* Effet néon/glow */}
-        <div className="absolute inset-0 rounded-2xl bg-blue-400/20 group-hover:bg-blue-400/30 transition-all duration-300 blur-sm" />
+        {/* <div className="absolute inset-0 rounded-2xl bg-blue-400/20 group-hover:bg-blue-400/30 transition-all duration-300 blur-sm" /> */}
       </div>
       
       {/* Indicateur de statut */}
       <StatusIndicator isOnline={isOnline} quality={quality} />
     </div>
     
-    {/* Texte du logo et statut de connexion */}
-    <div className="min-w-0 flex-1">
+    {/* Texte du logo et statut de connexion - masqué sur mobile */}
+    <div className="min-w-0 flex-1 hidden sm:block">
       <div className="flex items-center gap-2">
         <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-slate-900 via-blue-700 to-indigo-600 dark:from-white dark:via-blue-300 dark:to-indigo-400 bg-clip-text text-transparent">
           NeuroChat
