@@ -315,29 +315,26 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
                     {(provider === 'gemini' || provider === 'mistral') && (
                       <Button
                         type="button"
-                        size="sm"
+                        size="icon"
                         variant="ghost"
                         onClick={onToggleAgent}
                         disabled={isLoading}
                         className={cn(
-                          "h-9 px-3 rounded-xl border transition-all duration-300 flex items-center gap-2 relative group overflow-hidden",
+                          "h-10 w-10 rounded-xl transition-all duration-300 relative group overflow-hidden",
                           agentEnabled
                             ? provider === 'gemini'
-                              ? 'bg-gradient-to-r from-indigo-50 via-blue-50 to-indigo-50 dark:from-indigo-950/40 dark:via-blue-950/40 dark:to-indigo-950/40 border-indigo-300/60 text-indigo-700 dark:text-indigo-300 shadow-lg shadow-indigo-500/10'
-                              : 'bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 dark:from-purple-950/40 dark:via-pink-950/40 dark:to-purple-950/40 border-purple-300/60 text-purple-700 dark:text-purple-300 shadow-lg shadow-purple-500/10'
-                            : 'bg-white/80 dark:bg-slate-800/80 border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-50/90 dark:hover:bg-slate-700/90'
+                              ? 'bg-gradient-to-br from-indigo-100/90 to-indigo-200/90 dark:from-indigo-900/50 dark:to-indigo-800/50 border-indigo-300/60 dark:border-indigo-600/60 shadow-lg shadow-indigo-500/20'
+                              : 'bg-gradient-to-br from-purple-100/90 to-purple-200/90 dark:from-purple-900/50 dark:to-purple-800/50 border-purple-300/60 dark:border-purple-600/60 shadow-lg shadow-purple-500/20'
+                            : 'bg-gradient-to-br from-slate-100/90 to-slate-200/90 dark:from-slate-800/90 dark:to-slate-700/90 border border-slate-200/60 dark:border-slate-700/60 hover:from-slate-200/90 hover:to-slate-300/90 dark:hover:from-slate-700/90 dark:hover:to-slate-600/90'
                         )}
                         title={agentEnabled ? `Désactiver ${provider === 'gemini' ? 'Agent Gemini' : 'Agent Mistral'}` : `Activer ${provider === 'gemini' ? 'Agent Gemini' : 'Agent Mistral'}`}
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                         {provider === 'gemini' ? (
-                          <Sparkles className={cn("w-4 h-4 relative", agentEnabled ? 'text-indigo-600 dark:text-indigo-300 animate-pulse' : 'text-slate-500 dark:text-slate-400')} />
+                          <Bot className={cn("w-5 h-5", agentEnabled ? 'text-indigo-600 dark:text-indigo-300 animate-pulse' : 'text-slate-600 dark:text-slate-300')} />
                         ) : (
-                          <Bot className={cn("w-4 h-4 relative", agentEnabled ? 'text-purple-600 dark:text-purple-300 animate-pulse' : 'text-slate-500 dark:text-slate-400')} />
+                          <Bot className={cn("w-5 h-5", agentEnabled ? 'text-purple-600 dark:text-purple-300 animate-pulse' : 'text-slate-600 dark:text-slate-300')} />
                         )}
-                        <span className="text-xs font-medium relative">
-                          {agentEnabled ? 'Agent: ON' : 'Activer agent'}
-                        </span>
                       </Button>
                     )}
                   </div>
