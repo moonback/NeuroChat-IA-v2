@@ -8,7 +8,7 @@ import {
   Trash2, Menu, X, WifiOff, Baby, Sparkles,
   Globe, Database, Activity, Pencil, HelpCircle
 } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
 import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
 import { HelpModal } from '@/components/HelpModal';
 // import { Input } from '@/components/ui/input';
