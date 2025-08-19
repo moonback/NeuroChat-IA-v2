@@ -1511,7 +1511,7 @@ ${lines.join('\n')}`, false);
             
             {/* 🎭 Avatar IA 3D Réactif */}
             {!modeEnfant && (
-              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-30">
+              <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30">
                 <ReactiveAvatar
                   recentMessages={messages.slice(-5).map(msg => ({
                     text: msg.text,
@@ -1519,10 +1519,10 @@ ${lines.join('\n')}`, false);
                   }))}
                   baseConfig={avatarState.config}
                   onConfigChange={avatarState.updateConfig}
-                  position="center"
-                  defaultSize="lg"
                   isLoading={isLoading}
                   isConversing={messages.length > 0}
+                  position="center"
+                  defaultSize="xl"
                 />
               </div>
             )}

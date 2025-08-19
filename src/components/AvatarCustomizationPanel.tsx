@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Avatar3D, Avatar3DProps } from './Avatar3D';
 import { cn } from '@/lib/utils';
+import { X, RotateCcw, Palette, Shirt, Zap, Save, Download, Maximize2, Glasses } from 'lucide-react';
 
 export interface AvatarCustomizationPanelProps {
   /** Configuration actuelle de l'avatar */
@@ -20,35 +20,35 @@ export interface AvatarCustomizationPanelProps {
 }
 
 const STYLE_OPTIONS = [
-  { value: 'modern', label: 'Moderne', icon: '✨' },
-  { value: 'classic', label: 'Classique', icon: '🎭' },
-  { value: 'futuristic', label: 'Futuriste', icon: '🚀' },
-  { value: 'minimal', label: 'Minimal', icon: '⚪' }
+  { value: 'modern', label: 'Moderne', icon: '✨', color: 'from-blue-500 to-cyan-500' },
+  { value: 'classic', label: 'Classique', icon: '🎭', color: 'from-purple-500 to-pink-500' },
+  { value: 'futuristic', label: 'Futuriste', icon: '🚀', color: 'from-green-500 to-emerald-500' },
+  { value: 'minimal', label: 'Minimal', icon: '⚪', color: 'from-gray-500 to-slate-500' }
 ] as const;
 
 const CLOTHING_OPTIONS = [
-  { value: 'casual', label: 'Décontracté', icon: '👕' },
-  { value: 'formal', label: 'Formel', icon: '👔' },
-  { value: 'tech', label: 'Tech', icon: '💻' },
-  { value: 'creative', label: 'Créatif', icon: '🎨' }
+  { value: 'casual', label: 'Décontracté', icon: '👕', color: 'from-orange-500 to-red-500' },
+  { value: 'formal', label: 'Formel', icon: '👔', color: 'from-indigo-500 to-purple-500' },
+  { value: 'tech', label: 'Tech', icon: '💻', color: 'from-cyan-500 to-blue-500' },
+  { value: 'creative', label: 'Créatif', icon: '🎨', color: 'from-pink-500 to-rose-500' }
 ] as const;
 
 const ACCESSORY_OPTIONS = [
-  { value: '👓', label: 'Lunettes' },
-  { value: '🎩', label: 'Chapeau' },
-  { value: '💍', label: 'Bague' },
-  { value: '⌚', label: 'Montre' },
-  { value: '🎧', label: 'Écouteurs' },
-  { value: '👜', label: 'Sac' },
-  { value: '🌂', label: 'Parapluie' },
-  { value: '🎭', label: 'Masque' }
+  { value: '👓', label: 'Lunettes', category: 'face', icon: '👓' },
+  { value: '🎩', label: 'Chapeau', category: 'head', icon: '🎩' },
+  { value: '💍', label: 'Bague', category: 'hand', icon: '💍' },
+  { value: '⌚', label: 'Montre', category: 'hand', icon: '⌚' },
+  { value: '🎧', label: 'Écouteurs', category: 'head', icon: '🎧' },
+  { value: '👜', label: 'Sac', category: 'body', icon: '👜' },
+  { value: '🌂', label: 'Parapluie', category: 'hand', icon: '🌂' },
+  { value: '🎭', label: 'Masque', category: 'face', icon: '🎭' }
 ];
 
 const SIZE_OPTIONS = [
-  { value: 'sm', label: 'Petit' },
-  { value: 'md', label: 'Moyen' },
-  { value: 'lg', label: 'Grand' },
-  { value: 'xl', label: 'Très grand' }
+  { value: 'sm', label: 'Petit', size: 16, description: '16px' },
+  { value: 'md', label: 'Moyen', size: 20, description: '20px' },
+  { value: 'lg', label: 'Grand', size: 24, description: '24px' },
+  { value: 'xl', label: 'Très grand', size: 32, description: '32px' }
 ] as const;
 
 export const AvatarCustomizationPanel: React.FC<AvatarCustomizationPanelProps> = ({
@@ -61,6 +61,17 @@ export const AvatarCustomizationPanel: React.FC<AvatarCustomizationPanelProps> =
     avatarConfig.accessories || []
   );
   const [animationSpeed, setAnimationSpeed] = useState(1);
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [open]);
 
   const handleStyleChange = (style: Avatar3DProps['style']) => {
     onConfigChange({ style });
@@ -100,170 +111,247 @@ export const AvatarCustomizationPanel: React.FC<AvatarCustomizationPanelProps> =
     setAnimationSpeed(1);
   };
 
+  const exportConfig = () => {
+    const config = {
+      ...avatarConfig,
+      accessories: selectedAccessories,
+      animationSpeed
+    };
+    navigator.clipboard.writeText(JSON.stringify(config, null, 2));
+  };
+
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <CardHeader className="border-b">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              🎨 Personnalisation de l'Avatar
-            </CardTitle>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              ✕
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <Card className="w-full h-full max-w-none max-h-none m-0 rounded-none border-0 bg-gradient-to-br from-slate-50/95 to-slate-100/95 dark:from-slate-900/95 dark:to-slate-800/95 backdrop-blur-xl flex flex-col">
+        <CardHeader className="pb-6 border-b border-slate-200/50 dark:border-slate-700/50 flex-shrink-0">
+          <CardTitle className="flex items-center justify-between text-2xl">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20">
+                🎨
+              </div>
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+                Personnalisation de l'Avatar
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="h-10 w-10 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+            >
+              <X className="h-5 w-5" />
             </Button>
-          </div>
+          </CardTitle>
         </CardHeader>
-
-        <CardContent className="p-6 space-y-6">
-          {/* Aperçu de l'avatar */}
-          <div className="flex justify-center p-6 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-xl">
-            <Avatar3D
-              {...avatarConfig}
-              accessories={selectedAccessories}
-              size="xl"
-              emotion="happy"
-            />
-          </div>
-
-          {/* Styles visuels */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="text-lg font-semibold">🎭 Style Visuel</Label>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {STYLE_OPTIONS.map((style) => (
-                <Button
-                  key={style.value}
-                  variant={avatarConfig.style === style.value ? 'default' : 'outline'}
-                  className="h-20 flex-col gap-2"
-                  onClick={() => handleStyleChange(style.value)}
-                >
-                  <span className="text-2xl">{style.icon}</span>
-                  <span className="text-xs">{style.label}</span>
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Vêtements */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="text-lg font-semibold">👔 Style de Vêtements</Label>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {CLOTHING_OPTIONS.map((clothing) => (
-                <Button
-                  key={clothing.value}
-                  variant={avatarConfig.clothing === clothing.value ? 'default' : 'outline'}
-                  className="h-20 flex-col gap-2"
-                  onClick={() => handleClothingChange(clothing.value)}
-                >
-                  <span className="text-2xl">{clothing.icon}</span>
-                  <span className="text-xs">{clothing.label}</span>
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Taille */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="text-lg font-semibold">📏 Taille de l'Avatar</Label>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {SIZE_OPTIONS.map((size) => (
-                <Button
-                  key={size.value}
-                  variant={avatarConfig.size === size.value ? 'default' : 'outline'}
-                  className="h-16 flex-col gap-1"
-                  onClick={() => handleSizeChange(size.value)}
-                >
-                  <div className={cn(
-                    'w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-purple-500',
-                    size.value === 'sm' && 'w-4 h-4',
-                    size.value === 'lg' && 'w-8 h-8',
-                    size.value === 'xl' && 'w-10 h-10'
-                  )} />
-                  <span className="text-xs">{size.label}</span>
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Accessoires */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="text-lg font-semibold">🎁 Accessoires</Label>
-              <Badge variant="secondary">
-                {selectedAccessories.length} sélectionné(s)
-              </Badge>
-            </div>
-            <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
-              {ACCESSORY_OPTIONS.map((accessory) => (
-                <Button
-                  key={accessory.value}
-                  variant={selectedAccessories.includes(accessory.value) ? 'default' : 'outline'}
-                  size="sm"
-                  className="h-16 flex-col gap-2"
-                  onClick={() => handleAccessoryToggle(accessory.value)}
-                >
-                  <span className="text-xl">{accessory.value}</span>
-                  <span className="text-xs text-center leading-tight">
-                    {accessory.label}
-                  </span>
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Options d'animation */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="text-lg font-semibold">🎬 Animations</Label>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="animations"
-                  checked={avatarConfig.animated}
-                  onCheckedChange={handleAnimationToggle}
-                />
-                <Label htmlFor="animations">Animations actives</Label>
+        
+        <CardContent className="flex-1 overflow-y-auto p-6 min-h-0">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 h-full">
+            {/* Aperçu de l'avatar - Colonne de gauche */}
+            <div className="xl:col-span-1">
+              <div className="sticky top-6">
+                <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-400/20">
+                  <h3 className="text-lg font-semibold mb-4 text-center text-gray-700 dark:text-gray-300">
+                    Aperçu Live
+                  </h3>
+                  <div className="flex justify-center p-6 bg-gradient-to-br from-white/50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-900/50 rounded-xl">
+                    <Avatar3D
+                      {...avatarConfig}
+                      accessories={selectedAccessories}
+                      size="xl"
+                      emotion="happy"
+                      animated={true}
+                    />
+                  </div>
+                  <div className="mt-4 text-center">
+                    <Badge variant="outline" className="text-sm bg-white/50 dark:bg-black/50">
+                      {selectedAccessories.length} accessoire(s) actif(s)
+                    </Badge>
+                  </div>
+                </div>
               </div>
             </div>
-            
-            {avatarConfig.animated && (
-              <div className="space-y-3">
-                <Label className="text-sm text-muted-foreground">
-                  Vitesse des animations: {animationSpeed}x
-                </Label>
-                <Slider
-                  value={[animationSpeed]}
-                  onValueChange={(value) => setAnimationSpeed(value[0])}
-                  max={3}
-                  min={0.5}
-                  step={0.1}
-                  className="w-full"
-                />
-              </div>
-            )}
-          </div>
 
-          {/* Actions */}
-          <div className="flex justify-between pt-4 border-t">
-            <Button variant="outline" onClick={resetToDefaults}>
-              🔄 Réinitialiser
-            </Button>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={onClose}>
-                Annuler
-              </Button>
-              <Button onClick={onClose}>
-                ✅ Appliquer
-              </Button>
+            {/* Contrôles de personnalisation - Colonnes de droite */}
+            <div className="xl:col-span-2 space-y-8">
+              {/* Styles visuels */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/20">
+                    <Palette className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Style Visuel</h3>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {STYLE_OPTIONS.map((style) => (
+                    <Button
+                      key={style.value}
+                      variant={avatarConfig.style === style.value ? "default" : "outline"}
+                      onClick={() => handleStyleChange(style.value)}
+                      className={cn(
+                        "h-auto p-4 flex flex-col items-center space-y-2 transition-all duration-200",
+                        avatarConfig.style === style.value
+                          ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg scale-105"
+                          : "hover:scale-105 hover:shadow-md"
+                      )}
+                    >
+                      <span className="text-2xl">{style.icon}</span>
+                      <span className="text-sm font-medium">{style.label}</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Vêtements */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-green-500/20 to-green-600/20">
+                    <Shirt className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Vêtements</h3>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {CLOTHING_OPTIONS.map((clothing) => (
+                    <Button
+                      key={clothing.value}
+                      variant={avatarConfig.clothing === clothing.value ? "default" : "outline"}
+                      onClick={() => handleClothingChange(clothing.value)}
+                      className={cn(
+                        "h-auto p-4 flex flex-col items-center space-y-2 transition-all duration-200",
+                        avatarConfig.clothing === clothing.value
+                          ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg scale-105"
+                          : "hover:scale-105 hover:shadow-md"
+                      )}
+                    >
+                      <span className="text-2xl">{clothing.icon}</span>
+                      <span className="text-sm font-medium">{clothing.label}</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Taille */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-600/20">
+                    <Maximize2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Taille</h3>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {SIZE_OPTIONS.map((size) => (
+                    <Button
+                      key={size.value}
+                      variant={avatarConfig.size === size.value ? "default" : "outline"}
+                      onClick={() => handleSizeChange(size.value)}
+                      className={cn(
+                        "h-auto p-4 flex flex-col items-center space-y-2 transition-all duration-200",
+                        avatarConfig.size === size.value
+                          ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg scale-105"
+                          : "hover:scale-105 hover:shadow-md"
+                      )}
+                    >
+                      <span className="text-lg font-bold">{size.label}</span>
+                      <span className="text-xs text-muted-foreground">{size.description}</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Accessoires */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/20">
+                    <Glasses className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Accessoires</h3>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {ACCESSORY_OPTIONS.map((accessory) => (
+                    <Button
+                      key={accessory.value}
+                      variant={selectedAccessories.includes(accessory.value) ? "default" : "outline"}
+                      onClick={() => handleAccessoryToggle(accessory.value)}
+                      className={cn(
+                        "h-auto p-4 flex flex-col items-center space-y-2 transition-all duration-200",
+                        selectedAccessories.includes(accessory.value)
+                          ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg scale-105"
+                          : "hover:scale-105 hover:shadow-md"
+                      )}
+                    >
+                      <span className="text-2xl">{accessory.icon}</span>
+                      <span className="text-sm font-medium">{accessory.label}</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Animations */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500/20 to-pink-600/20">
+                    <Zap className="w-5 h-5 text-pink-600 dark:text-pink-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Animations</h3>
+                </div>
+                
+                <div className="flex items-center space-x-4">
+                  <Switch
+                    checked={avatarConfig.animated}
+                    onCheckedChange={handleAnimationToggle}
+                    className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-pink-500 data-[state=checked]:to-purple-500"
+                  />
+                  <Label className="text-lg font-medium">
+                    {avatarConfig.animated ? "Animations activées" : "Animations désactivées"}
+                  </Label>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>
+
+        {/* Footer avec actions */}
+        <div className="border-t border-slate-200/50 dark:border-slate-700/50 p-6 bg-gradient-to-r from-slate-50/50 to-slate-100/50 dark:from-slate-800/50 dark:to-slate-900/50 flex-shrink-0">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                onClick={resetToDefaults}
+                className="flex items-center gap-2 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-700"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Réinitialiser
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={exportConfig}
+                className="flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-700"
+              >
+                <Download className="w-4 h-4" />
+                Exporter
+              </Button>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={onClose} className="px-6">
+                Annuler
+              </Button>
+              <Button 
+                onClick={onClose}
+                className="px-8 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Sauvegarder
+              </Button>
+            </div>
+          </div>
+        </div>
       </Card>
     </div>
   );
