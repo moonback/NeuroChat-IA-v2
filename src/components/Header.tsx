@@ -8,7 +8,10 @@ import {
   Trash2, Menu, X, WifiOff, Baby, Sparkles,
   Globe, Database, Activity, Pencil, HelpCircle
 } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
 import { HelpModal } from '@/components/HelpModal';
 // import { Input } from '@/components/ui/input';
@@ -200,25 +203,8 @@ const Logo = ({ onNewDiscussion, isOnline, quality }: {
       <StatusIndicator isOnline={isOnline} quality={quality} />
     </div>
     <div className="min-w-0 flex-1">
-      <h1 className="text-lg sm:text-[1.4rem] md:text-2xl font-bold tracking-tight bg-gradient-to-r from-slate-900/90 via-slate-800/80 to-slate-600/70 dark:from-white dark:via-slate-100 dark:to-slate-300 bg-clip-text text-transparent flex items-center gap-1 sm:gap-2">
-        <span className="truncate">NeuroChat</span>
-        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 animate-pulse flex-shrink-0" />
-      </h1>
-      <div className="hidden xs:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-        {isOnline ? (
-          <>
-            <div className="flex items-center gap-1">
-              <Activity className="w-3 h-3" />
-              <span className="capitalize truncate">{quality === 'excellent' ? 'Excellente' : quality === 'good' ? 'Bonne' : 'Faible'} connexion</span>
-            </div>
-          </>
-        ) : (
-          <div className="flex items-center gap-1 text-red-500">
-            <WifiOff className="w-3 h-3" />
-            <span className="truncate">Hors ligne</span>
-          </div>
-        )}
-      </div>
+      
+      <ConnectionStatus isOnline={isOnline} quality={quality} />
     </div>
   </div>
 );
@@ -364,6 +350,971 @@ const PrivateModeBanner = ({ show }: { show: boolean }) => {
 };
 
 // =====================
+// Composants de base refactorisés
+// =====================
+
+// Composant pour le statut de connexion
+const ConnectionStatus = ({ isOnline, quality }: { isOnline: boolean; quality: 'excellent' | 'good' | 'poor' }) => (
+  <div className="hidden xs:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+    {isOnline ? (
+      <div className="flex items-center gap-1">
+        <Activity className="w-3 h-3" />
+        <span className="capitalize truncate">
+          {quality === 'excellent' ? 'Excellente' : quality === 'good' ? 'Bonne' : 'Faible'} connexion
+        </span>
+      </div>
+    ) : (
+      <div className="flex items-center gap-1 text-red-500">
+        <WifiOff className="w-3 h-3" />
+        <span className="truncate">Hors ligne</span>
+      </div>
+    )}
+  </div>
+);
+
+// Composant pour le sélecteur d'espace de travail
+const WorkspaceSelector = ({ 
+  modeEnfant, 
+  workspaces, 
+  workspaceId, 
+  onChangeWorkspace, 
+  onCreateWorkspace, 
+  onRenameWorkspace, 
+  onDeleteWorkspace 
+}: {
+  modeEnfant?: boolean;
+  workspaces?: Array<{ id: string; name: string }>;
+  workspaceId?: string;
+  onChangeWorkspace?: (id: string) => void;
+  onCreateWorkspace?: () => void;
+  onRenameWorkspace?: (id: string, name: string) => void;
+  onDeleteWorkspace?: (id: string) => void;
+}) => {
+  const [showWorkspaceModal, setShowWorkspaceModal] = useState(false);
+  
+  if (modeEnfant || !workspaces || !onChangeWorkspace) return null;
+
+  const currentWorkspace = workspaces.find(w => w.id === workspaceId);
+
+  return (
+    <>
+      <button
+        onClick={() => setShowWorkspaceModal(true)}
+        className="flex items-center gap-2 bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60 rounded-xl px-3 py-2 max-w-[200px] sm:max-w-none hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-colors group"
+        title="Changer d'espace de travail"
+      >
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <Database className="w-4 h-4 text-slate-600 dark:text-slate-400 flex-shrink-0" />
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
+            {currentWorkspace?.name || 'Espace par défaut'}
+          </span>
+        </div>
+        <Pencil className="w-3 h-3 text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+      </button>
+
+      <WorkspaceSelectorModal
+        open={showWorkspaceModal}
+        onOpenChange={setShowWorkspaceModal}
+        workspaces={workspaces}
+        currentWorkspaceId={workspaceId}
+        onChangeWorkspace={onChangeWorkspace}
+        onCreateWorkspace={onCreateWorkspace}
+        onRenameWorkspace={onRenameWorkspace}
+        onDeleteWorkspace={onDeleteWorkspace}
+      />
+    </>
+  );
+};
+
+// Composant modal pour la sélection d'espace de travail
+const WorkspaceSelectorModal = ({
+  open,
+  onOpenChange,
+  workspaces,
+  currentWorkspaceId,
+  onChangeWorkspace,
+  onCreateWorkspace,
+  onRenameWorkspace,
+  onDeleteWorkspace
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  workspaces: Array<{ id: string; name: string }>;
+  currentWorkspaceId?: string;
+  onChangeWorkspace?: (id: string) => void;
+  onCreateWorkspace?: () => void;
+  onRenameWorkspace?: (id: string, name: string) => void;
+  onDeleteWorkspace?: (id: string) => void;
+}) => {
+  const [newWorkspaceName, setNewWorkspaceName] = useState('');
+  const [editingWorkspace, setEditingWorkspace] = useState<{ id: string; name: string } | null>(null);
+  const [editName, setEditName] = useState('');
+
+  const handleCreateWorkspace = () => {
+    if (newWorkspaceName.trim() && onCreateWorkspace) {
+      onCreateWorkspace();
+      setNewWorkspaceName('');
+      onOpenChange(false);
+    }
+  };
+
+  const handleRenameWorkspace = () => {
+    if (editingWorkspace && editName.trim() && onRenameWorkspace) {
+      onRenameWorkspace(editingWorkspace.id, editName.trim());
+      setEditingWorkspace(null);
+      setEditName('');
+    }
+  };
+
+  const handleDeleteWorkspace = (workspaceId: string) => {
+    const workspace = workspaces.find(w => w.id === workspaceId);
+    if (workspace && onDeleteWorkspace) {
+      const ok = window.confirm(`Supprimer l'espace "${workspace.name}" ?\nToutes les données locales de cet espace seront perdues.`);
+      if (ok) {
+        onDeleteWorkspace(workspaceId);
+        if (currentWorkspaceId === workspaceId) {
+          onChangeWorkspace?.('default');
+        }
+      }
+    }
+  };
+
+  const handleSelectWorkspace = (workspaceId: string) => {
+    onChangeWorkspace?.(workspaceId);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md rounded-2xl border border-slate-200/50 dark:border-slate-800/50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl shadow-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+            Espaces de travail
+          </DialogTitle>
+          <DialogDescription className="text-slate-600 dark:text-slate-400">
+            Gérez vos espaces de travail et changez d'environnement
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Création d'un nouvel espace */}
+          <div className="space-y-3">
+            <Label htmlFor="new-workspace" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              Créer un nouvel espace
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="new-workspace"
+                placeholder="Nom de l'espace"
+                value={newWorkspaceName}
+                onChange={(e) => setNewWorkspaceName(e.target.value)}
+                className="flex-1"
+                onKeyDown={(e) => e.key === 'Enter' && handleCreateWorkspace()}
+              />
+              <Button
+                onClick={handleCreateWorkspace}
+                disabled={!newWorkspaceName.trim()}
+                size="sm"
+                className="px-4"
+              >
+                <PlusCircle className="w-4 h-4 mr-2" />
+                Créer
+              </Button>
+            </div>
+          </div>
+
+          {/* Liste des espaces existants */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              Espaces disponibles
+            </Label>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {workspaces.map((workspace) => {
+                const isCurrent = workspace.id === currentWorkspaceId;
+                const isEditing = editingWorkspace?.id === workspace.id;
+                const isDefault = workspace.id === 'default';
+
+                return (
+                  <div
+                    key={workspace.id}
+                    className={`p-3 rounded-xl border transition-all duration-200 ${
+                      isCurrent
+                        ? 'border-blue-300 dark:border-blue-600 bg-blue-50/80 dark:bg-blue-950/40'
+                        : 'border-slate-200/60 dark:border-slate-800/60 bg-slate-50/60 dark:bg-slate-900/40 hover:bg-slate-100/60 dark:hover:bg-slate-800/60'
+                    }`}
+                  >
+                    {isEditing ? (
+                      <div className="flex gap-2">
+                        <Input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="flex-1"
+                          onKeyDown={(e) => e.key === 'Enter' && handleRenameWorkspace()}
+                          autoFocus
+                        />
+                        <Button
+                          onClick={handleRenameWorkspace}
+                          size="sm"
+                          variant="outline"
+                          className="px-3"
+                        >
+                          <CheckSquare className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setEditingWorkspace(null);
+                            setEditName('');
+                          }}
+                          size="sm"
+                          variant="outline"
+                          className="px-3"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
+                            <Database className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className={`font-medium truncate ${isCurrent ? 'text-blue-700 dark:text-blue-300' : 'text-slate-700 dark:text-slate-300'}`}>
+                                {workspace.name}
+                              </span>
+                              {isCurrent && (
+                                <span className="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 rounded-full">
+                                  Actuel
+                                </span>
+                              )}
+                              {isDefault && (
+                                <span className="px-2 py-1 text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full">
+                                  Par défaut
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          {!isCurrent && (
+                            <Button
+                              onClick={() => handleSelectWorkspace(workspace.id)}
+                              size="sm"
+                              variant="outline"
+                              className="h-8 px-3 text-xs"
+                            >
+                              Sélectionner
+                            </Button>
+                          )}
+                          
+                          {!isDefault && onRenameWorkspace && (
+                            <Button
+                              onClick={() => {
+                                setEditingWorkspace(workspace);
+                                setEditName(workspace.name);
+                              }}
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0"
+                              title="Renommer"
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </Button>
+                          )}
+                          
+                          {!isDefault && onDeleteWorkspace && (
+                            <Button
+                              onClick={() => handleDeleteWorkspace(workspace.id)}
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            onClick={() => onOpenChange(false)}
+            variant="outline"
+            className="rounded-xl"
+          >
+            Fermer
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// Composant pour les actions de sélection
+
+// Composant pour les actions mobiles
+const MobileActions = ({ 
+  muted, 
+  onNewDiscussion, 
+  handleVolumeToggle, 
+  setShowMobileMenu 
+}: {
+  modeEnfant?: boolean;
+  muted: boolean;
+  onNewDiscussion: () => void;
+  handleVolumeToggle: () => void;
+  setShowMobileMenu: (show: boolean) => void;
+}) => (
+  <div className="md:hidden flex items-center gap-1 mobile-optimized">
+    {/* Barre d'actions mobile ultra-optimisée */}
+    <div className="flex items-center gap-1 bg-slate-50/80 dark:bg-slate-900/60 rounded-2xl p-1 border border-slate-200/60 dark:border-slate-800/60 backdrop-blur-sm shadow-mobile">
+      {/* Bouton Nouveau - Priorité haute */}
+      <IconButton 
+        onClick={onNewDiscussion} 
+        tooltip="Nouvelle discussion" 
+        className="h-8 w-8 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-100/80 dark:hover:bg-blue-900/60 mobile-button transition-smooth"
+        aria-label="Nouvelle discussion"
+      >
+        <PlusCircle className="w-4 h-4" />
+      </IconButton>
+      
+      {/* Contrôle audio - Priorité haute */}
+      <IconButton
+        onClick={handleVolumeToggle}
+        tooltip={muted ? 'Activer audio' : 'Désactiver audio'}
+        active={!muted}
+        className={`h-8 w-8 rounded-xl mobile-button transition-smooth ${
+          muted
+            ? 'bg-red-50/80 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100/80 dark:hover:bg-red-900/60'
+            : 'bg-green-50/80 dark:bg-green-950/40 text-green-600 dark:text-green-400 hover:bg-green-100/80 dark:hover:bg-green-900/60'
+        }`}
+        aria-label={muted ? 'Activer audio' : 'Désactiver audio'}
+      >
+        {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+      </IconButton>
+    </div>
+
+    {/* Bouton menu principal - Accès aux options avancées */}
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => setShowMobileMenu(true)}
+      className="h-9 w-9 p-0 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 hover:bg-slate-200/80 dark:hover:bg-slate-700/60 transition-smooth hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 mobile-button"
+      aria-label="Menu principal"
+    >
+      <Menu className="w-5 h-5" />
+    </Button>
+  </div>
+);
+
+// Composant pour l'indicateur de statut mobile
+const MobileStatusIndicator = ({ 
+  modePrive, 
+  modeEnfant, 
+  ragEnabled, 
+  webEnabled 
+}: {
+  modePrive: boolean;
+  modeEnfant?: boolean;
+  ragEnabled: boolean;
+  webEnabled?: boolean;
+}) => (
+  <div className="md:hidden border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm">
+    <div className="max-w-12xl mx-auto px-4 py-2">
+      <div className="flex items-center justify-between text-xs">
+        {/* Modes actifs */}
+        <div className="flex items-center gap-2">
+          {modePrive && (
+            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-50/80 dark:bg-red-950/40 text-red-600 dark:text-red-400">
+              <Shield className="w-3 h-3" />
+              <span className="text-xs font-medium">Privé</span>
+            </div>
+          )}
+          {modeEnfant && (
+            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-pink-50/80 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400">
+              <Baby className="w-3 h-3" />
+              <span className="text-xs font-medium">Enfant</span>
+            </div>
+          )}
+          {ragEnabled && (
+            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
+              <Database className="w-3 h-3" />
+              <span className="text-xs font-medium">RAG</span>
+            </div>
+          )}
+          {webEnabled && (
+            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50/80 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
+              <Globe className="w-3 h-3" />
+              <span className="text-xs font-medium">Web</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// Composant pour les actions desktop
+const DesktopActions = ({ 
+  modeEnfant, 
+  onNewDiscussion, 
+  onOpenHistory, 
+  onOpenMemory, 
+  selectionActions, 
+  muted, 
+  handleVolumeToggle, 
+  handleModeVocalToggle, 
+  modePrive, 
+  handlePrivateModeToggle, 
+  handleChildModeToggle, 
+  ragEnabled, 
+  handleRagToggle, 
+  webEnabled, 
+  handleWebToggle, 
+  webSearching, 
+  toggleTheme, 
+  setShowMobileMenu 
+}: {
+  modeEnfant?: boolean;
+  onNewDiscussion: () => void;
+  onOpenHistory: () => void;
+  onOpenMemory: () => void;
+  selectionActions: React.ReactNode;
+  muted: boolean;
+  handleVolumeToggle: () => void;
+  handleModeVocalToggle: () => void;
+  modePrive: boolean;
+  handlePrivateModeToggle: () => void;
+  handleChildModeToggle: () => void;
+  ragEnabled: boolean;
+  handleRagToggle: () => void;
+  webEnabled?: boolean;
+  handleWebToggle: () => void;
+  webSearching?: boolean;
+  toggleTheme: () => void;
+  setShowMobileMenu: (show: boolean) => void;
+}) => (
+  <div className="hidden md:flex items-center gap-3">
+    {/* Actions de base */}
+    <div className="flex items-center gap-2">
+      <ActionButton onClick={onNewDiscussion} tooltip="Nouvelle discussion">
+        <PlusCircle className="w-4 h-4 mr-2" />
+        Nouveau
+      </ActionButton>
+
+      {!modeEnfant && (
+        <ButtonGroup>
+          <IconButton onClick={onOpenHistory} tooltip="Historique" aria-label="Historique">
+            <History className="w-4 h-4" />
+          </IconButton>
+          <IconButton onClick={onOpenMemory} tooltip="Mémoire" aria-label="Mémoire">
+            <Brain className="w-4 h-4" />
+          </IconButton>
+        </ButtonGroup>
+      )}
+    </div>
+
+    {/* Actions de sélection */}
+    {selectionActions}
+
+    {/* Contrôles vocaux modernisés */}
+    <ButtonGroup>
+      <IconButton
+        onClick={handleVolumeToggle}
+        tooltip={muted ? 'Activer audio' : 'Désactiver audio'}
+        active={!muted}
+        className={muted
+          ? 'text-red-600 hover:bg-red-50/80 dark:hover:bg-red-950/50'
+          : 'text-green-600 hover:bg-green-50/80 dark:hover:bg-green-950/50'
+        }
+      >
+        {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+      </IconButton>
+
+      {!modeEnfant && (
+        <IconButton
+          onClick={handleModeVocalToggle}
+          tooltip="Mode vocal automatique"
+          active={false}
+        >
+          <Mic className="w-4 h-4" />
+        </IconButton>
+      )}
+    </ButtonGroup>
+
+    {/* Modes IA modernisés */}
+    <ButtonGroup>
+      {!modeEnfant && (
+        <IconButton
+          onClick={handlePrivateModeToggle}
+          tooltip="Mode privé"
+          active={modePrive}
+          className={modePrive 
+            ? 'text-red-600 dark:text-red-400 bg-red-50/80 dark:bg-red-950/40' 
+            : 'hover:bg-red-50/80 dark:hover:bg-red-950/50'
+          }
+        >
+          <Shield className="w-4 h-4" />
+        </IconButton>
+      )}
+
+      <IconButton
+        onClick={handleChildModeToggle}
+        tooltip="Mode enfant"
+        active={!!modeEnfant}
+      >
+        <Baby className="w-4 h-4" />
+      </IconButton>
+
+      {/* Badge de sécurité permanent (non désactivable) */}
+      {!modeEnfant && !modePrive && (
+        <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-50/80 dark:bg-green-950/40 text-green-600 dark:text-green-400">
+          <Shield className="w-4 h-4" />
+          <span className="text-xs font-semibold">AES-256</span>
+        </div>
+      )}
+      
+      {!modeEnfant && (
+        <>
+          <IconButton
+            onClick={handleRagToggle}
+            tooltip="Recherche documentaire (RAG)"
+            active={ragEnabled}
+          >
+            <Database className="w-4 h-4" />
+          </IconButton>
+
+          <IconButton
+            onClick={handleWebToggle}
+            tooltip="Recherche web"
+            active={!!webEnabled}
+          >
+            <Globe className={`w-4 h-4 ${webSearching ? 'animate-spin' : ''}`} />
+          </IconButton>
+        </>
+      )}
+    </ButtonGroup>
+
+    {/* Réglages */}
+    {!modeEnfant && (
+      <ButtonGroup>
+        <IconButton
+          onClick={toggleTheme}
+          tooltip="Mode clair/sombre"
+        >
+          <Sun className="w-4 h-4" />
+        </IconButton>
+
+        <IconButton
+          onClick={() => setShowMobileMenu(true)}
+          tooltip="Plus d'options"
+        >
+          <Settings2 className="w-4 h-4" />
+        </IconButton>
+      </ButtonGroup>
+    )}
+  </div>
+);
+
+// Composant pour le panneau latéral mobile
+const MobileMenuSheet = ({ 
+  showMobileMenu, 
+  setShowMobileMenu, 
+  closeMobileMenu, 
+  handleMenuAction, 
+  modeEnfant, 
+  hasActiveConversation, 
+  selectMode, 
+  selectedCount, 
+  onToggleSelectMode, 
+  onRequestDelete, 
+  modePrive, 
+  handlePrivateModeToggle, 
+  handleChildModeToggle, 
+  ragEnabled, 
+  handleRagToggle, 
+  webEnabled, 
+  handleWebToggle, 
+  onOpenTTSSettings, 
+  onOpenGeminiSettings, 
+  onOpenRagDocs, 
+  autoVoiceConfig, 
+  onUpdateAutoVoiceConfig, 
+  onOpenChildPinSettings, 
+  toggleTheme, 
+  theme, 
+  setShowHelpModal, 
+  onChangeProvider, 
+  provider, 
+  setShowVocalSettings 
+}: {
+  showMobileMenu: boolean;
+  setShowMobileMenu: (show: boolean) => void;
+  closeMobileMenu: () => void;
+  handleMenuAction: (action: () => void) => () => void;
+  modeEnfant?: boolean;
+  hasActiveConversation: boolean;
+  selectMode: boolean;
+  selectedCount: number;
+  onToggleSelectMode: () => void;
+  onRequestDelete: () => void;
+  modePrive: boolean;
+  handlePrivateModeToggle: () => void;
+  handleChildModeToggle: () => void;
+  ragEnabled: boolean;
+  handleRagToggle: () => void;
+  webEnabled?: boolean;
+  handleWebToggle: () => void;
+  onOpenTTSSettings: () => void;
+  onOpenGeminiSettings?: () => void;
+  onOpenRagDocs: () => void;
+  autoVoiceConfig?: { silenceMs: number; minChars: number; minWords: number; cooldownMs: number };
+  onUpdateAutoVoiceConfig?: (key: 'silenceMs' | 'minChars' | 'minWords' | 'cooldownMs', value: number) => void;
+  onOpenChildPinSettings?: () => void;
+  toggleTheme: () => void;
+  theme: string;
+  setShowHelpModal: (show: boolean) => void;
+  onChangeProvider?: (p: 'gemini' | 'openai' | 'mistral') => void;
+  provider?: 'gemini' | 'openai' | 'mistral';
+  setShowVocalSettings: (show: boolean) => void;
+}) => (
+       <Sheet open={showMobileMenu} onOpenChange={setShowMobileMenu}>
+       <SheetContent side="right" className="p-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-l border-slate-200/50 dark:border-slate-800/50 shadow-2xl w-[95vw] max-w-[480px] sm:w-[420px]">
+             <SheetHeader className="p-6 border-b border-slate-200/60 dark:border-slate-800/60">
+         <div className="flex items-center justify-between">
+           <div className="flex-1 min-w-0">
+             <h2 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent mb-2">
+               Menu Principal
+             </h2>
+             <p className="text-base text-slate-600 dark:text-slate-400 font-medium">Navigation et réglages</p>
+           </div>
+          <Button variant="ghost" size="sm" onClick={closeMobileMenu} className="h-8 w-8 p-0 rounded-xl" aria-label="Fermer">
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+      </SheetHeader>
+      
+             <div className="flex-1 overflow-y-auto">
+         <div className="p-6 space-y-8">
+          {/* Section: Actions Principales */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+              <div className="w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center">
+                <PlusCircle className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <span className="text-sm font-semibold uppercase tracking-wide">Actions</span>
+            </div>
+            
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+              <TileButton
+                onClick={handleMenuAction(() => {})}
+                label={'Nouveau'}
+                icon={PlusCircle}
+                tooltip="Démarrer une nouvelle conversation"
+              />
+              {!modeEnfant && (
+                <TileButton
+                  onClick={handleMenuAction(() => {})}
+                  label={'Historique'}
+                  icon={History}
+                  tooltip="Consulter les conversations passées"
+                />
+              )}
+              {!modeEnfant && (
+                <TileButton
+                  onClick={handleMenuAction(() => {})}
+                  label={'Mémoire'}
+                  icon={Brain}
+                  tooltip="Gérer les informations mémorisées"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Section: Gestion des Messages */}
+          {hasActiveConversation && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center">
+                  <CheckSquare className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <span className="text-sm font-semibold uppercase tracking-wide">Gestion</span>
+              </div>
+              
+              <div className="space-y-2">
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" 
+                  onClick={handleMenuAction(onToggleSelectMode)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center">
+                      {selectMode ? <CheckSquare className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> : <Square className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium">{selectMode ? 'Annuler sélection' : 'Sélectionner messages'}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        {selectMode ? 'Quitter le mode sélection' : 'Choisir des messages à supprimer'}
+                      </div>
+                    </div>
+                  </div>
+                </Button>
+
+                {selectMode && selectedCount > 0 && (
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-red-50/80 dark:hover:bg-red-950/60 transition-all duration-200" 
+                    onClick={handleMenuAction(onRequestDelete)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/40 flex items-center justify-center">
+                        <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-red-600 dark:text-red-400">
+                          Supprimer sélection ({selectedCount})
+                        </div>
+                        <div className="text-xs text-red-500/70 dark:text-red-400/70">
+                          Action irréversible
+                        </div>
+                      </div>
+                    </div>
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+          
+          <div className="border-t border-slate-200/60 dark:border-slate-800/60" />
+
+          {/* Section: Modes et Fonctionnalités */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+              <div className="w-6 h-6 rounded-lg bg-purple-50 dark:bg-purple-950/40 flex items-center justify-center">
+                <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <span className="text-sm font-semibold uppercase tracking-wide">Modes & IA</span>
+            </div>
+            
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+              {!modeEnfant && (
+                <TileButton
+                  onClick={handleMenuAction(handlePrivateModeToggle)}
+                  label={modePrive ? 'Privé: ON' : 'Privé: OFF'}
+                  icon={Shield}
+                  active={modePrive}
+                  intent={modePrive ? 'danger' : 'default'}
+                  tooltip="Mode privé"
+                />
+              )}
+
+              <TileButton
+                onClick={handleMenuAction(handleChildModeToggle)}
+                label={modeEnfant ? 'Enfant: ON' : 'Enfant: OFF'}
+                icon={Baby}
+                active={!!modeEnfant}
+                intent={modeEnfant ? 'info' : 'default'}
+                tooltip="Mode enfant"
+              />
+            
+              {!modeEnfant && (
+                <TileButton
+                  onClick={handleMenuAction(handleRagToggle)}
+                  label={ragEnabled ? 'RAG: ON' : 'RAG: OFF'}
+                  icon={Database}
+                  active={ragEnabled}
+                  intent={ragEnabled ? 'success' : 'default'}
+                  tooltip="Recherche documentaire"
+                />
+              )}
+
+              {!modeEnfant && (
+                <TileButton
+                  onClick={handleMenuAction(handleWebToggle)}
+                  label={webEnabled ? 'Web: ON' : 'Web: OFF'}
+                  icon={Globe}
+                  active={!!webEnabled}
+                  intent={webEnabled ? 'warning' : 'default'}
+                  tooltip="Recherche web"
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="border-t border-slate-200/60 dark:border-slate-800/60" />
+
+          {/* Section: Paramètres et Configuration */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+              <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center">
+                <Settings2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <span className="text-sm font-semibold uppercase tracking-wide">Configuration</span>
+            </div>
+            
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+              {!modeEnfant && (
+                <TileButton
+                  onClick={handleMenuAction(onOpenTTSSettings)}
+                  label={'Synthèse'}
+                  icon={Settings2}
+                  tooltip="Synthèse vocale"
+                />
+              )}
+              
+              {!modeEnfant && onOpenGeminiSettings && (
+                <TileButton
+                  onClick={handleMenuAction(onOpenGeminiSettings)}
+                  label={'Gemini'}
+                  icon={Sparkles}
+                  tooltip="Réglages Gemini"
+                />
+              )}
+              
+              {!modeEnfant && (
+                <TileButton
+                  onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('openai:settings:open') as any))}
+                  label={'OpenAI'}
+                  icon={Brain}
+                  tooltip="Réglages OpenAI"
+                />
+              )}
+              
+              {!modeEnfant && (
+                <TileButton
+                  onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('mistral:settings:open') as any))}
+                  label={'Mistral'}
+                  icon={Sparkles}
+                  tooltip="Réglages Mistral"
+                />
+              )}
+              
+              {!modeEnfant && (
+                <TileButton
+                  onClick={handleMenuAction(onOpenRagDocs)}
+                  label={'Docs RAG'}
+                  icon={BookOpen}
+                  tooltip="Documents RAG"
+                />
+              )}
+              
+              {!modeEnfant && autoVoiceConfig && onUpdateAutoVoiceConfig && (
+                <TileButton
+                  onClick={() => setShowVocalSettings(true)}
+                  label={'Vocal réglages'}
+                  icon={Settings2}
+                  tooltip="Ouvrir les réglages du mode vocal"
+                />
+              )}
+              
+              {onOpenChildPinSettings && (
+                <TileButton
+                  onClick={handleMenuAction(onOpenChildPinSettings)}
+                  label={'PIN enfant'}
+                  icon={Settings2}
+                  tooltip="PIN mode enfant"
+                />
+              )}
+              
+              {!modeEnfant && (
+                <TileButton
+                  onClick={handleMenuAction(toggleTheme)}
+                  label={theme === 'dark' ? 'Clair' : 'Sombre'}
+                  icon={theme === 'dark' ? Sun : Moon}
+                  tooltip={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+                />
+              )}
+              
+              <TileButton
+                onClick={handleMenuAction(() => setShowHelpModal(true))}
+                label={'Aide'}
+                icon={HelpCircle}
+                tooltip="Besoin d'aide ? Consultez la documentation complète"
+              />
+            </div>
+          </div>
+
+          {/* Sélecteur de provider IA - Version mobile optimisée */}
+          {!modeEnfant && onChangeProvider && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                <div className="w-6 h-6 rounded-lg bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center">
+                  <Brain className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <span className="text-sm font-semibold uppercase tracking-wide">IA Provider</span>
+              </div>
+              
+              <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    variant={provider === 'gemini' ? 'default' : 'ghost'}
+                    className="h-10 rounded-lg text-xs font-medium"
+                    onClick={handleMenuAction(() => onChangeProvider('gemini'))}
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <Sparkles className="w-4 h-4" />
+                      <span>Gemini</span>
+                    </div>
+                  </Button>
+                  <Button
+                    variant={provider === 'openai' ? 'default' : 'ghost'}
+                    className="h-10 rounded-lg text-xs font-medium"
+                    onClick={handleMenuAction(() => onChangeProvider('openai'))}
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <Brain className="w-4 h-4" />
+                      <span>OpenAI</span>
+                    </div>
+                  </Button>
+                  <Button
+                    variant={provider === 'mistral' ? 'default' : 'ghost'}
+                    className="h-10 rounded-lg text-xs font-medium"
+                    onClick={handleMenuAction(() => onChangeProvider('mistral'))}
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <Sparkles className="w-4 h-4" />
+                      <span>Mistral</span>
+                    </div>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Réglages OpenAI spécifiques */}
+          {!modeEnfant && provider === 'openai' && (
+            <Button
+              variant="ghost"
+              className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200"
+              onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('openai:settings:open')))}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/40 dark:to-green-950/40 flex items-center justify-center">
+                  <Brain className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <div className="font-medium">Réglages OpenAI</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">Configuration du modèle IA</div>
+                </div>
+              </div>
+            </Button>
+          )}
+        </div>
+      </div>
+    </SheetContent>
+  </Sheet>
+);
+
+// =====================
 // Composant principal amélioré
 // =====================
 export function Header(props: HeaderProps) {
@@ -490,609 +1441,94 @@ export function Header(props: HeaderProps) {
               <Logo onNewDiscussion={onNewDiscussion} isOnline={isOnline} quality={connectionQuality} />
               
               {/* Sélecteur d'espace de travail - Responsive */}
-              {!props.modeEnfant && props.workspaces && props.onChangeWorkspace && (
-                <div className="flex items-center gap-1 bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60 rounded-xl px-2 py-1 max-w-[200px] sm:max-w-none">
-                  <select
-                    value={props.workspaceId || 'default'}
-                    onChange={(e) => props.onChangeWorkspace?.(e.target.value)}
-                    className="bg-transparent text-xs sm:text-sm text-slate-700 dark:text-slate-300 focus:outline-none min-w-0 truncate"
-                    title="Espace de travail"
-                  >
-                    {props.workspaces.map(ws => (
-                      <option key={ws.id} value={ws.id}>{ws.name}</option>
-                    ))}
-                  </select>
-                  {props.onCreateWorkspace && (
-                    <Button variant="ghost" size="sm" className="h-6 w-6 sm:h-7 sm:w-7 p-0 flex-shrink-0" onClick={() => props.onCreateWorkspace?.()} title="Créer un espace">
-                      <PlusCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                    </Button>
-                  )}
-                  <div className="hidden sm:flex items-center gap-1">
-                    {props.onRenameWorkspace && props.workspaceId && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                        onClick={() => {
-                          const current = props.workspaces!.find(w => w.id === (props.workspaceId || 'default'));
-                          const name = window.prompt('Renommer l\'espace', current?.name || '');
-                          if (name && name.trim()) props.onRenameWorkspace?.(props.workspaceId!, name.trim());
-                        }}
-                        title="Renommer l'espace"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                    )}
-                    {props.onDeleteWorkspace && props.workspaceId && props.workspaceId !== 'default' && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
-                        onClick={() => {
-                          const current = props.workspaces!.find(w => w.id === props.workspaceId);
-                          if (!current) return;
-                          const ok = window.confirm(`Supprimer l'espace "${current.name}" ?\nToutes les données locales de cet espace seront perdues.`);
-                          if (ok) props.onDeleteWorkspace?.(props.workspaceId!);
-                        }}
-                        title="Supprimer l'espace"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              )}
+              <WorkspaceSelector
+                modeEnfant={props.modeEnfant}
+                workspaces={props.workspaces}
+                workspaceId={props.workspaceId}
+                onChangeWorkspace={props.onChangeWorkspace}
+                onCreateWorkspace={props.onCreateWorkspace}
+                onRenameWorkspace={props.onRenameWorkspace}
+                onDeleteWorkspace={props.onDeleteWorkspace}
+              />
             </div>
 
             {/* Actions principales - Desktop */}
-            <div className="hidden md:flex items-center gap-3">
-              {/* Actions de base */}
-              <div className="flex items-center gap-2">
-                <ActionButton onClick={onNewDiscussion} tooltip="Nouvelle discussion">
-                  <PlusCircle className="w-4 h-4 mr-2" />
-                  Nouveau
-                </ActionButton>
+            <DesktopActions
+              modeEnfant={props.modeEnfant}
+              onNewDiscussion={onNewDiscussion}
+              onOpenHistory={onOpenHistory}
+              onOpenMemory={onOpenMemory}
+              selectionActions={selectionActions}
+              muted={muted}
+              handleVolumeToggle={handleVolumeToggle}
+              handleModeVocalToggle={handleModeVocalToggle}
+              modePrive={modePrive}
+              handlePrivateModeToggle={handlePrivateModeToggle}
+              handleChildModeToggle={handleChildModeToggle}
+              ragEnabled={ragEnabled}
+              handleRagToggle={handleRagToggle}
+              webEnabled={webEnabled}
+              handleWebToggle={handleWebToggle}
+              webSearching={props.webSearching}
+              toggleTheme={toggleTheme}
+              setShowMobileMenu={setShowMobileMenu}
+            />
 
-                {!props.modeEnfant && (
-                  <ButtonGroup>
-                    <IconButton onClick={onOpenHistory} tooltip="Historique" aria-label="Historique">
-                      <History className="w-4 h-4" />
-                    </IconButton>
-                    <IconButton onClick={onOpenMemory} tooltip="Mémoire" aria-label="Mémoire">
-                      <Brain className="w-4 h-4" />
-                    </IconButton>
-                  </ButtonGroup>
-                )}
-              </div>
-
-              {/* Actions de sélection */}
-              {selectionActions}
-
-              {/* Contrôles vocaux modernisés */}
-              <ButtonGroup>
-                <IconButton
-                  onClick={handleVolumeToggle}
-                  tooltip={muted ? 'Activer audio' : 'Désactiver audio'}
-                  active={!muted}
-                  className={muted
-                    ? 'text-red-600 hover:bg-red-50/80 dark:hover:bg-red-950/50'
-                    : 'text-green-600 hover:bg-green-50/80 dark:hover:bg-green-950/50'
-                  }
-                >
-                  {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </IconButton>
-
-                {!props.modeEnfant && (
-                  <IconButton
-                    onClick={handleModeVocalToggle}
-                    tooltip="Mode vocal automatique"
-                    active={modeVocalAuto}
-                  >
-                    <Mic className="w-4 h-4" />
-                  </IconButton>
-                )}
-              </ButtonGroup>
-
-              {/* Modes IA modernisés */}
-              <ButtonGroup>
-                {!props.modeEnfant && (
-                  <IconButton
-                    onClick={handlePrivateModeToggle}
-                    tooltip="Mode privé"
-                    active={modePrive}
-                    className={modePrive 
-                      ? 'text-red-600 dark:text-red-400 bg-red-50/80 dark:bg-red-950/40' 
-                      : 'hover:bg-red-50/80 dark:hover:bg-red-950/50'
-                    }
-                  >
-                    <Shield className="w-4 h-4" />
-                  </IconButton>
-                )}
-
-                <IconButton
-                  onClick={handleChildModeToggle}
-                  tooltip="Mode enfant"
-                  active={!!props.modeEnfant}
-                >
-                  <Baby className="w-4 h-4" />
-                </IconButton>
-
-                {/* Badge de sécurité permanent (non désactivable) */}
-                {!props.modeEnfant && !modePrive && (
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-50/80 dark:bg-green-950/40 text-green-600 dark:text-green-400">
-                    <Shield className="w-4 h-4" />
-                    <span className="text-xs font-semibold">AES-256</span>
-                  </div>
-                )}
-                
-                {!props.modeEnfant && (
-                  <>
-                    <IconButton
-                      onClick={handleRagToggle}
-                      tooltip="Recherche documentaire (RAG)"
-                      active={ragEnabled}
-                    >
-                      <Database className="w-4 h-4" />
-                    </IconButton>
-
-                    <IconButton
-                      onClick={handleWebToggle}
-                      tooltip="Recherche web"
-                      active={!!webEnabled}
-                    >
-                      <Globe className={`w-4 h-4 ${props.webSearching ? 'animate-spin' : ''}`} />
-                    </IconButton>
-                  </>
-                )}
-              </ButtonGroup>
-
-              {/* Réglages */}
-              {!props.modeEnfant && (
-                <ButtonGroup>
-                  <IconButton
-                    onClick={toggleTheme}
-                    tooltip={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
-                  >
-                    {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                  </IconButton>
-
-                  <IconButton
-                    onClick={() => setShowMobileMenu(true)}
-                    tooltip="Plus d'options"
-                  >
-                    <Settings2 className="w-4 h-4" />
-                  </IconButton>
-                </ButtonGroup>
-              )}
-            </div>
-
-            {/* Actions mobiles essentielles */}
-            <div className="flex items-center gap-2">
-              {/* Contrôles rapides mobile */}
-              <div className="md:hidden flex items-center gap-1">
-                {/* Bouton Nouveau - toujours visible */}
-                <IconButton onClick={onNewDiscussion} tooltip="Nouvelle discussion" className="h-9 w-9">
-                  <PlusCircle className="w-4 h-4" />
-                </IconButton>
-                
-                {/* Contrôle audio - toujours visible */}
-                <IconButton
-                  onClick={handleVolumeToggle}
-                  tooltip={muted ? 'Activer audio' : 'Désactiver audio'}
-                  active={!muted}
-                  className={`h-9 w-9 ${
-                    muted
-                      ? 'text-red-600 hover:bg-red-50/80 dark:hover:bg-red-950/50'
-                      : 'text-green-600 hover:bg-green-50/80 dark:hover:bg-green-950/50'
-                  }`}
-                >
-                  {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </IconButton>
-                
-                {/* Mode vocal auto - visible si pas en mode enfant */}
-                {!props.modeEnfant && (
-                  <IconButton
-                    onClick={handleModeVocalToggle}
-                    tooltip="Mode vocal automatique"
-                    active={modeVocalAuto}
-                    className="h-9 w-9"
-                  >
-                    <Mic className="w-4 h-4" />
-                  </IconButton>
-                )}
-              </div>
-
-              {/* Bouton menu mobile amélioré */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowMobileMenu(true)}
-                className="md:hidden h-10 w-10 p-0 rounded-xl hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-all duration-200 hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                aria-label="Ouvrir le menu"
-              >
-                <Menu className="w-5 h-5" />
-              </Button>
-            </div>
+            {/* Actions mobiles essentielles - Refonte complète */}
+            <MobileActions
+              modeEnfant={props.modeEnfant}
+              muted={muted}
+              onNewDiscussion={onNewDiscussion}
+              handleVolumeToggle={handleVolumeToggle}
+              setShowMobileMenu={setShowMobileMenu}
+            />
           </div>
         </div>
 
         {/* Banner mode privé */}
         <PrivateModeBanner show={showPrivateIndicator} />
+
+        {/* Indicateur de statut mobile - Affichage compact des informations importantes */}
+        <MobileStatusIndicator
+          modePrive={modePrive}
+          modeEnfant={props.modeEnfant}
+          ragEnabled={ragEnabled}
+          webEnabled={webEnabled}
+        />
+
+        {/* Panneau latéral de réglages (Sheet) - Refonte mobile */}
+        <MobileMenuSheet
+          showMobileMenu={showMobileMenu}
+          setShowMobileMenu={setShowMobileMenu}
+          closeMobileMenu={closeMobileMenu}
+          handleMenuAction={handleMenuAction}
+          modeEnfant={props.modeEnfant}
+          hasActiveConversation={hasActiveConversation}
+          selectMode={selectMode}
+          selectedCount={selectedCount}
+          onToggleSelectMode={onToggleSelectMode}
+          onRequestDelete={onRequestDelete}
+          modePrive={modePrive}
+          handlePrivateModeToggle={handlePrivateModeToggle}
+          handleChildModeToggle={handleChildModeToggle}
+          ragEnabled={ragEnabled}
+          handleRagToggle={handleRagToggle}
+          webEnabled={webEnabled}
+          handleWebToggle={handleWebToggle}
+          onOpenTTSSettings={onOpenTTSSettings}
+          onOpenGeminiSettings={onOpenGeminiSettings}
+          onOpenRagDocs={onOpenRagDocs}
+          autoVoiceConfig={props.autoVoiceConfig}
+          onUpdateAutoVoiceConfig={props.onUpdateAutoVoiceConfig}
+          onOpenChildPinSettings={props.onOpenChildPinSettings}
+          toggleTheme={toggleTheme}
+          theme={theme}
+          setShowHelpModal={setShowHelpModal}
+          onChangeProvider={onChangeProvider}
+          provider={provider}
+          setShowVocalSettings={setShowVocalSettings}
+        />
       </header>
-
-      {/* Panneau latéral de réglages (Sheet) */}
-      <Sheet open={showMobileMenu} onOpenChange={setShowMobileMenu}>
-        <SheetContent side="right" className="p-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-l border-slate-200/50 dark:border-slate-800/50 shadow-2xl w-[95vw] max-w-[360px] sm:w-[340px] md:w-[380px]">
-          <SheetHeader className="sr-only">
-            <SheetTitle>Menu options</SheetTitle>
-          </SheetHeader>
-          <div className="p-4">
-            <div className="mb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
-                Options
-              </h2>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Réglages rapides</p>
-                </div>
-              <Button variant="ghost" size="sm" onClick={closeMobileMenu} className="h-8 w-8 p-0 rounded-xl" aria-label="Fermer">
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-                    </div>
-
-            <div className="space-y-2">
-              {/* Section: Actions */}
-              <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 mb-1">
-                <Settings2 className="w-3.5 h-3.5" />
-                <span className="text-[11px] font-semibold uppercase tracking-wide">Actions</span>
-                <span className="text-[9px] opacity-70 ml-1">Créer et gérer</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 mb-1 mt-1.5">
-                <CheckSquare className="w-3.5 h-3.5" />
-                <span className="text-[11px] font-semibold uppercase tracking-wide">Sélection</span>
-                <span className="text-[9px] opacity-70 ml-1">Choisir et supprimer</span>
-              </div>
-              <div className="rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-2">
-                <div className="grid grid-cols-3 gap-1.5">
-                {!props.modeEnfant && (
-                    <TileButton
-                      onClick={handleMenuAction(handleModeVocalToggle)}
-                      label={'Vocal'}
-                      icon={Mic}
-                      active={modeVocalAuto}
-                      tooltip="Activer/désactiver le mode vocal auto"
-                    />
-                  )}
-                  <TileButton
-                    onClick={handleMenuAction(onNewDiscussion)}
-                    label={'Nouveau'}
-                    icon={PlusCircle}
-                    tooltip="Démarrer une nouvelle conversation"
-                  />
-                  {!props.modeEnfant && (
-                    <TileButton
-                      onClick={handleMenuAction(onOpenHistory)}
-                      label={'Historique'}
-                      icon={History}
-                      tooltip="Consulter les conversations passées"
-                    />
-                  )}
-                  {!props.modeEnfant && (
-                    <TileButton
-                      onClick={handleMenuAction(onOpenMemory)}
-                      label={'Mémoire'}
-                      icon={Brain}
-                      tooltip="Gérer les informations mémorisées"
-                    />
-                  )}
-                        </div>
-              </div>
-
-              {hasActiveConversation && (
-                <>
-                  <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 mt-2">
-                    <CheckSquare className="w-4 h-4" />
-                    <span className="text-xs font-semibold uppercase tracking-wide">Sélection</span>
-                    <span className="text-[10px] opacity-70 ml-2">Choisir et supprimer</span>
-                  </div>
-                  <div className="space-y-1 mt-1 rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-2">
-                    <Button variant="ghost" className="w-full justify-start h-10 rounded-lg text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onToggleSelectMode)}>
-                      <div className="flex items-center gap-3">
-                        <div className="w-7 h-7 rounded-md bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center">
-                          {selectMode ? <CheckSquare className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" /> : <Square className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />}
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium">{selectMode ? 'Annuler sélection' : 'Sélectionner messages'}</div>
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                            {selectMode ? 'Quitter le mode sélection' : 'Choisir des messages à supprimer'}
-                          </div>
-                        </div>
-                      </div>
-                    </Button>
-
-                    {selectMode && selectedCount > 0 && (
-                      <Button variant="ghost" className="w-full justify-start h-10 rounded-lg text-left font-medium hover:bg-red-50/80 dark:hover:bg-red-950/60 transition-all duration-200" onClick={handleMenuAction(onRequestDelete)}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-7 h-7 rounded-md bg-red-50 dark:bg-red-950/40 flex items-center justify-center">
-                            <Trash2 className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-                          </div>
-                          <div>
-                            <div className="text-sm font-medium text-red-600 dark:text-red-400">
-                              Supprimer sélection ({selectedCount})
-                            </div>
-                            <div className="text-[11px] text-red-500/70 dark:text-red-400/70">
-                              Action irréversible
-                            </div>
-                          </div>
-                        </div>
-                      </Button>
-                    )}
-                  </div>
-                </>
-              )}
-              
-              <div className="border-t border-slate-200/60 dark:border-slate-800/60 my-2" />
-
-              {/* Section: Modes */}
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                <Sparkles className="w-4 h-4" />
-                <span className="text-xs font-semibold uppercase tracking-wide">Modes</span>
-                <span className="text-[10px] opacity-70 ml-2">Activer des contextes</span>
-                      </div>
-              <div className="rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-2">
-                <div className="grid grid-cols-3 gap-1.5">
-                  {!props.modeEnfant && (
-                    <TileButton
-                      onClick={handleMenuAction(handlePrivateModeToggle)}
-                      label={modePrive ? 'Privé: ON' : 'Privé: OFF'}
-                      icon={Shield}
-                      active={modePrive}
-                      intent={modePrive ? 'danger' : 'default'}
-                      tooltip="Mode privé"
-                    />
-                  )}
-
-                  <TileButton
-                    onClick={handleMenuAction(handleChildModeToggle)}
-                    label={props.modeEnfant ? 'Enfant: ON' : 'Enfant: OFF'}
-                    icon={Baby}
-                    active={!!props.modeEnfant}
-                    intent={props.modeEnfant ? 'info' : 'default'}
-                    tooltip="Mode enfant"
-                  />
-                
-                {!props.modeEnfant && (
-                    <TileButton
-                      onClick={handleMenuAction(handleRagToggle)}
-                      label={ragEnabled ? 'RAG: ON' : 'RAG: OFF'}
-                      icon={Database}
-                      active={ragEnabled}
-                      intent={ragEnabled ? 'success' : 'default'}
-                      tooltip="Recherche documentaire"
-                    />
-                  )}
-
-                  {!props.modeEnfant && (
-                    <TileButton
-                      onClick={handleMenuAction(handleWebToggle)}
-                      label={webEnabled ? 'Web: ON' : 'Web: OFF'}
-                      icon={Globe}
-                      active={!!webEnabled}
-                      intent={webEnabled ? 'warning' : 'default'}
-                      tooltip="Recherche web"
-                    />
-                  )}
-                        </div>
-                          </div>
-
-              <div className="border-t border-slate-200/60 dark:border-slate-800/60" />
-
-              {/* Section: Paramètres */}
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                <Settings2 className="w-4 h-4" />
-                <span className="text-xs font-semibold uppercase tracking-wide">Paramètres</span>
-                <span className="text-[10px] opacity-70 ml-2">Personnaliser l'expérience</span>
-                        </div>
-              <div className="rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/60 p-2 mb-2">
-                <div className="grid grid-cols-3 gap-1.5">
-                  {!props.modeEnfant && (
-                    <TileButton
-                      onClick={handleMenuAction(onOpenTTSSettings)}
-                      label={'Synthèse'}
-                      icon={Settings2}
-                      tooltip="Synthèse vocale"
-                    />
-                  )}
-                  {!props.modeEnfant && onOpenGeminiSettings && (
-                    <TileButton
-                      onClick={handleMenuAction(onOpenGeminiSettings)}
-                      label={'Gemini'}
-                      icon={Sparkles}
-                      tooltip="Réglages Gemini"
-                    />
-                  )}
-                  {!props.modeEnfant && (
-                    <TileButton
-                      onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('openai:settings:open') as any))}
-                      label={'OpenAI'}
-                      icon={Brain}
-                      tooltip="Réglages OpenAI"
-                    />
-                  )}
-                  {!props.modeEnfant && (
-                    <TileButton
-                      onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('mistral:settings:open') as any))}
-                      label={'Mistral'}
-                      icon={Sparkles}
-                      tooltip="Réglages Mistral"
-                    />
-                  )}
-                  {!props.modeEnfant && (
-                    <TileButton
-                      onClick={handleMenuAction(onOpenRagDocs)}
-                      label={'Docs RAG'}
-                      icon={BookOpen}
-                      tooltip="Documents RAG"
-                    />
-                  )}
-                  {!props.modeEnfant && props.autoVoiceConfig && props.onUpdateAutoVoiceConfig && (
-                    <TileButton
-                      onClick={() => setShowVocalSettings(true)}
-                      label={'Vocal réglages'}
-                      icon={Settings2}
-                      tooltip="Ouvrir les réglages du mode vocal"
-                    />
-                  )}
-                  {props.onOpenChildPinSettings && (
-                    <TileButton
-                      onClick={handleMenuAction(props.onOpenChildPinSettings)}
-                      label={'PIN enfant'}
-                      icon={Settings2}
-                      tooltip="PIN mode enfant"
-                    />
-                  )}
-                  {!props.modeEnfant && (
-                    <TileButton
-                      onClick={handleMenuAction(toggleTheme)}
-                      label={theme === 'dark' ? 'Clair' : 'Sombre'}
-                      icon={theme === 'dark' ? Sun : Moon}
-                      tooltip={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
-                    />
-                  )}
-                  <TileButton
-                    onClick={handleMenuAction(() => setShowHelpModal(true))}
-                    label={'Aide'}
-                    icon={HelpCircle}
-                    tooltip="Besoin d'aide ? Consultez la documentation complète"
-                  />
-              </div>
-                {/* Réglages du mode vocal automatique */}
-                {/* {!props.modeEnfant && props.autoVoiceConfig && props.onUpdateAutoVoiceConfig && (
-                  <div className="mt-4 space-y-3">
-                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Vocal</div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="space-y-1">
-                        <label className="text-xs text-slate-600 dark:text-slate-300">Silence (ms)</label>
-                        <Input
-                          type="number"
-                          min={500}
-                          max={8000}
-                          value={props.autoVoiceConfig.silenceMs}
-                          onChange={(e) => props.onUpdateAutoVoiceConfig?.('silenceMs', Math.max(500, Math.min(8000, Number(e.target.value) || 0)))}
-                        />
-                        </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-slate-600 dark:text-slate-300">Min. caractères</label>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={200}
-                          value={props.autoVoiceConfig.minChars}
-                          onChange={(e) => props.onUpdateAutoVoiceConfig?.('minChars', Math.max(1, Math.min(200, Number(e.target.value) || 0)))}
-                        />
-                        </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-slate-600 dark:text-slate-300">Min. mots</label>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={20}
-                          value={props.autoVoiceConfig.minWords}
-                          onChange={(e) => props.onUpdateAutoVoiceConfig?.('minWords', Math.max(1, Math.min(20, Number(e.target.value) || 0)))}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-slate-600 dark:text-slate-300">Cooldown (ms)</label>
-                        <Input
-                          type="number"
-                          min={0}
-                          max={10000}
-                          value={props.autoVoiceConfig.cooldownMs}
-                          onChange={(e) => props.onUpdateAutoVoiceConfig?.('cooldownMs', Math.max(0, Math.min(10000, Number(e.target.value) || 0)))}
-                        />
-                        </div>
-                        </div>
-                      </div>
-                )} */}
-              </div>
-
-                {/* Sélecteur de provider IA */}
-                {!props.modeEnfant && onChangeProvider && (
-                  <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
-                    <div className="text-sm font-medium mb-3 text-slate-700 dark:text-slate-300">Fournisseur IA</div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant={provider === 'gemini' ? 'default' : 'ghost'}
-                        className="flex-1 h-10 rounded-lg text-sm"
-                        onClick={handleMenuAction(() => onChangeProvider('gemini'))}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Sparkles className="w-4 h-4" />
-                          Gemini
-                        </div>
-                      </Button>
-                      <Button
-                        variant={provider === 'openai' ? 'default' : 'ghost'}
-                        className="flex-1 h-10 rounded-lg text-sm"
-                        onClick={handleMenuAction(() => onChangeProvider('openai'))}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Brain className="w-4 h-4" />
-                          OpenAI
-                        </div>
-                      </Button>
-                      <Button
-                        variant={provider === 'mistral' ? 'default' : 'ghost'}
-                        className="flex-1 h-10 rounded-lg text-sm"
-                        onClick={handleMenuAction(() => onChangeProvider('mistral'))}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Sparkles className="w-4 h-4" />
-                          Mistral
-                        </div>
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* {!props.modeEnfant && onOpenGeminiSettings && provider === 'gemini' && (
-                  <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" onClick={handleMenuAction(onOpenGeminiSettings)}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 flex items-center justify-center">
-                        <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div>
-                        <div className="font-medium">Réglages Gemini</div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">Configuration du modèle IA</div>
-                      </div>
-                    </div>
-                  </Button>
-                )} */}
-
-                {!props.modeEnfant && provider === 'openai' && (
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200"
-                    onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('openai:settings:open')))}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/40 dark:to-green-950/40 flex items-center justify-center">
-                        <Brain className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                      </div>
-                      <div>
-                        <div className="font-medium">Réglages OpenAI</div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">Configuration du modèle IA</div>
-                      </div>
-                    </div>
-                  </Button>
-                )}
-
-                
-                    </div>
-                      </div>
-        </SheetContent>
-      </Sheet>
 
       {/* Modal Réglages Vocal Auto */}
       {!props.modeEnfant && props.autoVoiceConfig && props.onUpdateAutoVoiceConfig && (
@@ -1178,6 +1614,28 @@ export function Header(props: HeaderProps) {
             transform: translateX(0);
           }
         }
+
+        @keyframes fade-in-up {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes scale-in {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
         
         .animate-slide-down {
           animation: slide-down 0.3s ease-out;
@@ -1186,15 +1644,60 @@ export function Header(props: HeaderProps) {
         .animate-slide-in {
           animation: slide-in 0.2s ease-out;
         }
+
+        .animate-fade-in-up {
+          animation: fade-in-up 0.3s ease-out;
+        }
+
+        .animate-scale-in {
+          animation: scale-in 0.2s ease-out;
+        }
         
         .animate-pulse {
           animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
-        
+
+        /* Optimisations mobile */
+        @media (max-width: 768px) {
+          .mobile-optimized {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+          }
+          
+          .mobile-button {
+            min-height: 44px;
+            min-width: 44px;
+          }
+        }
+
         /* Breakpoint xs personnalisé pour très petits écrans */
         @media (min-width: 475px) {
           .xs\:flex {
             display: flex;
+          }
+        }
+
+        /* Améliorations pour les petits écrans */
+        @media (max-width: 640px) {
+          .sm\:hidden {
+            display: none !important;
+          }
+        }
+
+        /* Transitions fluides pour tous les éléments interactifs */
+        .transition-smooth {
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Effet de pression tactile */
+        .active\:scale-95:active {
+          transform: scale(0.95);
+        }
+
+        /* Optimisation des ombres pour mobile */
+        @media (max-width: 768px) {
+          .shadow-mobile {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
           }
         }
       `}</style>
