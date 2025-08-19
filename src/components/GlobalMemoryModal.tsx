@@ -15,11 +15,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+
 import { 
   Brain, 
   Search, 
-  Filter, 
   Download, 
   Upload, 
   Trash2, 
@@ -27,9 +26,7 @@ import {
   Edit3, 
   Tag,
   Calendar,
-  Star,
-  Eye,
-  X
+  Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
