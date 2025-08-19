@@ -47,6 +47,7 @@ import { ChildModeBanner } from '@/components/ChildModeBanner';
 import { ChildModePinDialog } from '@/components/ChildModePinDialog';
 import { ChildModeChangePinDialog } from '@/components/ChildModeChangePinDialog';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
+import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
 import { RagSidebar } from '@/components/RagSidebar';
 import { RagSidebarDrawer } from '@/components/RagSidebarDrawer';
 import { WebSourcesSidebar } from '@/components/WebSourcesSidebar';
@@ -177,6 +178,8 @@ function App() {
   // Ajout du state pour la modale de gestion des documents RAG
   const [showRagDocs, setShowRagDocs] = useState(false);
   const [showMemory, setShowMemory] = useState(false);
+  // Ajout du state pour les réglages vocaux
+  const [showVocalSettings, setShowVocalSettings] = useState(false);
   // Ajout du state pour activer/désactiver le RAG
   const [ragEnabled, setRagEnabled] = useState(false);
   // Ajout du state pour activer/désactiver la recherche web
@@ -322,10 +325,10 @@ function App() {
           setUsedWebSources([]);
           
           // Toast de confirmation avec détails de sécurité
-          toast.success('🔐 Mode Privé Ultra-Sécurisé Activé', {
-            description: 'Protection AES-256 • Auto-destruction • Zéro persistance',
-            duration: 3000,
-          });
+          // toast.success('🔐 Mode Privé Ultra-Sécurisé Activé', {
+          //   description: 'Protection AES-256 • Auto-destruction • Zéro persistance',
+          //   duration: 3000,
+          // });
           
           // Afficher les stats de sécurité
           const keyStats = getKeyManagerStats();
@@ -1450,6 +1453,7 @@ ${lines.join('\n')}`, false);
             }
           }}
           onOpenChildPinSettings={() => setShowChildChangePinDialog(true)}
+          onOpenVocalSettings={() => setShowVocalSettings(true)}
           autoVoiceConfig={autoVoiceConfig}
           onUpdateAutoVoiceConfig={(key, value) => setAutoVoiceConfig(cfg => ({ ...cfg, [key]: value }))}
           selectMode={selectMode}
@@ -1611,6 +1615,15 @@ ${lines.join('\n')}`, false);
           deleteSettings={deleteSettings}
         />
       </Suspense>
+
+      {/* Modal des réglages du mode vocal automatique */}
+      <VocalAutoSettingsModal
+        open={modeEnfant ? false : showVocalSettings}
+        onClose={() => setShowVocalSettings(false)}
+        config={autoVoiceConfig}
+        onUpdate={(key, value) => setAutoVoiceConfig(cfg => ({ ...cfg, [key]: value }))}
+        onReset={() => setAutoVoiceConfig({ silenceMs: 2500, minChars: 6, minWords: 2, cooldownMs: 1500 })}
+      />
 
       <VocalModeIndicator 
         visible={modeVocalAuto} 
