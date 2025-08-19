@@ -199,6 +199,7 @@ class EvolvedMemoryService {
       this.learningMetrics.patternsIdentified++;
     }
 
+    this.updateLearningMetrics(true); // Mise à jour des métriques
     this.saveToStorage();
   }
 
@@ -291,6 +292,7 @@ class EvolvedMemoryService {
       this.personality.set(trait, newTrait);
     }
 
+    this.updateLearningMetrics(true); // Mise à jour des métriques
     this.saveToStorage();
   }
 
@@ -348,6 +350,7 @@ class EvolvedMemoryService {
       this.contextualMemories.set(contextId, newContextualMemory);
     }
 
+    this.updateLearningMetrics(true); // Mise à jour des métriques
     this.saveToStorage();
   }
 
