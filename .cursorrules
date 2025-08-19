@@ -1,0 +1,274 @@
+# 🧠 NeuroChat-IA-v2 - Règles CursorAI
+# Configuration personnalisée pour un assistant IA intelligent et sécurisé
+
+## 🎯 CONTEXTE DU PROJET
+NeuroChat-IA-v2 est une application de chat IA avancée avec :
+- Support multi-providers (OpenAI, Gemini, Mistral)
+- Chiffrement AES-256 et modes de sécurité
+- RAG (Retrieval-Augmented Generation) 
+- Synthèse vocale et reconnaissance vocale
+- Interface responsive et accessible
+- Gestion des espaces de travail
+
+## 🏗️ ARCHITECTURE ET ORGANISATION
+
+### Structure des dossiers
+```
+src/
+├── components/          # Composants React réutilisables
+│   ├── ui/             # Composants UI de base (shadcn/ui)
+│   └── [feature]/      # Composants spécifiques aux fonctionnalités
+├── hooks/              # Hooks React personnalisés
+├── services/           # Services métier et API
+├── lib/                # Utilitaires et helpers
+├── store/              # État global (Zustand/Context)
+├── types/              # Types TypeScript
+└── styles/             # Styles globaux et CSS modules
+```
+
+### Conventions de nommage
+- **Composants** : PascalCase (`ChatContainer.tsx`, `Header.tsx`)
+- **Hooks** : camelCase avec préfixe `use` (`useTheme.ts`, `useWorkspace.ts`)
+- **Services** : camelCase (`openaiApi.ts`, `encryption.ts`)
+- **Types/Interfaces** : PascalCase (`Message`, `RagContext`)
+- **Constantes** : UPPER_SNAKE_CASE (`DEFAULT_TIMEOUT`, `MAX_RETRIES`)
+
+## 🔧 CONVENTIONS TECHNIQUES
+
+### TypeScript
+- **Strict mode** : Toujours activé
+- **Types explicites** : Préférer les types explicites aux `any`
+- **Interfaces** : Utiliser pour les objets complexes
+- **Generics** : Utiliser quand approprié pour la réutilisabilité
+- **Union types** : Pour les valeurs multiples possibles
+
+```typescript
+// ✅ BON
+interface Message {
+  id: string;
+  content: string;
+  role: 'user' | 'assistant';
+  timestamp: Date;
+}
+
+// ❌ MAUVAIS
+const message: any = { ... };
+```
+
+### React
+- **Fonctional Components** : Toujours utiliser des composants fonctionnels
+- **Hooks** : Respecter les règles des hooks React
+- **Props** : Définir des interfaces claires pour les props
+- **State** : Utiliser `useState` pour l'état local, `useReducer` pour l'état complexe
+- **Effects** : Spécifier les dépendances dans `useEffect`
+
+```typescript
+// ✅ BON
+interface HeaderProps {
+  muted: boolean;
+  onMute: () => void;
+  onUnmute: () => void;
+  // ... autres props
+}
+
+export function Header({ muted, onMute, onUnmute, ...props }: HeaderProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  useEffect(() => {
+    // Logique avec dépendances claires
+  }, [muted]);
+  
+  return <header>...</header>;
+}
+```
+
+### Tailwind CSS
+- **Classes utilitaires** : Utiliser les classes Tailwind natives
+- **Responsive** : Toujours penser mobile-first
+- **Dark mode** : Supporter `dark:` pour tous les composants
+- **Custom classes** : Créer des classes personnalisées pour la réutilisabilité
+
+```typescript
+// ✅ BON
+<div className="w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/50">
+  <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-lg transition-colors">
+    Action
+  </button>
+</div>
+
+// ❌ MAUVAIS
+<div className="bg-white" style={{ width: '100%', backdropFilter: 'blur(10px)' }}>
+```
+
+## 🎨 STYLE ET QUALITÉ DU CODE
+
+### Formatage
+- **Indentation** : 2 espaces
+- **Longueur de ligne** : Max 100 caractères
+- **Semicolons** : Toujours utiliser
+- **Guillemets** : Préférer les guillemets simples pour les chaînes
+- **Virgules trailing** : Utiliser pour les objets et arrays multilignes
+
+### Commentaires
+- **JSDoc** : Pour les fonctions et composants publics
+- **Commentaires explicatifs** : Pour la logique complexe
+- **TODO/FIXME** : Marquer les améliorations futures
+
+```typescript
+/**
+ * Gère le chiffrement des messages avec AES-256
+ * @param message - Message à chiffrer
+ * @param key - Clé de chiffrement
+ * @returns Message chiffré en base64
+ */
+export function encryptMessage(message: string, key: string): string {
+  // Logique de chiffrement complexe
+  // TODO: Ajouter support pour d'autres algorithmes
+}
+```
+
+### Gestion des erreurs
+- **Try-catch** : Toujours gérer les erreurs async
+- **Error boundaries** : Implémenter pour les composants React
+- **Logging** : Logger les erreurs de manière appropriée
+- **Fallbacks** : Fournir des alternatives en cas d'échec
+
+```typescript
+// ✅ BON
+try {
+  const result = await apiCall();
+  return result;
+} catch (error) {
+  console.error('Erreur API:', error);
+  // Fallback ou re-throw selon le contexte
+  throw new Error('Impossible de récupérer les données');
+}
+```
+
+## 🚀 RÈGLES SPÉCIFIQUES AU PROJET
+
+### Sécurité et Chiffrement
+- **AES-256** : Toujours utiliser pour le chiffrement des données sensibles
+- **Clés** : Ne jamais exposer les clés dans le code
+- **Validation** : Valider toutes les entrées utilisateur
+- **Sanitisation** : Nettoyer les données avant affichage
+
+### Performance
+- **Lazy loading** : Pour les composants lourds
+- **Memoization** : Utiliser `useMemo` et `useCallback` judicieusement
+- **Virtualization** : Pour les longues listes (Virtuoso)
+- **Bundle splitting** : Diviser le code en chunks
+
+### Accessibilité
+- **ARIA labels** : Toujours fournir des labels accessibles
+- **Navigation clavier** : Supporter la navigation au clavier
+- **Contraste** : Respecter les ratios de contraste WCAG
+- **Screen readers** : Tester avec des lecteurs d'écran
+
+## 🤖 RÈGLES CURSORAI
+
+### Génération de code
+- **Composants modulaires** : Créer des composants réutilisables et testables
+- **Props typées** : Toujours définir des interfaces claires
+- **Hooks personnalisés** : Extraire la logique dans des hooks réutilisables
+- **Gestion d'état** : Utiliser des patterns React modernes
+
+### Refactoring
+- **Extraction** : Diviser les gros composants en plus petits
+- **Réutilisabilité** : Créer des composants génériques
+- **Performance** : Optimiser les re-renders et la mémoire
+- **Tests** : Rendre le code testable
+
+### Documentation
+- **README** : Maintenir à jour
+- **JSDoc** : Documenter les APIs publiques
+- **Exemples** : Fournir des exemples d'utilisation
+- **Changelog** : Documenter les changements
+
+## 📝 CONVENTIONS GIT
+
+### Messages de commit
+```
+type(scope): description courte
+
+Description détaillée si nécessaire
+
+- Changement 1
+- Changement 2
+
+Fixes #123
+```
+
+**Types** : `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
+**Scope** : `ui`, `api`, `security`, `performance`, `mobile`
+
+### Branches
+- **main** : Code de production
+- **develop** : Développement principal
+- **feature/*** : Nouvelles fonctionnalités
+- **fix/*** : Corrections de bugs
+- **hotfix/*** : Corrections urgentes
+
+## 🔍 VÉRIFICATIONS QUALITÉ
+
+### Avant commit
+- [ ] Code compile sans erreurs
+- [ ] Tests passent
+- [ ] Linting OK (ESLint + Prettier)
+- [ ] Types TypeScript valides
+- [ ] Responsive design vérifié
+- [ ] Accessibilité testée
+
+### Code review
+- [ ] Logique claire et compréhensible
+- [ ] Performance acceptable
+- [ ] Sécurité respectée
+- [ ] Tests couvrent les cas d'usage
+- [ ] Documentation à jour
+
+## 🎯 PROMPTS RECOMMANDÉS
+
+### Pour la création de composants
+```
+Crée un composant React TypeScript pour [fonctionnalité] avec :
+- Interface claire et accessible
+- Support du mode sombre
+- Responsive design mobile-first
+- Gestion d'erreurs appropriée
+- Tests unitaires de base
+```
+
+### Pour le refactoring
+```
+Refactorise ce composant en suivant les bonnes pratiques :
+- Divise en composants plus petits
+- Extrais la logique dans des hooks
+- Améliore la performance
+- Ajoute la gestion d'erreurs
+- Rends le code plus testable
+```
+
+### Pour l'optimisation
+```
+Optimise ce code pour :
+- Réduire les re-renders
+- Améliorer la performance
+- Réduire la taille du bundle
+- Améliorer l'accessibilité
+- Respecter les conventions du projet
+```
+
+---
+
+## 📚 RESSOURCES UTILES
+
+- **React Docs** : https://react.dev/
+- **TypeScript Handbook** : https://www.typescriptlang.org/docs/
+- **Tailwind CSS** : https://tailwindcss.com/docs
+- **shadcn/ui** : https://ui.shadcn.com/
+- **ESLint Rules** : https://eslint.org/docs/rules/
+- **Accessibility Guidelines** : https://www.w3.org/WAI/WCAG21/quickref/
+
+---
+
+*Ce fichier .cursorrules est vivant et doit être mis à jour selon l'évolution du projet et les nouvelles bonnes pratiques.*
