@@ -875,13 +875,7 @@ const DesktopActions = ({
         <Baby className="w-4 h-4" />
       </IconButton>
 
-      {/* Badge de sécurité permanent (non désactivable) */}
-      {!modeEnfant && !modePrive && (
-        <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-50/80 dark:bg-green-950/40 text-green-600 dark:text-green-400">
-          <Shield className="w-4 h-4" />
-          <span className="text-xs font-semibold">AES-256</span>
-        </div>
-      )}
+      
       
       {!modeEnfant && (
         <>
@@ -907,12 +901,13 @@ const DesktopActions = ({
     {/* Réglages */}
     {!modeEnfant && (
       <ButtonGroup>
-        <IconButton
-          onClick={toggleTheme}
-          tooltip="Mode clair/sombre"
-        >
-          <Sun className="w-4 h-4" />
-        </IconButton>
+        {/* Badge de sécurité permanent (non désactivable) */}
+      {!modeEnfant && !modePrive && (
+        <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-50/80 dark:bg-green-950/40 text-green-600 dark:text-green-400">
+          <Shield className="w-4 h-4" />
+          <span className="text-xs font-semibold">AES-256</span>
+        </div>
+      )}
 
         <IconButton
           onClick={() => setShowMobileMenu(true)}
