@@ -805,96 +805,63 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
     ];
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 relative overflow-hidden">
-        <FloatingParticles count={20} mode="enfant" />
-        
-        {/* Effets de fond dynamiques */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-1/4 w-40 h-40 bg-gradient-to-r from-pink-400/30 to-yellow-400/30 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-20 right-1/4 w-32 h-32 bg-gradient-to-r from-purple-400/30 to-pink-400/30 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 w-24 h-24 bg-gradient-to-r from-orange-400/30 to-red-400/30 rounded-full blur-xl animate-pulse" style={{ animationDelay: '2s' }} />
-        </div>
-
-        <div className="max-w-4xl mx-auto space-y-12 relative z-10">
-          {/* Titre avec effet rainbow et animations */}
-          <div className="space-y-6">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-pink-600 via-orange-500 via-yellow-500 via-green-500 via-blue-500 via-indigo-500 to-purple-600 blur-2xl opacity-30 animate-pulse" />
-              <h2 className="relative text-3xl sm:text-5xl font-black bg-gradient-to-r from-pink-600 via-orange-500 via-yellow-500 via-green-500 via-blue-500 via-indigo-500 to-purple-600 bg-clip-text text-transparent tracking-tight flex items-center justify-center gap-4">
-                🌈 Espace Magique des Enfants 🌈
-                <div className="animate-bounce">
-                  <Wand2 className="w-8 h-8 sm:w-12 sm:h-12 text-yellow-500" />
-                </div>
-              </h2>
-              <div className="absolute -top-4 -right-4 text-3xl animate-bounce" style={{ animationDelay: '0.5s' }}>✨</div>
-              <div className="absolute -bottom-2 -left-2 text-2xl animate-bounce" style={{ animationDelay: '1s' }}>🎭</div>
-            </div>
-            <p className="text-slate-600 dark:text-slate-300 text-lg sm:text-xl leading-relaxed max-w-3xl mx-auto">
-              Bienvenue dans ton <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600 animate-pulse">univers personnel</span> où 
-              l'apprentissage devient une <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">aventure extraordinaire</span> !
+      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 relative">
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Titre */}
+          <div className="space-y-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-800 dark:text-slate-200">
+              Espace Enfants
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 text-lg">
+              Bienvenue dans ton espace d'apprentissage et de découverte
             </p>
           </div>
 
-          {/* Features avec animations ultra-dynamiques */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((feature, idx) => (
+          {/* Features */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: Heart,
+                title: 'Amusant',
+                desc: 'Jeux, histoires et défis créatifs',
+                emoji: '🎮'
+              },
+              {
+                icon: Stars,
+                title: 'Éducatif',
+                desc: 'Découvre et apprends en toute sécurité',
+                emoji: '✨'
+              },
+              {
+                icon: Shield,
+                title: 'Sécurisé',
+                desc: 'Un espace protégé pour explorer',
+                emoji: '🛡️'
+              }
+            ].map((feature) => (
               <div 
                 key={feature.title}
-                className="group relative"
-                style={{ animationDelay: `${idx * 300}ms` }}
+                className="p-6 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
               >
-                {/* Effet de halo */}
-                <div className={`absolute inset-0 bg-gradient-to-r ${feature.bgGradient} rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 scale-110`} />
-                
-                <div className="relative p-8 bg-white/95 dark:bg-slate-800/95 rounded-3xl border-4 border-white/90 dark:border-slate-700/90 backdrop-blur-xl shadow-2xl hover:shadow-4xl hover:scale-110 hover:-rotate-2 transition-all duration-700 cursor-pointer overflow-hidden">
-                  {/* Effet de brillance rainbow */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-rainbow-gradient to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" 
-                       style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)' }} />
-                  
-                  <div className="relative z-10">
-                    <div className="text-5xl mb-6 animate-bounce group-hover:scale-125 transition-transform duration-300" 
-                         style={{ animationDelay: `${idx * 0.3}s` }}>
-                      {feature.emoji}
-                    </div>
-                    <div className={`w-16 h-16 bg-gradient-to-r ${feature.color} rounded-3xl flex items-center justify-center mb-6 mx-auto group-hover:rotate-[360deg] group-hover:scale-125 transition-all duration-1000 shadow-2xl`}>
-                      <feature.icon className="w-8 h-8 text-white drop-shadow-lg" />
-                    </div>
-                    <h3 className="font-black text-lg text-slate-800 dark:text-slate-200 mb-4">{feature.title}</h3>
-                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed">{feature.desc}</p>
-                  </div>
-
-                  {/* Sparkles décoratives */}
-                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="flex gap-1">
-                      <Stars className="w-4 h-4 text-yellow-400 animate-spin" />
-                      <Sparkles className="w-3 h-3 text-pink-400 animate-pulse" />
-                    </div>
-                  </div>
-                </div>
+                <div className="text-3xl mb-4">{feature.emoji}</div>
+                <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400">
+                  {feature.desc}
+                </p>
               </div>
             ))}
           </div>
 
-          {/* Call to action super-interactif */}
-          <div className="animate-in slide-in-from-bottom-4 duration-1000" style={{ animationDelay: '900ms' }}>
-            <div className="relative p-8 bg-gradient-to-r from-yellow-50/90 via-orange-50/90 to-pink-50/90 dark:from-yellow-950/30 dark:via-orange-950/30 dark:to-pink-950/30 rounded-3xl border-4 border-gradient-to-r border-yellow-200/80 dark:border-yellow-800/80 backdrop-blur-md shadow-2xl hover:shadow-4xl hover:scale-105 transition-all duration-500 group cursor-pointer">
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-pink-400/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              
-              <div className="relative z-10 text-center">
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <div className="text-3xl animate-bounce">👋</div>
-                  <Rocket className="w-8 h-8 text-orange-600 animate-pulse" />
-                  <div className="text-3xl animate-bounce" style={{ animationDelay: '0.5s' }}>🚀</div>
-                </div>
-                <p className="text-lg font-bold text-slate-700 dark:text-slate-300 mb-3">
-                  Salut petit explorateur ! Je suis ton assistant magique !
-                </p>
-                <p className="text-slate-600 dark:text-slate-400">
-                  Raconte-moi quel type d'aventure tu veux vivre aujourd'hui ! 
-                  Histoire, jeu, découverte... tout est possible ! ✨
-                </p>
-              </div>
-            </div>
+          {/* Call to action */}
+          <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+            <p className="text-lg font-medium text-slate-800 dark:text-slate-200 mb-2">
+              Salut ! Je suis ton assistant.
+            </p>
+            <p className="text-slate-600 dark:text-slate-400">
+              Dis-moi ce que tu aimerais faire aujourd'hui !
+            </p>
           </div>
         </div>
       </div>
