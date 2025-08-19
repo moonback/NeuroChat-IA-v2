@@ -160,6 +160,17 @@ export function GlobalMemoryModal({ open, onOpenChange }: GlobalMemoryModalProps
     }
   }, [loadData]);
 
+  const handleCreateTestMemories = useCallback(async () => {
+    try {
+      await globalMemoryService.createTestMemories();
+      toast.success('Souvenirs de test créés');
+      loadData();
+    } catch (error) {
+      console.error('Erreur création souvenirs de test:', error);
+      toast.error('Erreur lors de la création des souvenirs de test');
+    }
+  }, [loadData]);
+
   const handleEditMemory = useCallback((memory: MemoryItem) => {
     setEditingMemory(memory);
     setEditForm({
@@ -274,6 +285,10 @@ export function GlobalMemoryModal({ open, onOpenChange }: GlobalMemoryModalProps
               </div>
 
               <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleCreateTestMemories}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Test
+                </Button>
                 <Button variant="outline" size="sm" onClick={handleExportMemory}>
                   <Download className="h-4 w-4 mr-2" />
                   Exporter
