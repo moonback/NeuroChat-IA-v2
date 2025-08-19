@@ -21,7 +21,6 @@ interface ChildActivitySuggestionsProps {
   onActivitySelected?: (activity: ChildActivity) => void;
   onActivityStarted?: (activity: ChildActivity) => void;
   onClose?: () => void;
-  className?: string;
 }
 
 const ACTIVITY_ICONS = {
@@ -47,8 +46,7 @@ export const ChildActivitySuggestions: React.FC<ChildActivitySuggestionsProps> =
   ageRange = '7-10',
   onActivitySelected,
   onActivityStarted,
-  onClose,
-  className = ''
+  onClose
 }) => {
   const [suggestions, setSuggestions] = useState<ChildActivity[]>([]);
   const [selectedActivity, setSelectedActivity] = useState<ChildActivity | null>(null);
