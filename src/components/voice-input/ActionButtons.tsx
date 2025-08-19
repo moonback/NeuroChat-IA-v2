@@ -31,7 +31,6 @@ interface ActionButtonsProps {
 
 export const ActionButtons: React.FC<ActionButtonsProps> = React.memo(({
   onFileSelect,
-  fileInputRef,
   provider,
   agentEnabled,
   onToggleAgent,

@@ -35,5 +35,5 @@ export function useConnectionStatus(): ConnectionStatus {
     };
   }, []);
 
-  return { isOnline, connectionQuality };
+  return { isOnline, connectionQuality, quality: connectionQuality };
 }
