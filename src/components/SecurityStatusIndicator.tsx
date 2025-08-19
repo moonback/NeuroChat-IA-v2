@@ -194,7 +194,7 @@ export const SecurityStatusIndicator: React.FC<SecurityStatusIndicatorProps> = (
           <div className="flex items-center gap-2 text-white/90">
             <div className={cn(
               "w-2 h-2 rounded-full",
-              metrics.memorySecured ? "bg-green-400 animate-pulse" : "bg-gray-400"
+              "bg-gray-400"
             )} />
             <span className="text-xs">Mémoire</span>
           </div>
@@ -294,12 +294,11 @@ export const SecurityBadge: React.FC<{ onClick?: () => void }> = ({ onClick }) =
   useEffect(() => {
     const updateLevel = () => {
       const storageActive = isSecureStorageActive();
-      const memoryActive = isPrivateModeActive();
       
-      setSecurityLevel(
-        (storageActive && memoryActive) ? 'military' : 
-        (storageActive || memoryActive) ? 'basic' : 'none'
-      );
+      
+              setSecurityLevel(
+          storageActive ? 'military' : 'none'
+        );
     };
     
     updateLevel();
