@@ -781,7 +781,6 @@ const DesktopActions = ({
   webEnabled, 
   handleWebToggle, 
   webSearching, 
-  toggleTheme, 
   setShowMobileMenu 
 }: {
   modeEnfant?: boolean;
