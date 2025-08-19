@@ -766,8 +766,6 @@ const ConversationStats = ({ messages }: { messages: ChatMessage[] }) => {
 
 // Composant Hero ultra-amélioré
 const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive: boolean }) => {
-  const [currentFeature, setCurrentFeature] = useState(0);
-  void currentFeature; // Avoiding unused variable warning
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -777,15 +775,6 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
-
-  useEffect(() => {
-    if (!modeEnfant && !modePrive) {
-      const interval = setInterval(() => {
-        setCurrentFeature(prev => (prev + 1) % 3);
-      }, 4000);
-      return () => clearInterval(interval);
-    }
-  }, [modeEnfant, modePrive]);
 
   if (modeEnfant) {
     const features = [
@@ -1029,34 +1018,7 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
     );
   }
 
-  // Mode normal avec features rotatives ultra-amélioré
-  const normalFeatures = [
-    {
-      icon: Brain,
-      title: "IA Nouvelle Génération",
-      desc: "Intelligence artificielle avec compréhension contextuelle avancée et mémoire émotionnelle",
-      color: "from-purple-500 via-indigo-500 to-blue-500",
-      accent: "🧠",
-      bgEffect: "from-purple-400/20 to-indigo-400/20"
-    },
-    {
-      icon: Globe,
-      title: "Recherche Web Instantanée",
-      desc: "Accès en temps réel aux informations mondiales avec analyse de fiabilité automatique",
-      color: "from-blue-500 via-cyan-500 to-teal-500",
-      accent: "🌐",
-      bgEffect: "from-blue-400/20 to-cyan-400/20"
-    },
-    {
-      icon: Database,
-      title: "RAG Enterprise Premium",
-      desc: "Recherche intelligente dans vos documents avec indexation sémantique et suggestions contextuelles",
-      color: "from-emerald-500 via-teal-500 to-cyan-500",
-      accent: "📚",
-      bgEffect: "from-emerald-400/20 to-teal-400/20"
-    }
-  ];
-  void normalFeatures; // Avoiding unused variable warning
+  // Mode normal simplifié
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 relative overflow-hidden">
@@ -1068,48 +1030,16 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
             <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-blue-600 via-indigo-600 to-cyan-600 blur-2xl opacity-20 animate-pulse" />
             <h2 className="relative text-2xl sm:text-3xl font-black bg-gradient-to-r from-purple-600 via-blue-600 via-indigo-600 to-cyan-600 bg-clip-text text-transparent tracking-tight flex items-center justify-center gap-3">
               <Brain className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500 animate-pulse" />
-              NeuroChat Enterprise
+              NeuroChat Assistant IA
               <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 animate-spin" />
             </h2>
           </div>
           <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed max-w-3xl mx-auto">
-            <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">IA Avancée</span> 
-            {' '}• <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">RAG Premium</span> 
-            {' '}• <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-cyan-600">Web Intelligence</span>
+            Assistant IA intelligent pour vos conversations et projets
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {normalFeatures.map((feature, idx) => (
-            <div 
-              key={feature.title}
-              className="group relative"
-              style={{ animationDelay: `${idx * 150}ms` }}
-            >
-              <div className={`absolute inset-0 bg-gradient-to-r ${feature.bgEffect} rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 scale-105`} />
-              
-              <div className="relative p-4 bg-white/95 dark:bg-slate-800/95 rounded-2xl border border-white/60 dark:border-slate-700/60 backdrop-blur-lg shadow-lg hover:shadow-xl hover:scale-102 transition-all duration-500 overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 group-hover:from-white/15 transition-all duration-300" />
-                
-                <div className="relative z-10">
-                  <div className="text-2xl mb-3 group-hover:scale-110 transition-transform duration-300" 
-                       style={{ animationDelay: `${idx * 0.2}s` }}>
-                    {feature.accent}
-                  </div>
-                  <div className={`w-10 h-10 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:rotate-6 group-hover:scale-110 transition-all duration-300 shadow-lg`}>
-                    <feature.icon className="w-5 h-5 text-white drop-shadow-sm" />
-                  </div>
-                  <h3 className="font-black text-sm text-slate-800 dark:text-slate-200 mb-2">{feature.title}</h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{feature.desc}</p>
-                </div>
 
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <Stars className="w-3 h-3 text-yellow-400 animate-spin" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
 
 
       </div>
