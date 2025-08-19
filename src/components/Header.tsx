@@ -447,69 +447,9 @@ const WorkspaceSelector = ({
 };
 
 // Composant pour les actions de sélection
-const SelectionActions = ({ 
-  hasActiveConversation, 
-  selectMode, 
-  selectedCount, 
-  totalCount, 
-  onToggleSelectMode, 
-  onSelectAll, 
-  onDeselectAll, 
-  onRequestDelete 
-}: {
-  hasActiveConversation: boolean;
-  selectMode: boolean;
-  selectedCount: number;
-  totalCount: number;
-  onToggleSelectMode: () => void;
-  onSelectAll: () => void;
-  onDeselectAll: () => void;
-  onRequestDelete: () => void;
-}) => {
-  if (!hasActiveConversation) return null;
-
-  return (
-    <>
-      <ActionButton
-        variant={selectMode ? "default" : "ghost"}
-        onClick={onToggleSelectMode}
-        tooltip={selectMode ? 'Quitter la sélection' : 'Sélectionner des messages'}
-        className={selectMode ? 'bg-blue-50/80 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400' : ''}
-      >
-        {selectMode ? <CheckSquare className="w-4 h-4 mr-2" /> : <Square className="w-4 h-4 mr-2" />}
-        {selectMode ? 'Sélection' : 'Sélectionner'}
-      </ActionButton>
-
-      {selectMode && (
-        <div className="flex items-center gap-1 animate-slide-in">
-          <ActionButton
-            onClick={selectedCount === totalCount ? onDeselectAll : onSelectAll}
-            tooltip={selectedCount === totalCount ? 'Tout désélectionner' : 'Tout sélectionner'}
-            className="text-xs px-3"
-          >
-            {selectedCount === totalCount ? 'Tout désélectionner' : 'Tout sélectionner'}
-          </ActionButton>
-
-          {selectedCount > 0 && (
-            <ActionButton
-              variant="destructive"
-              onClick={onRequestDelete}
-              tooltip={`Supprimer ${selectedCount} message${selectedCount > 1 ? 's' : ''}`}
-              className="bg-red-50/80 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60"
-            >
-              <Trash2 className="w-4 h-4 mr-1" />
-              <span className="text-xs">({selectedCount})</span>
-            </ActionButton>
-          )}
-        </div>
-      )}
-    </>
-  );
-};
 
 // Composant pour les actions mobiles
 const MobileActions = ({ 
-  modeEnfant, 
   muted, 
   onNewDiscussion, 
   handleVolumeToggle, 
