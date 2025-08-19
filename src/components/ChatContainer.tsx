@@ -777,92 +777,38 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
   }, []);
 
   if (modeEnfant) {
-    const features = [
-      { 
-        icon: Heart, 
-        title: 'Super Amusant', 
-        desc: 'Jeux magiques, histoires fantastiques et défis créatifs !', 
-        color: 'from-pink-500 via-rose-500 to-red-500',
-        emoji: '🎮',
-        bgGradient: 'from-pink-400/20 to-rose-400/20'
-      },
-      { 
-        icon: Stars, 
-        title: 'Apprentissage Magique', 
-        desc: 'Découvre le monde avec des aventures éducatives !', 
-        color: 'from-violet-500 via-purple-500 to-indigo-500',
-        emoji: '✨',
-        bgGradient: 'from-violet-400/20 to-purple-400/20'
-      },
-      { 
-        icon: Shield, 
-        title: 'Zone Ultra-Safe', 
-        desc: 'Un cocon protégé où tu peux explorer en toute sécurité !', 
-        color: 'from-emerald-500 via-teal-500 to-cyan-500',
-        emoji: '🛡️',
-        bgGradient: 'from-emerald-400/20 to-teal-400/20'
-      }
-    ];
-
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 relative">
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* Titre */}
-          <div className="space-y-4">
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-800 dark:text-slate-200">
-              Espace Enfants
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400 text-lg">
-              Bienvenue dans ton espace d'apprentissage et de découverte
+      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 relative overflow-hidden">
+        <FloatingParticles count={20} mode="enfant" />
+        
+        {/* Effets de fond dynamiques - style plus mature */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-1/4 w-40 h-40 bg-gradient-to-r from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-20 right-1/4 w-32 h-32 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 left-1/2 w-24 h-24 bg-gradient-to-r from-orange-400/20 to-red-400/20 rounded-full blur-xl animate-pulse" style={{ animationDelay: '2s' }} />
+        </div>
+
+        <div className="max-w-4xl mx-auto space-y-12 relative z-10">
+          {/* Titre avec style plus mature et sophistiqué */}
+          <div className="space-y-6">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 via-emerald-600 via-teal-600 via-orange-600 to-red-600 blur-2xl opacity-20 animate-pulse" />
+              <h2 className="relative text-3xl sm:text-5xl font-black bg-gradient-to-r from-indigo-600 via-purple-600 via-emerald-600 via-teal-600 via-orange-600 to-red-600 bg-clip-text text-transparent tracking-tight flex items-center justify-center gap-4">
+                🚀 Espace Enfant 🚀
+                <div className="animate-pulse">
+                  <Zap className="w-8 h-8 sm:w-12 sm:h-12 text-purple-500" />
+                </div>
+              </h2>
+              <div className="absolute -top-4 -right-4 text-3xl animate-bounce" style={{ animationDelay: '0.5s' }}>⚡</div>
+              <div className="absolute -bottom-2 -left-2 text-2xl animate-bounce" style={{ animationDelay: '1s' }}>🎯</div>
+            </div>
+            <p className="text-slate-600 dark:text-slate-300 text-lg sm:text-xl leading-relaxed max-w-3xl mx-auto">
+              Bienvenue dans ton <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 animate-pulse">espace personnel</span> où 
+              l'apprentissage devient une <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500">expérience immersive</span> !
             </p>
           </div>
 
-          {/* Features */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                icon: Heart,
-                title: 'Amusant',
-                desc: 'Jeux, histoires et défis créatifs',
-                emoji: '🎮'
-              },
-              {
-                icon: Stars,
-                title: 'Éducatif',
-                desc: 'Découvre et apprends en toute sécurité',
-                emoji: '✨'
-              },
-              {
-                icon: Shield,
-                title: 'Sécurisé',
-                desc: 'Un espace protégé pour explorer',
-                emoji: '🛡️'
-              }
-            ].map((feature) => (
-              <div 
-                key={feature.title}
-                className="p-6 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
-              >
-                <div className="text-3xl mb-4">{feature.emoji}</div>
-                <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400">
-                  {feature.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Call to action */}
-          <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <p className="text-lg font-medium text-slate-800 dark:text-slate-200 mb-2">
-              Salut ! Je suis ton assistant.
-            </p>
-            <p className="text-slate-600 dark:text-slate-400">
-              Dis-moi ce que tu aimerais faire aujourd'hui !
-            </p>
-          </div>
+          
         </div>
       </div>
     );
