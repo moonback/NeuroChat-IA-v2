@@ -6,7 +6,7 @@ import {
   History, Settings2, Volume2, VolumeX, Sun, Moon, 
   PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, 
   Trash2, Menu, X, WifiOff, Baby, Sparkles,
-  Globe, Database, Activity, Pencil, HelpCircle
+  Globe, Database, Activity, Pencil, HelpCircle, Cloud
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
 import { HelpModal } from '@/components/HelpModal';
+// ☁️ Indicateur de statut cloud
+import { CloudStatusIndicator } from '@/components/CloudStatusIndicator';
 // import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
@@ -29,7 +31,6 @@ interface HeaderProps {
   onOpenHistory: () => void;
   onOpenTTSSettings: () => void;
   onOpenRagDocs: () => void;
-  onOpenMemory: () => void;
   stop: () => void;
   modeVocalAuto: boolean;
   setModeVocalAuto: (v: boolean) => void;
@@ -790,7 +791,6 @@ const DesktopActions = ({
   modeEnfant, 
   onNewDiscussion, 
   onOpenHistory, 
-  onOpenMemory, 
   selectionActions, 
   muted, 
   handleVolumeToggle, 
@@ -808,7 +808,6 @@ const DesktopActions = ({
   modeEnfant?: boolean;
   onNewDiscussion: () => void;
   onOpenHistory: () => void;
-  onOpenMemory: () => void;
   selectionActions: React.ReactNode;
   muted: boolean;
   handleVolumeToggle: () => void;
@@ -837,9 +836,9 @@ const DesktopActions = ({
           <IconButton onClick={onOpenHistory} tooltip="Historique" aria-label="Historique">
             <History className="w-4 h-4" />
           </IconButton>
-          <IconButton onClick={onOpenMemory} tooltip="Mémoire" aria-label="Mémoire">
-            <Brain className="w-4 h-4" />
-          </IconButton>
+          
+          {/* Indicateur de statut cloud */}
+          <CloudStatusIndicator />
         </ButtonGroup>
       )}
     </div>
@@ -1045,14 +1044,7 @@ const MobileMenuSheet = ({
                   tooltip="Consulter les conversations passées"
                 />
               )}
-              {!modeEnfant && (
-                <TileButton
-                  onClick={handleMenuAction(() => {})}
-                  label={'Mémoire'}
-                  icon={Brain}
-                  tooltip="Gérer les informations mémorisées"
-                />
-              )}
+              
             </div>
           </div>
 
@@ -1223,6 +1215,15 @@ const MobileMenuSheet = ({
                 />
               )}
               
+              {!modeEnfant && (
+                <TileButton
+                  onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('cloud:auth:open')))}
+                  label={'Mémoire Internet'}
+                  icon={Cloud}
+                  tooltip="Synchroniser avec le cloud"
+                />
+              )}
+              
               {!modeEnfant && autoVoiceConfig && onUpdateAutoVoiceConfig && (
                 <TileButton
                   onClick={() => setShowVocalSettings(true)}
@@ -1336,7 +1337,7 @@ const MobileMenuSheet = ({
 export function Header(props: HeaderProps) {
   const {
     muted, onMute, onUnmute, onNewDiscussion, onOpenHistory, onOpenTTSSettings,
-    onOpenRagDocs, onOpenMemory, modeVocalAuto, setModeVocalAuto,
+    onOpenRagDocs, modeVocalAuto, setModeVocalAuto,
     hasActiveConversation, ragEnabled, setRagEnabled, onOpenGeminiSettings,
     webEnabled, setWebEnabled, provider, onChangeProvider, modePrive, setModePrive, 
     selectMode, onToggleSelectMode, selectedCount, totalCount, onSelectAll, onDeselectAll,
@@ -1469,26 +1470,25 @@ export function Header(props: HeaderProps) {
             </div>
 
             {/* Actions principales - Desktop */}
-            <DesktopActions
-              modeEnfant={props.modeEnfant}
-              onNewDiscussion={onNewDiscussion}
-              onOpenHistory={onOpenHistory}
-              onOpenMemory={onOpenMemory}
-              selectionActions={selectionActions}
-              muted={muted}
-              handleVolumeToggle={handleVolumeToggle}
-              handleModeVocalToggle={handleModeVocalToggle}
-              modePrive={modePrive}
-              handlePrivateModeToggle={handlePrivateModeToggle}
-              handleChildModeToggle={handleChildModeToggle}
-              ragEnabled={ragEnabled}
-              handleRagToggle={handleRagToggle}
-              webEnabled={webEnabled}
-              handleWebToggle={handleWebToggle}
-              webSearching={props.webSearching}
-              toggleTheme={toggleTheme}
-              setShowMobileMenu={setShowMobileMenu}
-            />
+                         <DesktopActions
+               modeEnfant={props.modeEnfant}
+               onNewDiscussion={onNewDiscussion}
+               onOpenHistory={onOpenHistory}
+               selectionActions={selectionActions}
+               muted={muted}
+               handleVolumeToggle={handleVolumeToggle}
+               handleModeVocalToggle={handleModeVocalToggle}
+               modePrive={modePrive}
+               handlePrivateModeToggle={handlePrivateModeToggle}
+               handleChildModeToggle={handleChildModeToggle}
+               ragEnabled={ragEnabled}
+               handleRagToggle={handleRagToggle}
+               webEnabled={webEnabled}
+               handleWebToggle={handleWebToggle}
+               webSearching={props.webSearching}
+               toggleTheme={toggleTheme}
+               setShowMobileMenu={setShowMobileMenu}
+             />
 
             {/* Actions mobiles essentielles - Refonte complète */}
             <MobileActions

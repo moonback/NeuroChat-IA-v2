@@ -41,7 +41,7 @@ export function useWorkspace() {
         'rag_user_docs',
         'rag_doc_stats',
         'rag_doc_favorites',
-        'neurochat_user_memory_v1',
+
       ];
       for (const base of keysToClear) {
         localStorage.removeItem(wsKey(id, base));
