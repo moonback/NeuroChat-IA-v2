@@ -133,7 +133,9 @@ function App() {
     initializeSecurity();
     
     // Initialiser le service de mémoire globale
-    initializeGlobalMemory();
+    initializeGlobalMemory().catch(error => {
+      console.error('Erreur initialisation mémoire globale:', error);
+    });
     
     // Nettoyage à la fermeture du composant
     return () => {

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Mémoire Globale - Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { margin: 5px; padding: 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 3px; }
+        .error { background: #f8d7da; color: #721c24; }
+        .success { background: #d4edda; color: #155724; }
+    </style>
+</head>
+<body>
+    <h1>🧠 Test Debug - Mémoire Globale</h1>
+    
+    <div class="test-section">
+        <h3>1. Vérification localStorage</h3>
+        <button onclick="checkLocalStorage()">Vérifier localStorage</button>
+        <div id="localStorageResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Test Direct Service Mémoire</h3>
+        <button onclick="testMemoryService()">Tester Service Mémoire</button>
+        <div id="memoryServiceResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Création Souvenirs Test</h3>
+        <button onclick="createTestMemories()">Créer Souvenirs Test</button>
+        <div id="testMemoriesResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>4. Vérification Persistance</h3>
+        <button onclick="verifyPersistence()">Vérifier Persistance</button>
+        <div id="persistenceResult" class="result"></div>
+    </div>
+
+    <script>
+        function showResult(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `result ${isError ? 'error' : 'success'}`;
+        }
+
+        function checkLocalStorage() {
+            try {
+                const memoryData = localStorage.getItem('nc_global_memory');
+                const conversationsData = localStorage.getItem('nc_conversation_summaries');
+                
+                let result = '📊 État localStorage:\n';
+                result += `- nc_global_memory: ${memoryData ? memoryData.length + ' caractères' : 'null'}\n`;
+                result += `- nc_conversation_summaries: ${conversationsData ? conversationsData.length + ' caractères' : 'null'}\n`;
+                
+                if (memoryData) {
+                    try {
+                        const parsed = JSON.parse(memoryData);
+                        result += `- Mémoires parsées: ${Array.isArray(parsed) ? parsed.length : 'Format invalide'}\n`;
+                    } catch (e) {
+                        result += `- Erreur parsing: ${e.message}\n`;
+                    }
+                }
+                
+                showResult('localStorageResult', result);
+            } catch (error) {
+                showResult('localStorageResult', `Erreur: ${error.message}`, true);
+            }
+        }
+
+        function testMemoryService() {
+            try {
+                if (typeof window.globalMemoryService !== 'undefined') {
+                    const stats = window.globalMemoryService.getMemoryStats();
+                    showResult('memoryServiceResult', 
+                        `✅ Service accessible\n` +
+                        `- Total souvenirs: ${stats.total}\n` +
+                        `- Par catégorie: ${JSON.stringify(stats.byCategory)}\n` +
+                        `- Récents (7j): ${stats.recent}`
+                    );
+                } else {
+                    showResult('memoryServiceResult', '❌ Service non accessible - Vérifiez que l\'app principale est chargée', true);
+                }
+            } catch (error) {
+                showResult('memoryServiceResult', `Erreur: ${error.message}`, true);
+            }
+        }
+
+        function createTestMemories() {
+            try {
+                if (typeof window.globalMemoryService !== 'undefined') {
+                    window.globalMemoryService.createTestMemories().then(() => {
+                        showResult('testMemoriesResult', '✅ Souvenirs de test créés avec succès !');
+                        // Recharger l'état localStorage
+                        setTimeout(checkLocalStorage, 100);
+                    }).catch(error => {
+                        showResult('testMemoriesResult', `Erreur création: ${error.message}`, true);
+                    });
+                } else {
+                    showResult('testMemoriesResult', '❌ Service non accessible', true);
+                }
+            } catch (error) {
+                showResult('testMemoriesResult', `Erreur: ${error.message}`, true);
+            }
+        }
+
+        function verifyPersistence() {
+            try {
+                // Simuler un rechargement en vidant le cache
+                const memoryData = localStorage.getItem('nc_global_memory');
+                const conversationsData = localStorage.getItem('nc_conversation_summaries');
+                
+                let result = '🔄 Test de persistance:\n';
+                result += `- Données présentes: ${memoryData ? 'OUI' : 'NON'}\n`;
+                result += `- Taille mémoire: ${memoryData ? memoryData.length : 0} caractères\n`;
+                result += `- Taille conversations: ${conversationsData ? conversationsData.length : 0} caractères\n`;
+                
+                if (memoryData) {
+                    try {
+                        const parsed = JSON.parse(memoryData);
+                        result += `- Souvenirs valides: ${Array.isArray(parsed) ? parsed.length : 'Format invalide'}\n`;
+                        
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            result += `- Premier souvenir: ${parsed[0].content.substring(0, 50)}...\n`;
+                        }
+                    } catch (e) {
+                        result += `- Erreur parsing: ${e.message}\n`;
+                    }
+                }
+                
+                showResult('persistenceResult', result);
+            } catch (error) {
+                showResult('persistenceResult', `Erreur: ${error.message}`, true);
+            }
+        }
+
+        // Auto-vérification au chargement
+        window.addEventListener('load', () => {
+            setTimeout(checkLocalStorage, 500);
+        });
+    </script>
+</body>
+</html>
