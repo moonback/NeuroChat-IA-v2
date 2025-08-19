@@ -1014,7 +1014,7 @@ const MobileMenuSheet = ({
               <span className="text-sm font-semibold uppercase tracking-wide">Actions</span>
             </div>
             
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <TileButton
                 onClick={handleMenuAction(() => {})}
                 label={'Nouveau'}
@@ -1105,7 +1105,7 @@ const MobileMenuSheet = ({
               <span className="text-sm font-semibold uppercase tracking-wide">Modes & IA</span>
             </div>
             
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {!modeEnfant && (
                 <TileButton
                   onClick={handleMenuAction(handlePrivateModeToggle)}
@@ -1161,7 +1161,7 @@ const MobileMenuSheet = ({
               <span className="text-sm font-semibold uppercase tracking-wide">Configuration</span>
             </div>
             
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {!modeEnfant && (
                 <TileButton
                   onClick={handleMenuAction(onOpenTTSSettings)}
