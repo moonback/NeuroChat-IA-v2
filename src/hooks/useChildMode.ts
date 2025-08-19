@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { filterChildContent, validateAIResponse } from '../services/childContentFilter';
+import { filterChildContent } from '../services/childContentFilter';
 import { 
   generateChildSystemPrompt, 
   generateConversationStarters,
@@ -195,39 +195,7 @@ export function useChildMode() {
     };
   }, [config.enableFiltering]);
 
-  // Valider une réponse IA
-  const validateAIResponse = useCallback((response: string): {
-    isSafe: boolean;
-    filteredResponse: string;
-    warnings: string[];
-    suggestions: string[];
-  } => {
-    if (!config.enableFiltering) {
-      return {
-        isSafe: true,
-        filteredResponse: response,
-        warnings: [],
-        suggestions: []
-      };
-    }
-
-    const validationResult = validateAIResponse(response);
-    
-    // Mettre à jour les statistiques
-    if (validationResult.warnings.length > 0) {
-      setStats(prev => ({
-        ...prev,
-        warningsCount: prev.warningsCount + validationResult.warnings.length
-      }));
-    }
-
-    return {
-      isSafe: validationResult.isSafe,
-      filteredResponse: validationResult.filteredContent,
-      warnings: validationResult.warnings,
-      suggestions: validationResult.suggestions
-    };
-  }, [config.enableFiltering]);
+  
 
   // Ajouter des points et récompenses
   const addReward = useCallback((type: string, message: string, points: number) => {
@@ -336,7 +304,6 @@ export function useChildMode() {
     
     // Fonctionnalités
     filterUserContent,
-    validateAIResponse,
     addReward,
     completeActivity,
     

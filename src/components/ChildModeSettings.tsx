@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Settings, 
   Shield, 
@@ -57,8 +57,7 @@ export const ChildModeSettings: React.FC<ChildModeSettingsProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'general' | 'security' | 'content' | 'rewards'>('general');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['general']));
-  const [filterStats, setFilterStats] = useState(getFilterStats());
-  const [contentStats, setContentStats] = useState(getChildContentStats());
+
 
   // Fonctionnalités de sécurité par niveau
   const securityFeatures: SecurityFeature[] = [

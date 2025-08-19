@@ -876,7 +876,7 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
           </div>
 
           {/* Call to action super-interactif */}
-          <div className="animate-in slide-in-from-bottom-4 duration-1000" style={{ animationDelay: '900ms' }}>
+          {/* <div className="animate-in slide-in-from-bottom-4 duration-1000" style={{ animationDelay: '900ms' }}>
             <div className="relative p-8 bg-gradient-to-r from-yellow-50/90 via-orange-50/90 to-pink-50/90 dark:from-yellow-950/30 dark:via-orange-950/30 dark:to-pink-950/30 rounded-3xl border-4 border-gradient-to-r border-yellow-200/80 dark:border-yellow-800/80 backdrop-blur-md shadow-2xl hover:shadow-4xl hover:scale-105 transition-all duration-500 group cursor-pointer">
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-pink-400/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               
@@ -895,7 +895,7 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
                 </p>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     );

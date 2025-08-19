@@ -20,6 +20,16 @@ import {
   loadPersistentEncrypted
 } from '@/services/persistentEncryption';
 
+// 🧒 Mode enfant - Hook et composants
+import { useChildMode } from '@/hooks/useChildMode';
+import {
+  ChildRewards,
+  ChildActivitySuggestions,
+  ChildModeSettings,
+  ChildProgressBar
+} from '@/components/childMode';
+import { validateAIResponse } from '@/services/childContentFilter';
+
 // Constantes pour le debug
 const ENCRYPTION_ENABLED_KEY = 'nc_encryption_enabled';
 const MASTER_PASSWORD_KEY = 'nc_master_password_encrypted';
@@ -140,6 +150,20 @@ function App() {
   // --- Espaces de travail via hooks ---
   const { workspaceId, setWorkspaceId, workspaces, createWorkspace, renameWorkspace, deleteWorkspace, wsKey } = useWorkspace();
   const { open: workspaceOpeningOpen, setOpen: setWorkspaceOpeningOpen, name: workspaceOpeningName } = useWorkspaceOpeningModal(workspaceId, workspaces);
+  
+  // 🧒 Hook du mode enfant
+  const {
+    config: childModeConfig,
+    stats: childModeStats,
+    filterUserContent,
+
+    addReward,
+    completeActivity,
+
+    updateConfig: updateChildConfig,
+    isActive: isChildModeActive
+  } = useChildMode();
+  
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -303,6 +327,12 @@ function App() {
   const [childPin, setChildPin] = useState<string>(localStorage.getItem('mode_enfant_pin') || '');
   const [showChildPinDialog, setShowChildPinDialog] = useState<boolean>(false);
   const [showChildChangePinDialog, setShowChildChangePinDialog] = useState<boolean>(false);
+  
+  // 🧒 États pour les composants du mode enfant
+  const [showChildModeSettings, setShowChildModeSettings] = useState<boolean>(false);
+  const [showChildRewards, setShowChildRewards] = useState<boolean>(false);
+  const [showChildActivities, setShowChildActivities] = useState<boolean>(false);
+  
   // --- Timeline de raisonnement ---
   // Timeline retirée
   // 🔐 Gestion du mode privé avec chiffrement AES-256
@@ -700,6 +730,28 @@ function App() {
       toast.error('Pas de connexion Internet. Vérifie ta connexion réseau.');
       return;
     }
+
+    // 🧒 Filtrage du contenu en mode enfant
+    if (modeEnfant && isChildModeActive()) {
+      const filterResult = filterUserContent(userMessage);
+      if (!filterResult.isSafe) {
+        // Afficher les avertissements et suggestions
+        if (filterResult.warnings.length > 0) {
+          toast.warning('Contenu inapproprié détecté', {
+            description: filterResult.warnings.join(', '),
+            duration: 5000,
+          });
+        }
+        if (filterResult.suggestions.length > 0) {
+          toast.info('Suggestions', {
+            description: filterResult.suggestions.join(', '),
+            duration: 4000,
+          });
+        }
+        // Utiliser le contenu filtré
+        userMessage = filterResult.filteredContent;
+      }
+    }
     // Heuristiques d'activation automatique RAG/Web selon la requête
     const lower = userMessage.toLowerCase();
     const autoUseRag = autoRagEnabled && ragKeywords.some(kw => new RegExp(`(^|\b)${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\b|$)`, 'i').test(lower));
@@ -831,6 +883,32 @@ function App() {
             setMessages(prev => prev.map(m => m.id === aiMsg.id ? { ...m, text: (m.text || '') + token } : m));
           },
           onDone: () => {
+            // 🧒 Validation de la réponse IA en mode enfant
+            if (modeEnfant && isChildModeActive()) {
+              const validationResult = validateAIResponse(acc);
+              if (!validationResult.isSafe) {
+                // Afficher les avertissements et suggestions
+                if (validationResult.warnings.length > 0) {
+                  toast.warning('Réponse IA inappropriée détectée', {
+                    description: validationResult.warnings.join(', '),
+                    duration: 5000,
+                  });
+                }
+                if (validationResult.suggestions.length > 0) {
+                  toast.info('Suggestions de réponse', {
+                    description: validationResult.suggestions.join(', '),
+                    duration: 4000,
+                  });
+                }
+                // Mettre à jour le message avec la réponse filtrée
+                setMessages(prev => prev.map(m => m.id === aiMsg.id ? { ...m, text: validationResult.filteredContent } : m));
+                acc = validationResult.filteredContent;
+              }
+              
+              // Donner des points pour la conversation
+              addReward('conversation', 'Conversation réussie !', 5);
+            }
+            
             // Indiquer que l'IA commence à parler
             setIsAISpeaking(true);
             console.log('[Vocal Mode] IA commence à parler - microphone coupé');
@@ -1316,6 +1394,45 @@ function App() {
         <PrivateModeBanner visible={modePrive && !modeEnfant} />
         {/* Indicateur visuel du mode enfant */}
         <ChildModeBanner visible={modeEnfant} />
+        
+        {/* 🧒 Composants du mode enfant */}
+        {modeEnfant && isChildModeActive() && (
+          <>
+            {/* Boutons flottants pour le mode enfant */}
+            <div className="fixed left-3 bottom-80 z-40 flex flex-col gap-2">
+              <button
+                className="rounded-full p-3 text-white bg-gradient-to-r from-pink-500 to-purple-600 shadow-xl border border-white/20 hover:scale-105 transition-transform"
+                onClick={() => setShowChildRewards(true)}
+                aria-label="Voir les récompenses"
+              >
+                🏆
+              </button>
+              <button
+                className="rounded-full p-3 text-white bg-gradient-to-r from-blue-500 to-cyan-600 shadow-xl border border-white/20 hover:scale-105 transition-transform"
+                onClick={() => setShowChildActivities(true)}
+                aria-label="Voir les activités"
+              >
+                🎮
+              </button>
+              <button
+                className="rounded-full p-3 text-white bg-gradient-to-r from-green-500 to-emerald-600 shadow-xl border border-white/20 hover:scale-105 transition-transform"
+                onClick={() => setShowChildModeSettings(true)}
+                aria-label="Paramètres du mode enfant"
+              >
+                ⚙️
+              </button>
+            </div>
+            
+            {/* Barre de progression flottante */}
+            <div className="fixed left-3 bottom-32 z-40">
+              <ChildProgressBar
+                currentPoints={childModeStats.totalPoints}
+                targetPoints={100}
+                level={Math.floor(childModeStats.totalPoints / 100) + 1}
+              />
+            </div>
+          </>
+        )}
 
 
 
@@ -1543,6 +1660,48 @@ function App() {
 
       {/* Mémoire: gestion via modale */}
 
+      {/* 🧒 Modales du mode enfant */}
+      {modeEnfant && isChildModeActive() && (
+        <>
+          {/* Modale des récompenses */}
+          <ChildRewards
+            visible={showChildRewards}
+            currentPoints={childModeStats.totalPoints}
+            ageRange={childModeConfig.ageRange}
+            onRewardEarned={(reward) => {
+              console.log('Récompense gagnée:', reward);
+              setShowChildRewards(false);
+            }}
+          />
+
+          {/* Modale des activités */}
+          <ChildActivitySuggestions
+            visible={showChildActivities}
+            ageRange={childModeConfig.ageRange}
+            onActivitySelected={(activity) => {
+              console.log('Activité sélectionnée:', activity);
+              completeActivity(activity.id);
+              setShowChildActivities(false);
+            }}
+          />
+
+          {/* Modale des paramètres */}
+          <ChildModeSettings
+            open={showChildModeSettings}
+            onClose={() => setShowChildModeSettings(false)}
+            currentAgeRange={childModeConfig.ageRange}
+            onAgeRangeChange={(ageRange) => updateChildConfig({ ageRange })}
+            securityLevel={childModeConfig.securityLevel}
+            onSecurityLevelChange={(securityLevel) => updateChildConfig({ securityLevel })}
+            enableRewards={childModeConfig.enableRewards}
+            onRewardsToggle={(enabled) => updateChildConfig({ enableRewards: enabled })}
+            enableActivities={childModeConfig.enableActivities}
+            onActivitiesToggle={(enabled) => updateChildConfig({ enableActivities: enabled })}
+            enableFiltering={childModeConfig.enableFiltering}
+            onFilteringToggle={(enabled) => updateChildConfig({ enableFiltering: enabled })}
+          />
+        </>
+      )}
       
       {/* Modale d'ouverture d'espace de travail */}
       <WorkspaceOpeningDialog open={workspaceOpeningOpen} onOpenChange={setWorkspaceOpeningOpen} name={workspaceOpeningName} />

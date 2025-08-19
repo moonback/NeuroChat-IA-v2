@@ -35,7 +35,7 @@ export const ChildModeDemo: React.FC = () => {
   const [demoAgeRange, setDemoAgeRange] = useState<'3-6' | '7-10' | '11-14'>('7-10');
   
   const {
-    config,
+
     stats,
     filterUserContent,
     addReward,
@@ -88,11 +88,11 @@ export const ChildModeDemo: React.FC = () => {
   };
 
   const getStartersDemo = () => {
-    return getConversationStarters(demoAgeRange, 'joyeux');
+    return getConversationStarters('joyeux');
   };
 
   const getEncouragementDemo = () => {
-    return getEncouragement('Test de démonstration !', demoAgeRange);
+    return getEncouragement('Test de démonstration !');
   };
 
   return (
@@ -220,13 +220,13 @@ export const ChildModeDemo: React.FC = () => {
             <div className="mt-4">
               <h4 className="font-semibold mb-2">Activités Rapides</h4>
               <div className="space-y-2">
-                {demoActivities.map((activity) => (
-                  <QuickActivityCard
-                    key={activity.id}
-                    activity={activity}
-                    onStart={() => completeActivity(activity.id)}
-                  />
-                ))}
+                                            {demoActivities.map((activity) => activity && (
+                              <QuickActivityCard
+                                key={activity.id}
+                                activity={activity}
+                                onStart={() => completeActivity(activity.id)}
+                              />
+                            ))}
               </div>
             </div>
 
@@ -327,7 +327,7 @@ export const ChildModeDemo: React.FC = () => {
                 Générer Suggestions
               </Button>
               <div className="space-y-2">
-                {getConversationStarters(demoAgeRange, 'joyeux').map((starter, index) => (
+                                            {getConversationStarters('joyeux').map((starter, index) => (
                   <div key={index} className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
                     {starter}
                   </div>
@@ -346,7 +346,7 @@ export const ChildModeDemo: React.FC = () => {
                 Générer Encouragement
               </Button>
               <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg text-sm">
-                {getEncouragement('Test de démonstration !', demoAgeRange)}
+                                            {getEncouragement('Test de démonstration !')}
               </div>
             </div>
           </CardContent>

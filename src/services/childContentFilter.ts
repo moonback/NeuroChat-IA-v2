@@ -138,14 +138,14 @@ export function filterChildContent(content: string): ContentFilterResult {
   if (complexityScore > 0.7) {
     warnings.push('Langage trop complexe détecté');
     suggestions.push('Je vais reformuler de manière plus simple');
-    if (maxRiskLevel !== 'high') maxRiskLevel = 'medium';
+    if (maxRiskLevel === 'low') maxRiskLevel = 'medium';
   }
   
   // Vérifier la longueur
   if (filteredContent.length > 500) {
     warnings.push('Contenu trop long détecté');
     suggestions.push('Je vais faire plus court et plus clair');
-    if (maxRiskLevel !== 'high') maxRiskLevel = 'medium';
+    if (maxRiskLevel === 'low') maxRiskLevel = 'medium';
   }
   
   const isSafe = maxRiskLevel !== 'high' && warnings.length < 3;
