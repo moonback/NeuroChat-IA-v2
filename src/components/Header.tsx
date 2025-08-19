@@ -6,7 +6,7 @@ import {
   History, Settings2, Volume2, VolumeX, Sun, Moon, 
   PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, 
   Trash2, Menu, X, WifiOff, Baby, Sparkles,
-  Globe, Database, Activity, Pencil, HelpCircle
+  Globe, Database, Activity, Pencil, HelpCircle, Info
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -688,13 +688,15 @@ const MobileActions = ({
   muted, 
   onNewDiscussion, 
   handleVolumeToggle, 
-  setShowMobileMenu 
+  setShowMobileMenu,
+  onOpenQuickInfo
 }: {
   modeEnfant?: boolean;
   muted: boolean;
   onNewDiscussion: () => void;
   handleVolumeToggle: () => void;
   setShowMobileMenu: (show: boolean) => void;
+  onOpenQuickInfo: () => void;
 }) => (
   <div className="md:hidden flex items-center gap-1 mobile-optimized">
     {/* Barre d'actions mobile ultra-optimisée */}
@@ -722,6 +724,16 @@ const MobileActions = ({
         aria-label={muted ? 'Activer audio' : 'Désactiver audio'}
       >
         {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+      </IconButton>
+
+      {/* Bouton d'informations rapides - Mobile */}
+      <IconButton
+        onClick={onOpenQuickInfo}
+        tooltip="Informations rapides"
+        className="h-8 w-8 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-100/80 dark:hover:bg-blue-900/60 mobile-button transition-smooth"
+        aria-label="Informations rapides"
+      >
+        <Info className="w-4 h-4" />
       </IconButton>
     </div>
 
@@ -803,7 +815,8 @@ const DesktopActions = ({
   webEnabled, 
   handleWebToggle, 
   webSearching, 
-  setShowMobileMenu 
+  setShowMobileMenu,
+  onOpenQuickInfo
 }: {
   modeEnfant?: boolean;
   onNewDiscussion: () => void;
@@ -823,6 +836,7 @@ const DesktopActions = ({
   webSearching?: boolean;
   toggleTheme: () => void;
   setShowMobileMenu: (show: boolean) => void;
+  onOpenQuickInfo: () => void;
 }) => (
   <div className="hidden md:flex items-center gap-3">
     {/* Actions de base */}
@@ -919,6 +933,17 @@ const DesktopActions = ({
       )}
     </ButtonGroup>
 
+    {/* Bouton d'informations rapides */}
+    <ButtonGroup>
+      <IconButton
+        onClick={onOpenQuickInfo}
+        tooltip="Informations rapides"
+        className="text-blue-600 hover:bg-blue-50/80 dark:hover:bg-blue-950/50"
+      >
+        <Info className="w-4 h-4" />
+      </IconButton>
+    </ButtonGroup>
+
     {/* Réglages */}
     {!modeEnfant && (
       <ButtonGroup>
@@ -926,6 +951,7 @@ const DesktopActions = ({
       {!modeEnfant && !modePrive && (
         <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-50/80 dark:bg-green-950/40 text-green-600 dark:text-green-400">
           <Shield className="w-4 h-4" />
+          <span className="w-4 h-4" />
           <span className="text-xs font-semibold">AES-256</span>
         </div>
       )}
@@ -1331,6 +1357,254 @@ const MobileMenuSheet = ({
 );
 
 // =====================
+// Modal d'informations rapides
+// =====================
+interface QuickInfoModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  isOnline: boolean;
+  connectionQuality: 'excellent' | 'good' | 'poor';
+  modePrive: boolean;
+  modeEnfant?: boolean;
+  ragEnabled: boolean;
+  webEnabled?: boolean;
+  modeVocalAuto: boolean;
+  muted: boolean;
+  provider?: 'gemini' | 'openai' | 'mistral';
+  onOpenTTSSettings: () => void;
+  onOpenGeminiSettings?: () => void;
+  onOpenRagDocs: () => void;
+  onOpenMemory: () => void;
+}
+
+const QuickInfoModal = ({
+  isOpen,
+  onClose,
+  isOnline,
+  connectionQuality,
+  modePrive,
+  modeEnfant,
+  ragEnabled,
+  webEnabled,
+  modeVocalAuto,
+  muted,
+  provider,
+  onOpenTTSSettings,
+  onOpenGeminiSettings,
+  onOpenRagDocs,
+  onOpenMemory
+}: QuickInfoModalProps) => {
+  const getQualityColor = (quality: 'excellent' | 'good' | 'poor') => {
+    switch (quality) {
+      case 'excellent': return 'text-green-600 dark:text-green-400';
+      case 'good': return 'text-yellow-600 dark:text-yellow-400';
+      case 'poor': return 'text-red-600 dark:text-red-400';
+      default: return 'text-slate-600 dark:text-slate-400';
+    }
+  };
+
+  const getQualityIcon = (quality: 'excellent' | 'good' | 'poor') => {
+    switch (quality) {
+      case 'excellent': return '🟢';
+      case 'good': return '🟡';
+      case 'poor': return '🔴';
+      default: return '⚪';
+    }
+  };
+
+  const getProviderIcon = (provider?: 'gemini' | 'openai' | 'mistral') => {
+    switch (provider) {
+      case 'gemini': return <Sparkles className="w-4 h-4" />;
+      case 'openai': return <Brain className="w-4 h-4" />;
+      case 'mistral': return <Sparkles className="w-4 h-4" />;
+      default: return <Brain className="w-4 h-4" />;
+    }
+  };
+
+  const getProviderName = (provider?: 'gemini' | 'openai' | 'mistral') => {
+    switch (provider) {
+      case 'gemini': return 'Gemini';
+      case 'openai': return 'OpenAI';
+      case 'mistral': return 'Mistral';
+      default: return 'Non défini';
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl rounded-3xl border border-slate-200/50 dark:border-slate-800/50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl shadow-2xl">
+        <DialogHeader className="text-center pb-6">
+          <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/40 dark:to-indigo-950/40 flex items-center justify-center mb-4">
+            <Info className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+          </div>
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-slate-900 via-blue-700 to-indigo-600 dark:from-white dark:via-blue-300 dark:to-indigo-400 bg-clip-text text-transparent">
+            Informations Rapides
+          </DialogTitle>
+          <DialogDescription className="text-slate-600 dark:text-slate-400 text-lg">
+            Vue d'ensemble de l'état de NeuroChat
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Statut de connexion */}
+          <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Connexion</h3>
+              <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
+                isOnline ? 'bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400' : 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400'
+              }`}>
+                <span>{isOnline ? '🟢' : '🔴'}</span>
+                <span>{isOnline ? 'En ligne' : 'Hors ligne'}</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 rounded-xl bg-white/60 dark:bg-slate-800/40">
+                <div className="text-2xl mb-1">{getQualityIcon(connectionQuality)}</div>
+                <div className="text-sm font-medium text-slate-700 dark:text-slate-300">Qualité</div>
+                <div className={`text-lg font-bold ${getQualityColor(connectionQuality)}`}>
+                  {connectionQuality === 'excellent' ? 'Excellente' : connectionQuality === 'good' ? 'Bonne' : 'Faible'}
+                </div>
+              </div>
+              <div className="text-center p-3 rounded-xl bg-white/60 dark:bg-slate-800/40">
+                <div className="text-2xl mb-1">🔒</div>
+                <div className="text-sm font-medium text-slate-700 dark:text-slate-300">Sécurité</div>
+                <div className="text-lg font-bold text-green-600 dark:text-green-400">AES-256</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Fonctionnalités actives */}
+          <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">Fonctionnalités</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className={`flex items-center gap-3 p-3 rounded-xl ${
+                ragEnabled ? 'bg-green-50 dark:bg-green-950/40 border border-green-200/60 dark:border-green-800/60' : 'bg-slate-100/60 dark:bg-slate-800/40'
+              }`}>
+                <BookOpen className={`w-5 h-5 ${ragEnabled ? 'text-green-600 dark:text-green-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                <div>
+                  <div className="font-medium text-slate-900 dark:text-white">RAG</div>
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
+                    {ragEnabled ? 'Activé' : 'Désactivé'}
+                  </div>
+                </div>
+              </div>
+              <div className={`flex items-center gap-3 p-3 rounded-xl ${
+                webEnabled ? 'bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/60' : 'bg-slate-100/60 dark:bg-slate-800/40'
+              }`}>
+                <Globe className={`w-5 h-5 ${webEnabled ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                <div>
+                  <div className="font-medium text-slate-900 dark:text-white">Web</div>
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
+                    {webEnabled ? 'Activé' : 'Désactivé'}
+                  </div>
+                </div>
+              </div>
+              <div className={`flex items-center gap-3 p-3 rounded-xl ${
+                modeVocalAuto ? 'bg-purple-50 dark:bg-purple-950/40 border border-purple-200/60 dark:border-purple-800/60' : 'bg-slate-100/60 dark:bg-slate-800/40'
+              }`}>
+                <Mic className={`w-5 h-5 ${modeVocalAuto ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                <div>
+                  <div className="font-medium text-slate-900 dark:text-white">Vocal Auto</div>
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
+                    {modeVocalAuto ? 'Activé' : 'Désactivé'}
+                  </div>
+                </div>
+              </div>
+              <div className={`flex items-center gap-3 p-3 rounded-xl ${
+                !muted ? 'bg-orange-50 dark:bg-orange-950/40 border border-orange-200/60 dark:border-orange-800/60' : 'bg-slate-100/60 dark:bg-slate-800/40'
+              }`}>
+                <Volume2 className={`w-5 h-5 ${!muted ? 'text-orange-600 dark:text-orange-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                <div>
+                  <div className="font-medium text-slate-900 dark:text-white">Audio</div>
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
+                    {!muted ? 'Activé' : 'Désactivé'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Provider IA et modes */}
+          <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">Configuration</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 rounded-xl bg-white/60 dark:bg-slate-800/40">
+                <div className="flex items-center justify-center mb-2">
+                  {getProviderIcon(provider)}
+                </div>
+                <div className="text-sm font-medium text-slate-700 dark:text-slate-300">Provider IA</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white">
+                  {getProviderName(provider)}
+                </div>
+              </div>
+              <div className="text-center p-3 rounded-xl bg-white/60 dark:bg-slate-800/40">
+                <div className="text-2xl mb-2">
+                  {modePrive ? '🔒' : modeEnfant ? '👶' : '👤'}
+                </div>
+                <div className="text-sm font-medium text-slate-700 dark:text-slate-300">Mode</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white">
+                  {modePrive ? 'Privé' : modeEnfant ? 'Enfant' : 'Normal'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions rapides */}
+          <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">Actions Rapides</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                onClick={() => { onOpenTTSSettings(); onClose(); }}
+                className="h-11 rounded-xl border-slate-200/60 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+              >
+                <Settings2 className="w-4 h-4 mr-2" />
+                TTS
+              </Button>
+              {onOpenGeminiSettings && (
+                <Button
+                  variant="outline"
+                  onClick={() => { onOpenGeminiSettings(); onClose(); }}
+                  className="h-11 rounded-xl border-slate-200/60 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  IA
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => { onOpenRagDocs(); onClose(); }}
+                className="h-11 rounded-xl border-slate-200/60 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+              >
+                <BookOpen className="w-4 h-4 mr-2" />
+                RAG
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => { onOpenMemory(); onClose(); }}
+                className="h-11 rounded-xl border-slate-200/60 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+              >
+                <Brain className="w-4 h-4 mr-2" />
+                Mémoire
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter className="pt-6">
+          <Button
+            onClick={onClose}
+            className="w-full h-11 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium"
+          >
+            Fermer
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// =====================
 // Composant principal amélioré
 // =====================
 export function Header(props: HeaderProps) {
@@ -1349,6 +1623,7 @@ export function Header(props: HeaderProps) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showVocalSettings, setShowVocalSettings] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showQuickInfo, setShowQuickInfo] = useState(false);
   
 
   // Handlers optimisés avec feedback
@@ -1488,6 +1763,7 @@ export function Header(props: HeaderProps) {
               webSearching={props.webSearching}
               toggleTheme={toggleTheme}
               setShowMobileMenu={setShowMobileMenu}
+              onOpenQuickInfo={() => setShowQuickInfo(true)}
             />
 
             {/* Actions mobiles essentielles - Refonte complète */}
@@ -1497,6 +1773,7 @@ export function Header(props: HeaderProps) {
               onNewDiscussion={onNewDiscussion}
               handleVolumeToggle={handleVolumeToggle}
               setShowMobileMenu={setShowMobileMenu}
+              onOpenQuickInfo={() => setShowQuickInfo(true)}
             />
           </div>
         </div>
@@ -1566,6 +1843,25 @@ export function Header(props: HeaderProps) {
       <HelpModal
         isOpen={showHelpModal}
         onClose={() => setShowHelpModal(false)}
+      />
+
+      {/* Modal d'informations rapides */}
+      <QuickInfoModal
+        isOpen={showQuickInfo}
+        onClose={() => setShowQuickInfo(false)}
+        isOnline={isOnline}
+        connectionQuality={connectionQuality}
+        modePrive={modePrive}
+        modeEnfant={props.modeEnfant}
+        ragEnabled={ragEnabled}
+        webEnabled={webEnabled}
+        modeVocalAuto={modeVocalAuto}
+        muted={muted}
+        provider={provider}
+        onOpenTTSSettings={onOpenTTSSettings}
+        onOpenGeminiSettings={onOpenGeminiSettings}
+        onOpenRagDocs={onOpenRagDocs}
+        onOpenMemory={onOpenMemory}
       />
 
       {/* AlertDialog modernisée pour la confirmation de suppression */}
