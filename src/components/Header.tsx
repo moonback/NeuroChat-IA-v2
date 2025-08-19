@@ -30,6 +30,7 @@ interface HeaderProps {
   onOpenTTSSettings: () => void;
   onOpenRagDocs: () => void;
   onOpenMemory: () => void;
+  onOpenAvatarTest?: () => void; // Nouvelle prop pour le test de l'avatar
   stop: () => void;
   modeVocalAuto: boolean;
   setModeVocalAuto: (v: boolean) => void;
@@ -769,6 +770,7 @@ const DesktopActions = ({
   onNewDiscussion, 
   onOpenHistory, 
   onOpenMemory, 
+  onOpenAvatarTest,
   selectionActions, 
   muted, 
   handleVolumeToggle, 
@@ -787,6 +789,7 @@ const DesktopActions = ({
   onNewDiscussion: () => void;
   onOpenHistory: () => void;
   onOpenMemory: () => void;
+  onOpenAvatarTest?: () => void;
   selectionActions: React.ReactNode;
   muted: boolean;
   handleVolumeToggle: () => void;
@@ -818,6 +821,11 @@ const DesktopActions = ({
           <IconButton onClick={onOpenMemory} tooltip="Mémoire" aria-label="Mémoire">
             <Brain className="w-4 h-4" />
           </IconButton>
+          {onOpenAvatarTest && (
+            <IconButton onClick={onOpenAvatarTest} tooltip="Test Avatar" aria-label="Test Avatar">
+              🎭
+            </IconButton>
+          )}
         </ButtonGroup>
       )}
     </div>
@@ -1314,7 +1322,7 @@ const MobileMenuSheet = ({
 export function Header(props: HeaderProps) {
   const {
     muted, onMute, onUnmute, onNewDiscussion, onOpenHistory, onOpenTTSSettings,
-    onOpenRagDocs, onOpenMemory, modeVocalAuto, setModeVocalAuto,
+    onOpenRagDocs, onOpenMemory, onOpenAvatarTest, modeVocalAuto, setModeVocalAuto,
     hasActiveConversation, ragEnabled, setRagEnabled, onOpenGeminiSettings,
     webEnabled, setWebEnabled, provider, onChangeProvider, modePrive, setModePrive, 
     selectMode, onToggleSelectMode, selectedCount, totalCount, onSelectAll, onDeselectAll,
@@ -1452,6 +1460,7 @@ export function Header(props: HeaderProps) {
               onNewDiscussion={onNewDiscussion}
               onOpenHistory={onOpenHistory}
               onOpenMemory={onOpenMemory}
+              onOpenAvatarTest={onOpenAvatarTest}
               selectionActions={selectionActions}
               muted={muted}
               handleVolumeToggle={handleVolumeToggle}

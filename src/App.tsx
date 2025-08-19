@@ -21,7 +21,7 @@ import {
 } from '@/services/persistentEncryption';
 
 // 🎭 Avatar IA 3D Réactif
-import { ReactiveAvatar } from '@/components/avatar';
+import { ReactiveAvatar, AvatarTestPage } from '@/components/avatar';
 import { useAvatarState } from '@/hooks/useAvatarState';
 
 // Constantes pour le debug
@@ -1399,10 +1399,19 @@ ${lines.join('\n')}`, false);
     storageKey: 'neurochat-avatar-config'
   });
 
+  // État pour afficher la page de test de l'avatar
+  const [showAvatarTest, setShowAvatarTest] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Halo de fond en bas de page */}
       <div className="bottom-horizon-glow" aria-hidden="true" />
+      
+      {/* Page de test de l'avatar */}
+      {showAvatarTest && (
+        <AvatarTestPage />
+      )}
+      
       {/* Menu historique des discussions */}
       <Suspense fallback={null}>
         <HistoryModalLazy
@@ -1427,6 +1436,7 @@ ${lines.join('\n')}`, false);
           onOpenTTSSettings={() => setShowTTSSettings(true)}
           onOpenRagDocs={() => setShowRagDocs(true)}
           onOpenMemory={() => setShowMemory(true)}
+          onOpenAvatarTest={() => setShowAvatarTest(true)}
           workspaceId={workspaceId}
           workspaces={workspaces}
           onChangeWorkspace={(id) => setWorkspaceId(id)}
