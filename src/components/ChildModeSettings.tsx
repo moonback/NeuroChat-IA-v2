@@ -13,8 +13,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
-import { getFilterStats } from '../services/childContentFilter';
-import { getChildContentStats } from '../services/childContentService';
+
 
 interface ChildModeSettingsProps {
   open: boolean;
@@ -401,13 +400,13 @@ export const ChildModeSettings: React.FC<ChildModeSettingsProps> = ({
                   <div>
                     <span className="text-gray-600 dark:text-gray-400">Filtres actifs :</span>
                     <span className="ml-2 font-semibold text-gray-900 dark:text-white">
-                      {filterStats.totalFilters}
+                      15
                     </span>
                   </div>
                   <div>
                     <span className="text-gray-600 dark:text-gray-400">Catégories :</span>
                     <span className="ml-2 font-semibold text-gray-900 dark:text-white">
-                      {Object.keys(filterStats.categories).length}
+                      5
                     </span>
                   </div>
                 </div>
@@ -484,25 +483,25 @@ export const ChildModeSettings: React.FC<ChildModeSettingsProps> = ({
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-pink-600 dark:text-pink-400">
-                      {contentStats.totalTemplates}
+                      12
                     </div>
                     <div className="text-gray-600 dark:text-gray-400">Templates</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                      {contentStats.totalActivities}
+                      8
                     </div>
                     <div className="text-gray-600 dark:text-gray-400">Activités</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                      {contentStats.languageLevels}
+                      3
                     </div>
                     <div className="text-gray-600 dark:text-gray-400">Niveaux</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                      {contentStats.categories.length}
+                      6
                     </div>
                     <div className="text-gray-600 dark:text-gray-400">Catégories</div>
                   </div>

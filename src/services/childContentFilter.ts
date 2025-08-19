@@ -148,7 +148,7 @@ export function filterChildContent(content: string): ContentFilterResult {
     if (maxRiskLevel === 'low') maxRiskLevel = 'medium';
   }
   
-  const isSafe = maxRiskLevel !== 'high' && warnings.length < 3;
+  const isSafe = (maxRiskLevel === 'low' || maxRiskLevel === 'medium') && warnings.length < 3;
   
   return {
     isSafe,
@@ -181,7 +181,7 @@ export function hasPositiveContent(content: string): boolean {
 /**
  * Génère des suggestions de contenu alternatif
  */
-export function generateAlternativeSuggestions(originalContent: string): string[] {
+export function generateAlternativeSuggestions(): string[] {
   const alternatives = [
     'Raconte-moi une histoire drôle',
     'Que veux-tu apprendre aujourd\'hui ?',
