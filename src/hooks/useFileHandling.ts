@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import type { FileInfo, FileProcessingResult } from '@/types/voiceInput';
+import type { FileProcessingResult } from '@/types/voiceInput';
 
 export function useFileHandling() {
   const processFile = useCallback(async (file: File): Promise<FileProcessingResult> => {

@@ -3,8 +3,7 @@ import { useSpeechRecognition } from './useSpeechRecognition';
 import type { 
   Provider, 
   VoiceInputState, 
-  FileInfo, 
-  SlashCommand 
+  FileInfo
 } from '@/types/voiceInput';
 
 import { SLASH_COMMANDS } from '@/constants/slashCommands';
