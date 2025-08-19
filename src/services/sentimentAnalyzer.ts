@@ -46,7 +46,6 @@ const NEGATION_WORDS = ['pas', 'non', 'ne', 'aucun', 'rien', 'jamais', 'nullemen
 // Analyse simple basée sur les mots-clés
 export function analyzeSentiment(text: string): SentimentResult {
   const lowerText = text.toLowerCase();
-  const words = lowerText.split(/\s+/);
   
   let emotion: EmotionType = 'neutral';
   let confidence = 0;

@@ -20,6 +20,10 @@ import {
   loadPersistentEncrypted
 } from '@/services/persistentEncryption';
 
+// 🎭 Avatar IA 3D Réactif
+import { ReactiveAvatar } from '@/components/avatar';
+import { useAvatarState } from '@/hooks/useAvatarState';
+
 // Constantes pour le debug
 const ENCRYPTION_ENABLED_KEY = 'nc_encryption_enabled';
 const MASTER_PASSWORD_KEY = 'nc_master_password_encrypted';
@@ -619,7 +623,7 @@ function App() {
     // Si le mode est inactif, définir le PIN si vide et activer
     if (!childPin) {
       if (!pin || pin.length < 4) {
-        toast.error('Choisis un code PIN d’au moins 4 chiffres.');
+        toast.error("Choisis un code PIN d'au moins 4 chiffres.");
         return;
       }
       setChildPin(pin);
@@ -645,7 +649,7 @@ function App() {
         "- Ne propose pas de sauvegarder des informations personnelles.",
         "- Évite de demander des données sensibles (email, téléphone, adresse, identifiants). Si nécessaire, demande un consentement explicite et propose des alternatives.",
         "- Réponds de manière concise et éphémère. Ne fais pas de suivi hors de ce message.",
-        "- Si l’utilisateur demande des fonctions liées à la mémoire, précise poliment que la mémoire est désactivée en mode privé."
+        "- Si l'utilisateur demande des fonctions liées à la mémoire, précise poliment que la mémoire est désactivée en mode privé."
       ].join('\n');
       return `${base}\n\n${privateBlock}`;
     }
@@ -656,7 +660,7 @@ function App() {
         '- Évite les sujets sensibles, violents ou inappropriés. Redirige vers des thèmes éducatifs et bienveillants.',
         "- Privilégie des explications courtes avec des exemples concrets, des analogies et des mini-jeux (devinettes, quiz).",
         "- Demande l'avis d'un adulte pour toute action qui pourrait nécessiter une supervision (ex: télécharger, acheter, partager).",
-        '- N’inclus pas de liens externes bruts; si nécessaire, mentionne de demander à un adulte.'
+        "- N'inclus pas de liens externes bruts; si nécessaire, mentionne de demander à un adulte."
       ].join('\n');
       return `${base}\n\n${childBlock}`;
     }
@@ -1383,6 +1387,18 @@ ${lines.join('\n')}`, false);
     };
   }, [autoVoiceTimeout]);
 
+  // 🎭 Avatar IA 3D Réactif
+  const avatarState = useAvatarState({
+    initialConfig: {
+      style: 'modern',
+      clothing: 'tech',
+      size: 'lg',
+      animated: true
+    },
+    persistConfig: true,
+    storageKey: 'neurochat-avatar-config'
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Halo de fond en bas de page */}
@@ -1492,6 +1508,25 @@ ${lines.join('\n')}`, false);
               modePrive={modePrive || modeEnfant}
               modeEnfant={modeEnfant}
             />
+            
+            {/* 🎭 Avatar IA 3D Réactif */}
+            {!modeEnfant && (
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-30">
+                <ReactiveAvatar
+                  recentMessages={messages.slice(-5).map(msg => ({
+                    text: msg.text,
+                    isUser: msg.isUser
+                  }))}
+                  baseConfig={avatarState.config}
+                  onConfigChange={avatarState.updateConfig}
+                  position="center"
+                  defaultSize="lg"
+                  isLoading={isLoading}
+                  isConversing={messages.length > 0}
+                />
+              </div>
+            )}
+            
             {/* Sidebar RAG à droite (desktop) quand RAG/Web actif, agent actif, recherche en cours, ou résultats présents */}
             {((ragEnabled || ((provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) || isRagSearching || usedRagDocs.length > 0) && !modeEnfant) && (
               <>

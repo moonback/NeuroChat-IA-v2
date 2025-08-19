@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ReactiveAvatar } from './ReactiveAvatar';
+import { ReactiveAvatar } from '../ReactiveAvatar';
 import { useAvatarState } from '../../hooks/useAvatarState';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
