@@ -304,6 +304,8 @@ class GlobalMemoryService {
   async addMemory(memory: MemoryItem): Promise<void> {
     if (!this.isInitialized) await this.initialize();
     
+    console.log(`🧠 Ajout mémoire: [${memory.category}] "${memory.content}"`);
+    
     // Vérifier si une mémoire similaire existe déjà
     const existingIndex = this.memory.findIndex(m => 
       this.calculateSimilarity(m.content, memory.content) > 0.8
@@ -311,6 +313,7 @@ class GlobalMemoryService {
     
     if (existingIndex >= 0) {
       // Mettre à jour la mémoire existante
+      console.log(`🧠 Mise à jour mémoire existante: ${memory.id}`);
       this.memory[existingIndex] = {
         ...this.memory[existingIndex],
         content: memory.content, // Mettre à jour le contenu
@@ -321,10 +324,12 @@ class GlobalMemoryService {
       };
     } else {
       // Ajouter une nouvelle mémoire
+      console.log(`🧠 Nouvelle mémoire ajoutée: ${memory.id}`);
       this.memory.push(memory);
     }
     
     await this.saveMemory();
+    console.log(`🧠 Mémoire sauvegardée. Total: ${this.memory.length}`);
   }
 
   /**
@@ -416,7 +421,9 @@ class GlobalMemoryService {
    */
   private async saveMemory(): Promise<void> {
     try {
-      localStorage.setItem(this.MEMORY_KEY, JSON.stringify(this.memory));
+      const data = JSON.stringify(this.memory);
+      localStorage.setItem(this.MEMORY_KEY, data);
+      console.log(`🧠 Mémoire sauvegardée dans localStorage: ${data.length} caractères`);
     } catch (error) {
       console.error('Erreur sauvegarde mémoire:', error);
     }
@@ -428,6 +435,8 @@ class GlobalMemoryService {
   private async loadMemory(): Promise<void> {
     try {
       const saved = localStorage.getItem(this.MEMORY_KEY);
+      console.log(`🧠 Chargement mémoire depuis localStorage: ${saved ? saved.length : 0} caractères`);
+      
       if (saved) {
         const parsed = JSON.parse(saved);
         this.memory = parsed.map((item: any) => ({
@@ -435,6 +444,9 @@ class GlobalMemoryService {
           timestamp: new Date(item.timestamp),
           lastAccessed: new Date(item.lastAccessed)
         }));
+        console.log(`🧠 ${this.memory.length} souvenirs chargés depuis localStorage`);
+      } else {
+        console.log('🧠 Aucune mémoire trouvée dans localStorage');
       }
     } catch (error) {
       console.error('Erreur chargement mémoire:', error);
@@ -677,3 +689,9 @@ export const globalMemoryService = new GlobalMemoryService();
 
 // Fonction d'initialisation automatique
 export const initializeGlobalMemory = () => globalMemoryService.initialize();
+
+// Exposer le service globalement en mode développement pour le débogage
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  (window as any).globalMemoryService = globalMemoryService;
+  console.log('🧠 Service de mémoire globale exposé globalement pour le débogage');
+}
