@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Mémoire Globale</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+        .log { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <h1>🧠 Test Direct de la Mémoire Globale</h1>
+    
+    <div>
+        <button onclick="testService()">Tester le Service</button>
+        <button onclick="createTestMemories()">Créer Souvenirs Test</button>
+        <button onclick="checkStats()">Vérifier Statistiques</button>
+        <button onclick="clearLogs()">Effacer Logs</button>
+    </div>
+    
+    <div id="logs"></div>
+    
+    <script>
+        // Simuler le service de mémoire globale
+        class TestGlobalMemoryService {
+            constructor() {
+                this.memory = [];
+                this.isInitialized = false;
+                this.log('Service de test créé');
+            }
+            
+            async initialize() {
+                this.isInitialized = true;
+                this.log('✅ Service initialisé');
+                return Promise.resolve();
+            }
+            
+            async createTestMemories() {
+                const testMemories = [
+                    {
+                        id: `test_${Date.now()}_1`,
+                        content: 'J\'aime la programmation et l\'intelligence artificielle',
+                        category: 'preferences',
+                        importance: 4,
+                        tags: ['programmation', 'IA', 'tech'],
+                        sourceConversation: 'test_conversation',
+                        timestamp: new Date(),
+                        lastAccessed: new Date(),
+                        accessCount: 1
+                    },
+                    {
+                        id: `test_${Date.now()}_2`,
+                        content: 'Je travaille comme développeur web',
+                        category: 'personnalite',
+                        importance: 5,
+                        tags: ['travail', 'développeur', 'web'],
+                        sourceConversation: 'test_conversation',
+                        timestamp: new Date(),
+                        lastAccessed: new Date(),
+                        accessCount: 1
+                    },
+                    {
+                        id: `test_${Date.now()}_3`,
+                        content: 'Mon projet est de créer une application de chat IA',
+                        category: 'projets',
+                        importance: 5,
+                        tags: ['projet', 'chat', 'IA', 'application'],
+                        sourceConversation: 'test_conversation',
+                        timestamp: new Date(),
+                        lastAccessed: new Date(),
+                        accessCount: 1
+                    }
+                ];
+                
+                for (const memory of testMemories) {
+                    this.memory.push(memory);
+                }
+                
+                this.log(`✅ ${testMemories.length} souvenirs de test créés`);
+                return Promise.resolve();
+            }
+            
+            getMemoryStats() {
+                const byCategory = {};
+                this.memory.forEach(item => {
+                    byCategory[item.category] = (byCategory[item.category] || 0) + 1;
+                });
+                
+                return {
+                    total: this.memory.length,
+                    byCategory,
+                    recent: this.memory.length
+                };
+            }
+            
+            getAllMemories() {
+                return [...this.memory];
+            }
+            
+            log(message) {
+                const logsDiv = document.getElementById('logs');
+                const logDiv = document.createElement('div');
+                logDiv.className = 'log';
+                logDiv.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+                logsDiv.appendChild(logDiv);
+                console.log(message);
+            }
+        }
+        
+        // Créer l'instance de test
+        const testService = new TestGlobalMemoryService();
+        
+        // Fonctions de test
+        async function testService() {
+            testService.log('🧠 Test du service de mémoire globale...');
+            try {
+                await testService.initialize();
+                testService.log('✅ Service testé avec succès');
+            } catch (error) {
+                testService.log(`❌ Erreur: ${error.message}`);
+            }
+        }
+        
+        async function createTestMemories() {
+            testService.log('🧠 Création de souvenirs de test...');
+            try {
+                await testService.createTestMemories();
+                testService.log('✅ Souvenirs créés avec succès');
+            } catch (error) {
+                testService.log(`❌ Erreur: ${error.message}`);
+            }
+        }
+        
+        function checkStats() {
+            testService.log('🧠 Vérification des statistiques...');
+            try {
+                const stats = testService.getMemoryStats();
+                const memories = testService.getAllMemories();
+                
+                testService.log(`📊 Statistiques: ${JSON.stringify(stats, null, 2)}`);
+                testService.log(`🧠 Souvenirs: ${memories.length} éléments`);
+                
+                memories.forEach((memory, index) => {
+                    testService.log(`  ${index + 1}. [${memory.category}] ${memory.content}`);
+                });
+            } catch (error) {
+                testService.log(`❌ Erreur: ${error.message}`);
+            }
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        // Test automatique au chargement
+        window.addEventListener('load', () => {
+            testService.log('🚀 Page de test chargée');
+            testService.log('🧠 Service de test disponible');
+        });
+    </script>
+</body>
+</html>

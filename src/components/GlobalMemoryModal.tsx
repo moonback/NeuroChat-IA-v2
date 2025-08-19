@@ -40,7 +40,7 @@ interface GlobalMemoryModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function GlobalMemoryModal({ open, onOpenChange }: GlobalMemoryModalProps) {
+export default function GlobalMemoryModal({ open, onOpenChange }: GlobalMemoryModalProps) {
   const [activeTab, setActiveTab] = useState('memories');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');

@@ -30,7 +30,7 @@ import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { searchDocuments } from '@/services/ragSearch';
 const RagDocsModalLazy = lazy(() => import('@/components/RagDocsModal').then(m => ({ default: m.RagDocsModal })));
 const HistoryModalLazy = lazy(() => import('@/components/HistoryModal').then(m => ({ default: m.HistoryModal })));
-const GlobalMemoryModalLazy = lazy(() => import('@/components/GlobalMemoryModal').then(m => ({ default: m.GlobalMemoryModal })));
+const GlobalMemoryModalLazy = lazy(() => import('@/components/GlobalMemoryModal'));
 
 import type { DiscussionWithCategory } from '@/components/HistoryModal';
 
