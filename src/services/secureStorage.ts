@@ -52,7 +52,7 @@ const SENSITIVE_KEY_PATTERNS = [
   /^ws:.*:gemini_discussions$/,
   /^ws:.*:gemini_current_discussion$/,
   /^ws:.*:gemini_presets$/,
-  /^ws:.*:neurochat_user_memory_v1$/,
+
   /^ws:.*:rag_user_docs$/,
   /^ws:.*:rag_doc_stats$/,
   /^ws:.*:rag_doc_favorites$/,
