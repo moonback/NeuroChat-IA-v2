@@ -24,9 +24,7 @@ export const Header: React.FC<HeaderProps> = React.memo((props) => {
   const {
     showMobileMenu,
     setShowMobileMenu,
-    showVocalSettings,
     setShowVocalSettings,
-    showHelpModal,
     setShowHelpModal,
     handleVolumeToggle,
     handleModeVocalToggle,
@@ -45,7 +43,7 @@ export const Header: React.FC<HeaderProps> = React.memo((props) => {
   // État local pour la sélection de messages
   const [selectMode, setSelectMode] = React.useState(false);
   const [selectedCount, setSelectedCount] = React.useState(0);
-  const [totalCount, setTotalCount] = React.useState(0);
+  const [totalCount] = React.useState(0);
 
   // Handlers pour la sélection de messages
   const handleToggleSelectMode = useCallback(() => {
