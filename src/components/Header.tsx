@@ -29,6 +29,7 @@ interface HeaderProps {
   onOpenHistory: () => void;
   onOpenTTSSettings: () => void;
   onOpenRagDocs: () => void;
+  onOpenGlobalMemory?: () => void;
   stop: () => void;
   modeVocalAuto: boolean;
   setModeVocalAuto: (v: boolean) => void;
@@ -957,6 +958,7 @@ const MobileMenuSheet = ({
   onOpenTTSSettings, 
   onOpenGeminiSettings, 
   onOpenRagDocs, 
+  onOpenGlobalMemory, 
   autoVoiceConfig, 
   onUpdateAutoVoiceConfig, 
   onOpenChildPinSettings, 
@@ -987,6 +989,7 @@ const MobileMenuSheet = ({
   onOpenTTSSettings: () => void;
   onOpenGeminiSettings?: () => void;
   onOpenRagDocs: () => void;
+  onOpenGlobalMemory?: () => void;
   autoVoiceConfig?: { silenceMs: number; minChars: number; minWords: number; cooldownMs: number };
   onUpdateAutoVoiceConfig?: (key: 'silenceMs' | 'minChars' | 'minWords' | 'cooldownMs', value: number) => void;
   onOpenChildPinSettings?: () => void;
@@ -1207,6 +1210,15 @@ const MobileMenuSheet = ({
                   label={'Docs RAG'}
                   icon={BookOpen}
                   tooltip="Documents RAG"
+                />
+              )}
+              
+              {!modeEnfant && onOpenGlobalMemory && (
+                <TileButton
+                  onClick={handleMenuAction(onOpenGlobalMemory)}
+                  label={'Mémoire'}
+                  icon={Brain}
+                  tooltip="Mémoire globale des conversations"
                 />
               )}
               
@@ -1520,6 +1532,7 @@ export function Header(props: HeaderProps) {
           onOpenTTSSettings={onOpenTTSSettings}
           onOpenGeminiSettings={onOpenGeminiSettings}
           onOpenRagDocs={onOpenRagDocs}
+          onOpenGlobalMemory={props.onOpenGlobalMemory}
           autoVoiceConfig={props.autoVoiceConfig}
           onUpdateAutoVoiceConfig={props.onUpdateAutoVoiceConfig}
           onOpenChildPinSettings={props.onOpenChildPinSettings}
