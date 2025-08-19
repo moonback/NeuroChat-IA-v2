@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { useTheme } from '@/hooks/useTheme';
 import { useWorkspace } from '@/hooks/useWorkspace';
 import { useHeaderState } from '@/hooks/useHeaderState';
@@ -6,7 +6,7 @@ import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { usePrivateModeFeedback } from '@/hooks/usePrivateModeFeedback';
 import { Logo } from './header/Logo';
 import { WorkspaceSelector } from './header/WorkspaceSelector';
-import { SelectionActions, MobileActions, DesktopActions } from './header/ActionComponents';
+import { MobileActions, DesktopActions } from './header/ActionComponents';
 import { MobileStatusIndicator } from './header/MobileIndicators';
 import { MobileMenuSheet } from './header/MobileMenu';
 import { ConnectionStatus, PrivateModeBanner } from './header/StatusIndicators';
@@ -40,37 +40,9 @@ export const Header: React.FC<HeaderProps> = React.memo((props) => {
   // Hook pour le feedback du mode privé
   const { audioRef, showPrivateIndicator } = usePrivateModeFeedback(props.modePrive);
 
-  // État local pour la sélection de messages
-  const [selectMode, setSelectMode] = React.useState(false);
-  const [selectedCount, setSelectedCount] = React.useState(0);
-  const [totalCount] = React.useState(0);
 
-  // Handlers pour la sélection de messages
-  const handleToggleSelectMode = useCallback(() => {
-    setSelectMode(!selectMode);
-    if (selectMode) {
-      setSelectedCount(0);
-    }
-  }, [selectMode]);
 
-  const handleSelectAll = useCallback(() => {
-    setSelectedCount(totalCount);
-  }, [totalCount]);
 
-  const handleDeselectAll = useCallback(() => {
-    setSelectedCount(0);
-  }, []);
-
-  const handleRequestDelete = useCallback(() => {
-    if (selectedCount > 0) {
-      const ok = window.confirm(`Supprimer ${selectedCount} message${selectedCount > 1 ? 's' : ''} ?\nCette action est irréversible.`);
-      if (ok) {
-        // Logique de suppression à implémenter
-        setSelectedCount(0);
-        setSelectMode(false);
-      }
-    }
-  }, [selectedCount]);
 
   // Handler pour fermer le menu mobile
   const closeMobileMenu = useCallback(() => {
@@ -83,19 +55,7 @@ export const Header: React.FC<HeaderProps> = React.memo((props) => {
     closeMobileMenu();
   }, [closeMobileMenu]);
 
-  // Composants d'actions de sélection
-  const selectionActions = useMemo(() => (
-    <SelectionActions
-      hasActiveConversation={props.hasActiveConversation}
-      selectMode={selectMode}
-      selectedCount={selectedCount}
-      totalCount={totalCount}
-      onToggleSelectMode={handleToggleSelectMode}
-      onSelectAll={handleSelectAll}
-      onDeselectAll={handleDeselectAll}
-      onRequestDelete={handleRequestDelete}
-    />
-  ), [props.hasActiveConversation, selectMode, selectedCount, totalCount, handleToggleSelectMode, handleSelectAll, handleDeselectAll, handleRequestDelete]);
+
 
   return (
     <>
@@ -127,16 +87,12 @@ export const Header: React.FC<HeaderProps> = React.memo((props) => {
 
             {/* Section droite : Actions et contrôles */}
             <div className="flex items-center gap-2 sm:gap-3">
-              {/* Actions de sélection */}
-              {selectionActions}
-
               {/* Actions desktop */}
               <DesktopActions
                 modeEnfant={props.modeEnfant}
                 onNewDiscussion={props.onNewDiscussion}
                 onOpenHistory={props.onOpenHistory}
                 onOpenMemory={props.onOpenMemory}
-                selectionActions={selectionActions}
                 muted={props.muted}
                 handleVolumeToggle={handleVolumeToggle}
                 handleModeVocalToggle={handleModeVocalToggle}
@@ -188,10 +144,6 @@ export const Header: React.FC<HeaderProps> = React.memo((props) => {
         handleMenuAction={handleMenuAction}
         modeEnfant={props.modeEnfant}
         hasActiveConversation={props.hasActiveConversation}
-        selectMode={selectMode}
-        selectedCount={selectedCount}
-        onToggleSelectMode={handleToggleSelectMode}
-        onRequestDelete={handleRequestDelete}
         modePrive={props.modePrive}
         handlePrivateModeToggle={handlePrivateModeToggle}
         handleChildModeToggle={handleChildModeToggle}

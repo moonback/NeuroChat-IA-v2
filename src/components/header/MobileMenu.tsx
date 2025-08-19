@@ -12,10 +12,6 @@ interface MobileMenuSheetProps {
   handleMenuAction: (action: () => void) => () => void;
   modeEnfant?: boolean;
   hasActiveConversation: boolean;
-  selectMode: boolean;
-  selectedCount: number;
-  onToggleSelectMode: () => void;
-  onRequestDelete: () => void;
   modePrive: boolean;
   handlePrivateModeToggle: () => void;
   handleChildModeToggle: () => void;
@@ -44,10 +40,6 @@ export const MobileMenuSheet: React.FC<MobileMenuSheetProps> = React.memo(({
   handleMenuAction,
   modeEnfant,
   hasActiveConversation,
-  selectMode,
-  selectedCount,
-  onToggleSelectMode,
-  onRequestDelete,
   modePrive,
   handlePrivateModeToggle,
   handleChildModeToggle,

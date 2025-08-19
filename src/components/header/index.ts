@@ -5,7 +5,7 @@ export { Logo } from './Logo';
 export { WorkspaceSelector } from './WorkspaceSelector';
 
 // Composants d'actions
-export { SelectionActions, MobileActions, DesktopActions } from './ActionComponents';
+export { MobileActions, DesktopActions } from './ActionComponents';
 
 // Composants d'indicateurs
 export { MobileStatusIndicator } from './MobileIndicators';
