@@ -79,10 +79,12 @@ export interface CloudConversationResponse {
 // CONFIGURATION
 // ========================================================================================
 
-const API_BASE_URL = import.meta.env.VITE_CLOUD_API_URL || 'http://localhost:3001/api';
-const SYNC_INTERVAL = 30000; // 30 secondes
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000; // 1 seconde
+import { ENV_CONFIG, DEFAULT_CONFIG } from '@/config/environment';
+
+const API_BASE_URL = ENV_CONFIG.CLOUD_API_URL;
+const SYNC_INTERVAL = DEFAULT_CONFIG.CLOUD.SYNC_INTERVAL;
+const MAX_RETRIES = DEFAULT_CONFIG.CLOUD.MAX_RETRIES;
+const RETRY_DELAY = DEFAULT_CONFIG.CLOUD.RETRY_DELAY;
 
 // ========================================================================================
 // GESTIONNAIRE D'AUTHENTIFICATION
