@@ -8,7 +8,7 @@
  * - Personnalité évolutive qui s'adapte au temps
  */
 
-import { MemoryItem, MemorySource } from './memory';
+// Import supprimé car non utilisé
 
 // Types pour la mémoire évolutive
 interface UserPreference {
@@ -99,7 +99,7 @@ class EvolvedMemoryService {
     category: UserPreference['category'],
     key: string,
     value: any,
-    context?: string
+    _context?: string
   ): void {
     const preferenceId = `${category}:${key}`;
     const existing = this.preferences.get(preferenceId);
@@ -128,6 +128,7 @@ class EvolvedMemoryService {
       this.learningMetrics.preferencesLearned++;
     }
 
+    this.updateLearningMetrics(true); // Mise à jour des métriques
     this.saveToStorage();
   }
 
@@ -251,7 +252,7 @@ class EvolvedMemoryService {
   observePersonalityTrait(
     trait: string,
     observedValue: number,
-    context?: string
+    _context?: string
   ): void {
     const existing = this.personality.get(trait);
     
