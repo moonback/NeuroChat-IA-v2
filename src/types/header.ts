@@ -39,6 +39,7 @@ export interface HeaderProps {
   setShowConfirmDelete: (open: boolean) => void;
   onDeleteConfirmed: () => void;
   onOpenChildPinSettings?: () => void;
+  onOpenVocalSettings?: () => void;
   // Vocal auto config
   autoVoiceConfig?: { silenceMs: number; minChars: number; minWords: number; cooldownMs: number };
   onUpdateAutoVoiceConfig?: (key: 'silenceMs' | 'minChars' | 'minWords' | 'cooldownMs', value: number) => void;
