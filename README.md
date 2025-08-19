@@ -1,8 +1,6 @@
 ### 🧠 NeuroChat IA v2
+Une assistante IA moderne et sécurisée, propulsée par Gemini, OpenAI et Mistral. Elle intègre une interface vocale, l'analyse d'images, une mémoire utilisateur, un RAG local, ainsi que des modes privé et enfant.
 
-> Assistant IA moderne (React + TypeScript) avec voix, images, mémoire utilisateur, RAG local, mode privé et mode enfant — propulsé par Gemini, OpenAI et Mistral.
-
-[![Build](https://github.com/moonback/NeuroChat-IA-v2/actions/workflows/ci.yml/badge.svg)](https://github.com/moonback/NeuroChat-IA-v2/actions)
 [![Version](https://img.shields.io/badge/version-2.2.0-blue.svg)](./README.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![React](https://img.shields.io/badge/react-18.3.1-61dafb.svg)](https://react.dev/)
