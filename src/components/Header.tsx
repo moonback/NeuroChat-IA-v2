@@ -1430,26 +1430,27 @@ const QuickInfoModal = ({
     }
   };
 
-  return (
+    return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl rounded-3xl border border-slate-200/50 dark:border-slate-800/50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl shadow-2xl">
-        <DialogHeader className="text-center pb-6">
-          <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/40 dark:to-indigo-950/40 flex items-center justify-center mb-4">
-            <Info className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] rounded-3xl border border-slate-200/50 dark:border-slate-800/50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+        <DialogHeader className="text-center pb-4 sm:pb-6 flex-shrink-0">
+          <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/40 dark:to-indigo-950/40 flex items-center justify-center mb-3 sm:mb-4">
+            <Info className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400" />
           </div>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-slate-900 via-blue-700 to-indigo-600 dark:from-white dark:via-blue-300 dark:to-indigo-400 bg-clip-text text-transparent">
+          <DialogTitle className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-blue-700 to-indigo-600 dark:from-white dark:via-blue-300 dark:to-indigo-400 bg-clip-text text-transparent">
             Informations Rapides
           </DialogTitle>
-          <DialogDescription className="text-slate-600 dark:text-slate-400 text-lg">
+          <DialogDescription className="text-slate-600 dark:text-slate-400 text-base sm:text-lg">
             Vue d'ensemble de l'état de NeuroChat
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        {/* Contenu scrollable */}
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 sm:pb-6 space-y-4 sm:space-y-6 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent">
           {/* Statut de connexion */}
-          <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Connexion</h3>
+          <div className="p-3 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+              <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">Connexion</h3>
               <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
                 isOnline ? 'bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400' : 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400'
               }`}>
@@ -1457,7 +1458,7 @@ const QuickInfoModal = ({
                 <span>{isOnline ? 'En ligne' : 'Hors ligne'}</span>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="text-center p-3 rounded-xl bg-white/60 dark:bg-slate-800/40">
                 <div className="text-2xl mb-1">{getQualityIcon(connectionQuality)}</div>
                 <div className="text-sm font-medium text-slate-700 dark:text-slate-300">Qualité</div>
@@ -1474,9 +1475,9 @@ const QuickInfoModal = ({
           </div>
 
           {/* Fonctionnalités actives */}
-          <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">Fonctionnalités</h3>
-            <div className="grid grid-cols-2 gap-3">
+          <div className="p-3 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
+            <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-3">Fonctionnalités</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className={`flex items-center gap-3 p-3 rounded-xl ${
                 ragEnabled ? 'bg-green-50 dark:bg-green-950/40 border border-green-200/60 dark:border-green-800/60' : 'bg-slate-100/60 dark:bg-slate-800/40'
               }`}>
@@ -1525,9 +1526,9 @@ const QuickInfoModal = ({
           </div>
 
           {/* Provider IA et modes */}
-          <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">Configuration</h3>
-            <div className="grid grid-cols-2 gap-4">
+          <div className="p-3 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
+            <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-3">Configuration</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="text-center p-3 rounded-xl bg-white/60 dark:bg-slate-800/40">
                 <div className="flex items-center justify-center mb-2">
                   {getProviderIcon(provider)}
@@ -1550,9 +1551,9 @@ const QuickInfoModal = ({
           </div>
 
           {/* Actions rapides */}
-          <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">Actions Rapides</h3>
-            <div className="grid grid-cols-2 gap-3">
+          <div className="p-3 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
+            <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-3">Actions Rapides</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Button
                 variant="outline"
                 onClick={() => { onOpenTTSSettings(); onClose(); }}
@@ -1582,7 +1583,7 @@ const QuickInfoModal = ({
               <Button
                 variant="outline"
                 onClick={() => { onOpenMemory(); onClose(); }}
-                className="h-11 rounded-xl border-slate-200/60 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                className="h-11 rounded-xl border-slate-200/60 dark:border-slate-800/60 hover:bg-slate-800/60"
               >
                 <Brain className="w-4 h-4 mr-2" />
                 Mémoire
@@ -1591,7 +1592,7 @@ const QuickInfoModal = ({
           </div>
         </div>
 
-        <DialogFooter className="pt-6">
+        <DialogFooter className="pt-4 sm:pt-6 flex-shrink-0 border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/20 dark:bg-slate-900/20">
           <Button
             onClick={onClose}
             className="w-full h-11 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium"
@@ -1935,6 +1936,47 @@ export function Header(props: HeaderProps) {
           to {
             opacity: 1;
             transform: translateY(0);
+          }
+        }
+
+        /* Styles pour la scrollbar personnalisée */
+        .scrollbar-thin::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+          background: rgba(148, 163, 184, 0.5);
+          border-radius: 3px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+          background: rgba(148, 163, 184, 0.7);
+        }
+        
+        .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+          background: rgba(71, 85, 105, 0.5);
+        }
+        
+        .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+          background: rgba(71, 85, 105, 0.7);
+        }
+
+        /* Optimisations pour mobile */
+        @media (max-width: 640px) {
+          .mobile-optimized {
+            gap: 0.5rem;
+          }
+          
+          .mobile-button {
+            transition: all 0.2s ease;
+          }
+          
+          .mobile-button:active {
+            transform: scale(0.95);
           }
         }
 
