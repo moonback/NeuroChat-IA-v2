@@ -6,7 +6,7 @@ import {
   MessageCircle, History, Settings2, Volume2, VolumeX, Sun, Moon, 
   PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, 
   Trash2, Menu, X, WifiOff, Baby, Sparkles,
-  Globe, Database, Activity, Pencil, HelpCircle
+  Globe, Database, Activity, Pencil, HelpCircle, TrendingUp
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -30,6 +30,7 @@ interface HeaderProps {
   onOpenTTSSettings: () => void;
   onOpenRagDocs: () => void;
   onOpenMemory: () => void;
+  onOpenEvolvedMemory?: () => void;
   stop: () => void;
   modeVocalAuto: boolean;
   setModeVocalAuto: (v: boolean) => void;
@@ -769,6 +770,7 @@ const DesktopActions = ({
   onNewDiscussion, 
   onOpenHistory, 
   onOpenMemory, 
+  onOpenEvolvedMemory, 
   selectionActions, 
   muted, 
   handleVolumeToggle, 
@@ -787,6 +789,7 @@ const DesktopActions = ({
   onNewDiscussion: () => void;
   onOpenHistory: () => void;
   onOpenMemory: () => void;
+  onOpenEvolvedMemory?: () => void;
   selectionActions: React.ReactNode;
   muted: boolean;
   handleVolumeToggle: () => void;
@@ -817,6 +820,9 @@ const DesktopActions = ({
           </IconButton>
           <IconButton onClick={onOpenMemory} tooltip="Mémoire" aria-label="Mémoire">
             <Brain className="w-4 h-4" />
+          </IconButton>
+          <IconButton onClick={onOpenEvolvedMemory} tooltip="Mémoire Évolutive" aria-label="Mémoire Évolutive">
+            <TrendingUp className="w-4 h-4" />
           </IconButton>
         </ButtonGroup>
       )}
@@ -1452,6 +1458,7 @@ export function Header(props: HeaderProps) {
               onNewDiscussion={onNewDiscussion}
               onOpenHistory={onOpenHistory}
               onOpenMemory={onOpenMemory}
+              onOpenEvolvedMemory={props.onOpenEvolvedMemory}
               selectionActions={selectionActions}
               muted={muted}
               handleVolumeToggle={handleVolumeToggle}
