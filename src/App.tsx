@@ -1678,11 +1678,17 @@ function App() {
           <ChildActivitySuggestions
             visible={showChildActivities}
             ageRange={childModeConfig.ageRange}
-            onActivitySelected={(activity) => {
+            onActivitySelected={(activity: any) => {
               console.log('Activité sélectionnée:', activity);
+              // Ne pas fermer la modale immédiatement, laisser l'utilisateur voir les détails
+            }}
+            onActivityStarted={(activity: any) => {
+              console.log('Activité démarrée:', activity);
               completeActivity(activity.id);
+              addReward('activity', `Activité "${activity.title}" terminée !`, 15);
               setShowChildActivities(false);
             }}
+            onClose={() => setShowChildActivities(false)}
           />
 
           {/* Modale des paramètres */}

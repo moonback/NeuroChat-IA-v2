@@ -10,7 +10,8 @@ import {
   Heart,
   Star,
   Zap,
-  Play
+  Play,
+  X
 } from 'lucide-react';
 import { getChildActivity, ChildActivity } from '../services/childContentService';
 
@@ -18,6 +19,8 @@ interface ChildActivitySuggestionsProps {
   visible: boolean;
   ageRange?: '3-6' | '7-10' | '11-14';
   onActivitySelected?: (activity: ChildActivity) => void;
+  onActivityStarted?: (activity: ChildActivity) => void;
+  onClose?: () => void;
   className?: string;
 }
 
@@ -43,6 +46,8 @@ export const ChildActivitySuggestions: React.FC<ChildActivitySuggestionsProps> =
   visible,
   ageRange = '7-10',
   onActivitySelected,
+  onActivityStarted,
+  onClose,
   className = ''
 }) => {
   const [suggestions, setSuggestions] = useState<ChildActivity[]>([]);
@@ -83,25 +88,40 @@ export const ChildActivitySuggestions: React.FC<ChildActivitySuggestionsProps> =
 
   const handleStartActivity = () => {
     if (selectedActivity) {
-      // Ici on pourrait lancer l'activité ou naviguer vers une page dédiée
+      // Appeler le callback pour marquer l'activité comme démarrée
+      onActivityStarted?.(selectedActivity);
       console.log('Démarrage de l\'activité:', selectedActivity.title);
       setShowDetails(false);
+      setSelectedActivity(null);
     }
   };
 
   if (!visible) return null;
 
   return (
-    <div className={`${className}`}>
-      {/* Titre de la section */}
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">
-          🎮 Activités Ludiques
-        </h2>
-        <p className="text-white/80">
-          Découvre de nouvelles activités amusantes et éducatives !
-        </p>
-      </div>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-gradient-to-br from-pink-500 via-purple-600 to-blue-600 rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
+        {/* Bouton de fermeture */}
+        <button
+          onClick={() => {
+            setShowDetails(false);
+            setSelectedActivity(null);
+            onClose?.();
+          }}
+          className="absolute top-4 right-4 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+        >
+          <X className="w-5 h-5 text-white" />
+        </button>
+
+        {/* Titre de la section */}
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-white mb-2">
+            🎮 Activités Ludiques
+          </h2>
+          <p className="text-white/80">
+            Découvre de nouvelles activités amusantes et éducatives !
+          </p>
+        </div>
 
       {/* Grille des suggestions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -167,90 +187,91 @@ export const ChildActivitySuggestions: React.FC<ChildActivitySuggestionsProps> =
         </button>
       </div>
 
-      {/* Modal de détails de l'activité */}
-      {showDetails && selectedActivity && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
-            <div className="text-center mb-4">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full mb-3">
-                {React.createElement(ACTIVITY_ICONS[selectedActivity.type], { 
-                  className: 'w-10 h-10 text-white' 
-                })}
-              </div>
-              
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                {selectedActivity.title}
-              </h3>
-              
-              <p className="text-gray-600 mb-4">
-                {selectedActivity.description}
-              </p>
-            </div>
-
-            {/* Informations de l'activité */}
-            <div className="space-y-4 mb-6">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-gray-700 font-medium">Durée :</span>
-                <span className="text-gray-900 font-bold">{selectedActivity.duration} minutes</span>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-gray-700 font-medium">Type :</span>
-                <span className="text-gray-900 font-bold capitalize">{selectedActivity.type}</span>
-              </div>
-              
-              {selectedActivity.materials && selectedActivity.materials.length > 0 && (
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <span className="text-gray-700 font-medium block mb-2">Matériaux nécessaires :</span>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedActivity.materials.map((material, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                      >
-                        {material}
-                      </span>
-                    ))}
-                  </div>
+        {/* Modal de détails de l'activité */}
+        {showDetails && selectedActivity && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-60 p-4">
+            <div className="bg-white rounded-2xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+              <div className="text-center mb-4">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full mb-3">
+                  {React.createElement(ACTIVITY_ICONS[selectedActivity.type], { 
+                    className: 'w-10 h-10 text-white' 
+                  })}
                 </div>
-              )}
-            </div>
+                
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                  {selectedActivity.title}
+                </h3>
+                
+                <p className="text-gray-600 mb-4">
+                  {selectedActivity.description}
+                </p>
+              </div>
 
-            {/* Instructions */}
-            <div className="mb-6">
-              <h4 className="text-lg font-semibold text-gray-800 mb-3">Instructions :</h4>
-              <ol className="space-y-2">
-                {selectedActivity.instructions.map((instruction, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-pink-500 to-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                      {index + 1}
-                    </span>
-                    <span className="text-gray-700">{instruction}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
+              {/* Informations de l'activité */}
+              <div className="space-y-4 mb-6">
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-gray-700 font-medium">Durée :</span>
+                  <span className="text-gray-900 font-bold">{selectedActivity.duration} minutes</span>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-gray-700 font-medium">Type :</span>
+                  <span className="text-gray-900 font-bold capitalize">{selectedActivity.type}</span>
+                </div>
+                
+                {selectedActivity.materials && selectedActivity.materials.length > 0 && (
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <span className="text-gray-700 font-medium block mb-2">Matériaux nécessaires :</span>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedActivity.materials.map((material, index) => (
+                        <span
+                          key={index}
+                          className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                        >
+                          {material}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
-            {/* Actions */}
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowDetails(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Fermer
-              </button>
-              
-              <button
-                onClick={handleStartActivity}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-200"
-              >
-                <Heart className="w-4 h-4 inline mr-2" />
-                Commencer
-              </button>
+              {/* Instructions */}
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold text-gray-800 mb-3">Instructions :</h4>
+                <ol className="space-y-2">
+                  {selectedActivity.instructions.map((instruction, index) => (
+                    <li key={index} className="flex items-start gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-pink-500 to-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                        {index + 1}
+                      </span>
+                      <span className="text-gray-700">{instruction}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDetails(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Retour
+                </button>
+                
+                <button
+                  onClick={handleStartActivity}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-200"
+                >
+                  <Heart className="w-4 h-4 inline mr-2" />
+                  Commencer !
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
