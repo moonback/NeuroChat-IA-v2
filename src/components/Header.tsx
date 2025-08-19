@@ -1432,8 +1432,8 @@ const QuickInfoModal = ({
 
     return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] rounded-3xl border border-slate-200/50 dark:border-slate-800/50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl shadow-2xl overflow-hidden">
-        <DialogHeader className="text-center pb-4 sm:pb-6 flex-shrink-0">
+                      <DialogContent className="w-screen h-screen max-w-none max-h-none rounded-none border-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+                          <DialogHeader className="text-center pb-4 sm:pb-6 flex-shrink-0 px-4 sm:px-6 pt-4 sm:pt-6">
           <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/40 dark:to-indigo-950/40 flex items-center justify-center mb-3 sm:mb-4">
             <Info className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400" />
           </div>
@@ -1592,7 +1592,7 @@ const QuickInfoModal = ({
           </div>
         </div>
 
-        <DialogFooter className="pt-4 sm:pt-6 flex-shrink-0 border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/20 dark:bg-slate-900/20">
+                          <DialogFooter className="pt-4 sm:pt-6 flex-shrink-0 border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/20 dark:bg-slate-900/20 px-4 sm:px-6 pb-4 sm:pb-6">
           <Button
             onClick={onClose}
             className="w-full h-11 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium"
