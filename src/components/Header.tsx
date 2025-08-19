@@ -24,6 +24,7 @@ export const Header: React.FC<HeaderProps> = React.memo((props) => {
   const {
     showMobileMenu,
     setShowMobileMenu,
+    showVocalSettings,
     setShowVocalSettings,
     setShowHelpModal,
     handleVolumeToggle,
@@ -31,7 +32,9 @@ export const Header: React.FC<HeaderProps> = React.memo((props) => {
     handlePrivateModeToggle,
     handleChildModeToggle,
     handleRagToggle,
-    handleWebToggle
+    handleWebToggle,
+    closeMobileMenu,
+    handleMenuAction
   } = useHeaderState(props);
 
   // Hook pour le statut de connexion
@@ -44,16 +47,7 @@ export const Header: React.FC<HeaderProps> = React.memo((props) => {
 
 
 
-  // Handler pour fermer le menu mobile
-  const closeMobileMenu = useCallback(() => {
-    setShowMobileMenu(false);
-  }, []);
 
-  // Handler pour les actions du menu avec fermeture automatique
-  const handleMenuAction = useCallback((action: () => void) => () => {
-    action();
-    closeMobileMenu();
-  }, [closeMobileMenu]);
 
 
 
