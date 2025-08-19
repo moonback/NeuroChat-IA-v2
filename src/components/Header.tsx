@@ -992,7 +992,7 @@ const MobileMenuSheet = ({
              <SheetHeader className="p-6 border-b border-slate-200/60 dark:border-slate-800/60">
          <div className="flex items-center justify-between">
            <div className="flex-1 min-w-0">
-             <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent mb-2">
+             <h2 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent mb-2">
                Menu Principal
              </h2>
              <p className="text-base text-slate-600 dark:text-slate-400 font-medium">Navigation et réglages</p>
