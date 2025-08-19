@@ -45,6 +45,8 @@ const ENCRYPTION_WHITELIST = new Set([
   'mistral_agent_enabled',
   'gemini_agent_enabled',
   'auto_voice_cfg',
+  'nc_global_memory',
+  'nc_conversation_summaries',
 ]);
 
 /** Patterns de clés sensibles qui doivent être chiffrées */
@@ -440,10 +442,9 @@ export function initializeSecureStorage(): void {
     console.log('🔐 Session de stockage sécurisé récupérée');
   }
   
-  // Nettoyer les données orphelines
-  if (!isSecureStorageActive()) {
-    obliterateEncryptedData();
-  }
+  // Note: Ne pas auto-nettoyer les données en mode normal pour préserver
+  // les données persistantes comme la mémoire globale du chat
+  console.log('🔒 Stockage sécurisé initialisé en mode:', globalSecurityMode);
 }
 
 /**
