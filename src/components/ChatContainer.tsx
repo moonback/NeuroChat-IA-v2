@@ -560,8 +560,8 @@ import { MessageBubble } from './MessageBubble';
 import { 
   ArrowDown, Zap, Brain, Clock, Info, ExternalLink, Shield, X, BookOpen, 
   Sparkles, Activity, MessageSquare, Bot, User, ChevronUp, ChevronDown,
-  Layers, Database, Eye, Wand2, Stars, Heart,
-  Rocket, Crown, Diamond, Flame
+  Layers, Database, Eye, Heart,
+  Crown, Diamond, Flame
 } from 'lucide-react';
 import { TypingIndicator } from './TypingIndicator';
 import { cn } from '@/lib/utils';
