@@ -200,10 +200,7 @@ const Logo = ({ onNewDiscussion, isOnline, quality }: {
       <StatusIndicator isOnline={isOnline} quality={quality} />
     </div>
     <div className="min-w-0 flex-1">
-      <h1 className="text-lg sm:text-[1.4rem] md:text-2xl font-bold tracking-tight bg-gradient-to-r from-slate-900/90 via-slate-800/80 to-slate-600/70 dark:from-white dark:via-slate-100 dark:to-slate-300 bg-clip-text text-transparent flex items-center gap-1 sm:gap-2">
-        <span className="truncate">NeuroChat</span>
-        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 animate-pulse flex-shrink-0" />
-      </h1>
+      
       <div className="hidden xs:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
         {isOnline ? (
           <>
