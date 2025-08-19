@@ -694,55 +694,6 @@ export function Header(props: HeaderProps) {
                 >
                   {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                 </IconButton>
-                
-                {/* Mode vocal auto - Visible si pas en mode enfant */}
-                {!props.modeEnfant && (
-                  <IconButton
-                    onClick={handleModeVocalToggle}
-                    tooltip="Mode vocal automatique"
-                    active={modeVocalAuto}
-                    className={`h-8 w-8 rounded-xl mobile-button transition-smooth ${
-                      modeVocalAuto 
-                        ? 'bg-purple-50/80 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400' 
-                        : 'bg-slate-100/80 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400'
-                    }`}
-                    aria-label="Mode vocal automatique"
-                  >
-                    <Mic className="w-4 h-4" />
-                  </IconButton>
-                )}
-
-                {/* Mode enfant - Toujours visible */}
-                <IconButton
-                  onClick={handleChildModeToggle}
-                  tooltip="Mode enfant"
-                  active={!!props.modeEnfant}
-                  className={`h-8 w-8 rounded-xl mobile-button transition-smooth ${
-                    props.modeEnfant 
-                      ? 'bg-pink-50/80 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400' 
-                      : 'bg-slate-100/80 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400'
-                  }`}
-                  aria-label="Mode enfant"
-                >
-                  <Baby className="w-4 h-4" />
-                </IconButton>
-
-                {/* Mode privé - Visible si pas en mode enfant */}
-                {!props.modeEnfant && (
-                  <IconButton
-                    onClick={handlePrivateModeToggle}
-                    tooltip="Mode privé"
-                    active={modePrive}
-                    className={`h-8 w-8 rounded-xl mobile-button transition-smooth ${
-                      modePrive 
-                        ? 'bg-red-50/80 dark:bg-red-950/40 text-red-600 dark:text-red-400' 
-                        : 'bg-slate-100/80 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400'
-                    }`}
-                    aria-label="Mode privé"
-                  >
-                    <Shield className="w-4 h-4" />
-                  </IconButton>
-                )}
               </div>
 
               {/* Bouton menu principal - Accès aux options avancées */}
@@ -766,13 +717,7 @@ export function Header(props: HeaderProps) {
         <div className="md:hidden border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm">
           <div className="max-w-12xl mx-auto px-4 py-2">
             <div className="flex items-center justify-between text-xs">
-              {/* Statut de connexion */}
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                <span className="text-slate-600 dark:text-slate-400">
-                  {isOnline ? 'En ligne' : 'Hors ligne'}
-                </span>
-              </div>
+              
 
               {/* Modes actifs */}
               <div className="flex items-center gap-2">
