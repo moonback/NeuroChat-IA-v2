@@ -30,7 +30,7 @@ import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { searchDocuments } from '@/services/ragSearch';
 const RagDocsModalLazy = lazy(() => import('@/components/RagDocsModal').then(m => ({ default: m.RagDocsModal })));
 const HistoryModalLazy = lazy(() => import('@/components/HistoryModal').then(m => ({ default: m.HistoryModal })));
-
+const GlobalMemoryModalLazy = lazy(() => import('@/components/GlobalMemoryModal'));
 
 import type { DiscussionWithCategory } from '@/components/HistoryModal';
 
@@ -53,6 +53,7 @@ import { WebSourcesDrawer } from '@/components/WebSourcesDrawer';
 import type { WebSource } from '@/components/WebSourcesSidebar';
 import { AgentStatus } from '@/components/AgentStatus';
 import { useWorkspace, useWorkspaceOpeningModal } from '@/hooks/useWorkspace';
+import { initializeGlobalMemory, globalMemoryService } from '@/services/globalMemory';
 
 // Timeline retirée
 
@@ -131,6 +132,9 @@ function App() {
     
     initializeSecurity();
     
+    // Initialiser le service de mémoire globale
+    initializeGlobalMemory();
+    
     // Nettoyage à la fermeture du composant
     return () => {
       shutdownKeyManager();
@@ -174,6 +178,9 @@ function App() {
   const [modeVocalAuto, setModeVocalAuto] = useState(false);
   // Ajout du state pour la modale de gestion des documents RAG
   const [showRagDocs, setShowRagDocs] = useState(false);
+  
+  // Ajout du state pour la modale de mémoire globale
+  const [showGlobalMemory, setShowGlobalMemory] = useState(false);
 
   // Ajout du state pour activer/désactiver le RAG
   const [ragEnabled, setRagEnabled] = useState(false);
@@ -505,7 +512,7 @@ function App() {
   }, [persistentEncryptionEnabled]);
 
   // Sauvegarder une discussion dans l'historique (sans doublons consécutifs)
-  const saveDiscussionToHistory = (discussion: Message[]) => {
+  const saveDiscussionToHistory = async (discussion: Message[]) => {
     if (modePrive) return; // Pas de sauvegarde en mode privé
     if (!discussion.length) return;
     const historyRaw = localStorage.getItem(wsKey(workspaceId, LOCALSTORAGE_KEY_BASE));
@@ -541,6 +548,22 @@ function App() {
         : new Date().toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
       history.push({ title: defaultTitle, messages: discussion, childMode: modeEnfant });
       localStorage.setItem(wsKey(workspaceId, LOCALSTORAGE_KEY_BASE), JSON.stringify(history));
+      
+      // Traiter la conversation avec la mémoire globale
+      try {
+        const conversationId = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        await globalMemoryService.processConversation(
+          conversationId,
+          defaultTitle,
+          discussion.map(m => ({
+            text: m.text || '',
+            isUser: m.isUser,
+            timestamp: m.timestamp
+          }))
+        );
+      } catch (error) {
+        console.error('Erreur traitement mémoire globale:', error);
+      }
     }
   };
 
@@ -632,8 +655,19 @@ function App() {
   // 🔐 Le chiffrement est maintenant permanent et obligatoire - pas de désactivation possible
 
   // Prompt système avec règles additionnelles en mode privé
-  const getSystemPrompt = () => {
+  const getSystemPrompt = async (userMessage?: string) => {
     const base = SYSTEM_PROMPT;
+    
+    // Ajouter la mémoire globale si pas en mode privé et pas en mode enfant
+    let memoryContext = '';
+    if (!modePrive && !modeEnfant && userMessage) {
+      try {
+        memoryContext = await globalMemoryService.generateMemoryContext(userMessage, 3);
+      } catch (error) {
+        console.error('Erreur récupération mémoire globale:', error);
+      }
+    }
+    
     if (modePrive) {
       const privateBlock = [
         'MODE PRIVÉ ACTIF :',
@@ -656,6 +690,12 @@ function App() {
       ].join('\n');
       return `${base}\n\n${childBlock}`;
     }
+    
+    // Ajouter le contexte de mémoire globale si disponible
+    if (memoryContext) {
+      return `${base}\n\n${memoryContext}`;
+    }
+    
     return base;
   };
 
@@ -808,7 +848,8 @@ function App() {
 
       // Important: ne pas inclure à nouveau la question utilisateur dans le prompt système
       // pour éviter qu'elle soit envoyée deux fois au modèle.
-      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${(ragEnabled || autoUseRag) ? ragContext : ""}${webContext}`;
+      const systemPrompt = await getSystemPrompt(userMessage);
+      const prompt = `${systemPrompt}\n${dateTimeInfo}${(ragEnabled || autoUseRag) ? ragContext : ""}${webContext}`;
        // Timeline retirée
       // LOG prompt final
       const llmCfg: LlmConfig = {
@@ -1255,6 +1296,7 @@ function App() {
           onOpenHistory={handleOpenHistory}
           onOpenTTSSettings={() => setShowTTSSettings(true)}
           onOpenRagDocs={() => setShowRagDocs(true)}
+          onOpenGlobalMemory={() => setShowGlobalMemory(true)}
 
           workspaceId={workspaceId}
           workspaces={workspaces}
@@ -1470,6 +1512,14 @@ function App() {
       {/* Modale de gestion des documents RAG */}
       <Suspense fallback={null}>
         <RagDocsModalLazy open={modeEnfant ? false : showRagDocs} onClose={() => setShowRagDocs(false)} workspaceId={workspaceId} />
+      </Suspense>
+
+      {/* Modale de mémoire globale */}
+      <Suspense fallback={null}>
+        <GlobalMemoryModalLazy 
+          open={modeEnfant ? false : showGlobalMemory} 
+          onOpenChange={setShowGlobalMemory} 
+        />
       </Suspense>
 
 
