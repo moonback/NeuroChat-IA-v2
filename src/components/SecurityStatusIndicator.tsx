@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { isSecureStorageActive } from '@/services/secureStorage';
-import { isPrivateModeActive } from '@/services/secureMemory';
+
 import { getKeyManagerStats, getKeyAuditTrail } from '@/services/keyManager';
 import { getCryptoStats } from '@/services/encryption';
 
@@ -27,7 +27,6 @@ interface SecurityStatusIndicatorProps {
 interface SecurityMetrics {
   encryptionActive: boolean;
   storageSecured: boolean;
-  memorySecured: boolean;
   keyManagerActive: boolean;
   totalKeys: number;
   auditEntries: number;
@@ -44,7 +43,6 @@ export const SecurityStatusIndicator: React.FC<SecurityStatusIndicatorProps> = (
   const [metrics, setMetrics] = useState<SecurityMetrics>({
     encryptionActive: false,
     storageSecured: false,
-    memorySecured: false,
     keyManagerActive: false,
     totalKeys: 0,
     auditEntries: 0,
@@ -63,17 +61,14 @@ export const SecurityStatusIndicator: React.FC<SecurityStatusIndicatorProps> = (
         const auditData = getKeyAuditTrail(10);
         
         const storageActive = isSecureStorageActive();
-        const memoryActive = isPrivateModeActive();
         
         setMetrics({
           encryptionActive: cryptoStats.isWebCryptoSupported,
           storageSecured: storageActive,
-          memorySecured: memoryActive,
           keyManagerActive: keyStats !== null,
           totalKeys: keyStats?.totalKeys || 0,
           auditEntries: auditData.length,
-          securityLevel: (storageActive && memoryActive) ? 'military' : 
-                        (storageActive || memoryActive) ? 'basic' : 'none'
+          securityLevel: storageActive ? 'military' : 'none'
         });
         
         setAuditTrail(auditData);
