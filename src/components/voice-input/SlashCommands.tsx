@@ -2,7 +2,7 @@ import React from 'react';
 import { Command } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { SlashCommand } from '@/hooks/useVoiceInput';
+import type { SlashCommand } from '@/types/voiceInput';
 
 interface SlashCommandsProps {
   commands: SlashCommand[];

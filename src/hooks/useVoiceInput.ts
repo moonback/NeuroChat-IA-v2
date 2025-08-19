@@ -7,11 +7,7 @@ import type {
   SlashCommand 
 } from '@/types/voiceInput';
 
-export const SLASH_COMMANDS: SlashCommand[] = [
-  { cmd: '/memoir', label: 'Ajouter à la mémoire', icon: '💾' },
-  { cmd: '/supp', label: 'Supprimer de la mémoire', icon: '🗑️' },
-  { cmd: '/memlist', label: 'Lister 5 éléments', icon: '📋' },
-];
+import { SLASH_COMMANDS } from '@/constants/slashCommands';
 
 export function useVoiceInput(
   onSendMessage: (message: string, imageFile?: File) => void,

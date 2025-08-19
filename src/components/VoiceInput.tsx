@@ -7,7 +7,7 @@ import { FilePreview } from './voice-input/FilePreview';
 import { SlashCommands } from './voice-input/SlashCommands';
 import { VoiceIndicator } from './voice-input/VoiceIndicator';
 import { ActionButtons } from './voice-input/ActionButtons';
-import type { Provider } from '@/services/llm';
+import type { Provider } from '@/types/voiceInput';
 
 interface VoiceInputProps {
   onSendMessage: (message: string, imageFile?: File) => void;

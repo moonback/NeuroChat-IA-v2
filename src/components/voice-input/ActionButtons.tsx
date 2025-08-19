@@ -2,7 +2,7 @@ import React from 'react';
 import { Paperclip, Bot, Mic, MicOff, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { Provider } from '@/services/llm';
+import type { Provider } from '@/types/voiceInput';
 
 interface ActionButtonsProps {
   // Fichier
