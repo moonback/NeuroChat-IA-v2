@@ -29,7 +29,6 @@ interface HeaderProps {
   onOpenHistory: () => void;
   onOpenTTSSettings: () => void;
   onOpenRagDocs: () => void;
-  onOpenMemory: () => void;
   stop: () => void;
   modeVocalAuto: boolean;
   setModeVocalAuto: (v: boolean) => void;
@@ -790,7 +789,6 @@ const DesktopActions = ({
   modeEnfant, 
   onNewDiscussion, 
   onOpenHistory, 
-  onOpenMemory, 
   selectionActions, 
   muted, 
   handleVolumeToggle, 
@@ -808,7 +806,6 @@ const DesktopActions = ({
   modeEnfant?: boolean;
   onNewDiscussion: () => void;
   onOpenHistory: () => void;
-  onOpenMemory: () => void;
   selectionActions: React.ReactNode;
   muted: boolean;
   handleVolumeToggle: () => void;
@@ -832,16 +829,13 @@ const DesktopActions = ({
         Nouveau
       </ActionButton>
 
-      {!modeEnfant && (
-        <ButtonGroup>
-          <IconButton onClick={onOpenHistory} tooltip="Historique" aria-label="Historique">
-            <History className="w-4 h-4" />
-          </IconButton>
-          <IconButton onClick={onOpenMemory} tooltip="Mémoire" aria-label="Mémoire">
-            <Brain className="w-4 h-4" />
-          </IconButton>
-        </ButtonGroup>
-      )}
+             {!modeEnfant && (
+         <ButtonGroup>
+           <IconButton onClick={onOpenHistory} tooltip="Historique" aria-label="Historique">
+             <History className="w-4 h-4" />
+           </IconButton>
+         </ButtonGroup>
+       )}
     </div>
 
     {/* Actions de sélection */}
@@ -1045,14 +1039,7 @@ const MobileMenuSheet = ({
                   tooltip="Consulter les conversations passées"
                 />
               )}
-              {!modeEnfant && (
-                <TileButton
-                  onClick={handleMenuAction(() => {})}
-                  label={'Mémoire'}
-                  icon={Brain}
-                  tooltip="Gérer les informations mémorisées"
-                />
-              )}
+              
             </div>
           </div>
 
@@ -1336,7 +1323,7 @@ const MobileMenuSheet = ({
 export function Header(props: HeaderProps) {
   const {
     muted, onMute, onUnmute, onNewDiscussion, onOpenHistory, onOpenTTSSettings,
-    onOpenRagDocs, onOpenMemory, modeVocalAuto, setModeVocalAuto,
+    onOpenRagDocs, modeVocalAuto, setModeVocalAuto,
     hasActiveConversation, ragEnabled, setRagEnabled, onOpenGeminiSettings,
     webEnabled, setWebEnabled, provider, onChangeProvider, modePrive, setModePrive, 
     selectMode, onToggleSelectMode, selectedCount, totalCount, onSelectAll, onDeselectAll,
@@ -1469,26 +1456,25 @@ export function Header(props: HeaderProps) {
             </div>
 
             {/* Actions principales - Desktop */}
-            <DesktopActions
-              modeEnfant={props.modeEnfant}
-              onNewDiscussion={onNewDiscussion}
-              onOpenHistory={onOpenHistory}
-              onOpenMemory={onOpenMemory}
-              selectionActions={selectionActions}
-              muted={muted}
-              handleVolumeToggle={handleVolumeToggle}
-              handleModeVocalToggle={handleModeVocalToggle}
-              modePrive={modePrive}
-              handlePrivateModeToggle={handlePrivateModeToggle}
-              handleChildModeToggle={handleChildModeToggle}
-              ragEnabled={ragEnabled}
-              handleRagToggle={handleRagToggle}
-              webEnabled={webEnabled}
-              handleWebToggle={handleWebToggle}
-              webSearching={props.webSearching}
-              toggleTheme={toggleTheme}
-              setShowMobileMenu={setShowMobileMenu}
-            />
+                         <DesktopActions
+               modeEnfant={props.modeEnfant}
+               onNewDiscussion={onNewDiscussion}
+               onOpenHistory={onOpenHistory}
+               selectionActions={selectionActions}
+               muted={muted}
+               handleVolumeToggle={handleVolumeToggle}
+               handleModeVocalToggle={handleModeVocalToggle}
+               modePrive={modePrive}
+               handlePrivateModeToggle={handlePrivateModeToggle}
+               handleChildModeToggle={handleChildModeToggle}
+               ragEnabled={ragEnabled}
+               handleRagToggle={handleRagToggle}
+               webEnabled={webEnabled}
+               handleWebToggle={handleWebToggle}
+               webSearching={props.webSearching}
+               toggleTheme={toggleTheme}
+               setShowMobileMenu={setShowMobileMenu}
+             />
 
             {/* Actions mobiles essentielles - Refonte complète */}
             <MobileActions

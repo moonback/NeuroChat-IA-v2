@@ -176,7 +176,7 @@ src/
 │   ├── RagDocsModal.tsx         # Gestion documents RAG
 │   ├── RagSidebar.tsx           # Sidebar RAG (stats, favoris, pagination)
 │   ├── RagSidebarDrawer.tsx     # Version mobile (drawer)
-│   ├── MemoryModal.tsx          # Gestion mémoire utilisateur
+
 │   ├── TTSSettingsModal.tsx     # Réglages synthèse vocale
 │   ├── PrivateModeBanner.tsx    # Bannière mode privé
 │   ├── ChildMode*.tsx           # PIN, bannière, changement PIN
@@ -198,7 +198,7 @@ src/
 │   ├── 🔐 encryption.ts         # **Chiffrement AES-256-GCM**
 │   ├── 🔐 keyManager.ts         # **Gestion des clés cryptographiques**
 │   ├── 🔐 secureStorage.ts      # **Stockage sécurisé**
-│   ├── 🔐 secureMemory.ts       # **Mémoire sécurisée**
+
 │   └── 🔐 persistentEncryption.ts # **Chiffrement persistant**
 ├── lib/
 │   └── utils.ts
