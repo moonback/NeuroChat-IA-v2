@@ -54,6 +54,9 @@ import { WebSourcesDrawer } from '@/components/WebSourcesDrawer';
 import type { WebSource } from '@/components/WebSourcesSidebar';
 import { AgentStatus } from '@/components/AgentStatus';
 import { useWorkspace, useWorkspaceOpeningModal } from '@/hooks/useWorkspace';
+import { evolvedMemory } from '@/services/evolvedMemory';
+import { personalityAnalyzer } from '@/services/personalityAnalyzer';
+import { EvolvedMemoryModal } from '@/components/EvolvedMemoryModal';
 
 // Timeline retirée
 
@@ -248,6 +251,7 @@ function App() {
   const [showGeminiSettings, setShowGeminiSettings] = useState(false);
   const [showOpenAISettings, setShowOpenAISettings] = useState(false);
   const [showMistralSettings, setShowMistralSettings] = useState(false);
+  const [showEvolvedMemory, setShowEvolvedMemory] = useState(false);
   const [mistralAgentEnabled, setMistralAgentEnabled] = useState<boolean>(() => {
     try { return localStorage.getItem('mistral_agent_enabled') === 'true'; } catch { return false; }
   });
@@ -804,6 +808,37 @@ ${lines.join('\n')}`, false);
     // Intercepter et gérer les commandes mémoire avant tout
     const handled = await handleMemoryCommand(userMessage);
     if (handled) return;
+
+    // 🧠 ANALYSE AUTOMATIQUE POUR LA MÉMOIRE ÉVOLUTIVE
+    try {
+      const analysis = personalityAnalyzer.analyzeMessage(userMessage, 'conversation');
+      
+      // Apprentissage automatique des préférences et de la personnalité
+      if (analysis.preferences) {
+        Object.entries(analysis.preferences).forEach(([key, pref]) => {
+          if (pref.category && pref.key && pref.value !== undefined) {
+            evolvedMemory.observePreference(
+              pref.category as any,
+              pref.key,
+              pref.value,
+              userMessage
+            );
+          }
+        });
+      }
+
+      // Mise à jour de la mémoire contextuelle
+      if (messages.length > 0) {
+        const recentMessageIds = messages.slice(-5).map(m => m.id);
+        evolvedMemory.updateContextualMemory(
+          userMessage.substring(0, 100),
+          recentMessageIds,
+          0.7
+        );
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'analyse de personnalité:', error);
+    }
 
     // Préparer la timeline de raisonnement
     // Timeline retirée
@@ -1411,6 +1446,7 @@ ${lines.join('\n')}`, false);
           onOpenTTSSettings={() => setShowTTSSettings(true)}
           onOpenRagDocs={() => setShowRagDocs(true)}
           onOpenMemory={() => setShowMemory(true)}
+          onOpenEvolvedMemory={() => setShowEvolvedMemory(true)}
           workspaceId={workspaceId}
           workspaces={workspaces}
           onChangeWorkspace={(id) => setWorkspaceId(id)}
@@ -1634,6 +1670,12 @@ ${lines.join('\n')}`, false);
           <MemoryModalLazy open={showMemory} onClose={() => setShowMemory(false)} />
         )}
       </Suspense>
+
+      {/* Modal de Mémoire Évolutive */}
+      <EvolvedMemoryModal
+        open={showEvolvedMemory}
+        onOpenChange={setShowEvolvedMemory}
+      />
 
       {/* Modale latérale compacte pour les réglages Gemini */}
       <Suspense fallback={null}>
