@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, PlusCircle, History, Brain, CheckSquare, Square, Trash2, Shield, Baby, Database, Globe, Settings2, Sparkles, BookOpen, HelpCircle, Sun, Moon } from 'lucide-react';
+import { X, PlusCircle, History, Brain, Shield, Baby, Database, Globe, Settings2, Sparkles, BookOpen, HelpCircle, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader } from '@/components/ui/sheet';
 import { TileButton } from './HeaderButtons';
@@ -11,7 +11,6 @@ interface MobileMenuSheetProps {
   closeMobileMenu: () => void;
   handleMenuAction: (action: () => void) => () => void;
   modeEnfant?: boolean;
-  hasActiveConversation: boolean;
   modePrive: boolean;
   handlePrivateModeToggle: () => void;
   handleChildModeToggle: () => void;
@@ -39,7 +38,6 @@ export const MobileMenuSheet: React.FC<MobileMenuSheetProps> = React.memo(({
   closeMobileMenu,
   handleMenuAction,
   modeEnfant,
-  hasActiveConversation,
   modePrive,
   handlePrivateModeToggle,
   handleChildModeToggle,
@@ -113,61 +111,7 @@ export const MobileMenuSheet: React.FC<MobileMenuSheetProps> = React.memo(({
             </div>
           </div>
 
-          {/* Section: Gestion des Messages */}
-          {hasActiveConversation && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center">
-                  <CheckSquare className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                </div>
-                <span className="text-sm font-semibold uppercase tracking-wide">Gestion</span>
-              </div>
-              
-              <div className="space-y-2">
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition-all duration-200" 
-                  onClick={handleMenuAction(onToggleSelectMode)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center">
-                      {selectMode ? <CheckSquare className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> : <Square className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium">{selectMode ? 'Annuler sélection' : 'Sélectionner messages'}</div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">
-                        {selectMode ? 'Quitter le mode sélection' : 'Choisir des messages à supprimer'}
-                      </div>
-                    </div>
-                  </div>
-                </Button>
 
-                {selectMode && selectedCount > 0 && (
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start h-12 rounded-xl text-left font-medium hover:bg-red-50/80 dark:hover:bg-red-950/60 transition-all duration-200" 
-                    onClick={handleMenuAction(onRequestDelete)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/40 flex items-center justify-center">
-                        <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-red-600 dark:text-red-400">
-                          Supprimer sélection ({selectedCount})
-                        </div>
-                        <div className="text-xs text-red-500/70 dark:text-red-400/70">
-                          Action irréversible
-                        </div>
-                      </div>
-                    </div>
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
-          
-          <div className="border-t border-slate-200/60 dark:border-slate-800/60" />
 
           {/* Section: Modes et Fonctionnalités */}
           <div className="space-y-3">

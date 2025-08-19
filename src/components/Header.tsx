@@ -99,6 +99,8 @@ export const Header: React.FC<HeaderProps> = React.memo((props) => {
                 modePrive={props.modePrive}
                 handlePrivateModeToggle={handlePrivateModeToggle}
                 handleChildModeToggle={handleChildModeToggle}
+                onOpenChildPinSettings={props.onOpenChildPinSettings}
+                onOpenVocalSettings={() => setShowVocalSettings(true)}
                 ragEnabled={props.ragEnabled}
                 handleRagToggle={handleRagToggle}
                 webEnabled={props.webEnabled}
@@ -143,7 +145,6 @@ export const Header: React.FC<HeaderProps> = React.memo((props) => {
         closeMobileMenu={closeMobileMenu}
         handleMenuAction={handleMenuAction}
         modeEnfant={props.modeEnfant}
-        hasActiveConversation={props.hasActiveConversation}
         modePrive={props.modePrive}
         handlePrivateModeToggle={handlePrivateModeToggle}
         handleChildModeToggle={handleChildModeToggle}

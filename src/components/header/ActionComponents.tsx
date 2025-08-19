@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlusCircle, History, Brain, Volume2, VolumeX, Mic, Shield, Baby, Database, Globe, Settings2 } from 'lucide-react';
+import { PlusCircle, History, Brain, Volume2, VolumeX, Mic, Shield, Baby, Database, Globe, Settings2, Key } from 'lucide-react';
 import { ActionButton, IconButton, ButtonGroup } from './HeaderButtons';
 
 
@@ -74,6 +74,8 @@ interface DesktopActionsProps {
   modePrive: boolean;
   handlePrivateModeToggle: () => void;
   handleChildModeToggle: () => void;
+  onOpenChildPinSettings?: () => void;
+  onOpenVocalSettings?: () => void;
   ragEnabled: boolean;
   handleRagToggle: () => void;
   webEnabled?: boolean;
@@ -93,6 +95,8 @@ export const DesktopActions: React.FC<DesktopActionsProps> = React.memo(({
   modePrive, 
   handlePrivateModeToggle, 
   handleChildModeToggle, 
+  onOpenChildPinSettings,
+  onOpenVocalSettings,
   ragEnabled, 
   handleRagToggle, 
   webEnabled, 
@@ -147,6 +151,18 @@ export const DesktopActions: React.FC<DesktopActionsProps> = React.memo(({
           <Mic className="w-4 h-4" />
         </IconButton>
       )}
+
+      {/* Bouton réglages vocaux - visible seulement si pas en mode enfant */}
+      {!modeEnfant && onOpenVocalSettings && (
+        <IconButton
+          onClick={onOpenVocalSettings}
+          tooltip="Réglages du mode vocal"
+          className="text-purple-600 hover:bg-purple-50/80 dark:hover:bg-purple-950/50"
+          aria-label="Réglages du mode vocal"
+        >
+          <Settings2 className="w-4 h-4" />
+        </IconButton>
+      )}
     </ButtonGroup>
 
     {/* Modes IA modernisés */}
@@ -174,6 +190,18 @@ export const DesktopActions: React.FC<DesktopActionsProps> = React.memo(({
       >
         <Baby className="w-4 h-4" />
       </IconButton>
+
+      {/* Bouton paramètres PIN mode enfant - visible seulement en mode enfant */}
+      {modeEnfant && onOpenChildPinSettings && (
+        <IconButton
+          onClick={onOpenChildPinSettings}
+          tooltip="Modifier le PIN du mode enfant"
+          className="text-orange-600 hover:bg-orange-50/80 dark:hover:bg-orange-950/50"
+          aria-label="Modifier le PIN du mode enfant"
+        >
+          <Key className="w-4 h-4" />
+        </IconButton>
+      )}
 
       {!modeEnfant && (
         <>
