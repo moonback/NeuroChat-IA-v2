@@ -1,0 +1,212 @@
+---
+description: |
+  🧠 Règles CursorAI pour NeuroChat-IA-v2
+  Application de chat IA avancée avec chiffrement, RAG, multi-providers et interface réactive.
+  Objectif : produire un code sécurisé, modulaire, performant et accessible.
+globs:
+  - "src/**/*.ts"
+  - "src/**/*.tsx"
+  - "src/**/*.css"
+  - "src/**/*.json"
+alwaysApply: true
+---
+
+# 🧠 NeuroChat-IA-v2 - Règles CursorAI
+# Configuration personnalisée pour un assistant IA intelligent et sécurisé
+
+## 🎯 CONTEXTE DU PROJET
+NeuroChat-IA-v2 est une application de chat IA avancée avec :
+- Support multi-providers (OpenAI, Gemini, Mistral)
+- Chiffrement AES-256 et modes de sécurité
+- RAG (Retrieval-Augmented Generation) 
+- Synthèse vocale et reconnaissance vocale
+- Interface responsive et accessible
+- Gestion des espaces de travail
+
+## 🏗️ ARCHITECTURE ET ORGANISATION
+
+### Structure des dossiers
+```
+src/
+├── components/          # Composants React réutilisables
+│   ├── ui/             # Composants UI de base (shadcn/ui)
+│   └── [feature]/      # Composants spécifiques aux fonctionnalités
+├── hooks/              # Hooks React personnalisés
+├── services/           # Services métier et API
+├── lib/                # Utilitaires et helpers
+├── store/              # État global (Zustand/Context)
+├── types/              # Types TypeScript
+└── styles/             # Styles globaux et CSS modules
+```
+
+### Conventions de nommage
+- **Composants** : PascalCase (`ChatContainer.tsx`, `Header.tsx`)
+- **Hooks** : camelCase avec préfixe `use` (`useTheme.ts`, `useWorkspace.ts`)
+- **Services** : camelCase (`openaiApi.ts`, `encryption.ts`)
+- **Types/Interfaces** : PascalCase (`Message`, `RagContext`)
+- **Constantes** : UPPER_SNAKE_CASE (`DEFAULT_TIMEOUT`, `MAX_RETRIES`)
+
+## 🔧 CONVENTIONS TECHNIQUES
+
+### TypeScript
+- **Strict mode** activé
+- Types explicites partout (éviter `any`)
+- `interface` pour objets complexes
+- Generics quand nécessaire
+- Union types pour valeurs multiples possibles
+
+### React
+- Composants fonctionnels uniquement
+- Props toujours typées via interface
+- `useState` pour état simple, `useReducer` pour logique complexe
+- `useEffect` avec dépendances complètes
+- `useMemo` / `useCallback` pour optimiser les re-renders
+
+### Tailwind CSS
+- Utiliser les classes utilitaires natives
+- Mobile-first + `dark:` systématiquement
+- Éviter `style={{...}}` inline → classes Tailwind
+- Créer des classes réutilisables si répétition
+
+## 🎨 STYLE ET QUALITÉ DU CODE
+
+### Formatage
+- Indentation 2 espaces
+- Max 100 caractères par ligne
+- Toujours `;` en fin de ligne
+- Chaînes en `'simple quotes'`
+- Trailing commas sur arrays/objets multilignes
+
+### Commentaires
+- **JSDoc** pour fonctions et composants publics
+- Commentaires pour logique complexe
+- `TODO` / `FIXME` clairs pour évolutions
+
+### Gestion des erreurs
+- `try/catch` systématique en async
+- `ErrorBoundary` pour React
+- Logging structuré (`console.error` → futur logger)
+- Fallback UI pour erreurs critiques
+
+## 🚀 RÈGLES SPÉCIFIQUES AU PROJET
+
+### Sécurité
+- AES-256 obligatoire pour données sensibles
+- Jamais exposer de clés en clair
+- Validation stricte des inputs utilisateurs
+- Échapper et nettoyer avant affichage (XSS)
+
+### Performance
+- Lazy loading des composants lourds
+- Virtualisation des listes (Virtuoso)
+- Code splitting dynamique
+- Mémoïsation sélective
+
+### Accessibilité
+- Labels ARIA systématiques
+- Navigation clavier supportée
+- Contraste conforme WCAG
+- Tests avec screen readers
+
+## 🤖 RÈGLES CURSORAI
+
+### Génération de code
+- Composants modulaires, testables et accessibles
+- Props typées
+- Logique réutilisable via hooks
+- Respect strict des conventions ci-dessus
+
+### Refactoring
+- Découpage des gros composants
+- Extraction de hooks/services
+- Amélioration performance (mémoïsation, suspense)
+- Code testable par défaut
+
+### Documentation
+- README maintenu
+- JSDoc pour API et services
+- Changelog à jour
+- Exemples d’utilisation pour chaque module clé
+
+## 📝 CONVENTIONS GIT
+
+### Messages de commit
+```
+type(scope): description courte
+
+Description détaillée si nécessaire
+
+- Changement 1
+- Changement 2
+
+Fixes #123
+```
+
+Types : `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`  
+Scopes : `ui`, `api`, `security`, `performance`, `mobile`  
+
+### Branches
+- `main` → prod
+- `develop` → branche de dev principale
+- `feature/*` → nouvelles fonctionnalités
+- `fix/*` → corrections
+- `hotfix/*` → urgences
+
+## 🔍 VÉRIFICATIONS QUALITÉ
+
+### Avant commit
+- [ ] Code compile sans erreurs
+- [ ] ESLint + Prettier OK
+- [ ] Tests passent
+- [ ] Types TS valides
+- [ ] UI responsive
+- [ ] Accessibilité vérifiée
+
+### Code review
+- [ ] Logique claire
+- [ ] Performances correctes
+- [ ] Sécurité respectée
+- [ ] Tests présents
+- [ ] Documentation mise à jour
+
+## 🎯 PROMPTS RECOMMANDÉS
+
+### Création de composants
+```
+Crée un composant React TS pour [fonctionnalité] avec :
+- Interface accessible
+- Dark mode support
+- Mobile-first responsive
+- Gestion d’erreurs intégrée
+- Tests unitaires basiques
+```
+
+### Refactoring
+```
+Refactorise ce composant :
+- Découpe en sous-composants
+- Déplace logique dans hooks
+- Améliore performance
+- Ajoute gestion d’erreurs
+- Rends testable
+```
+
+### Optimisation
+```
+Optimise ce code pour :
+- Limiter les re-renders
+- Réduire le bundle
+- Améliorer accessibilité
+- Respecter conventions du projet
+```
+
+## 📚 RESSOURCES UTILES
+- React : https://react.dev/  
+- TypeScript : https://www.typescriptlang.org/docs/  
+- Tailwind : https://tailwindcss.com/docs  
+- shadcn/ui : https://ui.shadcn.com/  
+- ESLint : https://eslint.org/docs/rules/  
+- WCAG : https://www.w3.org/WAI/WCAG21/quickref/  
+
+---
+ℹ️ Ce fichier `.cursorrules` doit être maintenu et évoluera avec le projet.
