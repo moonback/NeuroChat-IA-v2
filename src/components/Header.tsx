@@ -6,7 +6,7 @@ import {
   History, Settings2, Volume2, VolumeX, Sun, Moon, 
   PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, 
   Trash2, Menu, X, WifiOff, Baby, Sparkles,
-  Globe, Database, Activity, Pencil, HelpCircle
+  Globe, Database, Activity, Pencil, HelpCircle, Cloud
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
 import { HelpModal } from '@/components/HelpModal';
+// ☁️ Indicateur de statut cloud
+import { CloudStatusIndicator } from '@/components/CloudStatusIndicator';
 // import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
@@ -829,13 +831,16 @@ const DesktopActions = ({
         Nouveau
       </ActionButton>
 
-             {!modeEnfant && (
-         <ButtonGroup>
-           <IconButton onClick={onOpenHistory} tooltip="Historique" aria-label="Historique">
-             <History className="w-4 h-4" />
-           </IconButton>
-         </ButtonGroup>
-       )}
+      {!modeEnfant && (
+        <ButtonGroup>
+          <IconButton onClick={onOpenHistory} tooltip="Historique" aria-label="Historique">
+            <History className="w-4 h-4" />
+          </IconButton>
+          
+          {/* Indicateur de statut cloud */}
+          <CloudStatusIndicator />
+        </ButtonGroup>
+      )}
     </div>
 
     {/* Actions de sélection */}
@@ -1207,6 +1212,15 @@ const MobileMenuSheet = ({
                   label={'Docs RAG'}
                   icon={BookOpen}
                   tooltip="Documents RAG"
+                />
+              )}
+              
+              {!modeEnfant && (
+                <TileButton
+                  onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('cloud:auth:open')))}
+                  label={'Mémoire Internet'}
+                  icon={Cloud}
+                  tooltip="Synchroniser avec le cloud"
                 />
               )}
               

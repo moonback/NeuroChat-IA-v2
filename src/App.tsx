@@ -10,6 +10,8 @@ import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { toast } from 'sonner';
 // 🔐 Services de sécurité AES-256 niveau gouvernemental
 import { enableSecureStorage, disableSecureStorage, initializeSecureStorage } from '@/services/secureStorage';
+// ☁️ Services de synchronisation cloud
+import cloudSyncService from '@/services/cloudSync';
 
 import { initializeKeyManager, shutdownKeyManager, getKeyManagerStats } from '@/services/keyManager';
 import { selfTest as cryptoSelfTest } from '@/services/encryption';
@@ -53,6 +55,8 @@ import { WebSourcesDrawer } from '@/components/WebSourcesDrawer';
 import type { WebSource } from '@/components/WebSourcesSidebar';
 import { AgentStatus } from '@/components/AgentStatus';
 import { useWorkspace, useWorkspaceOpeningModal } from '@/hooks/useWorkspace';
+// ☁️ Modal d'authentification cloud
+import { CloudAuthModal } from '@/components/CloudAuthModal';
 
 // Timeline retirée
 
@@ -293,6 +297,13 @@ function App() {
     return () => document.removeEventListener('mistral:settings:open' as any, handler);
   }, []);
 
+  // ☁️ Ouvrir le modal d'authentification cloud via event du Header
+  useEffect(() => {
+    const handler = () => setShowCloudAuthModal(true);
+    document.addEventListener('cloud:auth:open' as any, handler);
+    return () => document.removeEventListener('cloud:auth:open' as any, handler);
+  }, []);
+
   // --- Mode privé/éphémère ---
   const [modePrive, setModePrive] = useState(false);
   // --- Chiffrement persistant pour mode normal ---
@@ -303,6 +314,8 @@ function App() {
   const [childPin, setChildPin] = useState<string>(localStorage.getItem('mode_enfant_pin') || '');
   const [showChildPinDialog, setShowChildPinDialog] = useState<boolean>(false);
   const [showChildChangePinDialog, setShowChildChangePinDialog] = useState<boolean>(false);
+  // ☁️ État pour le modal d'authentification cloud
+  const [showCloudAuthModal, setShowCloudAuthModal] = useState<boolean>(false);
   // --- Timeline de raisonnement ---
   // Timeline retirée
   // 🔐 Gestion du mode privé avec chiffrement AES-256
@@ -1546,6 +1559,12 @@ function App() {
       
       {/* Modale d'ouverture d'espace de travail */}
       <WorkspaceOpeningDialog open={workspaceOpeningOpen} onOpenChange={setWorkspaceOpeningOpen} name={workspaceOpeningName} />
+      
+      {/* ☁️ Modal d'authentification cloud */}
+      <CloudAuthModal 
+        open={showCloudAuthModal} 
+        onOpenChange={setShowCloudAuthModal} 
+      />
       
       {/* Le chiffrement est maintenant automatique et permanent */}
     </div>

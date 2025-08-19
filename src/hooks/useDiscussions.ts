@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+// ☁️ Service de synchronisation cloud
+import cloudSyncService from '@/services/cloudSync';
 
 export interface Message {
   id: string;
@@ -39,12 +41,14 @@ export function useDiscussions() {
   }, [messages]);
 
   // Charger l'historique
-  const loadHistory = useCallback(() => {
+  const loadHistory = useCallback(async () => {
+    // Chargement local
     const historyRaw = localStorage.getItem(LOCALSTORAGE_KEY);
+    let discussions: Discussion[] = [];
+    
     if (historyRaw) {
       try {
         const parsed = JSON.parse(historyRaw);
-        let discussions: Discussion[];
         if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
           discussions = parsed.map((msgs: Message[], idx: number) => ({
             title: `Discussion ${idx + 1}`,
@@ -58,18 +62,42 @@ export function useDiscussions() {
             childMode: !!d.childMode,
           }));
         }
-        setHistory(discussions);
       } catch {
-        setHistory([]);
+        discussions = [];
       }
-    } else {
-      setHistory([]);
     }
+
+    // ☁️ Chargement depuis le cloud si disponible
+    if (cloudSyncService.isAvailable()) {
+      try {
+        const cloudResponse = await cloudSyncService.getConversations({ limit: 100 });
+        if (cloudResponse.success && cloudResponse.data.conversations.length > 0) {
+          // Fusionner les conversations locales et cloud
+          const cloudDiscussions = cloudResponse.data.conversations.map(conv => ({
+            title: conv.title,
+            messages: [], // Les messages seront chargés à la demande
+            childMode: conv.child_mode,
+            cloudId: conv.id,
+            lastUpdated: new Date(conv.updated_at)
+          }));
+          
+          // TODO: Implémenter la logique de fusion intelligente
+          // Pour l'instant, on garde les locales et on ajoute les cloud
+          discussions = [...discussions, ...cloudDiscussions];
+        }
+      } catch (error) {
+        console.warn('Erreur chargement cloud:', error);
+      }
+    }
+
+    setHistory(discussions);
   }, []);
 
   // Sauvegarder une discussion dans l'historique
-  const saveDiscussionToHistory = useCallback((discussion: Message[]) => {
+  const saveDiscussionToHistory = useCallback(async (discussion: Message[]) => {
     if (!discussion.length) return;
+    
+    // Sauvegarde locale
     const historyRaw = localStorage.getItem(LOCALSTORAGE_KEY);
     let historyArr: Discussion[] = [];
     if (historyRaw) {
@@ -93,9 +121,26 @@ export function useDiscussions() {
       return true;
     };
     if (historyArr.length === 0 || !isSame(historyArr[historyArr.length - 1].messages, discussion)) {
-      historyArr.push({ title: `Discussion ${historyArr.length + 1}`, messages: discussion, childMode: false });
+      const newDiscussion = { title: `Discussion ${historyArr.length + 1}`, messages: discussion, childMode: false };
+      historyArr.push(newDiscussion);
       localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(historyArr));
       setHistory(historyArr);
+
+      // ☁️ Synchronisation cloud si disponible
+      if (cloudSyncService.isAvailable()) {
+        try {
+          await cloudSyncService.createConversation({
+            title: newDiscussion.title,
+            initial_messages: newDiscussion.messages.map(msg => ({
+              content: msg.text,
+              is_user: msg.isUser,
+              metadata: { timestamp: msg.timestamp.toISOString() }
+            }))
+          });
+        } catch (error) {
+          console.warn('Erreur synchronisation cloud:', error);
+        }
+      }
     }
   }, []);
 
@@ -142,6 +187,32 @@ export function useDiscussions() {
     return message;
   }, []);
 
+  // ☁️ Fonction de synchronisation manuelle avec le cloud
+  const syncWithCloud = useCallback(async () => {
+    if (!cloudSyncService.isAvailable()) {
+      throw new Error('Service cloud non disponible');
+    }
+
+    try {
+      // Charger les conversations du cloud
+      const cloudResponse = await cloudSyncService.getConversations({ limit: 1000 });
+      
+      if (cloudResponse.success) {
+        // TODO: Implémenter la logique de synchronisation bidirectionnelle complète
+        // - Comparer les timestamps
+        // - Résoudre les conflits
+        // - Mettre à jour les conversations locales
+        // - Envoyer les nouvelles conversations locales
+        
+        console.log('Synchronisation cloud réussie:', cloudResponse.data.conversations.length, 'conversations');
+        return cloudResponse.data.conversations;
+      }
+    } catch (error) {
+      console.error('Erreur synchronisation cloud:', error);
+      throw error;
+    }
+  }, []);
+
   return {
     messages,
     setMessages,
@@ -153,5 +224,6 @@ export function useDiscussions() {
     deleteDiscussion,
     renameDiscussion,
     addMessage,
+    syncWithCloud,
   };
 } 
