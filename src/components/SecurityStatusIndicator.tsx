@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { isSecureStorageActive } from '@/services/secureStorage';
-
+import { isPrivateModeActive } from '@/services/secureMemory';
 import { getKeyManagerStats, getKeyAuditTrail } from '@/services/keyManager';
 import { getCryptoStats } from '@/services/encryption';
 
@@ -27,6 +27,7 @@ interface SecurityStatusIndicatorProps {
 interface SecurityMetrics {
   encryptionActive: boolean;
   storageSecured: boolean;
+  memorySecured: boolean;
   keyManagerActive: boolean;
   totalKeys: number;
   auditEntries: number;
@@ -43,6 +44,7 @@ export const SecurityStatusIndicator: React.FC<SecurityStatusIndicatorProps> = (
   const [metrics, setMetrics] = useState<SecurityMetrics>({
     encryptionActive: false,
     storageSecured: false,
+    memorySecured: false,
     keyManagerActive: false,
     totalKeys: 0,
     auditEntries: 0,
@@ -61,14 +63,17 @@ export const SecurityStatusIndicator: React.FC<SecurityStatusIndicatorProps> = (
         const auditData = getKeyAuditTrail(10);
         
         const storageActive = isSecureStorageActive();
+        const memoryActive = isPrivateModeActive();
         
         setMetrics({
           encryptionActive: cryptoStats.isWebCryptoSupported,
           storageSecured: storageActive,
+          memorySecured: memoryActive,
           keyManagerActive: keyStats !== null,
           totalKeys: keyStats?.totalKeys || 0,
           auditEntries: auditData.length,
-          securityLevel: storageActive ? 'military' : 'none'
+          securityLevel: (storageActive && memoryActive) ? 'military' : 
+                        (storageActive || memoryActive) ? 'basic' : 'none'
         });
         
         setAuditTrail(auditData);
@@ -194,7 +199,7 @@ export const SecurityStatusIndicator: React.FC<SecurityStatusIndicatorProps> = (
           <div className="flex items-center gap-2 text-white/90">
             <div className={cn(
               "w-2 h-2 rounded-full",
-              "bg-gray-400"
+              metrics.memorySecured ? "bg-green-400 animate-pulse" : "bg-gray-400"
             )} />
             <span className="text-xs">Mémoire</span>
           </div>
@@ -294,11 +299,12 @@ export const SecurityBadge: React.FC<{ onClick?: () => void }> = ({ onClick }) =
   useEffect(() => {
     const updateLevel = () => {
       const storageActive = isSecureStorageActive();
+      const memoryActive = isPrivateModeActive();
       
-      
-              setSecurityLevel(
-          storageActive ? 'military' : 'none'
-        );
+      setSecurityLevel(
+        (storageActive && memoryActive) ? 'military' : 
+        (storageActive || memoryActive) ? 'basic' : 'none'
+      );
     };
     
     updateLevel();
