@@ -82,13 +82,26 @@ export function initializeElevenLabs(apiKey: string): void {
 }
 
 /**
- * Récupère la clé API depuis les variables d'environnement
+ * Récupère la clé API depuis les variables d'environnement ou le localStorage
  */
 function getApiKey(): string {
-  const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY || DEFAULT_CONFIG.apiKey;
+  // Priorité 1: Variable d'environnement
+  let apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
+  
+  // Priorité 2: localStorage
   if (!apiKey) {
-    throw new Error('Clé API ElevenLabs non configurée. Ajoutez VITE_ELEVENLABS_API_KEY dans votre .env');
+    apiKey = localStorage.getItem('elevenlabs_api_key') || '';
   }
+  
+  // Priorité 3: Configuration par défaut
+  if (!apiKey) {
+    apiKey = DEFAULT_CONFIG.apiKey;
+  }
+  
+  if (!apiKey) {
+    throw new Error('Clé API ElevenLabs non configurée. Ajoutez VITE_ELEVENLABS_API_KEY dans votre .env ou configurez-la dans l\'interface');
+  }
+  
   return apiKey;
 }
 

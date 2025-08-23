@@ -26,9 +26,13 @@ import {
   Mic,
   CheckCircle,
   AlertCircle,
-  Loader2
+  Loader2,
+  Key,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +48,8 @@ export function ElevenLabsTTSSettingsModal({ open, onClose }: ElevenLabsTTSSetti
   const firstFieldRef = useRef<HTMLSelectElement>(null);
   const [isTesting, setIsTesting] = useState(false);
   const [activeTab, setActiveTab] = useState<'voices' | 'settings' | 'advanced'>('voices');
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [apiKey, setApiKey] = useState('');
 
   const {
     isEnabled,
@@ -83,6 +89,35 @@ export function ElevenLabsTTSSettingsModal({ open, onClose }: ElevenLabsTTSSetti
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [open, onClose]);
+
+  // Charger la clé API depuis le localStorage au démarrage
+  useEffect(() => {
+    const savedApiKey = localStorage.getItem('elevenlabs_api_key') || '';
+    setApiKey(savedApiKey);
+  }, []);
+
+  // Sauvegarder la clé API
+  const handleSaveApiKey = async () => {
+    if (!apiKey.trim()) {
+      toast.error('Veuillez entrer une clé API');
+      return;
+    }
+
+    try {
+      // Sauvegarder dans le localStorage
+      localStorage.setItem('elevenlabs_api_key', apiKey);
+      
+      // Mettre à jour dans le hook (si la fonction existe)
+      toast.success('Clé API sauvegardée');
+      
+      // Recharger les données
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      toast.error('Erreur lors de la sauvegarde de la clé API');
+    }
+  };
 
   // Animation d'onde lors du test de la voix
   const handleTestVoice = async () => {
@@ -140,17 +175,65 @@ export function ElevenLabsTTSSettingsModal({ open, onClose }: ElevenLabsTTSSetti
 
   // Rendu du statut de l'API
   const renderApiStatus = () => (
-    <div className="flex items-center gap-2 mb-4">
-      <div className={`w-3 h-3 rounded-full ${apiKeyValid ? 'bg-green-500' : 'bg-red-500'}`} />
-      <span className={`text-sm font-medium ${apiKeyValid ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}>
-        {apiKeyValid ? 'API ElevenLabs connectée' : 'API ElevenLabs non connectée'}
-      </span>
-      {fallbackToNative && (
-        <Badge variant="secondary" className="ml-2">
-          <AlertCircle className="w-3 h-3 mr-1" />
-          Fallback TTS natif
-        </Badge>
-      )}
+    <div className="mb-4 p-4 rounded-2xl border bg-gradient-to-br from-white/90 to-slate-50/60 dark:from-slate-900/80 dark:to-slate-950/40 border-slate-200 dark:border-slate-700">
+      <div className="flex items-center gap-2 mb-3">
+        <Key className="w-5 h-5 text-slate-500" />
+        <label className="font-semibold">Configuration API ElevenLabs</label>
+      </div>
+      
+      <div className="space-y-3">
+        {/* Champ de saisie de la clé API */}
+        <div className="relative">
+          <Input
+            type={showApiKey ? 'text' : 'password'}
+            placeholder="Entrez votre clé API ElevenLabs"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            className="pr-12 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+          />
+          <button
+            type="button"
+            onClick={() => setShowApiKey(!showApiKey)}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+            title={showApiKey ? 'Masquer la clé' : 'Afficher la clé'}
+          >
+            {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+
+        {/* Bouton de sauvegarde */}
+        <Button
+          onClick={handleSaveApiKey}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          disabled={!apiKey.trim()}
+        >
+          Sauvegarder la clé API
+        </Button>
+
+        {/* Statut de l'API */}
+        <div className="flex items-center gap-2">
+          <div className={`w-3 h-3 rounded-full ${apiKeyValid ? 'bg-green-500' : 'bg-red-500'}`} />
+          <span className="text-sm">
+            {apiKeyValid ? 'Clé API valide' : 'Clé API invalide ou manquante'}
+          </span>
+          {fallbackToNative && (
+            <Badge variant="outline" className="ml-2 text-xs">
+              Fallback TTS natif
+            </Badge>
+          )}
+        </div>
+
+        {/* Instructions */}
+        <div className="text-xs text-slate-600 dark:text-slate-400 bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg">
+          <div className="font-medium mb-1">Comment obtenir votre clé API :</div>
+          <ol className="list-decimal list-inside space-y-1">
+            <li>Créez un compte sur <a href="https://elevenlabs.io" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline">elevenlabs.io</a></li>
+            <li>Allez dans votre profil → API Key</li>
+            <li>Copiez la clé et collez-la ci-dessus</li>
+            <li>Cliquez sur "Sauvegarder la clé API"</li>
+          </ol>
+        </div>
+      </div>
     </div>
   );
 
