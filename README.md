@@ -21,10 +21,12 @@ Une assistante IA moderne et sécurisée, propulsée par Gemini, OpenAI et Mistr
 
 ## ✨ Fonctionnalités
 
-- **Voix**
+- **🎙️ Voix & TTS**
+  - **ElevenLabs TTS** : Synthèse vocale de qualité professionnelle avec voix naturelles
   - Mode vocal automatique (mains libres) avec bip de reprise
   - Reconnaissance vocale (Web Speech API, fr-FR)
-  - Synthèse vocale configurable (vitesse, tonalité, volume, voix)
+  - **TTS avancé** : Stabilité, similarité, style, speaker boost
+  - **Voix multilingues** : Français, anglais et plus de 20 langues
   - Indicateur vocal flottant (déplaçable, minimisable, transcription en temps réel)
 
 - **Chat**
@@ -92,6 +94,8 @@ VITE_MISTRAL_API_KEY=your_mistral_key
 VITE_MISTRAL_MODEL=mistral-small-latest
 # (Optionnel) Recherche Web Tavily
 VITE_TAVILY_API_KEY=your_tavily_key
+# (Recommandé) ElevenLabs TTS - Synthèse vocale professionnelle
+VITE_ELEVENLABS_API_KEY=your_elevenlabs_key
 EOF
 
 # 3) Lancer en développement
@@ -104,6 +108,18 @@ Production: `npm run build` puis `npm run preview`.
 
 
 ## 📖 Guide d'utilisation
+
+### 🎙️ Configuration ElevenLabs TTS
+1. **Créez un compte** sur [elevenlabs.io](https://elevenlabs.io/)
+2. **Obtenez votre clé API** depuis votre profil
+3. **Ajoutez la clé** dans votre fichier `.env` :
+   ```bash
+   VITE_ELEVENLABS_API_KEY=votre_cle_api_ici
+   ```
+4. **Redémarrez l'application** pour activer ElevenLabs
+5. **Accédez aux paramètres** via l'icône TTS dans l'en-tête
+
+**Avantages** : Voix naturelles, paramètres avancés, support multilingue, qualité professionnelle
 
 ### Mode vocal automatique
 1. Activez le mode vocal dans l'en‑tête
@@ -154,7 +170,7 @@ Production: `npm run build` puis `npm run preview`.
 | **Frontend** | React 18, TypeScript, Vite |
 | **UI/UX** | Tailwind CSS, Radix UI, Lucide React |
 | **IA** | Google Gemini Pro API (multimodal), OpenAI (optionnel), Mistral (optionnel) |
-| **Audio** | Web Speech API (reconnaissance & synthèse) |
+| **Audio** | Web Speech API (reconnaissance), ElevenLabs TTS (synthèse professionnelle) |
 | **ML local** | `@xenova/transformers` (embeddings) |
 | **🔐 Sécurité** | **AES-256-GCM, PBKDF2 (600k itérations), WebCrypto API** |
 | **Données** | LocalStorage chiffré |
@@ -177,19 +193,22 @@ src/
 │   ├── RagSidebar.tsx           # Sidebar RAG (stats, favoris, pagination)
 │   ├── RagSidebarDrawer.tsx     # Version mobile (drawer)
 │   ├── MemoryModal.tsx          # Gestion mémoire utilisateur
-│   ├── TTSSettingsModal.tsx     # Réglages synthèse vocale
+│   ├── ElevenLabsTTSSettingsModal.tsx  # Réglages ElevenLabs TTS
+│   ├── TTSSettingsModal.tsx     # Réglages synthèse vocale (fallback)
 │   ├── PrivateModeBanner.tsx    # Bannière mode privé
 │   ├── ChildMode*.tsx           # PIN, bannière, changement PIN
 │   ├── WebSources*.tsx          # (optionnel) sources web utilisées
 │   └── ...
 ├── hooks/
 │   ├── useSpeechRecognition.ts
-│   ├── useSpeechSynthesis.ts
+│   ├── useElevenLabsTTS.ts      # Hook principal ElevenLabs TTS
+│   ├── useSpeechSynthesis.ts    # Hook fallback TTS natif
 │   ├── useDiscussions.ts
 │   └── useTheme.ts
 ├── services/
 │   ├── geminiApi.ts             # Appels Gemini
 │   ├── openaiApi.ts             # OpenAI (optionnel)
+│   ├── elevenLabsApi.ts         # API ElevenLabs TTS
 │   ├── llm.ts                   # Abstraction provider
 │   ├── geminiSystemPrompt.ts    # Prompts système
 │   ├── embeddings.ts            # Embeddings + similarité

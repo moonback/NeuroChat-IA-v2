@@ -6,7 +6,7 @@ import { VoiceInput } from '@/components/VoiceInput';
 import { GeminiGenerationConfig } from '@/services/geminiApi';
 import type { MistralGenerationConfig } from '@/services/mistralApi';
 import { streamMessage, type LlmConfig } from '@/services/llm';
-import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
+import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
 import { toast } from 'sonner';
 // 🔐 Services de sécurité AES-256 niveau gouvernemental
 import { enableSecureStorage, disableSecureStorage, initializeSecureStorage } from '@/services/secureStorage';
@@ -24,7 +24,7 @@ import {
 const ENCRYPTION_ENABLED_KEY = 'nc_encryption_enabled';
 const MASTER_PASSWORD_KEY = 'nc_master_password_encrypted';
 // Lazy-loaded components pour réduire le bundle initial
-const TTSSettingsModalLazy = lazy(() => import('@/components/TTSSettingsModal').then(m => ({ default: m.TTSSettingsModal })));
+const ElevenLabsTTSSettingsModalLazy = lazy(() => import('@/components/ElevenLabsTTSSettingsModal').then(m => ({ default: m.ElevenLabsTTSSettingsModal })));
 import { Header } from '@/components/Header';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { searchDocuments } from '@/services/ragSearch';
@@ -147,25 +147,23 @@ function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const {
     speak,
-    muted,
-    mute,
-    unmute,
-    rate,
-    setRate,
-    pitch,
-    setPitch,
-    volume,
-    setVolume,
-    voiceURI,
-    setVoiceURI,
-    availableVoices,
+    isEnabled: ttsEnabled,
+    isLoading: ttsLoading,
+    apiKeyValid: ttsApiKeyValid,
+    fallbackToNative: ttsFallbackToNative,
+    voices,
+    models,
+    settings: ttsSettings,
+    currentVoice,
+    currentModel,
+    updateSettings: updateTTSSettings,
     testVoice,
     resetSettings,
     exportSettings,
     importSettings,
     deleteSettings,
-    stop,
-  } = useSpeechSynthesis();
+    stop: stopTTS,
+  } = useElevenLabsTTS();
   const [showHistory, setShowHistory] = useState(false);
   const [historyList, setHistoryList] = useState<DiscussionWithCategory[]>([]);
   
@@ -993,10 +991,10 @@ ${lines.join('\n')}`, false);
               onEnd: () => {
                 setIsAISpeaking(false);
                 console.log('[Vocal Mode] IA a fini de parler - préparation redémarrage microphone');
-                if (modeVocalAutoRef.current && !muted) {
+                if (modeVocalAutoRef.current && ttsEnabled) {
                   playBip();
                   setTimeout(() => {
-                    if (modeVocalAutoRef.current && !muted && !listeningAuto && !isAISpeakingRef.current) {
+                    if (modeVocalAutoRef.current && ttsEnabled && !listeningAuto && !isAISpeakingRef.current) {
                       console.log('[Vocal Mode] Redémarrage du microphone après pause de sécurité');
                       startAuto();
                     } else {
@@ -1101,7 +1099,7 @@ ${lines.join('\n')}`, false);
   // Ajout d'un toast lors de la réinitialisation
   const handleResetSettings = () => {
     resetSettings();
-    toast.success('Réglages réinitialisés.');
+    toast.success('Réglages ElevenLabs réinitialisés.');
   };
 
 
@@ -1262,7 +1260,7 @@ ${lines.join('\n')}`, false);
 
   // Si l'utilisateur mute ou stop la voix, désactive le mode vocal auto
   useEffect(() => {
-    if (modeVocalAuto && muted) {
+    if (modeVocalAuto && !ttsEnabled) {
       setModeVocalAuto(false);
       stopAuto();
       resetAuto();
@@ -1275,7 +1273,7 @@ ${lines.join('\n')}`, false);
       lastAutoTextRef.current = '';
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [muted]);
+  }, [ttsEnabled]);
 
   // Supprimer plusieurs discussions d'un coup (filtrage)
   const handleDeleteMultipleDiscussions = (indices: number[]) => {
@@ -1403,9 +1401,9 @@ ${lines.join('\n')}`, false);
       <div className="w-full max-w-12xl h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] flex flex-col relative z-10">
         {/* Header compact performant */}
         <Header
-          muted={muted}
-          onMute={mute}
-          onUnmute={unmute}
+          muted={!ttsEnabled}
+          onMute={() => {}}
+          onUnmute={() => {}}
           onNewDiscussion={handleNewDiscussion}
           onOpenHistory={handleOpenHistory}
           onOpenTTSSettings={() => setShowTTSSettings(true)}
@@ -1592,23 +1590,9 @@ ${lines.join('\n')}`, false);
       </div>
 
       <Suspense fallback={null}>
-        <TTSSettingsModalLazy
+        <ElevenLabsTTSSettingsModalLazy
           open={modeEnfant ? false : showTTSSettings}
           onClose={() => setShowTTSSettings(false)}
-          rate={rate}
-          setRate={setRate}
-          pitch={pitch}
-          setPitch={setPitch}
-          volume={volume}
-          setVolume={setVolume}
-          voiceURI={voiceURI}
-          setVoiceURI={setVoiceURI}
-          availableVoices={availableVoices}
-          testVoice={testVoice}
-          resetSettings={handleResetSettings}
-          exportSettings={exportSettings}
-          importSettings={importSettings}
-          deleteSettings={deleteSettings}
         />
       </Suspense>
 
@@ -1616,7 +1600,7 @@ ${lines.join('\n')}`, false);
         visible={modeVocalAuto} 
         listening={listeningAuto}
         transcript={tempTranscriptAuto}
-        muted={muted}
+        muted={!ttsEnabled}
         timeoutActive={autoVoiceTimeout !== null}
         isAISpeaking={isAISpeaking}
       />
