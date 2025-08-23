@@ -991,10 +991,10 @@ ${lines.join('\n')}`, false);
               onEnd: () => {
                 setIsAISpeaking(false);
                 console.log('[Vocal Mode] IA a fini de parler - préparation redémarrage microphone');
-                if (modeVocalAutoRef.current && !muted) {
+                if (modeVocalAutoRef.current && ttsEnabled) {
                   playBip();
                   setTimeout(() => {
-                    if (modeVocalAutoRef.current && !muted && !listeningAuto && !isAISpeakingRef.current) {
+                    if (modeVocalAutoRef.current && ttsEnabled && !listeningAuto && !isAISpeakingRef.current) {
                       console.log('[Vocal Mode] Redémarrage du microphone après pause de sécurité');
                       startAuto();
                     } else {
@@ -1260,7 +1260,7 @@ ${lines.join('\n')}`, false);
 
   // Si l'utilisateur mute ou stop la voix, désactive le mode vocal auto
   useEffect(() => {
-    if (modeVocalAuto && muted) {
+    if (modeVocalAuto && !ttsEnabled) {
       setModeVocalAuto(false);
       stopAuto();
       resetAuto();
@@ -1273,7 +1273,7 @@ ${lines.join('\n')}`, false);
       lastAutoTextRef.current = '';
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [muted]);
+  }, [ttsEnabled]);
 
   // Supprimer plusieurs discussions d'un coup (filtrage)
   const handleDeleteMultipleDiscussions = (indices: number[]) => {
