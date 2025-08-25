@@ -171,7 +171,7 @@ export function ChatContainer({
                               ].map(filter => (
                                 <button
                                   key={filter.key}
-                                  onClick={() => setRagFilter(filter.key as any)}
+                                  onClick={() => setRagFilter(filter.key as 'all' | 'messages' | 'rag')}
                                   className={cn(
                                     "p-2 rounded-lg transition-all duration-300 relative group",
                                     ragFilter === filter.key
@@ -329,7 +329,6 @@ export function ChatContainer({
                         isUser={messageData.isUser}
                         timestamp={messageData.timestamp}
                         imageUrl={messageData.imageUrl}
-                        memoryFactsCount={messageData.memoryFactsCount}
                         sources={messageData.sources}
                         onEdit={onEditMessage ? (newText: string) => onEditMessage(messageData.id, newText) : undefined}
                         onDelete={onDeleteMessage ? () => onDeleteMessage(messageData.id) : undefined}
@@ -572,7 +571,7 @@ interface Message {
   isUser: boolean;
   timestamp: Date;
   imageUrl?: string;
-  memoryFactsCount?: number;
+  // memoryFactsCount supprimé - système de mémoire retiré
   sources?: Array<{ title: string; url: string }>;
 }
 
@@ -617,7 +616,7 @@ const useSmartScroll = (messages: ChatMessage[], isLoading: boolean) => {
     setShowScrollButton(!atBottom && messages.length > 0);
   }, [messages.length]);
 
-  const handleRangeChange = useCallback((range: any) => {
+  const handleRangeChange = useCallback((range: { endIndex: number }) => {
     if (messages.length > 0) {
       const progress = ((range.endIndex + 1) / messages.length) * 100;
       setScrollProgress(Math.min(progress, 100));

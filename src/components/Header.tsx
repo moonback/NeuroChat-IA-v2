@@ -29,7 +29,7 @@ interface HeaderProps {
   onOpenHistory: () => void;
   onOpenTTSSettings: () => void;
   onOpenRagDocs: () => void;
-  onOpenMemory: () => void;
+  // onOpenMemory supprimé - système de mémoire retiré
   stop: () => void;
   modeVocalAuto: boolean;
   setModeVocalAuto: (v: boolean) => void;
@@ -790,7 +790,7 @@ const DesktopActions = ({
   modeEnfant, 
   onNewDiscussion, 
   onOpenHistory, 
-  onOpenMemory, 
+  // onOpenMemory supprimé - système de mémoire retiré
   selectionActions, 
   muted, 
   handleVolumeToggle, 
@@ -808,7 +808,7 @@ const DesktopActions = ({
   modeEnfant?: boolean;
   onNewDiscussion: () => void;
   onOpenHistory: () => void;
-  onOpenMemory: () => void;
+  // onOpenMemory supprimé - système de mémoire retiré
   selectionActions: React.ReactNode;
   muted: boolean;
   handleVolumeToggle: () => void;
@@ -837,9 +837,7 @@ const DesktopActions = ({
           <IconButton onClick={onOpenHistory} tooltip="Historique" aria-label="Historique">
             <History className="w-4 h-4" />
           </IconButton>
-          <IconButton onClick={onOpenMemory} tooltip="Mémoire" aria-label="Mémoire">
-            <Brain className="w-4 h-4" />
-          </IconButton>
+          {/* Bouton mémoire supprimé - système de mémoire retiré */}
         </ButtonGroup>
       )}
     </div>
@@ -1336,7 +1334,7 @@ const MobileMenuSheet = ({
 export function Header(props: HeaderProps) {
   const {
     muted, onMute, onUnmute, onNewDiscussion, onOpenHistory, onOpenTTSSettings,
-    onOpenRagDocs, onOpenMemory, modeVocalAuto, setModeVocalAuto,
+    onOpenRagDocs, modeVocalAuto, setModeVocalAuto,
     hasActiveConversation, ragEnabled, setRagEnabled, onOpenGeminiSettings,
     webEnabled, setWebEnabled, provider, onChangeProvider, modePrive, setModePrive, 
     selectMode, onToggleSelectMode, selectedCount, totalCount, onSelectAll, onDeselectAll,
@@ -1473,7 +1471,7 @@ export function Header(props: HeaderProps) {
               modeEnfant={props.modeEnfant}
               onNewDiscussion={onNewDiscussion}
               onOpenHistory={onOpenHistory}
-              onOpenMemory={onOpenMemory}
+              // onOpenMemory supprimé - système de mémoire retiré
               selectionActions={selectionActions}
               muted={muted}
               handleVolumeToggle={handleVolumeToggle}
