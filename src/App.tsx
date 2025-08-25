@@ -206,7 +206,7 @@ function App() {
   const [provider, setProvider] = useState<'gemini' | 'openai' | 'mistral'>(
     (localStorage.getItem('llm_provider') as 'gemini' | 'openai' | 'mistral') || 'gemini'
   );
-  const [mistralConfig, _setMistralConfig] = useState<MistralGenerationConfig>({
+  const [mistralConfig, setMistralConfig] = useState<MistralGenerationConfig>({
     temperature: 0.7,
     top_p: 0.95,
     max_tokens: 4096,
@@ -588,15 +588,41 @@ function App() {
   }, []);
 
   const addMessage = (text: string, isUser: boolean, imageFile?: File, sources?: Array<{ title: string; url: string }>): Message => {
+    // Validation des paramètres
+    if (typeof text !== 'string') {
+      console.error('Erreur: le texte du message doit être une chaîne de caractères');
+      return {} as Message;
+    }
+    
+    // Générer un ID unique avec timestamp et random pour éviter les collisions
+    const messageId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
     const message: Message = {
-      id: Date.now().toString(),
-      text,
+      id: messageId,
+      text: text.trim(),
       isUser,
       timestamp: new Date(),
       imageUrl: imageFile ? URL.createObjectURL(imageFile) : undefined,
       sources,
     };
-    setMessages(prev => [...prev, message]);
+    
+    // Vérifier qu'il n'y a pas de doublon avant d'ajouter
+    setMessages(prev => {
+      // Vérifier si un message identique existe déjà
+      const duplicateExists = prev.some(m => 
+        m.text === message.text && 
+        m.isUser === message.isUser && 
+        Math.abs(m.timestamp.getTime() - message.timestamp.getTime()) < 1000 // Dans la même seconde
+      );
+      
+      if (duplicateExists) {
+        console.warn('Message dupliqué détecté, ignoré:', message);
+        return prev;
+      }
+      
+      return [...prev, message];
+    });
+    
     return message;
   };
 
@@ -689,6 +715,12 @@ function App() {
     const handled = await handleMemoryCommand(userMessage);
     if (handled) return;
 
+    // Vérifier que le message n'est pas vide
+    if (!userMessage.trim()) {
+      toast.error('Le message ne peut pas être vide');
+      return;
+    }
+
     // Préparer la timeline de raisonnement
     // Timeline retirée
 
@@ -774,6 +806,7 @@ function App() {
     } catch {} finally {
       if (webEnabled || autoUseWeb || (provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) setIsWebSearching(false);
     }
+    
     // Ajoute le message utilisateur localement
     const newMessage = addMessage(userMessage, true, imageFile);
     
@@ -828,9 +861,18 @@ function App() {
         openai: openaiConfig,
         mistral: mistralConfig,
       };
+      
       // Placeholder de réponse AI et streaming
       const aiMsg = addMessage('', false, undefined, webSources.length ? webSources : undefined);
       let acc = '';
+      
+      // Vérification de sécurité pour éviter la duplication
+      if (!aiMsg || aiMsg.id === newMessage.id) {
+        console.error('Erreur: ID de message dupliqué détecté');
+        toast.error('Erreur interne. Veuillez réessayer.');
+        return;
+      }
+      
       await streamMessage(
         llmCfg,
         filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
@@ -865,6 +907,9 @@ function App() {
           },
           onError: (err) => {
             console.error('Streaming error:', err);
+            // En cas d'erreur, supprimer le message AI vide
+            setMessages(prev => prev.filter(m => m.id !== aiMsg.id));
+            toast.error('Erreur lors de la génération de la réponse');
           }
         }
       );
@@ -1535,8 +1580,8 @@ function App() {
           open={modeEnfant ? false : showMistralSettings}
           onOpenChange={(open) => !modeEnfant && setShowMistralSettings(open)}
           mistralConfig={mistralConfig}
-          onConfigChange={(key, value) => _setMistralConfig(cfg => ({ ...cfg, [key]: value }))}
-          onReset={() => _setMistralConfig({ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest' })}
+                          onConfigChange={(key, value) => setMistralConfig(cfg => ({ ...cfg, [key]: value }))}
+                onReset={() => setMistralConfig({ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest' })}
           onClose={() => setShowMistralSettings(false)}
           DEFAULTS={{ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest' }}
           agentEnabled={mistralAgentEnabled}
