@@ -8,7 +8,7 @@ import {
   Trash2, Menu, X, WifiOff, Baby, Sparkles,
   Globe, Database, Activity, Pencil, HelpCircle
 } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle} from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -1006,9 +1006,9 @@ const MobileMenuSheet = ({
              <SheetHeader className="p-6 border-b border-slate-200/60 dark:border-slate-800/60">
          <div className="flex items-center justify-between">
            <div className="flex-1 min-w-0">
-             <h2 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent mb-2">
+             <SheetTitle className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent mb-2">
                Menu Principal
-             </h2>
+             </SheetTitle>
              <p className="text-base text-slate-600 dark:text-slate-400 font-medium">Navigation et réglages</p>
            </div>
           <Button variant="ghost" size="sm" onClick={closeMobileMenu} className="h-8 w-8 p-0 rounded-xl" aria-label="Fermer">
