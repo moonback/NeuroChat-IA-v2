@@ -695,25 +695,9 @@ function App() {
     setMessages(prev => [...prev, ragMsg as any]);
   };
 
-  // --- Mémoire utilisateur ---
-  function splitTags(text: string): string[] {
-    return Array.from(new Set(text.split(',').map((t) => t.trim()).filter(Boolean))).slice(0, 8);
-  }
 
-  // Fonction de commande mémoire supprimée - système de mémoire retiré
-  function parseMemoryCommand(raw: string): null {
-    return null; // Désactivé
-  }
-
-  // Fonction de commande mémoire supprimée - système de mémoire retiré
-  async function handleMemoryCommand(userMessage: string): Promise<boolean> {
-    return false; // Désactivé
-  }
 
   const handleSendMessage = async (userMessage: string, imageFile?: File) => {
-    // Intercepter et gérer les commandes mémoire avant tout
-    const handled = await handleMemoryCommand(userMessage);
-    if (handled) return;
 
     // Vérifier que le message n'est pas vide
     if (!userMessage.trim()) {
