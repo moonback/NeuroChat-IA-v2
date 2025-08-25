@@ -1,4 +1,4 @@
-import { Bot, User, Copy, ThumbsUp, ThumbsDown, MoreHorizontal, Check, CheckCheck, Sparkles, Edit, Trash2, Reply, Brain } from 'lucide-react'; // Added Brain
+import { Bot, User, Copy, ThumbsUp, ThumbsDown, MoreHorizontal, Check, CheckCheck, Sparkles, Edit, Trash2, Reply } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useState, useRef, useEffect, useCallback } from 'react'; // Added useRef, useEffect, useCallback
@@ -14,11 +14,11 @@ interface MessageBubbleProps {
   onEdit?: (newText: string) => void; // Added onEdit prop
   onDelete?: () => void; // Added onDelete prop
   onReply?: (messageContent: string) => void; // Added onReply prop, passing message content
-  memoryFactsCount?: number; // New optional indicator
+  // memoryFactsCount supprimé - système de mémoire retiré
   sources?: Array<{ title: string; url: string }>;
 }
 
-export function MessageBubble({ message, isUser, timestamp, isLatest = false, imageUrl, onEdit, onDelete, onReply, memoryFactsCount, sources }: MessageBubbleProps) {
+export function MessageBubble({ message, isUser, timestamp, isLatest = false, imageUrl, onEdit, onDelete, onReply, sources }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
   const [isLiked, setIsLiked] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
@@ -57,7 +57,7 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast.success('Message copié dans le presse-papier !');
-    } catch (err) {
+    } catch {
       toast.error('Échec de la copie du message');
     }
   }, [message]);
@@ -259,12 +259,7 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
                     <CheckCheck className="w-3 h-3 text-white/70" />
                     <span className="text-xs text-white/70 font-medium">Envoyé</span>
                   </div>
-                  {typeof memoryFactsCount === 'number' && memoryFactsCount > 0 && (
-                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/15 border border-white/25 text-white/90">
-                      <Brain className="w-3 h-3" />
-                      <span className="text-[11px] leading-none">Fait mémorisé</span>
-                    </div>
-                  )}
+                  {/* Indicateur de mémoire supprimé - système de mémoire retiré */}
                 </div>
               )}
             </div>
