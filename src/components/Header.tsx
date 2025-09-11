@@ -5,7 +5,7 @@ import { useTheme } from '@/hooks/useTheme';
 import {
   History, Settings2, Volume2, VolumeX, Sun, Moon, 
   PlusCircle, Mic, Brain, Shield, BookOpen, CheckSquare, Square, 
-  Trash2, Menu, X, WifiOff, Baby, Sparkles,
+  Trash2, Menu, X, WifiOff, Baby, Sparkles, Layers,
   Globe, Database, Activity, Pencil, HelpCircle
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle} from '@/components/ui/sheet';
@@ -38,6 +38,8 @@ interface HeaderProps {
   setRagEnabled: (v: boolean) => void;
   webEnabled?: boolean;
   setWebEnabled?: (v: boolean) => void;
+  structuredMode?: boolean;
+  setStructuredMode?: (v: boolean) => void;
   webSearching?: boolean;
   onOpenGeminiSettings?: () => void;
   geminiConfig?: any;
@@ -803,6 +805,8 @@ const DesktopActions = ({
   webEnabled, 
   handleWebToggle, 
   webSearching, 
+  structuredMode,
+  handleStructuredToggle,
   setShowMobileMenu 
 }: {
   modeEnfant?: boolean;
@@ -821,6 +825,8 @@ const DesktopActions = ({
   webEnabled?: boolean;
   handleWebToggle: () => void;
   webSearching?: boolean;
+  structuredMode?: boolean;
+  handleStructuredToggle?: () => void;
   toggleTheme: () => void;
   setShowMobileMenu: (show: boolean) => void;
 }) => (
@@ -917,6 +923,19 @@ const DesktopActions = ({
       )}
     </ButtonGroup>
 
+    {/* Mode Réponses structurées */}
+    {!modeEnfant && (
+      <ButtonGroup>
+        <IconButton
+          onClick={handleStructuredToggle}
+          tooltip="Réponses structurées"
+          active={!!structuredMode}
+        >
+          <Layers className="w-4 h-4" />
+        </IconButton>
+      </ButtonGroup>
+    )}
+
     {/* Réglages */}
     {!modeEnfant && (
       <ButtonGroup>
@@ -958,6 +977,8 @@ const MobileMenuSheet = ({
   handleRagToggle, 
   webEnabled, 
   handleWebToggle, 
+  structuredMode,
+  handleStructuredToggle,
   onOpenTTSSettings, 
   onOpenGeminiSettings, 
   onOpenRagDocs, 
@@ -988,6 +1009,8 @@ const MobileMenuSheet = ({
   handleRagToggle: () => void;
   webEnabled?: boolean;
   handleWebToggle: () => void;
+  structuredMode?: boolean;
+  handleStructuredToggle?: () => void;
   onOpenTTSSettings: () => void;
   onOpenGeminiSettings?: () => void;
   onOpenRagDocs: () => void;
@@ -1159,6 +1182,17 @@ const MobileMenuSheet = ({
                   active={!!webEnabled}
                   intent={webEnabled ? 'warning' : 'default'}
                   tooltip="Recherche web"
+                />
+              )}
+
+              {!modeEnfant && (
+                <TileButton
+                  onClick={handleMenuAction(handleStructuredToggle || (() => {}))}
+                  label={structuredMode ? 'Structuré: ON' : 'Structuré: OFF'}
+                  icon={Layers}
+                  active={!!structuredMode}
+                  intent={structuredMode ? 'info' : 'default'}
+                  tooltip="Réponses structurées"
                 />
               )}
             </div>
@@ -1336,7 +1370,7 @@ export function Header(props: HeaderProps) {
     muted, onMute, onUnmute, onNewDiscussion, onOpenHistory, onOpenTTSSettings,
     onOpenRagDocs, modeVocalAuto, setModeVocalAuto,
     hasActiveConversation, ragEnabled, setRagEnabled, onOpenGeminiSettings,
-    webEnabled, setWebEnabled, provider, onChangeProvider, modePrive, setModePrive, 
+    webEnabled, setWebEnabled, structuredMode, setStructuredMode, provider, onChangeProvider, modePrive, setModePrive, 
     selectMode, onToggleSelectMode, selectedCount, totalCount, onSelectAll, onDeselectAll,
     onRequestDelete, showConfirmDelete, setShowConfirmDelete, onDeleteConfirmed
   } = props;
@@ -1380,6 +1414,13 @@ export function Header(props: HeaderProps) {
       if ('vibrate' in navigator) navigator.vibrate(30);
     }
   }, [webEnabled, setWebEnabled]);
+
+  const handleStructuredToggle = useCallback(() => {
+    if (setStructuredMode) {
+      setStructuredMode(!structuredMode);
+      if ('vibrate' in navigator) navigator.vibrate(30);
+    }
+  }, [structuredMode, setStructuredMode]);
 
   const handleChildModeToggle = useCallback(() => {
     props.onToggleModeEnfant?.();
@@ -1484,6 +1525,8 @@ export function Header(props: HeaderProps) {
               webEnabled={webEnabled}
               handleWebToggle={handleWebToggle}
               webSearching={props.webSearching}
+              structuredMode={structuredMode}
+              handleStructuredToggle={handleStructuredToggle}
               toggleTheme={toggleTheme}
               setShowMobileMenu={setShowMobileMenu}
             />
@@ -1529,6 +1572,8 @@ export function Header(props: HeaderProps) {
           handleRagToggle={handleRagToggle}
           webEnabled={webEnabled}
           handleWebToggle={handleWebToggle}
+          structuredMode={structuredMode}
+          handleStructuredToggle={handleStructuredToggle}
           onOpenTTSSettings={onOpenTTSSettings}
           onOpenGeminiSettings={onOpenGeminiSettings}
           onOpenRagDocs={onOpenRagDocs}
