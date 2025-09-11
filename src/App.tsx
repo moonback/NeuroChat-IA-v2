@@ -907,7 +907,7 @@ function App() {
             // Indiquer que l'IA commence à parler
             setIsAISpeaking(true);
             console.log('[Vocal Mode] IA commence à parler - microphone coupé');
-            const ttsText = acc.replace(/###\s*\d+\s*/g, '');
+            const ttsText = acc.replace(/###.*$/gm, '');
             speak(ttsText, {
               onEnd: () => {
                 setIsAISpeaking(false);
