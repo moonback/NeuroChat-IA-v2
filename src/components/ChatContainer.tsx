@@ -44,6 +44,30 @@ export function ChatContainer({
     return !(msg as RagContextMessage).isRagContext;
   });
 
+  // Fonction pour nettoyer les messages dupliqués
+  const deduplicateMessages = useCallback((messages: any[]) => {
+    const seen = new Set();
+    return messages.filter(msg => {
+      // Pour les messages RAG, utiliser l'ID
+      if ((msg as RagContextMessage).isRagContext) {
+        if (seen.has(msg.id)) return false;
+        seen.add(msg.id);
+        return true;
+      }
+      
+      // Pour les messages normaux, vérifier le contenu et l'utilisateur
+      const key = `${msg.text}-${msg.isUser}-${msg.timestamp?.getTime()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, []);
+
+  // Appliquer la déduplication aux messages filtrés
+  const deduplicatedMessages = useMemo(() => {
+    return deduplicateMessages(filteredMessages);
+  }, [filteredMessages, deduplicateMessages]);
+
   return (
     <div
       className={cn(
@@ -76,7 +100,7 @@ export function ChatContainer({
                 rangeChanged={handleRangeChange}
                 atBottomThreshold={200}
                 followOutput="smooth"
-                totalCount={filteredMessages.length + (isLoading ? 1 : 0)}
+                totalCount={deduplicatedMessages.length + (isLoading ? 1 : 0)}
                 components={{
                   Header: () => (
                     <div className="sticky top-0 z-30 mb-6 animate-in slide-in-from-top-2 duration-700">
@@ -171,7 +195,7 @@ export function ChatContainer({
                               ].map(filter => (
                                 <button
                                   key={filter.key}
-                                  onClick={() => setRagFilter(filter.key as any)}
+                                  onClick={() => setRagFilter(filter.key as 'all' | 'messages' | 'rag')}
                                   className={cn(
                                     "p-2 rounded-lg transition-all duration-300 relative group",
                                     ragFilter === filter.key
@@ -211,7 +235,7 @@ export function ChatContainer({
                   )
                 }}
                 itemContent={(index) => {
-                  if (index >= filteredMessages.length) {
+                  if (index >= deduplicatedMessages.length) {
                     return (
                       <div className="animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
                         <TypingIndicator />
@@ -219,7 +243,7 @@ export function ChatContainer({
                     );
                   }
                   
-                  const msg = filteredMessages[index];
+                  const msg = deduplicatedMessages[index];
                   
                   if ((msg as RagContextMessage).isRagContext) {
                     const ragMsg = msg as RagContextMessage;
@@ -329,7 +353,6 @@ export function ChatContainer({
                         isUser={messageData.isUser}
                         timestamp={messageData.timestamp}
                         imageUrl={messageData.imageUrl}
-                        memoryFactsCount={messageData.memoryFactsCount}
                         sources={messageData.sources}
                         onEdit={onEditMessage ? (newText: string) => onEditMessage(messageData.id, newText) : undefined}
                         onDelete={onDeleteMessage ? () => onDeleteMessage(messageData.id) : undefined}
@@ -553,7 +576,7 @@ export function ChatContainer({
       )}
     </div>
   );
-}import { useCallback, useEffect, useRef, useState } from 'react';
+}import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
@@ -572,7 +595,7 @@ interface Message {
   isUser: boolean;
   timestamp: Date;
   imageUrl?: string;
-  memoryFactsCount?: number;
+  // memoryFactsCount supprimé - système de mémoire retiré
   sources?: Array<{ title: string; url: string }>;
 }
 
@@ -617,7 +640,7 @@ const useSmartScroll = (messages: ChatMessage[], isLoading: boolean) => {
     setShowScrollButton(!atBottom && messages.length > 0);
   }, [messages.length]);
 
-  const handleRangeChange = useCallback((range: any) => {
+  const handleRangeChange = useCallback((range: { endIndex: number }) => {
     if (messages.length > 0) {
       const progress = ((range.endIndex + 1) / messages.length) * 100;
       setScrollProgress(Math.min(progress, 100));

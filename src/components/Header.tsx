@@ -8,7 +8,7 @@ import {
   Trash2, Menu, X, WifiOff, Baby, Sparkles,
   Globe, Database, Activity, Pencil, HelpCircle
 } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle} from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,7 +29,7 @@ interface HeaderProps {
   onOpenHistory: () => void;
   onOpenTTSSettings: () => void;
   onOpenRagDocs: () => void;
-  onOpenMemory: () => void;
+  // onOpenMemory supprimé - système de mémoire retiré
   stop: () => void;
   modeVocalAuto: boolean;
   setModeVocalAuto: (v: boolean) => void;
@@ -790,7 +790,7 @@ const DesktopActions = ({
   modeEnfant, 
   onNewDiscussion, 
   onOpenHistory, 
-  onOpenMemory, 
+  // onOpenMemory supprimé - système de mémoire retiré
   selectionActions, 
   muted, 
   handleVolumeToggle, 
@@ -808,7 +808,7 @@ const DesktopActions = ({
   modeEnfant?: boolean;
   onNewDiscussion: () => void;
   onOpenHistory: () => void;
-  onOpenMemory: () => void;
+  // onOpenMemory supprimé - système de mémoire retiré
   selectionActions: React.ReactNode;
   muted: boolean;
   handleVolumeToggle: () => void;
@@ -837,9 +837,7 @@ const DesktopActions = ({
           <IconButton onClick={onOpenHistory} tooltip="Historique" aria-label="Historique">
             <History className="w-4 h-4" />
           </IconButton>
-          <IconButton onClick={onOpenMemory} tooltip="Mémoire" aria-label="Mémoire">
-            <Brain className="w-4 h-4" />
-          </IconButton>
+          {/* Bouton mémoire supprimé - système de mémoire retiré */}
         </ButtonGroup>
       )}
     </div>
@@ -1008,9 +1006,9 @@ const MobileMenuSheet = ({
              <SheetHeader className="p-6 border-b border-slate-200/60 dark:border-slate-800/60">
          <div className="flex items-center justify-between">
            <div className="flex-1 min-w-0">
-             <h2 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent mb-2">
+             <SheetTitle className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent mb-2">
                Menu Principal
-             </h2>
+             </SheetTitle>
              <p className="text-base text-slate-600 dark:text-slate-400 font-medium">Navigation et réglages</p>
            </div>
           <Button variant="ghost" size="sm" onClick={closeMobileMenu} className="h-8 w-8 p-0 rounded-xl" aria-label="Fermer">
@@ -1336,7 +1334,7 @@ const MobileMenuSheet = ({
 export function Header(props: HeaderProps) {
   const {
     muted, onMute, onUnmute, onNewDiscussion, onOpenHistory, onOpenTTSSettings,
-    onOpenRagDocs, onOpenMemory, modeVocalAuto, setModeVocalAuto,
+    onOpenRagDocs, modeVocalAuto, setModeVocalAuto,
     hasActiveConversation, ragEnabled, setRagEnabled, onOpenGeminiSettings,
     webEnabled, setWebEnabled, provider, onChangeProvider, modePrive, setModePrive, 
     selectMode, onToggleSelectMode, selectedCount, totalCount, onSelectAll, onDeselectAll,
@@ -1473,7 +1471,7 @@ export function Header(props: HeaderProps) {
               modeEnfant={props.modeEnfant}
               onNewDiscussion={onNewDiscussion}
               onOpenHistory={onOpenHistory}
-              onOpenMemory={onOpenMemory}
+              // onOpenMemory supprimé - système de mémoire retiré
               selectionActions={selectionActions}
               muted={muted}
               handleVolumeToggle={handleVolumeToggle}
