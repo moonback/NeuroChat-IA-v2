@@ -1,10 +1,23 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Mic, MicOff, ImageIcon, X, Command, Paperclip, FileText, Bot } from 'lucide-react';
+import { Send, Loader2, Mic, MicOff, ImageIcon, X, Paperclip, FileText, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import type { Provider } from '@/services/llm';
+
+// Minimal types for dynamically imported libraries to avoid `any`
+type PdfTextContent = { items: Array<{ str?: string }> };
+type PdfPage = { getTextContent: () => Promise<PdfTextContent> };
+type PdfDocument = { numPages: number; getPage: (pageNumber: number) => Promise<PdfPage> };
+type PdfJsLib = {
+  GlobalWorkerOptions: { workerSrc: string };
+  getDocument: (opts: { data: ArrayBuffer }) => { promise: Promise<PdfDocument> };
+};
+
+type MammothLib = {
+  extractRawText: (opts: { arrayBuffer: ArrayBuffer }) => Promise<{ value?: string }>;
+};
 
 interface VoiceInputProps {
   onSendMessage: (message: string, imageFile?: File) => void;
@@ -40,7 +53,9 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
           setInputValue(detail);
           inputRef.current?.focus();
         }
-      } catch {}
+      } catch (error) {
+        console.error('voice-input:prefill handler error', error);
+      }
     };
     document.addEventListener('voice-input:prefill', handler as EventListener);
     return () => document.removeEventListener('voice-input:prefill', handler as EventListener);
@@ -89,18 +104,23 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
     if (mime === 'application/pdf' || name.endsWith('.pdf')) {
       try {
         const arrayBuffer = await file.arrayBuffer();
-        const pdfModule: any = await import('pdfjs-dist');
-        const pdfjsLib = pdfModule?.default ?? pdfModule;
+        const pdfModule: unknown = await import('pdfjs-dist');
+        const pdfjsCandidate = pdfModule as { default?: PdfJsLib } | PdfJsLib;
+        const pdfjsLib: PdfJsLib = (pdfjsCandidate as { default?: PdfJsLib }).default
+          ? (pdfjsCandidate as { default: PdfJsLib }).default
+          : (pdfjsCandidate as PdfJsLib);
         pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.mjs';
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const pdf: PdfDocument = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         setFileInfo({ kind: 'pdf', pages: pdf.numPages });
         // Extraction légère: première page texte (optionnel, court)
         try {
           const page = await pdf.getPage(1);
           const content = await page.getTextContent();
-          const text = content.items.map((it: any) => (it?.str || '')).join(' ');
+          const text = content.items.map((it) => it?.str || '').join(' ');
           setExtractedText(text.trim());
-        } catch {}
+        } catch (error) {
+          console.error('PDF first-page text extraction failed', error);
+        }
       } catch {
         setFileInfo({ kind: 'pdf' });
       }
@@ -114,8 +134,11 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
     ) {
       try {
         const arrayBuffer = await file.arrayBuffer();
-        const mammothModule: any = await import('mammoth');
-        const mammoth = mammothModule?.default ?? mammothModule;
+        const mammothModule: unknown = await import('mammoth');
+        const mammothCandidate = mammothModule as { default?: MammothLib } | MammothLib;
+        const mammoth: MammothLib = (mammothCandidate as { default?: MammothLib }).default
+          ? (mammothCandidate as { default: MammothLib }).default
+          : (mammothCandidate as MammothLib);
         const result = await mammoth.extractRawText({ arrayBuffer });
         const text = (result?.value || '').trim();
         const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
@@ -349,7 +372,7 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
                       onKeyPress={handleKeyPress}
                       onFocus={() => setIsFocused(true)}
                       onBlur={() => setIsFocused(false)}
-                       placeholder={listening ? "🎤 Dictée en cours..." : "Tapez un message… (/ pour commandes)"}
+                       placeholder={listening ? "🎤 Dictée en cours..." : "Tapez un message…"}
                       disabled={isLoading || listening}
                       className={cn(
                          "h-12 rounded-xl px-4 py-3 text-sm sm:text-base transition-all duration-300",
@@ -420,42 +443,7 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
                 </div>
               </div>
 
-              {/* Suggestions de commandes slash améliorées */}
-               {showSlashHelp && (
-                 <div className="mt-2 animate-in slide-in-from-bottom-2 fade-in-0 duration-200">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 mb-2">
-                      <Command className="w-4 h-4" />
-                      <span className="font-medium">Commandes disponibles :</span>
-                    </div>
-                    <div className="w-full flex flex-wrap gap-2">
-                      {(filteredCommands.length > 0 ? filteredCommands : slashCommands).map((c, idx) => (
-                         <Button
-                          key={c.cmd}
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          className={cn(
-                             "h-8 px-3 rounded-lg border transition-all duration-200 group relative overflow-hidden",
-                            activeSuggestionIdx === idx
-                              ? "bg-gradient-to-r from-blue-100/90 to-indigo-100/90 dark:from-blue-950/50 dark:to-indigo-950/50 border-blue-300/60 dark:border-blue-600/60 text-blue-700 dark:text-blue-300"
-                              : "bg-white/80 dark:bg-slate-800/80 border-slate-200/60 dark:border-slate-700/60 hover:bg-slate-50/90 dark:hover:bg-slate-700/90 text-slate-700 dark:text-slate-300"
-                          )}
-                          onClick={() => handleInsert(c.cmd)}
-                          title={c.label}
-                        >
-                          <div className="flex items-center gap-2">
-                             <span className="text-xs">{c.icon}</span>
-                             <code className="font-mono text-xs font-medium">{c.cmd}</code>
-                             <span className="text-[10px] opacity-70 hidden sm:inline">• {c.label}</span>
-                          </div>
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
+              
 
               {/* Indicateur de dictée vocale redesigné */}
                {listening && (
