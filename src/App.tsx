@@ -827,6 +827,16 @@ function App() {
       return indicators.some(indicator => lowerResponse.includes(indicator));
     };
     
+    // Fonction pour nettoyer le texte TTS (supprimer les références de sources)
+    const cleanTextForTTS = (text: string): string => {
+      return text
+        .replace(/###.*$/gm, '') // Supprimer les sections ###
+        .replace(/\[\d+\]/g, '') // Supprimer les références [1], [2], etc.
+        .replace(/\(\d+\)/g, '') // Supprimer les références (1), (2), etc.
+        .replace(/\s+/g, ' ') // Normaliser les espaces
+        .trim();
+    };
+    
     if (shouldSearchWebInitially) {
       try {
         setIsWebSearching(true);
@@ -998,7 +1008,7 @@ function App() {
                         },
                         onDone: () => {
                           setIsAISpeaking(true);
-                          const ttsText = fallbackAcc.replace(/###.*$/gm, '');
+                          const ttsText = cleanTextForTTS(fallbackAcc);
                           speak(ttsText, {
                             onEnd: () => {
                               setIsAISpeaking(false);
@@ -1032,7 +1042,7 @@ function App() {
             // Indiquer que l'IA commence à parler
             setIsAISpeaking(true);
             console.log('[Vocal Mode] IA commence à parler - microphone coupé');
-            const ttsText = acc.replace(/###.*$/gm, '');
+            const ttsText = cleanTextForTTS(acc);
             speak(ttsText, {
               onEnd: () => {
                 setIsAISpeaking(false);

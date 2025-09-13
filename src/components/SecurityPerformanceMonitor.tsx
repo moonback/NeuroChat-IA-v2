@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,14 +13,9 @@ import {
   Clock, 
   Database, 
   Key, 
-  Lock, 
-  Eye, 
   Zap,
   BarChart3,
-  TrendingUp,
-  TrendingDown,
   RefreshCw,
-  Settings,
   Download,
   AlertCircle
 } from 'lucide-react';
@@ -275,6 +270,7 @@ export function SecurityPerformanceMonitor({
         level: 'high',
         message: 'Erreur lors de la collecte des métriques',
         details: error instanceof Error ? error.message : 'Erreur inconnue',
+        resolved: false,
       });
     } finally {
       setIsRefreshing(false);
@@ -472,7 +468,7 @@ export function SecurityPerformanceMonitor({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onClose || (() => setIsOpen(false))}
+                onClick={onClose || (() => {})}
               >
                 Fermer
               </Button>
@@ -574,11 +570,11 @@ export function SecurityPerformanceMonitor({
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm">Taux de cache</span>
-                        <span className="font-mono">{(stats?.performance.cacheHitRate * 100).toFixed(1)}%</span>
+                        <span className="font-mono">{((stats?.performance.cacheHitRate || 0) * 100).toFixed(1)}%</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm">Taux d'erreur</span>
-                        <span className="font-mono">{(stats?.performance.errorRate * 100).toFixed(2)}%</span>
+                        <span className="font-mono">{((stats?.performance.errorRate || 0) * 100).toFixed(2)}%</span>
                       </div>
                     </div>
                   </CardContent>
@@ -739,7 +735,7 @@ export function SecurityPerformanceMonitor({
                     </div>
                     <div className="flex justify-between">
                       <span>Taux de cache</span>
-                      <span className="font-mono">{(stats?.performance.cacheHitRate * 100).toFixed(1)}%</span>
+                      <span className="font-mono">{((stats?.performance.cacheHitRate || 0) * 100).toFixed(1)}%</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Connexions actives</span>
@@ -747,7 +743,7 @@ export function SecurityPerformanceMonitor({
                     </div>
                     <div className="flex justify-between">
                       <span>Taux d'erreur</span>
-                      <span className="font-mono">{(stats?.performance.errorRate * 100).toFixed(2)}%</span>
+                      <span className="font-mono">{((stats?.performance.errorRate || 0) * 100).toFixed(2)}%</span>
                     </div>
                   </CardContent>
                 </Card>

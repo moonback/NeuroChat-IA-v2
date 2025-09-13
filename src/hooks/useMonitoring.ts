@@ -241,7 +241,11 @@ function checkAlerts(security: SecurityMetrics, performance: PerformanceMetrics)
     });
   }
   
-  return newAlerts;
+  return newAlerts.map(alert => ({
+    ...alert,
+    id: Math.random().toString(36).substr(2, 9),
+    timestamp: new Date().toISOString(),
+  }));
 }
 
 // Hook principal
@@ -293,6 +297,7 @@ export function useMonitoring() {
         level: 'high',
         message: 'Erreur lors de la collecte des métriques',
         details: error instanceof Error ? error.message : 'Erreur inconnue',
+        resolved: false,
       });
       setAlerts(getAlerts());
     } finally {

@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -35,7 +34,6 @@ export function MonitoringStatusIndicator({
     getPerformanceScore,
   } = useMonitoring();
 
-  const [isHovered, setIsHovered] = useState(false);
 
   if (!stats) {
     return (
@@ -141,8 +139,8 @@ export function MonitoringStatusIndicator({
               size="sm"
               onClick={onOpenMonitor}
               className="relative p-2"
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
+              onMouseEnter={() => {}}
+              onMouseLeave={() => {}}
             >
               <BarChart3 className="w-4 h-4" />
               {(activeAlerts > 0 || criticalAlerts > 0) && (

@@ -181,7 +181,7 @@ class MonitoringService {
       (window.crypto.subtle as any).encrypt = async (...args: any[]) => {
         const start = performance.now();
         try {
-          const result = await originalEncrypt.apply(window.crypto.subtle, args);
+          const result = await originalEncrypt.apply(window.crypto.subtle, args as [AlgorithmIdentifier | RsaOaepParams | AesCtrParams | AesCbcParams | AesGcmParams, CryptoKey, BufferSource]);
           const duration = performance.now() - start;
           
           this.recordSecurity({
@@ -213,7 +213,7 @@ class MonitoringService {
       (window.crypto.subtle as any).decrypt = async (...args: any[]) => {
         const start = performance.now();
         try {
-          const result = await originalDecrypt.apply(window.crypto.subtle, args);
+          const result = await originalDecrypt.apply(window.crypto.subtle, args as [AlgorithmIdentifier | RsaOaepParams | AesCtrParams | AesCbcParams | AesGcmParams, CryptoKey, BufferSource]);
           const duration = performance.now() - start;
           
           this.recordSecurity({
@@ -295,9 +295,10 @@ class MonitoringService {
       e => Date.now() - e.timestamp < 60000 // 1 minute
     );
 
+    const total = recentEvents.length;
     const successful = recentEvents.filter(e => e.success).length;
     const failed = recentEvents.filter(e => !e.success).length;
-    const total = recentEvents.length;
+    console.log('Security events analysis:', { successful, failed, total });
 
     return {
       totalEvents: this.securityEvents.length,
@@ -409,6 +410,7 @@ class MonitoringService {
 
   // Gestion des alertes
   private triggerAlert(type: string, alert: { level: string; message: string; details?: string }) {
+    console.log('Triggering alert:', { type, alert });
     console.warn(`🚨 Alerte ${alert.level.toUpperCase()}: ${alert.message}`, alert.details);
     
     // Ici on pourrait envoyer des notifications ou déclencher des actions

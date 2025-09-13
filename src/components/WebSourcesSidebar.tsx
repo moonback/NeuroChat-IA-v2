@@ -486,14 +486,14 @@ export function WebSourcesSidebar({ usedSources }: WebSourcesSidebarProps) {
   return (
     <TooltipProvider>
       {expanded && (
-        <aside
+    <aside
           className="absolute top-0 left-0 bottom-0 w-96 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-r border-slate-200/60 dark:border-slate-800/60 shadow-2xl hidden lg:flex flex-col z-40 transition-all duration-500"
           style={{
             transform: 'translateX(0)',
             width: '24rem'
           }}
           aria-label="Barre latérale des sources web enrichie"
-          onMouseLeave={() => setExpanded(false)}
+      onMouseLeave={() => setExpanded(false)}
         >
           {/* Header avec contrôles avancés */}
           <div className="p-4 border-b border-slate-200/60 dark:border-slate-800/60 bg-gradient-to-br from-green-50/80 via-emerald-50/60 to-teal-50/80 dark:from-slate-950/60 dark:via-green-950/40 dark:to-emerald-950/30">
@@ -501,7 +501,7 @@ export function WebSourcesSidebar({ usedSources }: WebSourcesSidebarProps) {
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-green-500/10 dark:bg-green-500/20">
                   <Globe className="w-5 h-5 text-green-600 dark:text-green-400" />
-                </div>
+        </div>
                 <div>
                   <div className="text-lg font-bold text-slate-800 dark:text-slate-200">Sources Web</div>
                   <div className="text-xs text-slate-500">
@@ -538,78 +538,78 @@ export function WebSourcesSidebar({ usedSources }: WebSourcesSidebarProps) {
                 </Tooltip>
               </div>
             </div>
-            {/* Statistiques rapides */}
+        {/* Statistiques rapides */}
             <div className="grid grid-cols-3 gap-2 mb-4">
               <div className="text-center p-2 bg-white/70 dark:bg-slate-800/70 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
                 <div className="text-xs text-slate-500 mb-1">Domaines</div>
                 <div className="text-sm font-bold text-green-600">{stats.domains}</div>
-              </div>
+          </div>
               <div className="text-center p-2 bg-white/70 dark:bg-slate-800/70 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
                 <div className="text-xs text-slate-500 mb-1">Récents</div>
                 <div className="text-sm font-bold text-blue-600">{stats.recent}</div>
-              </div>
+          </div>
               <div className="text-center p-2 bg-white/70 dark:bg-slate-800/70 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
                 <div className="text-xs text-slate-500 mb-1">Favoris</div>
                 <div className="text-sm font-bold text-yellow-600">{stats.favorites}</div>
-              </div>
+        </div>
             </div>
             {/* Recherche avancée */}
             <div className="relative mb-4">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
                 placeholder="Rechercher sources, tags, domaines..."
                 className="pl-10 pr-10 h-10 bg-white/80 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-green-500/50"
-              />
-              {search && (
+          />
+          {search && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setSearch('')}
+              onClick={() => setSearch('')}
                   className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                >
-                  <X className="w-4 h-4" />
+            >
+              <X className="w-4 h-4" />
                 </Button>
-              )}
-            </div>
+          )}
+        </div>
             {/* Contrôles de filtrage et tri */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-slate-500" />
-                <Select value={filterBy} onValueChange={(value: FilterOption) => setFilterBy(value)}>
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-slate-500" />
+            <Select value={filterBy} onValueChange={(value: FilterOption) => setFilterBy(value)}>
                   <SelectTrigger className="h-9 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
                     <SelectItem value="all">Toutes les sources</SelectItem>
-                    <SelectItem value="recent">Récentes (24h)</SelectItem>
-                    <SelectItem value="favorites">Favoris</SelectItem>
+                <SelectItem value="recent">Récentes (24h)</SelectItem>
+                <SelectItem value="favorites">Favoris</SelectItem>
                     <SelectItem value="highQuality">Haute qualité</SelectItem>
                     <SelectItem value="pinned">Épinglées</SelectItem>
                     <SelectItem value="news">Actualités</SelectItem>
                     <SelectItem value="academic">Académique</SelectItem>
                     <SelectItem value="social">Social</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2">
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
                 <ArrowUpDown className="w-4 h-4 text-slate-500" />
-                <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+            <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
                   <SelectTrigger className="h-9 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="timestamp">Plus récent</SelectItem>
-                    <SelectItem value="useCount">Plus utilisé</SelectItem>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="timestamp">Plus récent</SelectItem>
+                <SelectItem value="useCount">Plus utilisé</SelectItem>
                     <SelectItem value="quality">Meilleure qualité</SelectItem>
                     <SelectItem value="rating">Mieux noté</SelectItem>
-                    <SelectItem value="domain">Domaine</SelectItem>
-                    <SelectItem value="title">Titre</SelectItem>
+                <SelectItem value="domain">Domaine</SelectItem>
+                <SelectItem value="title">Titre</SelectItem>
                     <SelectItem value="readingTime">Temps de lecture</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              </SelectContent>
+            </Select>
+          </div>
               <div className="flex items-center gap-2">
                 <Hash className="w-4 h-4 text-slate-500" />
                 <Select value={groupBy} onValueChange={(value: GroupBy) => setGroupBy(value)}>
@@ -624,58 +624,58 @@ export function WebSourcesSidebar({ usedSources }: WebSourcesSidebarProps) {
                     <SelectItem value="quality">Par qualité</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+        </div>
             </div>
             {/* Pagination */}
             {processedSources.length > settings.itemsPerPage && (
               <div className="mt-4 p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
                 <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
                     <span className="text-slate-600 dark:text-slate-400">Par page:</span>
-                    <Select
+                <Select 
                       value={settings.itemsPerPage.toString()}
                       onValueChange={(value) => updateSettings({ itemsPerPage: Number(value) })}
-                    >
+                >
                       <SelectTrigger className="h-8 w-16 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="5">5</SelectItem>
-                        <SelectItem value="10">10</SelectItem>
-                        <SelectItem value="20">20</SelectItem>
-                        <SelectItem value="50">50</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
                   <div className="flex items-center gap-2">
                     <span className="text-slate-600 dark:text-slate-400">
                       {startIndex + 1}-{Math.min(startIndex + settings.itemsPerPage, processedSources.length)} sur {processedSources.length}
                     </span>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
                         className="h-7 w-7 p-0"
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                        disabled={currentPage === 1}
-                      >
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
                         <ChevronLeft className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                         className="h-7 w-7 p-0"
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                        disabled={currentPage === totalPages}
-                      >
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
                         <ChevronRight className="w-4 h-4" />
-                      </Button>
+                  </Button>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </div>
           {/* Contenu principal avec ScrollArea */}
           <ScrollArea className="flex-1">
             <div className="p-4 space-y-4">
@@ -689,8 +689,8 @@ export function WebSourcesSidebar({ usedSources }: WebSourcesSidebarProps) {
                       <Badge variant="secondary" className="text-xs">
                         {sources.length}
                       </Badge>
-                    </div>
-                  )}
+          </div>
+        )}
                   <div className="space-y-3">
                     {sources.map((source, index) => (
                       <SourceCard
@@ -703,7 +703,7 @@ export function WebSourcesSidebar({ usedSources }: WebSourcesSidebarProps) {
                         onUpdateNote={(note) => updateNote(source.url, note)}
                       />
                     ))}
-                  </div>
+      </div>
                 </div>
               ))}
               {processedSources.length === 0 && (
@@ -711,9 +711,9 @@ export function WebSourcesSidebar({ usedSources }: WebSourcesSidebarProps) {
                   <Globe className="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
                   <div className="text-sm text-slate-500 dark:text-slate-400">
                     {enrichedSources.length === 0 ? 'Aucune source web trouvée.' : 'Aucun résultat pour ces filtres.'}
-                  </div>
-                </div>
-              )}
+          </div>
+        </div>
+      )}
             </div>
           </ScrollArea>
           {/* Modales */}
