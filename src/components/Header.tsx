@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
 import { HelpModal } from '@/components/HelpModal';
+import { SecurityPerformanceMonitor } from '@/components/SecurityPerformanceMonitor';
+import { MonitoringStatusIndicator } from '@/components/MonitoringStatusIndicator';
 // import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
@@ -195,7 +197,22 @@ const Logo = ({ onNewDiscussion, isOnline, quality }: {
   isOnline: boolean; 
   quality: 'excellent' | 'good' | 'poor';
 }) => (
-  <div className="flex items-center gap-2 sm:gap-3 cursor-pointer group" onClick={onNewDiscussion}>
+  <div 
+    className="flex items-center gap-2 sm:gap-3 cursor-pointer group" 
+    onClick={(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onNewDiscussion();
+    }}
+    role="button"
+    tabIndex={0}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onNewDiscussion();
+      }
+    }}
+  >
     <div className="relative">
       {/* Logo principal avec image */}
       <div>
@@ -1382,6 +1399,7 @@ export function Header(props: HeaderProps) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showVocalSettings, setShowVocalSettings] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showMonitoring, setShowMonitoring] = useState(false);
   
 
   // Handlers optimisés avec feedback
@@ -1499,6 +1517,12 @@ export function Header(props: HeaderProps) {
             {/* Logo et branding */}
             <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
               <Logo onNewDiscussion={onNewDiscussion} isOnline={isOnline} quality={connectionQuality} />
+              
+              {/* Indicateur de monitoring */}
+              <MonitoringStatusIndicator 
+                onOpenMonitor={() => setShowMonitoring(true)}
+                compact={true}
+              />
               
               {/* Sélecteur d'espace de travail - Responsive */}
               <WorkspaceSelector
@@ -1765,6 +1789,19 @@ export function Header(props: HeaderProps) {
           }
         }
       `}</style>
+      
+      {/* Monitoring de sécurité et performance */}
+      {showMonitoring && (
+        <SecurityPerformanceMonitor 
+          isOpen={showMonitoring}
+          onClose={() => setShowMonitoring(false)}
+        />
+      )}
+      
+      {/* Boutons de test temporaires - À supprimer en production */}
+      {/* <MonitoringTestButton />
+      <SimpleMonitoringTest />
+      <MonitoringIndicatorTest /> */}
     </>
   );
 }

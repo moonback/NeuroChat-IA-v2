@@ -19,6 +19,10 @@ import {
   savePersistentEncrypted,
   loadPersistentEncrypted
 } from '@/services/persistentEncryption';
+// 🔍 Monitoring de sécurité et performance
+import { startMonitoring, stopMonitoring } from '@/services/monitoringService';
+// Tests des alertes (à supprimer en production)
+import '@/utils/alertTest';
 
 // Constantes pour le debug
 const ENCRYPTION_ENABLED_KEY = 'nc_encryption_enabled';
@@ -101,6 +105,9 @@ function App() {
         initializeSecureStorage();
         initializeKeyManager();
         
+        // 🔍 Démarrer le monitoring de sécurité et performance
+        startMonitoring();
+        
         // // Le chiffrement est maintenant obligatoire - pas de diagnostic nécessaire
         // console.log('🔐 Initialisation du chiffrement obligatoire...');
         
@@ -134,6 +141,7 @@ function App() {
     // Nettoyage à la fermeture du composant
     return () => {
       shutdownKeyManager();
+      stopMonitoring();
     };
   }, []);
 
