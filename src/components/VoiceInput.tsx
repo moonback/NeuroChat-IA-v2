@@ -25,9 +25,11 @@ interface VoiceInputProps {
   provider?: Provider;
   agentEnabled?: boolean;
   onToggleAgent?: () => void;
+  webEnabled?: boolean;
+  webSearching?: boolean;
 }
 
-export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agentEnabled = false, onToggleAgent }: VoiceInputProps) {
+export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agentEnabled = false, onToggleAgent, webEnabled = false, webSearching = false }: VoiceInputProps) {
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -372,7 +374,15 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
                       onKeyPress={handleKeyPress}
                       onFocus={() => setIsFocused(true)}
                       onBlur={() => setIsFocused(false)}
-                       placeholder={listening ? "🎤 Dictée en cours..." : "Tapez un message…"}
+                       placeholder={
+                         listening 
+                           ? "🎤 Dictée en cours..." 
+                           : webSearching 
+                             ? "🔍 Recherche web en cours..." 
+                             : webEnabled 
+                               ? "Tapez un message (recherche web activée)…" 
+                               : "Tapez un message (recherche web intelligente)…"
+                       }
                       disabled={isLoading || listening}
                       className={cn(
                          "h-12 rounded-xl px-4 py-3 text-sm sm:text-base transition-all duration-300",

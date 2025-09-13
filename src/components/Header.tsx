@@ -943,8 +943,12 @@ const DesktopActions = ({
 
           <IconButton
             onClick={handleWebToggle}
-            tooltip="Recherche web"
+            tooltip={webEnabled ? "Recherche web activée - Cliquez pour désactiver" : "Recherche web intelligente - S'active automatiquement si l'IA ne connaît pas la réponse"}
             active={!!webEnabled}
+            className={webEnabled 
+              ? 'text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40' 
+              : 'hover:bg-blue-50/80 dark:hover:bg-blue-950/50'
+            }
           >
             <Globe className={`w-4 h-4 ${webSearching ? 'animate-spin' : ''}`} />
           </IconButton>
@@ -1198,8 +1202,8 @@ const MobileMenuSheet = ({
                   label={webEnabled ? 'Web: ON' : 'Web: OFF'}
                   icon={Globe}
                   active={!!webEnabled}
-                  intent={webEnabled ? 'warning' : 'default'}
-                  tooltip="Recherche web"
+                  intent={webEnabled ? 'success' : 'default'}
+                  tooltip={webEnabled ? "Recherche web activée - Cliquez pour désactiver" : "Recherche web intelligente - S'active automatiquement si l'IA ne connaît pas la réponse"}
                 />
               )}
 
@@ -1433,8 +1437,20 @@ export function Header(props: HeaderProps) {
 
   const handleWebToggle = useCallback(() => {
     if (setWebEnabled) {
-      setWebEnabled(!webEnabled);
-      if ('vibrate' in navigator) navigator.vibrate(30);
+      const newWebEnabled = !webEnabled;
+      setWebEnabled(newWebEnabled);
+      
+      // Feedback visuel et sonore
+      if ('vibrate' in navigator) {
+        navigator.vibrate(newWebEnabled ? 100 : 50);
+      }
+      
+      // Toast notification pour informer l'utilisateur
+      if (newWebEnabled) {
+        console.log('🔍 Recherche web activée - Les prochaines questions incluront des résultats web');
+      } else {
+        console.log('🔍 Recherche web intelligente activée - S\'activera automatiquement si l\'IA ne connaît pas la réponse');
+      }
     }
   }, [webEnabled, setWebEnabled]);
 
