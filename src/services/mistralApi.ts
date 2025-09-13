@@ -32,7 +32,7 @@ export async function sendMessageToMistral(
     mistralMessages.push({ role: m.isUser ? 'user' : 'assistant', content: m.text });
   }
 
-  const body: any = {
+  const body: { model: string; messages: Array<{ role: string; content: string }>; temperature: number; top_p: number; max_tokens: number } = {
     model,
     messages: mistralMessages,
     temperature: generationConfig?.temperature ?? 0.7,
@@ -69,7 +69,7 @@ export async function streamMessageToMistral(
   _images: File[] | undefined,
   systemPrompt: string,
   generationConfig: MistralGenerationConfig | undefined,
-  callbacks: { onToken: (token: string) => void; onDone?: () => void; onError?: (err: any) => void },
+  callbacks: { onToken: (token: string) => void; onDone?: () => void; onError?: (err: Error) => void },
 ): Promise<void> {
   const apiKey = ensureApiKey();
   const model = (generationConfig?.model || (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest') as string;
@@ -82,7 +82,7 @@ export async function streamMessageToMistral(
     mistralMessages.push({ role: m.isUser ? 'user' : 'assistant', content: m.text });
   }
 
-  const body: any = {
+  const body: { model: string; messages: Array<{ role: string; content: string }>; temperature: number; top_p: number; max_tokens: number; stream: boolean } = {
     model,
     messages: mistralMessages,
     temperature: generationConfig?.temperature ?? 0.7,
@@ -140,7 +140,7 @@ export async function streamMessageToMistral(
     }
     callbacks.onDone?.();
   } catch (err) {
-    callbacks.onError?.(err);
+    callbacks.onError?.(err instanceof Error ? err : new Error(String(err)));
     throw err;
   }
 }

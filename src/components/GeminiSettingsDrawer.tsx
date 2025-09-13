@@ -12,7 +12,7 @@ interface GeminiSettingsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   geminiConfig: GeminiGenerationConfig;
-  onConfigChange: (key: keyof GeminiGenerationConfig, value: any) => void;
+  onConfigChange: (key: keyof GeminiGenerationConfig, value: unknown) => void;
   onReset: () => void;
   onClose: () => void;
   DEFAULTS: GeminiGenerationConfig & { stopSequences: string[]; candidateCount: number };

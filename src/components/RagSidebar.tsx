@@ -144,7 +144,6 @@ export function RagSidebar({ onOpenRagDocs, usedDocs, workspaceId = 'default' }:
     }
 
     try {
-      // @ts-ignore
       const modules = import.meta.glob('../data/rag_docs/*.{txt,md}', { as: 'raw', eager: true });
       const LS_STATS_KEY = wsKey(workspaceId, 'rag_doc_stats');
       const LS_FAVORITES_KEY = wsKey(workspaceId, 'rag_doc_favorites');
@@ -175,17 +174,20 @@ export function RagSidebar({ onOpenRagDocs, usedDocs, workspaceId = 'default' }:
       let userDocs: RagDoc[] = [];
       if (userRaw) {
         try { 
-          const rawDocs = JSON.parse(userRaw) as any[];
+          const rawDocs = JSON.parse(userRaw) as Array<{ id: string; titre: string; contenu: string; origine: string; size?: number; lastUsed?: Date; favorite?: boolean }>;
           userDocs = rawDocs
-            .filter(d => d?.origine !== 'github')
+            .filter(d => d?.origine === 'dossier' || d?.origine === 'utilisateur')
             .map(d => ({
               ...d,
               size: d.contenu?.length || 0,
               lastUsed: stats[d.id]?.lastUsed,
               useCount: stats[d.id]?.useCount || 0,
               favorite: favs.has(d.id),
+              origine: (d.origine === 'dossier' || d.origine === 'utilisateur') ? d.origine as 'dossier' | 'utilisateur' : 'utilisateur'
             }));
-        } catch {}
+        } catch {
+          // Ignore parsing errors
+        }
       }
       
       const allDocs = [...dossierDocs, ...userDocs];
@@ -454,7 +456,7 @@ export function RagSidebar({ onOpenRagDocs, usedDocs, workspaceId = 'default' }:
               <button
                 key={`used-${doc.id}`}
                 className="w-full text-left p-3 rounded-lg bg-gradient-to-r from-green-50/50 to-emerald-50/50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200/60 dark:border-green-800/60 hover:border-green-300 dark:hover:border-green-600 hover:shadow group"
-                onClick={() => handlePreview(doc as any)}
+                onClick={() => handlePreview(doc as RagDoc)}
                 title="Aperçu - Document utilisé"
               >
                 <div className="flex items-start gap-2">

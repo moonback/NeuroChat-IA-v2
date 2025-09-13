@@ -8,7 +8,7 @@ import {
   Trash2, Menu, X, WifiOff, Baby, Sparkles, Layers,
   Globe, Database, Activity, Pencil, HelpCircle
 } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -42,7 +42,7 @@ interface HeaderProps {
   setStructuredMode?: (v: boolean) => void;
   webSearching?: boolean;
   onOpenGeminiSettings?: () => void;
-  geminiConfig?: any;
+  geminiConfig?: Record<string, unknown>;
   provider?: 'gemini' | 'openai' | 'mistral';
   onChangeProvider?: (p: 'gemini' | 'openai' | 'mistral') => void;
   modePrive: boolean;
@@ -203,7 +203,7 @@ const Logo = ({ onNewDiscussion, isOnline, quality }: {
         <img 
           src="/logo-p.png" 
           alt="NeuroChat - IA Intelligente" 
-          className="w-10 h-10 sm:w-11 sm:h-11 object-contain relative z-10"
+          className="w-8 h-8 sm:w-9 sm:h-9 object-contain relative z-10"
         />
         
         {/* Effets de brillance */}
@@ -221,11 +221,11 @@ const Logo = ({ onNewDiscussion, isOnline, quality }: {
     {/* Texte du logo et statut de connexion - masqué sur mobile */}
     <div className="min-w-0 flex-1 hidden sm:block">
       <div className="flex items-center gap-2">
-        <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-slate-900 via-blue-700 to-indigo-600 dark:from-white dark:via-blue-300 dark:to-indigo-400 bg-clip-text text-transparent">
+        <h1 className="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-900 via-blue-700 to-indigo-600 dark:from-white dark:via-blue-300 dark:to-indigo-400 bg-clip-text text-transparent">
           NeuroChat
         </h1>
-        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">
-          IA v2
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full">
+          v2
         </span>
       </div>
       <ConnectionStatus isOnline={isOnline} quality={quality} />
@@ -235,6 +235,15 @@ const Logo = ({ onNewDiscussion, isOnline, quality }: {
 
 // (Badges de statut supprimés dans la nouvelle version épurée)
 
+interface ActionButtonProps {
+  onClick?: () => void;
+  tooltip?: string;
+  variant?: "ghost" | "default" | "destructive" | "outline" | "secondary" | "link";
+  className?: string;
+  loading?: boolean;
+  children: React.ReactNode;
+}
+
 const ActionButton = ({ 
   children, 
   onClick, 
@@ -243,7 +252,7 @@ const ActionButton = ({
   className = "",
   loading = false,
   ...props 
-}: any) => (
+}: ActionButtonProps) => (
   <Button
     variant={variant}
     size="sm"
@@ -252,7 +261,7 @@ const ActionButton = ({
     data-tooltip-id="header-tooltip"
     data-tooltip-content={tooltip}
     className={`
-      h-9 px-4 text-sm font-medium rounded-xl
+      h-8 px-3 text-sm font-medium rounded-lg
       hover:bg-slate-100/80 dark:hover:bg-slate-800/80 
       transition-all duration-200 hover:scale-[1.02] active:scale-95 
       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 
@@ -274,6 +283,15 @@ const ActionButton = ({
   </Button>
 );
 
+interface IconButtonProps {
+  onClick?: () => void;
+  tooltip?: string;
+  variant?: "ghost" | "default" | "destructive" | "outline" | "secondary" | "link";
+  className?: string;
+  active?: boolean;
+  children: React.ReactNode;
+}
+
 const IconButton = ({ 
   children, 
   onClick, 
@@ -282,7 +300,7 @@ const IconButton = ({
   className = "",
   active = false,
   ...props 
-}: any) => (
+}: IconButtonProps) => (
   <Button
     variant={variant}
     size="sm"
@@ -290,7 +308,7 @@ const IconButton = ({
     data-tooltip-id="header-tooltip"
     data-tooltip-content={tooltip}
     className={`
-      h-9 w-9 p-0 rounded-xl transition-all duration-200 
+      h-8 w-8 p-0 rounded-lg transition-all duration-200 
       hover:scale-105 active:scale-95 backdrop-blur-sm
       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 
       focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950
@@ -314,7 +332,7 @@ const TileButton = ({
 }: {
   onClick: () => void;
   label: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   active?: boolean;
   intent?: 'default' | 'danger' | 'info' | 'success' | 'warning';
   disabled?: boolean;
@@ -351,8 +369,8 @@ const TileButton = ({
 
 const ButtonGroup = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <div className={`
-    flex items-center gap-1 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 
-    border border-slate-200/60 dark:border-slate-800/60 p-1.5 shadow-sm backdrop-blur-sm
+    flex items-center gap-1 rounded-lg bg-slate-50/80 dark:bg-slate-900/60 
+    border border-slate-200/60 dark:border-slate-800/60 p-1 shadow-sm backdrop-blur-sm
     hover:shadow-md transition-all duration-200
     ${className}
   `}>
@@ -424,7 +442,7 @@ const WorkspaceSelector = ({
     <>
       <button
         onClick={() => setShowWorkspaceModal(true)}
-        className="flex items-center gap-2 bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60 rounded-xl px-3 py-2 max-w-[200px] sm:max-w-none hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-colors group"
+        className="flex items-center gap-1.5 bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60 rounded-lg px-2 py-1.5 max-w-[160px] sm:max-w-none hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-colors group"
         title="Changer d'espace de travail"
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -700,12 +718,12 @@ const MobileActions = ({
 }) => (
   <div className="md:hidden flex items-center gap-1 mobile-optimized">
     {/* Barre d'actions mobile ultra-optimisée */}
-    <div className="flex items-center gap-1 bg-slate-50/80 dark:bg-slate-900/60 rounded-2xl p-1 border border-slate-200/60 dark:border-slate-800/60 backdrop-blur-sm shadow-mobile">
+    <div className="flex items-center gap-1 bg-slate-50/80 dark:bg-slate-900/60 rounded-lg p-0.5 border border-slate-200/60 dark:border-slate-800/60 backdrop-blur-sm shadow-mobile">
       {/* Bouton Nouveau - Priorité haute */}
       <IconButton 
         onClick={onNewDiscussion} 
         tooltip="Nouvelle discussion" 
-        className="h-8 w-8 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-100/80 dark:hover:bg-blue-900/60 mobile-button transition-smooth"
+        className="h-7 w-7 rounded-lg bg-blue-50/80 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-100/80 dark:hover:bg-blue-900/60 mobile-button transition-smooth"
         aria-label="Nouvelle discussion"
       >
         <PlusCircle className="w-4 h-4" />
@@ -716,7 +734,7 @@ const MobileActions = ({
         onClick={handleVolumeToggle}
         tooltip={muted ? 'Activer audio' : 'Désactiver audio'}
         active={!muted}
-        className={`h-8 w-8 rounded-xl mobile-button transition-smooth ${
+        className={`h-7 w-7 rounded-lg mobile-button transition-smooth ${
           muted
             ? 'bg-red-50/80 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100/80 dark:hover:bg-red-900/60'
             : 'bg-green-50/80 dark:bg-green-950/40 text-green-600 dark:text-green-400 hover:bg-green-100/80 dark:hover:bg-green-900/60'
@@ -732,7 +750,7 @@ const MobileActions = ({
       variant="ghost"
       size="sm"
       onClick={() => setShowMobileMenu(true)}
-      className="h-9 w-9 p-0 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 hover:bg-slate-200/80 dark:hover:bg-slate-700/60 transition-smooth hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 mobile-button"
+      className="h-8 w-8 p-0 rounded-lg bg-slate-100/80 dark:bg-slate-800/60 hover:bg-slate-200/80 dark:hover:bg-slate-700/60 transition-smooth hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 mobile-button"
       aria-label="Menu principal"
     >
       <Menu className="w-5 h-5" />
@@ -752,31 +770,31 @@ const MobileStatusIndicator = ({
   ragEnabled: boolean;
   webEnabled?: boolean;
 }) => (
-  <div className="md:hidden border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm">
-    <div className="max-w-12xl mx-auto px-4 py-2">
+    <div className="md:hidden border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm">
+    <div className="max-w-12xl mx-auto px-2 py-1.5">
       <div className="flex items-center justify-between text-xs">
         {/* Modes actifs */}
         <div className="flex items-center gap-2">
           {modePrive && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-50/80 dark:bg-red-950/40 text-red-600 dark:text-red-400">
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-red-50/80 dark:bg-red-950/40 text-red-600 dark:text-red-400">
               <Shield className="w-3 h-3" />
               <span className="text-xs font-medium">Privé</span>
             </div>
           )}
           {modeEnfant && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-pink-50/80 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400">
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-pink-50/80 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400">
               <Baby className="w-3 h-3" />
               <span className="text-xs font-medium">Enfant</span>
             </div>
           )}
           {ragEnabled && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
               <Database className="w-3 h-3" />
               <span className="text-xs font-medium">RAG</span>
             </div>
           )}
           {webEnabled && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50/80 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-50/80 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
               <Globe className="w-3 h-3" />
               <span className="text-xs font-medium">Web</span>
             </div>
@@ -962,7 +980,6 @@ const DesktopActions = ({
 const MobileMenuSheet = ({ 
   showMobileMenu, 
   setShowMobileMenu, 
-  closeMobileMenu, 
   handleMenuAction, 
   modeEnfant, 
   hasActiveConversation, 
@@ -1027,17 +1044,7 @@ const MobileMenuSheet = ({
        <Sheet open={showMobileMenu} onOpenChange={setShowMobileMenu}>
        <SheetContent side="right" className="p-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-l border-slate-200/50 dark:border-slate-800/50 shadow-2xl w-[95vw] max-w-[480px] sm:w-[420px]">
              <SheetHeader className="p-6 border-b border-slate-200/60 dark:border-slate-800/60">
-         <div className="flex items-center justify-between">
-           <div className="flex-1 min-w-0">
-             <SheetTitle className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent mb-2">
-               Menu Principal
-             </SheetTitle>
-             <p className="text-base text-slate-600 dark:text-slate-400 font-medium">Navigation et réglages</p>
-           </div>
-          <Button variant="ghost" size="sm" onClick={closeMobileMenu} className="h-8 w-8 p-0 rounded-xl" aria-label="Fermer">
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
+         
       </SheetHeader>
       
              <div className="flex-1 overflow-y-auto">
@@ -1230,7 +1237,7 @@ const MobileMenuSheet = ({
               
               {!modeEnfant && (
                 <TileButton
-                  onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('openai:settings:open') as any))}
+                  onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('openai:settings:open')))}
                   label={'OpenAI'}
                   icon={Brain}
                   tooltip="Réglages OpenAI"
@@ -1239,7 +1246,7 @@ const MobileMenuSheet = ({
               
               {!modeEnfant && (
                 <TileButton
-                  onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('mistral:settings:open') as any))}
+                  onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('mistral:settings:open')))}
                   label={'Mistral'}
                   icon={Sparkles}
                   tooltip="Réglages Mistral"
@@ -1385,7 +1392,11 @@ export function Header(props: HeaderProps) {
 
   // Handlers optimisés avec feedback
   const handleVolumeToggle = useCallback(() => {
-      muted ? onUnmute() : onMute();
+    if (muted) {
+      onUnmute();
+    } else {
+      onMute();
+    }
   }, [muted, onMute, onUnmute]);
 
   const handleModeVocalToggle = useCallback(() => {
@@ -1424,7 +1435,7 @@ export function Header(props: HeaderProps) {
 
   const handleChildModeToggle = useCallback(() => {
     props.onToggleModeEnfant?.();
-  }, [props.onToggleModeEnfant]);
+  }, [props]);
 
   const closeMobileMenu = useCallback(() => {
     setShowMobileMenu(false);
@@ -1489,8 +1500,8 @@ export function Header(props: HeaderProps) {
           <source src="/bip2.ogg" type="audio/ogg" />
         </audio>
 
-        <div className="max-w-12xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <div className="max-w-12xl mx-auto px-2 sm:px-4 lg:px-6">
+          <div className="flex items-center justify-between h-14">
             {/* Logo et branding */}
             <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
               <Logo onNewDiscussion={onNewDiscussion} isOnline={isOnline} quality={connectionQuality} />
@@ -1731,14 +1742,14 @@ export function Header(props: HeaderProps) {
 
         /* Breakpoint xs personnalisé pour très petits écrans */
         @media (min-width: 475px) {
-          .xs\:flex {
+          .xs:flex {
             display: flex;
           }
         }
 
         /* Améliorations pour les petits écrans */
         @media (max-width: 640px) {
-          .sm\:hidden {
+          .sm:hidden {
             display: none !important;
           }
         }
@@ -1749,7 +1760,7 @@ export function Header(props: HeaderProps) {
         }
 
         /* Effet de pression tactile */
-        .active\:scale-95:active {
+        .active:scale-95:active {
           transform: scale(0.95);
         }
 

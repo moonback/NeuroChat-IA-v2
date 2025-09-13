@@ -50,7 +50,7 @@ export const SecurityStatusIndicator: React.FC<SecurityStatusIndicatorProps> = (
   });
   
   const [showDetails, setShowDetails] = useState(false);
-  const [auditTrail, setAuditTrail] = useState<any[]>([]);
+  const [auditTrail, setAuditTrail] = useState<Array<{ timestamp: Date; action: string; details: string; success?: boolean; purpose?: string }>>([]);
   
   // Mise à jour des métriques en temps réel
   useEffect(() => {
@@ -72,7 +72,13 @@ export const SecurityStatusIndicator: React.FC<SecurityStatusIndicatorProps> = (
           securityLevel: storageActive ? 'military' : 'none'
         });
         
-        setAuditTrail(auditData);
+        setAuditTrail(auditData.map(entry => ({
+          timestamp: new Date(entry.timestamp),
+          action: entry.action,
+          details: String((entry as any).details || ''),
+          success: entry.success,
+          purpose: entry.purpose
+        })));
       } catch (error) {
         console.error('Erreur mise à jour métriques sécurité:', error);
       }

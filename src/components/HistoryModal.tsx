@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { History, X, Search, MessageCircle, Users, Trash2, CheckSquare, Square, Grid3X3, List, ChevronLeft, ChevronRight, MoreHorizontal, Baby } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Discussion } from '@/hooks/useDiscussions';
@@ -6,7 +6,9 @@ import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader,
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 
 // Interface sans le champ category
-export interface DiscussionWithCategory extends Discussion {}
+export interface DiscussionWithCategory extends Discussion {
+  category?: string;
+}
 
 interface HistoryModalProps {
   open: boolean;
@@ -93,7 +95,7 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
   );
 
   // Reset page when filters change
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [search, sort, viewMode]);
 
@@ -153,7 +155,7 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <select
                 value={sort}
-                onChange={e => setSort(e.target.value as any)}
+                onChange={e => setSort(e.target.value as 'date-desc' | 'date-asc' | 'alpha')}
                 className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 aria-label="Trier"
               >

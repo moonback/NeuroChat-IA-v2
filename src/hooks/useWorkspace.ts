@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 export interface WorkspaceItem {
   id: string;
@@ -6,7 +6,7 @@ export interface WorkspaceItem {
 }
 
 export function useWorkspace() {
-  function wsKey(ws: string, base: string): string { return `ws:${ws}:${base}`; }
+  const wsKey = useCallback((ws: string, base: string): string => `ws:${ws}:${base}`, []);
 
   const [workspaceId, setWorkspaceId] = useState<string>(() => {
     try { return localStorage.getItem('nc_active_workspace') || 'default'; } catch { return 'default'; }
@@ -19,16 +19,22 @@ export function useWorkspace() {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
-    } catch {}
+    } catch {
+      // Ignore parsing errors
+    }
     return [{ id: 'default', name: 'Par défaut' }];
   });
 
   useEffect(() => {
-    try { localStorage.setItem('nc_workspaces', JSON.stringify(workspaces)); } catch {}
+    try { localStorage.setItem('nc_workspaces', JSON.stringify(workspaces)); } catch {
+      // Ignore storage errors
+    }
   }, [workspaces]);
 
   useEffect(() => {
-    try { localStorage.setItem('nc_active_workspace', workspaceId); } catch {}
+    try { localStorage.setItem('nc_active_workspace', workspaceId); } catch {
+      // Ignore storage errors
+    }
   }, [workspaceId]);
 
   // Effet utilitaire pour vider des clés par espace si supprimé
@@ -46,13 +52,15 @@ export function useWorkspace() {
       for (const base of keysToClear) {
         localStorage.removeItem(wsKey(id, base));
       }
-    } catch {}
+    } catch {
+      // Ignore parsing errors
+    }
   };
 
   const createWorkspace = () => {
     const name = window.prompt('Nom du nouvel espace');
     if (!name || !name.trim()) return;
-    const id = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').slice(0, 24) || `ws-${Date.now()}`;
+    const id = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 24) || `ws-${Date.now()}`;
     if (workspaces.some(w => w.id === id)) return;
     const next = [...workspaces, { id, name: name.trim() }];
     setWorkspaces(next);

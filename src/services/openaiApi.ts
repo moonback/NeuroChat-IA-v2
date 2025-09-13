@@ -65,7 +65,7 @@ export async function sendMessageToOpenAI(
     }
   });
 
-  const body: any = {
+  const body: { model: string; messages: Array<{ role: string; content: string | Array<{ type: string; text?: string; image_url?: { url: string } }> }>; temperature: number; top_p: number; max_tokens: number } = {
     model,
     messages: openaiMessages,
     temperature: generationConfig?.temperature ?? 0.7,
@@ -102,7 +102,7 @@ export async function streamMessageToOpenAI(
   images: File[] | undefined,
   systemPrompt: string,
   generationConfig: OpenAIGenerationConfig | undefined,
-  callbacks: { onToken: (token: string) => void; onDone?: () => void; onError?: (err: any) => void },
+  callbacks: { onToken: (token: string) => void; onDone?: () => void; onError?: (err: Error) => void },
 ): Promise<void> {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY as string | undefined;
   if (!apiKey) {
@@ -141,7 +141,7 @@ export async function streamMessageToOpenAI(
     }
   });
 
-  const body: any = {
+  const body: { model: string; messages: Array<{ role: string; content: string | Array<{ type: string; text?: string; image_url?: { url: string } }> }>; temperature: number; top_p: number; max_tokens: number; stream: boolean } = {
     model,
     messages: openaiMessages,
     temperature: generationConfig?.temperature ?? 0.7,
@@ -193,7 +193,7 @@ export async function streamMessageToOpenAI(
             if (typeof token === 'string' && token.length > 0) {
               callbacks.onToken(token);
             }
-          } catch (e) {
+          } catch {
             // ignorer lignes non JSON
           }
         }
@@ -201,7 +201,7 @@ export async function streamMessageToOpenAI(
     }
     callbacks.onDone?.();
   } catch (err) {
-    callbacks.onError?.(err);
+    callbacks.onError?.(err instanceof Error ? err : new Error(String(err)));
     throw err;
   }
 }

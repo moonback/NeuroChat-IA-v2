@@ -348,7 +348,7 @@ export async function decrypt(encryptedBlob: EncryptedBlob, password: string): P
  * @param encryptedBlob - Blob à valider
  * @returns true si le blob semble valide
  */
-export function validateEncryptedBlob(encryptedBlob: any): encryptedBlob is EncryptedBlob {
+export function validateEncryptedBlob(encryptedBlob: unknown): encryptedBlob is EncryptedBlob {
   if (!encryptedBlob || typeof encryptedBlob !== 'object') return false;
   
   const requiredFields = ['version', 'algorithm', 'data', 'iv', 'salt', 'tag', 'iterations', 'timestamp'];

@@ -14,22 +14,24 @@ function getAllDocuments(workspaceId: string) {
     };
   });
   // Charger les docs utilisateur depuis le localStorage
-  let userDocs: any[] = [];
+  let userDocs: Array<{ id: string; titre: string; contenu: string; origine: string }> = [];
   try {
     const raw = localStorage.getItem(wsKey(workspaceId, 'rag_user_docs'));
     if (raw) userDocs = JSON.parse(raw);
-  } catch {}
+  } catch {
+    // Ignore parsing errors
+  }
   return [...dossierDocs, ...userDocs];
 }
 
 // (champ 'model' supprimé – plus utilisé)
-let documentEmbeddings: { [id: string]: Float32Array } = {};
+const documentEmbeddings: { [id: string]: Float32Array } = {};
 
 // Fonction utilitaire pour la similarité cosinus
 // Les vecteurs étant normalisés, la similarité cosinus est un dot product
 
 // Initialisation du modèle et des embeddings (asynchrone)
-async function ensureEmbeddings(documents: any[]) {
+async function ensureEmbeddings(documents: Array<{ id: string; contenu: string }>) {
   const newDocs = documents.filter(doc => !documentEmbeddings[doc.id]);
   for (const doc of newDocs) {
     const emb = await embedText(doc.contenu, true);
@@ -48,7 +50,7 @@ async function ensureEmbeddings(documents: any[]) {
  * @param {number} maxResults - Nombre maximum de passages à retourner
  * @returns {Promise<Array<{id: number, titre: string, contenu: string}>>}
  */
-export async function searchDocuments(query: string, maxResults = 3, workspaceId = 'default'): Promise<any[]> {
+export async function searchDocuments(query: string, maxResults = 3, workspaceId = 'default'): Promise<Array<{ id: string; titre: string; contenu: string; score: number }>> {
   if (!query) return [];
   const documents = getAllDocuments(workspaceId);
   try {
@@ -64,7 +66,7 @@ export async function searchDocuments(query: string, maxResults = 3, workspaceId
       .sort((a, b) => b.score - a.score)
       .slice(0, maxResults)
       .filter(doc => doc.score > 0.1); // seuil minimal
-  } catch (e) {
+  } catch {
     // Fallback : recherche naïve par mots-clés
     const lowerQuery = query.toLowerCase();
     return documents

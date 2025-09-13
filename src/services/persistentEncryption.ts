@@ -28,7 +28,7 @@ let persistentEncryptionEnabled = false;
 let masterPassword: string | null = null;
 
 /** Cache pour éviter les re-déchiffrements */
-const persistentCache = new Map<string, any>();
+const persistentCache = new Map<string, unknown>();
 
 // ========================================================================================
 // GESTION DU CHIFFREMENT PERSISTANT
@@ -139,7 +139,7 @@ export async function initializePersistentEncryption(userPassword?: string): Pro
  * @param key - Clé de stockage
  * @param data - Données à chiffrer et sauvegarder
  */
-export async function savePersistentEncrypted(key: string, data: any): Promise<void> {
+export async function savePersistentEncrypted(key: string, data: unknown): Promise<void> {
   if (!persistentEncryptionEnabled || !masterPassword) {
     // Mode normal : stockage direct
     localStorage.setItem(key, JSON.stringify(data));
@@ -167,7 +167,7 @@ export async function savePersistentEncrypted(key: string, data: any): Promise<v
  * @param key - Clé de stockage
  * @returns Données déchiffrées ou null
  */
-export async function loadPersistentEncrypted(key: string): Promise<any> {
+export async function loadPersistentEncrypted(key: string): Promise<unknown> {
   // Vérifier le cache d'abord
   if (persistentCache.has(key)) {
     return persistentCache.get(key);
@@ -277,7 +277,7 @@ export async function changePersistentPassword(currentPassword: string, newPassw
   console.log('🔄 Changement de mot de passe de chiffrement...');
   
   // Récupérer toutes les données chiffrées
-  const encryptedData = new Map<string, any>();
+  const encryptedData = new Map<string, unknown>();
   
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);

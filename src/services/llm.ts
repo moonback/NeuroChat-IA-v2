@@ -67,7 +67,7 @@ export async function streamMessage(
   messages: Array<{ text: string; isUser: boolean }>,
   images: File[] | undefined,
   systemPrompt: string,
-  callbacks: { onToken: (token: string) => void; onDone?: () => void; onError?: (err: any) => void },
+  callbacks: { onToken: (token: string) => void; onDone?: () => void; onError?: (err: Error) => void },
 ): Promise<void> {
   const provider = cfg.provider;
   try {
@@ -83,15 +83,15 @@ export async function streamMessage(
     const full = await sendMessageToGemini(messages, images, systemPrompt, cfg.gemini);
     if (full) callbacks.onToken(full);
     callbacks.onDone?.();
-  } catch (err) {
+  } catch {
     // Fallback: non-streaming via pipeline standard
     try {
       const full = await sendMessage(cfg, messages, images, systemPrompt);
       if (full) callbacks.onToken(full);
       callbacks.onDone?.();
-    } catch (e) {
-      callbacks.onError?.(e);
-      throw e;
+    } catch {
+      callbacks.onError?.(new Error('Erreur lors de l\'envoi du message'));
+      throw new Error('Erreur lors de l\'envoi du message');
     }
   }
 }

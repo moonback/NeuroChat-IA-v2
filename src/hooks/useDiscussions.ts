@@ -26,7 +26,7 @@ export function useDiscussions() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setMessages(parsed.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) })));
+        setMessages(parsed.map((msg: { text: string; isUser: boolean; timestamp: string }) => ({ ...msg, timestamp: new Date(msg.timestamp) })));
       } catch {
         setMessages([]);
       }
@@ -52,9 +52,9 @@ export function useDiscussions() {
             childMode: false,
           }));
         } else {
-          discussions = parsed.map((d: any) => ({
+          discussions = parsed.map((d: { title?: string; messages: Array<{ text: string; isUser: boolean; timestamp: string }>; childMode?: boolean }) => ({
             title: d.title || 'Discussion',
-            messages: d.messages.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) })),
+            messages: d.messages.map((msg: { text: string; isUser: boolean; timestamp: string }) => ({ ...msg, timestamp: new Date(msg.timestamp) })),
             childMode: !!d.childMode,
           }));
         }
@@ -83,7 +83,9 @@ export function useDiscussions() {
         } else {
           historyArr = parsed;
         }
-      } catch {}
+      } catch {
+        // Ignore parsing errors
+      }
     }
     const isSame = (a: Message[], b: Message[]) => {
       if (a.length !== b.length) return false;

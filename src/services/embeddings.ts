@@ -4,7 +4,7 @@
 // - Normaliser les vecteurs une seule fois pour accélérer les similarités (cosinus = produit scalaire)
 // - Exposer des utilitaires performants (dot product, normalisation)
 
-import type { pipeline as PipelineType } from '@xenova/transformers';
+// import type { pipeline } from '@xenova/transformers';
 
 let embedderPromise: Promise<any> | null = null;
 
@@ -15,7 +15,7 @@ const EMBEDDING_CACHE_SIZE = 1000; // Limite du cache
 // Optimisations WASM pour onnxruntime-web via transformers.js
 // Sûres à appeler dans le navigateur; ignorées si non supportées
 try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { env } = require('@xenova/transformers');
   // Forcer le chargement distant des modèles (évite les tentatives de /models/Xenova/...)
   env.allowLocalModels = false;
@@ -23,15 +23,17 @@ try {
   if (env && env.backends && env.backends.onnx && env.backends.onnx.wasm) {
     env.backends.onnx.wasm.simd = true;
     env.backends.onnx.wasm.proxy = true;
-    env.backends.onnx.wasm.numThreads = (navigator as any)?.hardwareConcurrency || 4;
+    env.backends.onnx.wasm.numThreads = (navigator as Navigator & { hardwareConcurrency?: number })?.hardwareConcurrency || 4;
   }
-} catch {}
+} catch {
+  // Ignore if transformers is not available
+}
 
 export async function getEmbedder() {
   if (!embedderPromise) {
     embedderPromise = (async () => {
       const mod = await import('@xenova/transformers');
-      const pl = (mod as any).pipeline as typeof PipelineType;
+      const pl = (mod as { pipeline: any }).pipeline;
       // Modèle léger multi‑lingue bien supporté
       // pooling + normalize seront passés à l'appel
       return pl('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
@@ -78,9 +80,10 @@ export async function embedText(text: string, normalize = true): Promise<Float32
   }
   
   const embedder = await getEmbedder();
+  if (!embedder) throw new Error('Embedder not available');
   const output = await embedder(text, { pooling: 'mean', normalize: false });
   // output.data est typiquement un TypedArray
-  const arr = new Float32Array(output.data);
+  const arr = new Float32Array((output as any).data);
   const result = normalize ? normalizeVector(arr) : arr;
   
   // Ajouter au cache avec gestion de la taille

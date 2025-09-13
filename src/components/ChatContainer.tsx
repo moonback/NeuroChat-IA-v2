@@ -45,7 +45,7 @@ export function ChatContainer({
   });
 
   // Fonction pour nettoyer les messages dupliqués
-  const deduplicateMessages = useCallback((messages: any[]) => {
+  const deduplicateMessages = useCallback((messages: Array<Message | RagContextMessage>) => {
     const seen = new Set();
     return messages.filter(msg => {
       // Pour les messages RAG, utiliser l'ID
@@ -56,9 +56,12 @@ export function ChatContainer({
       }
       
       // Pour les messages normaux, vérifier le contenu et l'utilisateur
-      const key = `${msg.text}-${msg.isUser}-${msg.timestamp?.getTime()}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
+      if ('text' in msg && 'isUser' in msg) {
+        const key = `${msg.text}-${msg.isUser}-${msg.timestamp?.getTime()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }
       return true;
     });
   }, []);

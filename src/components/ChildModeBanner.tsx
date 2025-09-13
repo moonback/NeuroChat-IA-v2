@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { X, Smile, Shield, Info } from 'lucide-react';
 
 interface ChildModeBannerProps {
@@ -31,13 +31,13 @@ export const ChildModeBanner: React.FC<ChildModeBannerProps> = ({
     }
   }, [visible, autoHide, autoHideDelay]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsClosing(true);
     setTimeout(() => {
       onClose?.();
       setIsClosing(false);
     }, 300);
-  };
+  }, [onClose]);
 
   const getVariantStyles = () => {
     switch (variant) {
