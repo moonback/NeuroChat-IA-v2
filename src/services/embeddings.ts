@@ -4,9 +4,9 @@
 // - Normaliser les vecteurs une seule fois pour accélérer les similarités (cosinus = produit scalaire)
 // - Exposer des utilitaires performants (dot product, normalisation)
 
-import type { pipeline as PipelineType } from '@xenova/transformers';
+// import type { pipeline } from '@xenova/transformers';
 
-let embedderPromise: Promise<PipelineType> | null = null;
+let embedderPromise: Promise<any> | null = null;
 
 // Cache des embeddings pour éviter les recalculs
 const embeddingCache = new Map<string, Float32Array>();
@@ -33,7 +33,7 @@ export async function getEmbedder() {
   if (!embedderPromise) {
     embedderPromise = (async () => {
       const mod = await import('@xenova/transformers');
-      const pl = (mod as { pipeline: typeof PipelineType }).pipeline;
+      const pl = (mod as { pipeline: any }).pipeline;
       // Modèle léger multi‑lingue bien supporté
       // pooling + normalize seront passés à l'appel
       return pl('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
@@ -80,9 +80,10 @@ export async function embedText(text: string, normalize = true): Promise<Float32
   }
   
   const embedder = await getEmbedder();
+  if (!embedder) throw new Error('Embedder not available');
   const output = await embedder(text, { pooling: 'mean', normalize: false });
   // output.data est typiquement un TypedArray
-  const arr = new Float32Array(output.data);
+  const arr = new Float32Array((output as any).data);
   const result = normalize ? normalizeVector(arr) : arr;
   
   // Ajouter au cache avec gestion de la taille

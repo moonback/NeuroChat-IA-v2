@@ -140,7 +140,7 @@ export async function streamMessageToMistral(
     }
     callbacks.onDone?.();
   } catch (err) {
-    callbacks.onError?.(err);
+    callbacks.onError?.(err instanceof Error ? err : new Error(String(err)));
     throw err;
   }
 }

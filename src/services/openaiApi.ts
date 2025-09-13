@@ -201,7 +201,7 @@ export async function streamMessageToOpenAI(
     }
     callbacks.onDone?.();
   } catch (err) {
-    callbacks.onError?.(err);
+    callbacks.onError?.(err instanceof Error ? err : new Error(String(err)));
     throw err;
   }
 }

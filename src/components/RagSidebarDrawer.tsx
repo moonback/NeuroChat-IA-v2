@@ -66,7 +66,6 @@ export function RagSidebarDrawer({ open, onClose, usedDocs, onOpenRagDocs, works
   useEffect(() => {
     if (!open) return;
     async function loadDocs() {
-      // @ts-expect-error - import.meta.glob is a Vite-specific feature
       const modules = import.meta.glob('../data/rag_docs/*.{txt,md}', { as: 'raw', eager: true });
       const dossierDocs: RagDoc[] = Object.entries(modules).map(([path, contenu], idx) => {
         const titre = path.split('/').pop()?.replace(/\.[^/.]+$/, '') || `Document ${idx + 1}`;

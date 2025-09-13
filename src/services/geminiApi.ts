@@ -51,8 +51,7 @@ export async function sendMessageToGemini(
               data: base64Image.split(',')[1],
             }
           }
-        ],
-        role: 'user'
+        ]
       });
     }
   }

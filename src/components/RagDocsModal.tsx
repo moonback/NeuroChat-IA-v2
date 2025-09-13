@@ -90,7 +90,6 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
   // Charger les docs du dossier (via import.meta.glob)
   useEffect(() => {
     async function loadDocs() {
-      // @ts-expect-error - import.meta.glob is a Vite-specific feature
       const modules = import.meta.glob('../data/rag_docs/*.{txt,md}', { as: 'raw', eager: true });
       const dossierDocs: RagDoc[] = Object.entries(modules).map(([path, contenu], idx) => {
         const titre = path.split('/').pop()?.replace(/\.[^/.]+$/, '') || `Document ${idx + 1}`;
@@ -108,7 +107,7 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
       let userDocs: RagDoc[] = [];
       if (userRaw) {
         try {
-          userDocs = (JSON.parse(userRaw) as RagDoc[]).filter(d => d?.origine !== 'github');
+          userDocs = (JSON.parse(userRaw) as RagDoc[]).filter(d => d?.origine === 'dossier' || d?.origine === 'utilisateur');
         } catch {
           // Ignore parsing errors
         }
@@ -204,8 +203,8 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
     if (ext === 'docx') {
       try {
         const arrayBuffer = await file.arrayBuffer();
-        const mammothModule: { default?: { extractRawText: (options: { arrayBuffer: ArrayBuffer }) => Promise<{ value: string }> } } = await import('mammoth');
-        const mammoth = mammothModule?.default ?? mammothModule;
+        const mammothModule = await import('mammoth');
+        const mammoth = mammothModule.default || mammothModule;
         const result = await mammoth.extractRawText({ arrayBuffer });
         return result.value;
       } catch {
@@ -215,10 +214,10 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
     if (ext === 'csv') {
       try {
         const text = await file.text();
-        const papaModule: { default?: { parse: (text: string) => { data: string[][] } } } = await import('papaparse');
-        const Papa = papaModule?.default ?? papaModule;
+        const papaModule = await import('papaparse');
+        const Papa = papaModule.default || papaModule;
         const parsed = Papa.parse(text);
-        return parsed.data.map((row: string[]) => row.join(' ')).join('\n');
+        return parsed.data.map((row: unknown) => (row as string[]).join(' ')).join('\n');
       } catch {
         throw new Error('Erreur lors de l\'extraction du CSV.');
       }
@@ -485,7 +484,7 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
               <div className="flex flex-wrap gap-2 items-center">
                 <select
                   value={filterOrigin}
-                  onChange={e => setFilterOrigin(e.target.value as 'tous' | 'dossier' | 'utilisateur')}
+                  onChange={e => setFilterOrigin(e.target.value as 'all' | 'dossier' | 'utilisateur')}
                   className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">Toutes origines</option>
@@ -496,7 +495,7 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
 
                 <select
                   value={sortKey}
-                  onChange={e => setSortKey(e.target.value as 'titre' | 'origine' | 'taille')}
+                  onChange={e => setSortKey(e.target.value as 'titre' | 'origine' | 'extension')}
                   className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="titre">Titre</option>

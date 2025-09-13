@@ -144,7 +144,6 @@ export function RagSidebar({ onOpenRagDocs, usedDocs, workspaceId = 'default' }:
     }
 
     try {
-      // @ts-expect-error - import.meta.glob is a Vite-specific feature
       const modules = import.meta.glob('../data/rag_docs/*.{txt,md}', { as: 'raw', eager: true });
       const LS_STATS_KEY = wsKey(workspaceId, 'rag_doc_stats');
       const LS_FAVORITES_KEY = wsKey(workspaceId, 'rag_doc_favorites');
@@ -177,13 +176,14 @@ export function RagSidebar({ onOpenRagDocs, usedDocs, workspaceId = 'default' }:
         try { 
           const rawDocs = JSON.parse(userRaw) as Array<{ id: string; titre: string; contenu: string; origine: string; size?: number; lastUsed?: Date; favorite?: boolean }>;
           userDocs = rawDocs
-            .filter(d => d?.origine !== 'github')
+            .filter(d => d?.origine === 'dossier' || d?.origine === 'utilisateur')
             .map(d => ({
               ...d,
               size: d.contenu?.length || 0,
               lastUsed: stats[d.id]?.lastUsed,
               useCount: stats[d.id]?.useCount || 0,
               favorite: favs.has(d.id),
+              origine: (d.origine === 'dossier' || d.origine === 'utilisateur') ? d.origine as 'dossier' | 'utilisateur' : 'utilisateur'
             }));
         } catch {
           // Ignore parsing errors

@@ -191,7 +191,7 @@ export class SecureStorageAPI {
     try {
       // Vérifier le cache en mémoire d'abord
       if (storageCache.has(key)) {
-        return storageCache.get(key);
+        return storageCache.get(key) as string | null;
       }
       
       let rawData: string | null = null;
@@ -302,7 +302,7 @@ export const secureStorage = {
   getItem(key: string): string | null {
     // Récupération depuis le cache en premier
     if (storageCache.has(key)) {
-      return storageCache.get(key);
+      return storageCache.get(key) as string | null;
     }
     
     // Fallback sur localStorage pour les données non sensibles
