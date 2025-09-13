@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Globe, X, ExternalLink, Star, Clock, BarChart3, Filter, Search } from 'lucide-react';
+import { Globe, X, ExternalLink, Star, Clock, BarChart3, Search } from 'lucide-react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

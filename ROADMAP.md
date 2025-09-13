@@ -13,11 +13,11 @@ Ce document présente les étapes de développement : MVP, V1, et les fonction
 - Multi-provider (Gemini, OpenAI, Mistral)
 - Mode privé et mode enfant
 - UI moderne (Radix UI, Tailwind, animations)
+- Sidebar « Sources Web » enrichie (favoris, stats, pagination)
 
 ---
 
 ## V1 (en cours / à finaliser)
-- Sidebar « Sources Web » enrichie (favoris, stats, pagination)
 - Export avancé des conversations (PDF/Markdown)
 - Raccourcis clavier
 - Personnalités personnalisées (agents)

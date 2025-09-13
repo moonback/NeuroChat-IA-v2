@@ -19,6 +19,10 @@ import {
   savePersistentEncrypted,
   loadPersistentEncrypted
 } from '@/services/persistentEncryption';
+// 🔍 Monitoring de sécurité et performance
+import { startMonitoring, stopMonitoring } from '@/services/monitoringService';
+// Tests des alertes (à supprimer en production)
+import '@/utils/alertTest';
 
 // Constantes pour le debug
 const ENCRYPTION_ENABLED_KEY = 'nc_encryption_enabled';
@@ -101,6 +105,9 @@ function App() {
         initializeSecureStorage();
         initializeKeyManager();
         
+        // 🔍 Démarrer le monitoring de sécurité et performance
+        startMonitoring();
+        
         // // Le chiffrement est maintenant obligatoire - pas de diagnostic nécessaire
         // console.log('🔐 Initialisation du chiffrement obligatoire...');
         
@@ -134,6 +141,7 @@ function App() {
     // Nettoyage à la fermeture du composant
     return () => {
       shutdownKeyManager();
+      stopMonitoring();
     };
   }, []);
 
@@ -222,9 +230,6 @@ function App() {
   const [autoRagEnabled, setAutoRagEnabled] = useState<boolean>(() => {
     try { return localStorage.getItem('auto_rag_enabled') === 'true'; } catch { return true; }
   });
-  const [autoWebEnabled, setAutoWebEnabled] = useState<boolean>(() => {
-    try { return localStorage.getItem('auto_web_enabled') === 'true'; } catch { return true; }
-  });
   const [ragKeywords, setRagKeywords] = useState<string[]>(() => {
     try {
       const raw = localStorage.getItem('auto_rag_keywords');
@@ -234,23 +239,11 @@ function App() {
     }
     return ['doc', 'docs', 'pdf', 'mémoire', 'memoire', 'note', 'dossier', 'annexe', 'rapport', 'spécification', 'spec', 'slides', 'présentation'];
   });
-  const [webKeywords, setWebKeywords] = useState<string[]>(() => {
-    try {
-      const raw = localStorage.getItem('auto_web_keywords');
-      if (raw) return JSON.parse(raw);
-    } catch {
-      // Ignore parsing errors
-    }
-    return ["aujourd'hui", 'actualité', 'dernière', 'récent', 'prix', 'combien', 'qui', 'depuis', 'quand', 'météo', 'news', 'mise à jour', 'release', 'version', 'source', 'citation', 'référence'];
-  });
   useEffect(() => { try { localStorage.setItem('auto_rag_enabled', autoRagEnabled ? 'true' : 'false'); } catch { /* Ignore storage errors */ } }, [autoRagEnabled]);
-  useEffect(() => { try { localStorage.setItem('auto_web_enabled', autoWebEnabled ? 'true' : 'false'); } catch { /* Ignore storage errors */ } }, [autoWebEnabled]);
   // Mémoriser les arrays pour éviter les re-renders inutiles
   const memoizedRagKeywords = useMemo(() => ragKeywords, [ragKeywords]);
-  const memoizedWebKeywords = useMemo(() => webKeywords, [webKeywords]);
   
   useEffect(() => { try { localStorage.setItem('auto_rag_keywords', JSON.stringify(ragKeywords)); } catch { /* Ignore storage errors */ } }, [ragKeywords]);
-  useEffect(() => { try { localStorage.setItem('auto_web_keywords', JSON.stringify(webKeywords)); } catch { /* Ignore storage errors */ } }, [webKeywords]);
   const [showGeminiSettings, setShowGeminiSettings] = useState(false);
   const [showOpenAISettings, setShowOpenAISettings] = useState(false);
   const [showMistralSettings, setShowMistralSettings] = useState(false);
@@ -781,10 +774,9 @@ function App() {
       toast.error('Pas de connexion Internet. Vérifie ta connexion réseau.');
       return;
     }
-    // Heuristiques d'activation automatique RAG/Web selon la requête
+    // Heuristiques d'activation automatique RAG selon la requête
     const lower = userMessage.toLowerCase();
     const autoUseRag = autoRagEnabled && memoizedRagKeywords.some(kw => new RegExp(`(^|\b)${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\b|$)`, 'i').test(lower));
-    const autoUseWeb = autoWebEnabled && memoizedWebKeywords.some(kw => new RegExp(`(^|\b)${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\b|$)`, 'i').test(lower));
 
     // Étape RAG : recherche documentaire (si activé, auto, ou agent provider)
     let passages: Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }> = [];
@@ -810,8 +802,43 @@ function App() {
     // Étape Web : recherche en ligne (si activée ou auto)
     let webContext = '';
     let webSources: Array<{ title: string; url: string }> = [];
-    try {
-      if (webEnabled || autoUseWeb || (provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) {
+    
+    // 🔍 Recherche web intelligente : activée manuellement OU en fallback si pas de réponse
+    const shouldSearchWebInitially = webEnabled;
+    
+    // Fonction pour détecter si l'IA a besoin d'informations web
+    const needsWebSearch = (response: string): boolean => {
+      const lowerResponse = response.toLowerCase();
+      const indicators = [
+        'je ne sais pas',
+        'je ne connais pas',
+        'je n\'ai pas d\'information',
+        'je n\'ai pas accès',
+        'mes connaissances',
+        'ma base de données',
+        'je ne peux pas',
+        'impossible de',
+        'pas d\'information récente',
+        'données obsolètes',
+        'information non disponible',
+        'je ne trouve pas',
+        'aucune information'
+      ];
+      return indicators.some(indicator => lowerResponse.includes(indicator));
+    };
+    
+    // Fonction pour nettoyer le texte TTS (supprimer les références de sources)
+    const cleanTextForTTS = (text: string): string => {
+      return text
+        .replace(/###.*$/gm, '') // Supprimer les sections ###
+        .replace(/\[\d+\]/g, '') // Supprimer les références [1], [2], etc.
+        .replace(/\(\d+\)/g, '') // Supprimer les références (1), (2), etc.
+        .replace(/\s+/g, ' ') // Normaliser les espaces
+        .trim();
+    };
+    
+    if (shouldSearchWebInitially) {
+      try {
         setIsWebSearching(true);
         const { searchWeb } = await import('@/services/webSearch');
         const webResults = await searchWeb(userMessage, 5, { enrich: false });
@@ -840,11 +867,13 @@ function App() {
             return [...prev, ...uniqueNewSources];
           });
         }
+      } catch (error) {
+        console.warn('Erreur recherche web:', error);
+        // Ajouter une alerte pour informer l'utilisateur
+        addMessage('⚠️ Erreur lors de la recherche web. Vérifiez votre connexion internet.', false);
+      } finally {
+        setIsWebSearching(false);
       }
-    } catch {
-      // Ignore web search errors
-    } finally {
-      if (webEnabled || autoUseWeb || (provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) setIsWebSearching(false);
     }
     
     // Ajoute le message utilisateur localement
@@ -924,10 +953,96 @@ function App() {
             setMessages(prev => prev.map(m => m.id === aiMsg.id ? { ...m, text: (m.text || '') + token } : m));
           },
           onDone: () => {
+            // 🔍 Vérifier si l'IA a besoin d'informations web (fallback intelligent)
+            if (!webEnabled && needsWebSearch(acc)) {
+              console.log('🔍 L\'IA indique un manque de connaissances - déclenchement recherche web automatique');
+              
+              // Ajouter un message informatif
+              addMessage('🔍 Je ne connais pas cette information. Laissez-moi rechercher sur internet...', false);
+              
+              // Déclencher la recherche web automatique
+              setTimeout(async () => {
+                try {
+                  setIsWebSearching(true);
+                  const { searchWeb } = await import('@/services/webSearch');
+                  const webResults = await searchWeb(userMessage, 5, { enrich: false });
+                  
+                  if (webResults.length > 0) {
+                    // Construire le contexte web
+                    let fallbackWebContext = 'RÉSULTATS WEB RÉCENTS :\n';
+                    webResults.slice(0, 5).forEach((r, idx) => {
+                      const snippet = (r.snippet || '').replace(/\s+/g, ' ').slice(0, 360);
+                      fallbackWebContext += `- (${idx + 1}) [${r.title}] ${snippet}\nSource: ${r.url}\n`;
+                    });
+                    fallbackWebContext += '\n';
+                    
+                    // Ajouter les sources web
+                    const fallbackWebSources: WebSource[] = webResults.slice(0, 5).map(r => ({
+                      title: r.title,
+                      url: r.url,
+                      snippet: r.snippet,
+                      timestamp: new Date().toISOString(),
+                      messageId: newMessage.id,
+                    }));
+                    
+                    setUsedWebSources(prev => {
+                      const existingUrls = new Set(prev.map(s => s.url));
+                      const uniqueNewSources = fallbackWebSources.filter(s => !existingUrls.has(s.url));
+                      return [...prev, ...uniqueNewSources];
+                    });
+                    
+                    // Relancer la requête avec les informations web
+                    const fallbackPrompt = `${prompt}\n\n${fallbackWebContext}`;
+                    const fallbackAiMsg = addMessage('', false, undefined, fallbackWebSources.map(r => ({ title: r.title, url: r.url })));
+                    let fallbackAcc = '';
+                    
+                    await streamMessage(
+                      llmCfg,
+                      filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
+                      imageFile ? [imageFile] : undefined,
+                      fallbackPrompt,
+                      {
+                        onToken: (token) => {
+                          fallbackAcc += token;
+                          setMessages(prev => prev.map(m => m.id === fallbackAiMsg.id ? { ...m, text: (m.text || '') + token } : m));
+                        },
+                        onDone: () => {
+                          setIsAISpeaking(true);
+                          const ttsText = cleanTextForTTS(fallbackAcc);
+                          speak(ttsText, {
+                            onEnd: () => {
+                              setIsAISpeaking(false);
+                              if (modeVocalAutoRef.current && !muted) {
+                                playBip();
+                                setTimeout(() => {
+                                  if (modeVocalAutoRef.current && !muted && !listeningAuto && !isAISpeakingRef.current) {
+                                    startAuto();
+                                  }
+                                }, 1000);
+                              }
+                            }
+                          });
+                        }
+                      }
+                    );
+                  } else {
+                    addMessage('❌ Aucun résultat trouvé sur internet pour cette question.', false);
+                  }
+                } catch (error) {
+                  console.warn('Erreur recherche web fallback:', error);
+                  addMessage('⚠️ Erreur lors de la recherche web automatique.', false);
+                } finally {
+                  setIsWebSearching(false);
+                }
+              }, 1000); // Délai pour laisser le temps à l'utilisateur de voir le message
+              
+              return; // Sortir de la fonction pour éviter le TTS de la première réponse
+            }
+            
             // Indiquer que l'IA commence à parler
             setIsAISpeaking(true);
             console.log('[Vocal Mode] IA commence à parler - microphone coupé');
-            const ttsText = acc.replace(/###.*$/gm, '');
+            const ttsText = cleanTextForTTS(acc);
             speak(ttsText, {
               onEnd: () => {
                 setIsAISpeaking(false);
@@ -1546,6 +1661,8 @@ function App() {
             if (provider === 'gemini') setGeminiAgentEnabled(!geminiAgentEnabled);
             if (provider === 'mistral') setMistralAgentEnabled(!mistralAgentEnabled);
           }}
+          webEnabled={webEnabled}
+          webSearching={isWebSearching}
         />
       </div>
 
@@ -1600,13 +1717,9 @@ function App() {
           agentEnabled={geminiAgentEnabled}
           onToggleAgent={(enabled) => setGeminiAgentEnabled(enabled)}
           autoRagEnabled={autoRagEnabled}
-          autoWebEnabled={autoWebEnabled}
           ragKeywords={memoizedRagKeywords}
-          webKeywords={memoizedWebKeywords}
           onToggleAutoRag={setAutoRagEnabled}
-          onToggleAutoWeb={setAutoWebEnabled}
           onChangeRagKeywords={setRagKeywords}
-          onChangeWebKeywords={setWebKeywords}
         />
       </Suspense>
 
@@ -1621,13 +1734,9 @@ function App() {
           onClose={() => setShowOpenAISettings(false)}
           DEFAULTS={{ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' }}
           autoRagEnabled={autoRagEnabled}
-          autoWebEnabled={autoWebEnabled}
           ragKeywords={memoizedRagKeywords}
-          webKeywords={memoizedWebKeywords}
           onToggleAutoRag={setAutoRagEnabled}
-          onToggleAutoWeb={setAutoWebEnabled}
           onChangeRagKeywords={setRagKeywords}
-          onChangeWebKeywords={setWebKeywords}
         />
       </Suspense>
 
@@ -1644,13 +1753,9 @@ function App() {
           agentEnabled={mistralAgentEnabled}
           onToggleAgent={(enabled) => setMistralAgentEnabled(enabled)}
           autoRagEnabled={autoRagEnabled}
-          autoWebEnabled={autoWebEnabled}
           ragKeywords={memoizedRagKeywords}
-          webKeywords={memoizedWebKeywords}
           onToggleAutoRag={setAutoRagEnabled}
-          onToggleAutoWeb={setAutoWebEnabled}
           onChangeRagKeywords={setRagKeywords}
-          onChangeWebKeywords={setWebKeywords}
         />
       </Suspense>
 

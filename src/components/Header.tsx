@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
 import { HelpModal } from '@/components/HelpModal';
+import { SecurityPerformanceMonitor } from '@/components/SecurityPerformanceMonitor';
+import { MonitoringStatusIndicator } from '@/components/MonitoringStatusIndicator';
 // import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
@@ -195,7 +197,22 @@ const Logo = ({ onNewDiscussion, isOnline, quality }: {
   isOnline: boolean; 
   quality: 'excellent' | 'good' | 'poor';
 }) => (
-  <div className="flex items-center gap-2 sm:gap-3 cursor-pointer group" onClick={onNewDiscussion}>
+  <div 
+    className="flex items-center gap-2 sm:gap-3 cursor-pointer group" 
+    onClick={(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onNewDiscussion();
+    }}
+    role="button"
+    tabIndex={0}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onNewDiscussion();
+      }
+    }}
+  >
     <div className="relative">
       {/* Logo principal avec image */}
       <div>
@@ -926,8 +943,12 @@ const DesktopActions = ({
 
           <IconButton
             onClick={handleWebToggle}
-            tooltip="Recherche web"
+            tooltip={webEnabled ? "Recherche web activée - Cliquez pour désactiver" : "Recherche web intelligente - S'active automatiquement si l'IA ne connaît pas la réponse"}
             active={!!webEnabled}
+            className={webEnabled 
+              ? 'text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40' 
+              : 'hover:bg-blue-50/80 dark:hover:bg-blue-950/50'
+            }
           >
             <Globe className={`w-4 h-4 ${webSearching ? 'animate-spin' : ''}`} />
           </IconButton>
@@ -1181,8 +1202,8 @@ const MobileMenuSheet = ({
                   label={webEnabled ? 'Web: ON' : 'Web: OFF'}
                   icon={Globe}
                   active={!!webEnabled}
-                  intent={webEnabled ? 'warning' : 'default'}
-                  tooltip="Recherche web"
+                  intent={webEnabled ? 'success' : 'default'}
+                  tooltip={webEnabled ? "Recherche web activée - Cliquez pour désactiver" : "Recherche web intelligente - S'active automatiquement si l'IA ne connaît pas la réponse"}
                 />
               )}
 
@@ -1382,6 +1403,7 @@ export function Header(props: HeaderProps) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showVocalSettings, setShowVocalSettings] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showMonitoring, setShowMonitoring] = useState(false);
   
 
   // Handlers optimisés avec feedback
@@ -1415,8 +1437,20 @@ export function Header(props: HeaderProps) {
 
   const handleWebToggle = useCallback(() => {
     if (setWebEnabled) {
-      setWebEnabled(!webEnabled);
-      if ('vibrate' in navigator) navigator.vibrate(30);
+      const newWebEnabled = !webEnabled;
+      setWebEnabled(newWebEnabled);
+      
+      // Feedback visuel et sonore
+      if ('vibrate' in navigator) {
+        navigator.vibrate(newWebEnabled ? 100 : 50);
+      }
+      
+      // Toast notification pour informer l'utilisateur
+      if (newWebEnabled) {
+        console.log('🔍 Recherche web activée - Les prochaines questions incluront des résultats web');
+      } else {
+        console.log('🔍 Recherche web intelligente activée - S\'activera automatiquement si l\'IA ne connaît pas la réponse');
+      }
     }
   }, [webEnabled, setWebEnabled]);
 
@@ -1499,6 +1533,12 @@ export function Header(props: HeaderProps) {
             {/* Logo et branding */}
             <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
               <Logo onNewDiscussion={onNewDiscussion} isOnline={isOnline} quality={connectionQuality} />
+              
+              {/* Indicateur de monitoring */}
+              <MonitoringStatusIndicator 
+                onOpenMonitor={() => setShowMonitoring(true)}
+                compact={true}
+              />
               
               {/* Sélecteur d'espace de travail - Responsive */}
               <WorkspaceSelector
@@ -1765,6 +1805,19 @@ export function Header(props: HeaderProps) {
           }
         }
       `}</style>
+      
+      {/* Monitoring de sécurité et performance */}
+      {showMonitoring && (
+        <SecurityPerformanceMonitor 
+          isOpen={showMonitoring}
+          onClose={() => setShowMonitoring(false)}
+        />
+      )}
+      
+      {/* Boutons de test temporaires - À supprimer en production */}
+      {/* <MonitoringTestButton />
+      <SimpleMonitoringTest />
+      <MonitoringIndicatorTest /> */}
     </>
   );
 }
