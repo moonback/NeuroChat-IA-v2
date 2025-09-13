@@ -110,7 +110,7 @@ async function enrichWithReader(results: WebSearchResult[], maxToFetch = 2): Pro
 				}
 			}
 		} catch {
-			return results;
+			return r;
 		}
 		return r;
 	}));
