@@ -206,13 +206,7 @@ const Logo = ({ onNewDiscussion, isOnline, quality }: {
           className="w-8 h-8 sm:w-9 sm:h-9 object-contain relative z-10"
         />
         
-        {/* Effets de brillance */}
-        {/* <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-2xl" /> */}
-        {/* <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-transparent via-transparent to-white/10 group-hover:to-white/20 transition-all duration-300" /> */}
-        
-        {/* Effet néon/glow */}
-        {/* <div className="absolute inset-0 rounded-2xl bg-blue-400/20 group-hover:bg-blue-400/30 transition-all duration-300 blur-sm" /> */}
-      </div>
+        </div>
       
       {/* Indicateur de statut */}
       <StatusIndicator isOnline={isOnline} quality={quality} />
