@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import WorkspaceOpeningDialog from '@/components/WorkspaceOpeningDialog';
 import { ChatContainer } from '@/components/ChatContainer';
@@ -123,7 +123,7 @@ function App() {
         }
         
         // console.log('🔐 Système de sécurité AES-256 initialisé avec succès');
-      } catch (error) {
+      } catch {
         // console.error('Erreur d\'initialisation de la sécurité:', error);
         toast.error('Erreur lors de l\'initialisation du système de sécurité');
       }
@@ -229,20 +229,24 @@ function App() {
     try {
       const raw = localStorage.getItem('auto_rag_keywords');
       if (raw) return JSON.parse(raw);
-    } catch {}
+    } catch {
+      // Ignore parsing errors
+    }
     return ['doc', 'docs', 'pdf', 'mémoire', 'memoire', 'note', 'dossier', 'annexe', 'rapport', 'spécification', 'spec', 'slides', 'présentation'];
   });
   const [webKeywords, setWebKeywords] = useState<string[]>(() => {
     try {
       const raw = localStorage.getItem('auto_web_keywords');
       if (raw) return JSON.parse(raw);
-    } catch {}
+    } catch {
+      // Ignore parsing errors
+    }
     return ["aujourd'hui", 'actualité', 'dernière', 'récent', 'prix', 'combien', 'qui', 'depuis', 'quand', 'météo', 'news', 'mise à jour', 'release', 'version', 'source', 'citation', 'référence'];
   });
-  useEffect(() => { try { localStorage.setItem('auto_rag_enabled', autoRagEnabled ? 'true' : 'false'); } catch {} }, [autoRagEnabled]);
-  useEffect(() => { try { localStorage.setItem('auto_web_enabled', autoWebEnabled ? 'true' : 'false'); } catch {} }, [autoWebEnabled]);
-  useEffect(() => { try { localStorage.setItem('auto_rag_keywords', JSON.stringify(ragKeywords)); } catch {} }, [ragKeywords]);
-  useEffect(() => { try { localStorage.setItem('auto_web_keywords', JSON.stringify(webKeywords)); } catch {} }, [webKeywords]);
+  useEffect(() => { try { localStorage.setItem('auto_rag_enabled', autoRagEnabled ? 'true' : 'false'); } catch { /* Ignore storage errors */ } }, [autoRagEnabled]);
+  useEffect(() => { try { localStorage.setItem('auto_web_enabled', autoWebEnabled ? 'true' : 'false'); } catch { /* Ignore storage errors */ } }, [autoWebEnabled]);
+  useEffect(() => { try { localStorage.setItem('auto_rag_keywords', JSON.stringify(ragKeywords)); } catch { /* Ignore storage errors */ } }, [ragKeywords]);
+  useEffect(() => { try { localStorage.setItem('auto_web_keywords', JSON.stringify(webKeywords)); } catch { /* Ignore storage errors */ } }, [webKeywords]);
   const [showGeminiSettings, setShowGeminiSettings] = useState(false);
   const [showOpenAISettings, setShowOpenAISettings] = useState(false);
   const [showMistralSettings, setShowMistralSettings] = useState(false);
@@ -253,10 +257,10 @@ function App() {
     try { return localStorage.getItem('gemini_agent_enabled') === 'true'; } catch { return false; }
   });
   useEffect(() => {
-    try { localStorage.setItem('mistral_agent_enabled', mistralAgentEnabled ? 'true' : 'false'); } catch {}
+    try { localStorage.setItem('mistral_agent_enabled', mistralAgentEnabled ? 'true' : 'false'); } catch { /* Ignore storage errors */ }
   }, [mistralAgentEnabled]);
   useEffect(() => {
-    try { localStorage.setItem('gemini_agent_enabled', geminiAgentEnabled ? 'true' : 'false'); } catch {}
+    try { localStorage.setItem('gemini_agent_enabled', geminiAgentEnabled ? 'true' : 'false'); } catch { /* Ignore storage errors */ }
   }, [geminiAgentEnabled]);
   // Gestion des presets Gemini
   const [presets, setPresets] = useState<{ name: string; config: GeminiGenerationConfig }[]>([]);
@@ -282,15 +286,15 @@ function App() {
   // Ouvrir les réglages OpenAI via event du Header
   useEffect(() => {
     const handler = () => setShowOpenAISettings(true);
-    document.addEventListener('openai:settings:open' as any, handler);
-    return () => document.removeEventListener('openai:settings:open' as any, handler);
+    document.addEventListener('openai:settings:open', handler);
+    return () => document.removeEventListener('openai:settings:open', handler);
   }, []);
 
   // Ouvrir les réglages Mistral via event du Header
   useEffect(() => {
     const handler = () => setShowMistralSettings(true);
-    document.addEventListener('mistral:settings:open' as any, handler);
-    return () => document.removeEventListener('mistral:settings:open' as any, handler);
+    document.addEventListener('mistral:settings:open', handler);
+    return () => document.removeEventListener('mistral:settings:open', handler);
   }, []);
 
   // --- Mode privé/éphémère ---
@@ -308,7 +312,7 @@ function App() {
     try { return localStorage.getItem('structured_mode') === 'true'; } catch { return false; }
   });
   useEffect(() => {
-    try { localStorage.setItem('structured_mode', structuredMode ? 'true' : 'false'); } catch {}
+    try { localStorage.setItem('structured_mode', structuredMode ? 'true' : 'false'); } catch { /* Ignore storage errors */ }
   }, [structuredMode]);
   // --- Timeline de raisonnement ---
   // Timeline retirée
@@ -360,7 +364,9 @@ function App() {
       // Exposer l'état pour d'autres services (ex: memoryExtractor)
       try {
         localStorage.setItem('mode_prive', modePrive ? 'true' : 'false');
-      } catch {}
+      } catch {
+        // Ignore storage errors
+      }
     };
     
     handlePrivateModeChange();
@@ -370,10 +376,12 @@ function App() {
   useEffect(() => {
     try {
       localStorage.setItem('mode_enfant', modeEnfant ? 'true' : 'false');
-    } catch {}
+    } catch {
+      // Ignore storage errors
+    }
     // En mode enfant, forcer le mode privé à false
     if (modeEnfant && modePrive) setModePrive(false);
-  }, [modeEnfant]);
+  }, [modeEnfant, modePrive]);
 
   // --- Gestion de l'historique des discussions ---
   const LOCALSTORAGE_KEY_BASE = 'gemini_discussions';
@@ -428,7 +436,7 @@ function App() {
         }
         
         if (savedData && Array.isArray(savedData)) {
-          setMessages(savedData.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) })));
+          setMessages(savedData.map((msg: Message) => ({ ...msg, timestamp: new Date(msg.timestamp) })));
         } else {
           setMessages([]);
         }
@@ -439,7 +447,7 @@ function App() {
     };
     
     loadMessages();
-  }, [modePrive, workspaceId, persistentEncryptionEnabled]);
+  }, [modePrive, workspaceId, persistentEncryptionEnabled, wsKey]);
 
   // Sauvegarder la discussion courante à chaque changement (avec chiffrement optionnel)
   useEffect(() => {
@@ -464,7 +472,7 @@ function App() {
     };
     
     saveMessages();
-  }, [messages, modePrive, workspaceId, persistentEncryptionEnabled]);
+  }, [messages, modePrive, workspaceId, persistentEncryptionEnabled, wsKey]);
 
   // Charger les presets au montage
   useEffect(() => {
@@ -472,23 +480,25 @@ function App() {
     if (raw) {
       try {
         setPresets(JSON.parse(raw));
-      } catch {}
+      } catch {
+        // Ignore parsing errors
+      }
     } else {
       setPresets([]);
     }
-  }, [workspaceId]);
+  }, [workspaceId, wsKey]);
 
   // Sauvegarder les presets à chaque modification
   useEffect(() => {
     localStorage.setItem(wsKey(workspaceId, 'gemini_presets'), JSON.stringify(presets));
-  }, [presets, workspaceId]);
+  }, [presets, workspaceId, wsKey]);
 
   // En mode enfant, forcer RAG OFF et empêcher l'ouverture des réglages
   useEffect(() => {
     if (modeEnfant && ragEnabled) {
       setRagEnabled(false);
     }
-  }, [modeEnfant]);
+  }, [modeEnfant, ragEnabled]);
 
   // 🔐 Surveiller les changements d'état du chiffrement persistant
   useEffect(() => {
@@ -512,7 +522,7 @@ function App() {
   }, [persistentEncryptionEnabled]);
 
   // Sauvegarder une discussion dans l'historique (sans doublons consécutifs)
-  const saveDiscussionToHistory = (discussion: Message[]) => {
+  const saveDiscussionToHistory = useCallback((discussion: Message[]) => {
     if (modePrive) return; // Pas de sauvegarde en mode privé
     if (!discussion.length) return;
     const historyRaw = localStorage.getItem(wsKey(workspaceId, LOCALSTORAGE_KEY_BASE));
@@ -530,7 +540,9 @@ function App() {
         } else {
           history = parsed;
         }
-      } catch {}
+      } catch {
+        // Ignore parsing errors
+      }
     }
     // Vérifier si la dernière discussion est identique
     const isSame = (a: Message[], b: Message[]) => {
@@ -549,7 +561,7 @@ function App() {
       history.push({ title: defaultTitle, messages: discussion, childMode: modeEnfant });
       localStorage.setItem(wsKey(workspaceId, LOCALSTORAGE_KEY_BASE), JSON.stringify(history));
     }
-  };
+  }, [modePrive, workspaceId, wsKey, modeEnfant]);
 
   // Nouvelle discussion
   const handleNewDiscussion = () => {
@@ -578,7 +590,7 @@ function App() {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [messages, modePrive]);
+  }, [messages, modePrive, saveDiscussionToHistory]);
 
   // Monitor online status
   useEffect(() => {
@@ -652,7 +664,9 @@ function App() {
         return;
       }
       setChildPin(pin);
-      try { localStorage.setItem('mode_enfant_pin', pin); } catch {}
+      try { localStorage.setItem('mode_enfant_pin', pin); } catch {
+        // Ignore storage errors
+      }
     }
     setModeEnfant(true);
     setShowChildPinDialog(false);
@@ -728,7 +742,7 @@ function App() {
       isRagContext: true,
       timestamp: new Date(),
     };
-    setMessages(prev => [...prev, ragMsg as any]);
+    setMessages(prev => [...prev, ragMsg as unknown as Message]);
   };
 
 
@@ -780,7 +794,7 @@ function App() {
           addRagContextMessage(simplePassages);
           // Mémoriser les documents utilisés (unicité par id)
           setUsedRagDocs(prev => {
-            const byId = new Map<string, any>();
+            const byId = new Map<string, { id: string; titre: string; contenu: string; extension?: string; origine?: string }>();
             [...prev, ...passages].forEach(d => byId.set(String(d.id), { ...d, id: String(d.id) }));
             return Array.from(byId.values());
           });
@@ -823,7 +837,9 @@ function App() {
           });
         }
       }
-    } catch {} finally {
+    } catch {
+      // Ignore web search errors
+    } finally {
       if (webEnabled || autoUseWeb || (provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) setIsWebSearching(false);
     }
     
@@ -850,8 +866,8 @@ function App() {
       // On construit le contexte documentaire pour le prompt
        // Timeline retirée
       let ragContext = '';
-      let memoryContext = '';
       // Récupération mémoire utilisateur supprimée - système de mémoire retiré
+      const memoryContext = '';
       if (ragEnabled && passages.length > 0) {
         ragContext = 'Contexte documentaire :\n';
         passages.forEach((p) => {
@@ -966,9 +982,9 @@ function App() {
             messages: msgs.map(msg => ({ ...msg, timestamp: new Date(msg.timestamp) })),
           }));
         } else {
-          discussions = parsed.map((d: any) => ({
+          discussions = parsed.map((d: Discussion) => ({
             title: d.title || 'Discussion',
-            messages: d.messages.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) })),
+            messages: d.messages.map((msg: Message) => ({ ...msg, timestamp: new Date(msg.timestamp) })),
           }));
         }
         setHistoryList(discussions.map((d: Discussion) => ({
@@ -1039,11 +1055,15 @@ function App() {
     try {
       const raw = localStorage.getItem('auto_voice_cfg');
       if (raw) return JSON.parse(raw);
-    } catch {}
+    } catch {
+      // Ignore parsing errors
+    }
     return { silenceMs: 2500, minChars: 6, minWords: 2, cooldownMs: 1500 };
   });
   useEffect(() => {
-    try { localStorage.setItem('auto_voice_cfg', JSON.stringify(autoVoiceConfig)); } catch {}
+    try { localStorage.setItem('auto_voice_cfg', JSON.stringify(autoVoiceConfig)); } catch {
+      // Ignore storage errors
+    }
   }, [autoVoiceConfig]);
   // Anti-doublon et cooldown
   const lastAutoSentAtRef = useRef<number>(0);
@@ -1180,7 +1200,7 @@ function App() {
       // Empêcher la détection immédiate d'un doublon à la reprise
       lastAutoTextRef.current = '';
     }
-  }, [isAISpeaking]); // Simplifier les dépendances
+  }, [isAISpeaking, listeningAuto, stopAuto, resetAuto, autoVoiceTimeout]); // Ajouter toutes les dépendances
 
   // Si l'utilisateur mute ou stop la voix, désactive le mode vocal auto
   useEffect(() => {
@@ -1217,12 +1237,14 @@ function App() {
       if (historyRaw) {
         try {
           const history = JSON.parse(historyRaw);
-          const updatedHistory = history.map((discussion: any) => ({
+          const updatedHistory = history.map((discussion: Discussion) => ({
             ...discussion,
-            messages: discussion.messages.filter((msg: any) => msg.id !== id)
+            messages: discussion.messages.filter((msg: Message) => msg.id !== id)
           }));
           localStorage.setItem(wsKey(workspaceId, LOCALSTORAGE_KEY_BASE), JSON.stringify(updatedHistory));
-        } catch {}
+        } catch {
+          // Ignore parsing errors
+        }
       }
       return updated;
     });
@@ -1253,12 +1275,14 @@ function App() {
       if (historyRaw) {
         try {
           const history = JSON.parse(historyRaw);
-          const updatedHistory = history.map((discussion: any) => ({
+          const updatedHistory = history.map((discussion: Discussion) => ({
             ...discussion,
-            messages: discussion.messages.filter((msg: any) => !selectedMessageIds.includes(msg.id))
+            messages: discussion.messages.filter((msg: Message) => !selectedMessageIds.includes(msg.id))
           }));
           localStorage.setItem(wsKey(workspaceId, LOCALSTORAGE_KEY_BASE), JSON.stringify(updatedHistory));
-        } catch {}
+        } catch {
+          // Ignore parsing errors
+        }
       }
       return updated;
     });
@@ -1270,7 +1294,7 @@ function App() {
 
 
   // Handler pour modifier un hyperparamètre Gemini
-  const handleGeminiConfigChange = (key: keyof GeminiGenerationConfig, value: any) => {
+  const handleGeminiConfigChange = (key: keyof GeminiGenerationConfig, value: string | number) => {
     setGeminiConfig(cfg => ({ ...cfg, [key]: value }));
   };
 
@@ -1379,9 +1403,9 @@ function App() {
           selectMode={selectMode}
           onToggleSelectMode={handleToggleSelectMode}
           selectedCount={selectedMessageIds.length}
-          totalCount={messages.filter((m: any) => !m.isRagContext).length}
+          totalCount={messages.filter((m: Message) => !(m as unknown as RagContextMessage).isRagContext).length}
           onSelectAll={() => {
-            const allIds = messages.filter((m: any) => !m.isRagContext).map((m: any) => m.id);
+            const allIds = messages.filter((m: Message) => !(m as unknown as RagContextMessage).isRagContext).map((m: Message) => m.id);
             setSelectedMessageIds(allIds);
           }}
           onDeselectAll={() => setSelectedMessageIds([])}
@@ -1408,7 +1432,9 @@ function App() {
             onReplyToMessage={(content: string) => {
               try {
                 document.dispatchEvent(new CustomEvent('voice-input:prefill', { detail: String(content || '') }));
-              } catch {}
+              } catch {
+                // Ignore event dispatch errors
+              }
             }}
               selectMode={selectMode}
               selectedMessageIds={selectedMessageIds}
@@ -1495,7 +1521,9 @@ function App() {
         isCurrentValid={(pin) => pin === childPin}
         onConfirmNewPin={(newPin) => {
           setChildPin(newPin);
-          try { localStorage.setItem('mode_enfant_pin', newPin); } catch {}
+          try { localStorage.setItem('mode_enfant_pin', newPin); } catch {
+            // Ignore storage errors
+          }
           setShowChildChangePinDialog(false);
           toast.success('PIN mis à jour.');
         }}
