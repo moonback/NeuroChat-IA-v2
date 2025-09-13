@@ -90,7 +90,7 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
   // Charger les docs du dossier (via import.meta.glob)
   useEffect(() => {
     async function loadDocs() {
-      // @ts-ignore
+      // @ts-expect-error - import.meta.glob is a Vite-specific feature
       const modules = import.meta.glob('../data/rag_docs/*.{txt,md}', { as: 'raw', eager: true });
       const dossierDocs: RagDoc[] = Object.entries(modules).map(([path, contenu], idx) => {
         const titre = path.split('/').pop()?.replace(/\.[^/.]+$/, '') || `Document ${idx + 1}`;
@@ -108,13 +108,15 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
       let userDocs: RagDoc[] = [];
       if (userRaw) {
         try {
-          userDocs = (JSON.parse(userRaw) as any[]).filter(d => d?.origine !== 'github');
-        } catch {}
+          userDocs = (JSON.parse(userRaw) as RagDoc[]).filter(d => d?.origine !== 'github');
+        } catch {
+          // Ignore parsing errors
+        }
       }
       setDocs([...dossierDocs, ...userDocs]);
     }
     if (open) loadDocs();
-  }, [open]);
+  }, [open, workspaceId]);
 
   // Extraction de texte selon le type de fichier
   async function extractTextFromFile(file: File): Promise<string> {
@@ -124,12 +126,12 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
     }
     if (ext === 'pdf') {
       try {
-        const pdfModule: any = await import('pdfjs-dist');
+        const pdfModule: { default?: unknown; GlobalWorkerOptions?: { workerSrc: string } } = await import('pdfjs-dist');
         const pdfjsLib = pdfModule?.default ?? pdfModule;
-        // @ts-ignore
+        // @ts-expect-error - pdfjsLib is dynamically imported
         pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.mjs';
         const arrayBuffer = await file.arrayBuffer();
-        // @ts-ignore
+        // @ts-expect-error - pdfjsLib is dynamically imported
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         let text = '';
         for (let i = 1; i <= pdf.numPages; i++) {
@@ -138,7 +140,7 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
           // Regrouper les items par ligne (y)
           let lastY = null;
           let line = '';
-          for (const item of content.items as any[]) {
+          for (const item of content.items as Array<{ str: string; transform: number[] }>) {
             if (lastY !== null && Math.abs(item.transform[5] - lastY) > 2) {
               text += line.trim() + '\n';
               line = '';
@@ -163,24 +165,24 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
         // Suppression des caractères spéciaux inutiles
         lines = lines.map(l =>
           l
-            .replace(/[•·●◆■□▪▶►–—\-]{2,}/g, ' ') // séquences de puces/tirets
+            .replace(/[•·●◆■□▪▶►–—-]{2,}/g, ' ') // séquences de puces/tirets
             .replace(/\s{2,}/g, ' ') // espaces multiples
             .replace(/[^\x20-\x7Eà-ÿÀ-ŸœŒçÇ€$£¥%°.,;:!?()\[\]{}<>\/@#'"\-\n]/g, '') // caractères non imprimables sauf ponctuation de base
             .replace(/\.{3,}/g, '.') // séquences de points
             .trim()
         );
         // Suppression de motifs supplémentaires (numéros de page, symboles, valeurs seules)
-        const isTitle = (l: string) => /^[A-ZÀ-Ÿ0-9\s\-]{6,}$/.test(l) && l.length < 60;
+        const isTitle = (l: string) => /^[A-ZÀ-Ÿ0-9\s-]{6,}$/.test(l) && l.length < 60;
         lines = lines.filter(l =>
-          !/^Page\s*\d+([\/\-]\d+)?$/i.test(l) && // Page 3, Page 3/12, Page 3-12
+          !/^Page\s*\d+([/-]\d+)?$/i.test(l) && // Page 3, Page 3/12, Page 3-12
           !/^[-–—\s]*\d+[-–—\s]*$/.test(l) && // - 4 -, -- 12 --
-          !/^[.,;:!?()\[\]{}<>\/@#'"\-\s]+$/.test(l) && // lignes de ponctuation/symboles
+          !/^[.,;:!?()[\]{}<>/@#'"-\s]+$/.test(l) && // lignes de ponctuation/symboles
           !/^\d+(\s*(L|kg|cm|mm|g|ml|cl|m|W|V|A|°C|°F|%)?)$/.test(l) // valeurs numériques seules ou avec unité
         );
         // Mise en forme des titres (saut de ligne avant/après)
         lines = lines.map(l => isTitle(l) ? `\n${l}\n` : l);
         // Fusion des lignes courtes avec la suivante (sauf titres)
-        let fused: string[] = [];
+        const fused: string[] = [];
         for (let i = 0; i < lines.length; i++) {
           let current = lines[i];
           while (
@@ -195,29 +197,29 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
         }
         // Normalisation des sauts de ligne
         return fused.join('\n').replace(/\n{3,}/g, '\n\n');
-      } catch (e) {
+      } catch {
         throw new Error('Erreur lors de l\'extraction du PDF.');
       }
     }
     if (ext === 'docx') {
       try {
         const arrayBuffer = await file.arrayBuffer();
-        const mammothModule: any = await import('mammoth');
+        const mammothModule: { default?: { extractRawText: (options: { arrayBuffer: ArrayBuffer }) => Promise<{ value: string }> } } = await import('mammoth');
         const mammoth = mammothModule?.default ?? mammothModule;
         const result = await mammoth.extractRawText({ arrayBuffer });
         return result.value;
-      } catch (e) {
+      } catch {
         throw new Error('Erreur lors de l\'extraction du DOCX.');
       }
     }
     if (ext === 'csv') {
       try {
         const text = await file.text();
-        const papaModule: any = await import('papaparse');
+        const papaModule: { default?: { parse: (text: string) => { data: string[][] } } } = await import('papaparse');
         const Papa = papaModule?.default ?? papaModule;
         const parsed = Papa.parse(text);
-        return parsed.data.map((row: any) => row.join(' ')).join('\n');
-      } catch (e) {
+        return parsed.data.map((row: string[]) => row.join(' ')).join('\n');
+      } catch {
         throw new Error('Erreur lors de l\'extraction du CSV.');
       }
     }
@@ -226,7 +228,7 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
         const text = await file.text();
         const doc = new DOMParser().parseFromString(text, 'text/html');
         return doc.body.innerText || '';
-      } catch (e) {
+      } catch {
         throw new Error('Erreur lors de l\'extraction du HTML.');
       }
     }
@@ -253,10 +255,12 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
 
   // Traitement des fichiers (commun pour upload et drag&drop)
   const processFiles = async (files: File[]) => {
-    let userRaw = localStorage.getItem(wsKey(workspaceId, 'rag_user_docs'));
+    const userRaw = localStorage.getItem(wsKey(workspaceId, 'rag_user_docs'));
     let userDocs: RagDoc[] = [];
     if (userRaw) {
-      try { userDocs = JSON.parse(userRaw); } catch {}
+      try { userDocs = JSON.parse(userRaw); } catch {
+        // Ignore parsing errors
+      }
     }
     let addedCount = 0;
     for (const file of files) {
@@ -268,8 +272,9 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
       let text = '';
       try {
         text = await extractTextFromFile(file);
-      } catch (err: any) {
-        toast.error(`${file.name} : ${err.message || 'Erreur lors de l\'extraction du texte.'}`);
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Erreur lors de l\'extraction du texte.';
+        toast.error(`${file.name} : ${errorMessage}`);
         continue;
       }
       if (!text.trim()) {
@@ -306,7 +311,9 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
     const userRaw = localStorage.getItem(wsKey(workspaceId, 'rag_user_docs'));
     let userDocs: RagDoc[] = [];
     if (userRaw) {
-      try { userDocs = JSON.parse(userRaw); } catch {}
+      try { userDocs = JSON.parse(userRaw); } catch {
+        // Ignore parsing errors
+      }
     }
     userDocs = userDocs.filter(doc => doc.id !== id);
     localStorage.setItem(wsKey(workspaceId, 'rag_user_docs'), JSON.stringify(userDocs));
@@ -326,7 +333,9 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
     const userRaw = localStorage.getItem(wsKey(workspaceId, 'rag_user_docs'));
     let userDocs: RagDoc[] = [];
     if (userRaw) {
-      try { userDocs = JSON.parse(userRaw); } catch {}
+      try { userDocs = JSON.parse(userRaw); } catch {
+        // Ignore parsing errors
+      }
     }
     userDocs = userDocs.map(d => d.id === doc.id ? { ...d, titre: trimmed } : d);
     localStorage.setItem(wsKey(workspaceId, 'rag_user_docs'), JSON.stringify(userDocs));
@@ -476,7 +485,7 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
               <div className="flex flex-wrap gap-2 items-center">
                 <select
                   value={filterOrigin}
-                  onChange={e => setFilterOrigin(e.target.value as any)}
+                  onChange={e => setFilterOrigin(e.target.value as 'tous' | 'dossier' | 'utilisateur')}
                   className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">Toutes origines</option>
@@ -487,7 +496,7 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
 
                 <select
                   value={sortKey}
-                  onChange={e => setSortKey(e.target.value as any)}
+                  onChange={e => setSortKey(e.target.value as 'titre' | 'origine' | 'taille')}
                   className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="titre">Titre</option>
@@ -812,7 +821,9 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
                   const userRaw = localStorage.getItem(wsKey(workspaceId, 'rag_user_docs'));
                   let userDocs: RagDoc[] = [];
                   if (userRaw) {
-                    try { userDocs = JSON.parse(userRaw); } catch {}
+                    try { userDocs = JSON.parse(userRaw); } catch {
+        // Ignore parsing errors
+      }
                   }
                   userDocs = userDocs.filter(doc => !selectedIds.includes(doc.id));
                   localStorage.setItem(wsKey(workspaceId, 'rag_user_docs'), JSON.stringify(userDocs));

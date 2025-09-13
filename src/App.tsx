@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense, useCallback } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense, useCallback, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import WorkspaceOpeningDialog from '@/components/WorkspaceOpeningDialog';
 import { ChatContainer } from '@/components/ChatContainer';
@@ -245,6 +245,10 @@ function App() {
   });
   useEffect(() => { try { localStorage.setItem('auto_rag_enabled', autoRagEnabled ? 'true' : 'false'); } catch { /* Ignore storage errors */ } }, [autoRagEnabled]);
   useEffect(() => { try { localStorage.setItem('auto_web_enabled', autoWebEnabled ? 'true' : 'false'); } catch { /* Ignore storage errors */ } }, [autoWebEnabled]);
+  // Mémoriser les arrays pour éviter les re-renders inutiles
+  const memoizedRagKeywords = useMemo(() => ragKeywords, [ragKeywords]);
+  const memoizedWebKeywords = useMemo(() => webKeywords, [webKeywords]);
+  
   useEffect(() => { try { localStorage.setItem('auto_rag_keywords', JSON.stringify(ragKeywords)); } catch { /* Ignore storage errors */ } }, [ragKeywords]);
   useEffect(() => { try { localStorage.setItem('auto_web_keywords', JSON.stringify(webKeywords)); } catch { /* Ignore storage errors */ } }, [webKeywords]);
   const [showGeminiSettings, setShowGeminiSettings] = useState(false);
@@ -779,8 +783,8 @@ function App() {
     }
     // Heuristiques d'activation automatique RAG/Web selon la requête
     const lower = userMessage.toLowerCase();
-    const autoUseRag = autoRagEnabled && ragKeywords.some(kw => new RegExp(`(^|\b)${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\b|$)`, 'i').test(lower));
-    const autoUseWeb = autoWebEnabled && webKeywords.some(kw => new RegExp(`(^|\b)${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\b|$)`, 'i').test(lower));
+    const autoUseRag = autoRagEnabled && memoizedRagKeywords.some(kw => new RegExp(`(^|\b)${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\b|$)`, 'i').test(lower));
+    const autoUseWeb = autoWebEnabled && memoizedWebKeywords.some(kw => new RegExp(`(^|\b)${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\b|$)`, 'i').test(lower));
 
     // Étape RAG : recherche documentaire (si activé, auto, ou agent provider)
     let passages: Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }> = [];
@@ -1595,8 +1599,8 @@ function App() {
           onToggleAgent={(enabled) => setGeminiAgentEnabled(enabled)}
           autoRagEnabled={autoRagEnabled}
           autoWebEnabled={autoWebEnabled}
-          ragKeywords={ragKeywords}
-          webKeywords={webKeywords}
+          ragKeywords={memoizedRagKeywords}
+          webKeywords={memoizedWebKeywords}
           onToggleAutoRag={setAutoRagEnabled}
           onToggleAutoWeb={setAutoWebEnabled}
           onChangeRagKeywords={setRagKeywords}
@@ -1616,8 +1620,8 @@ function App() {
           DEFAULTS={{ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' }}
           autoRagEnabled={autoRagEnabled}
           autoWebEnabled={autoWebEnabled}
-          ragKeywords={ragKeywords}
-          webKeywords={webKeywords}
+          ragKeywords={memoizedRagKeywords}
+          webKeywords={memoizedWebKeywords}
           onToggleAutoRag={setAutoRagEnabled}
           onToggleAutoWeb={setAutoWebEnabled}
           onChangeRagKeywords={setRagKeywords}
@@ -1639,8 +1643,8 @@ function App() {
           onToggleAgent={(enabled) => setMistralAgentEnabled(enabled)}
           autoRagEnabled={autoRagEnabled}
           autoWebEnabled={autoWebEnabled}
-          ragKeywords={ragKeywords}
-          webKeywords={webKeywords}
+          ragKeywords={memoizedRagKeywords}
+          webKeywords={memoizedWebKeywords}
           onToggleAutoRag={setAutoRagEnabled}
           onToggleAutoWeb={setAutoWebEnabled}
           onChangeRagKeywords={setRagKeywords}

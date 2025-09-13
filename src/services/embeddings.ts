@@ -6,7 +6,7 @@
 
 import type { pipeline as PipelineType } from '@xenova/transformers';
 
-let embedderPromise: Promise<any> | null = null;
+let embedderPromise: Promise<PipelineType> | null = null;
 
 // Cache des embeddings pour éviter les recalculs
 const embeddingCache = new Map<string, Float32Array>();
@@ -15,7 +15,7 @@ const EMBEDDING_CACHE_SIZE = 1000; // Limite du cache
 // Optimisations WASM pour onnxruntime-web via transformers.js
 // Sûres à appeler dans le navigateur; ignorées si non supportées
 try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { env } = require('@xenova/transformers');
   // Forcer le chargement distant des modèles (évite les tentatives de /models/Xenova/...)
   env.allowLocalModels = false;
@@ -23,15 +23,17 @@ try {
   if (env && env.backends && env.backends.onnx && env.backends.onnx.wasm) {
     env.backends.onnx.wasm.simd = true;
     env.backends.onnx.wasm.proxy = true;
-    env.backends.onnx.wasm.numThreads = (navigator as any)?.hardwareConcurrency || 4;
+    env.backends.onnx.wasm.numThreads = (navigator as Navigator & { hardwareConcurrency?: number })?.hardwareConcurrency || 4;
   }
-} catch {}
+} catch {
+  // Ignore if transformers is not available
+}
 
 export async function getEmbedder() {
   if (!embedderPromise) {
     embedderPromise = (async () => {
       const mod = await import('@xenova/transformers');
-      const pl = (mod as any).pipeline as typeof PipelineType;
+      const pl = (mod as { pipeline: typeof PipelineType }).pipeline;
       // Modèle léger multi‑lingue bien supporté
       // pooling + normalize seront passés à l'appel
       return pl('feature-extraction', 'Xenova/all-MiniLM-L6-v2');

@@ -45,7 +45,7 @@ export function ChatContainer({
   });
 
   // Fonction pour nettoyer les messages dupliqués
-  const deduplicateMessages = useCallback((messages: any[]) => {
+  const deduplicateMessages = useCallback((messages: Array<Message | RagContextMessage>) => {
     const seen = new Set();
     return messages.filter(msg => {
       // Pour les messages RAG, utiliser l'ID

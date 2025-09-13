@@ -39,7 +39,7 @@ export async function sendMessageToGemini(
     text: msg.text
   }))];
 
-  let contents: any[] = [];
+  let contents: Array<{ parts: Array<{ text?: string; inline_data?: { mime_type: string; data: string } }> }> = [];
   if (files && files.length > 0) {
     for (const file of files) {
       const base64Image = await fileToBase64(file);
@@ -112,7 +112,7 @@ export async function sendMessageToGemini(
     const texts: string[] = [];
     if (Array.isArray(data.candidates)) {
       for (const c of data.candidates) {
-        const parts = (c as any)?.content?.parts || [];
+        const parts = (c as { content?: { parts?: Array<{ text?: string }> } })?.content?.parts || [];
         for (const p of parts) {
           if (typeof p.text === 'string') texts.push(p.text);
         }

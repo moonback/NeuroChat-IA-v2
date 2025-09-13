@@ -12,7 +12,7 @@ interface MistralSettingsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mistralConfig: MistralGenerationConfig;
-  onConfigChange: (key: keyof MistralGenerationConfig, value: any) => void;
+  onConfigChange: (key: keyof MistralGenerationConfig, value: unknown) => void;
   onReset: () => void;
   onClose: () => void;
   DEFAULTS: Required<Pick<MistralGenerationConfig, 'temperature' | 'top_p' | 'max_tokens' | 'model'>>;

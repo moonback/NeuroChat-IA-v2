@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { X, Lock, Shield, AlertTriangle } from 'lucide-react';
 
 interface PrivateModeBannerProps {
@@ -31,13 +31,13 @@ export const PrivateModeBanner: React.FC<PrivateModeBannerProps> = ({
     }
   }, [visible, autoHide, autoHideDelay]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsClosing(true);
     setTimeout(() => {
       onClose?.();
       setIsClosing(false);
     }, 300);
-  };
+  }, [onClose]);
 
   const getVariantStyles = () => {
     switch (variant) {

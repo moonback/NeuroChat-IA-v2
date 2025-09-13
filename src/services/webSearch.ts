@@ -16,7 +16,7 @@ async function fetchJson(url: string, options?: RequestInit) {
 }
 
 async function tryTavily(query: string, maxResults: number): Promise<WebSearchResult[]> {
-	const apiKey = (import.meta as any).env?.VITE_TAVILY_API_KEY as string | undefined;
+	const apiKey = (import.meta as { env?: { VITE_TAVILY_API_KEY?: string } }).env?.VITE_TAVILY_API_KEY;
 	if (!apiKey) return [];
 	try {
 		const res = await fetch('https://api.tavily.com/search', {
@@ -33,8 +33,8 @@ async function tryTavily(query: string, maxResults: number): Promise<WebSearchRe
 		});
 		if (!res.ok) throw new Error(`Tavily HTTP ${res.status}`);
 		const data = await res.json();
-		const items: any[] = Array.isArray(data?.results) ? data.results : [];
-		return items.map((r: any) => ({
+		const items: Array<{ title?: string; url?: string; content?: string; snippet?: string }> = Array.isArray(data?.results) ? data.results : [];
+		return items.map((r) => ({
 			title: String(r.title || 'Résultat web'),
 			url: String(r.url || ''),
 			snippet: String(r.content || r.snippet || '').slice(0, 500),
@@ -53,7 +53,7 @@ async function tryTavily(query: string, maxResults: number): Promise<WebSearchRe
 		if (data?.AbstractText && data?.AbstractURL) {
 			results.push({ title: data.Heading || 'DuckDuckGo', url: data.AbstractURL, snippet: data.AbstractText });
 		}
-		const topics: any[] = Array.isArray(data?.RelatedTopics) ? data.RelatedTopics : [];
+		const topics: Array<{ Topics?: Array<{ FirstURL?: string; Text?: string }>; FirstURL?: string; Text?: string }> = Array.isArray(data?.RelatedTopics) ? data.RelatedTopics : [];
 		for (const t of topics) {
 			if (Array.isArray(t?.Topics)) {
 				for (const sub of t.Topics) {
@@ -91,7 +91,9 @@ async function enrichWithReader(results: WebSearchResult[], maxToFetch = 2): Pro
 		try {
 			// Skip hosts frequently returning 4xx to readers
 			let host = '';
-			try { host = new URL(r.url).hostname.replace(/^www\./, ''); } catch {}
+			try { host = new URL(r.url).hostname.replace(/^www\./, ''); } catch {
+				// Ignore URL parsing errors
+			}
 			if (BLOCKED_HOSTS.some(h => host.endsWith(h))) return r;
 			// r.jina.ai récupère un extrait lisible de la page (CORS friendly)
 			const originalScheme = r.url.startsWith('https://') ? 'https://' : 'http://';
@@ -107,7 +109,9 @@ async function enrichWithReader(results: WebSearchResult[], maxToFetch = 2): Pro
 					return { ...r, snippet: text.slice(0, 1200) };
 				}
 			}
-		} catch {}
+		} catch {
+			return results;
+		}
 		return r;
 	}));
 	// Concat enriched for first N with the rest unchanged
@@ -126,7 +130,9 @@ export async function searchWeb(query: string, maxResults = 5, options?: { enric
 	if ((options?.enrich ?? false) && results.length > 0) {
 		try {
 			results = await enrichWithReader(results, Math.min(2, maxResults));
-		} catch {}
+		} catch {
+			return results;
+		}
 	}
 	return results.slice(0, maxResults);
 }

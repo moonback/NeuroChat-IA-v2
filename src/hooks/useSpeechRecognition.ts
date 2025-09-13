@@ -3,25 +3,25 @@
 
 declare global {
   interface Window {
-    webkitSpeechRecognition: any;
-    SpeechRecognition: any;
+    webkitSpeechRecognition: typeof SpeechRecognition;
+    SpeechRecognition: typeof SpeechRecognition;
   }
   interface SpeechRecognition extends EventTarget {
     lang: string;
     continuous: boolean;
     interimResults: boolean;
     maxAlternatives: number;
-    onaudioend: ((this: SpeechRecognition, ev: Event) => any) | null;
-    onaudiostart: ((this: SpeechRecognition, ev: Event) => any) | null;
-    onend: ((this: SpeechRecognition, ev: Event) => any) | null;
-    onerror: ((this: SpeechRecognition, ev: any) => any) | null;
-    onnomatch: ((this: SpeechRecognition, ev: any) => any) | null;
-    onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
-    onsoundend: ((this: SpeechRecognition, ev: Event) => any) | null;
-    onsoundstart: ((this: SpeechRecognition, ev: Event) => any) | null;
-    onspeechend: ((this: SpeechRecognition, ev: Event) => any) | null;
-    onspeechstart: ((this: SpeechRecognition, ev: Event) => any) | null;
-    onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+    onaudioend: ((this: SpeechRecognition, ev: Event) => void) | null;
+    onaudiostart: ((this: SpeechRecognition, ev: Event) => void) | null;
+    onend: ((this: SpeechRecognition, ev: Event) => void) | null;
+    onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void) | null;
+    onnomatch: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
+    onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
+    onsoundend: ((this: SpeechRecognition, ev: Event) => void) | null;
+    onsoundstart: ((this: SpeechRecognition, ev: Event) => void) | null;
+    onspeechend: ((this: SpeechRecognition, ev: Event) => void) | null;
+    onspeechstart: ((this: SpeechRecognition, ev: Event) => void) | null;
+    onstart: ((this: SpeechRecognition, ev: Event) => void) | null;
     abort(): void;
     start(): void;
     stop(): void;
@@ -30,19 +30,29 @@ declare global {
     readonly resultIndex: number;
     readonly results: SpeechRecognitionResultList;
   }
+  interface SpeechRecognitionErrorEvent extends Event {
+    readonly error: string;
+    readonly message: string;
+  }
   interface SpeechRecognitionResultList {
     readonly length: number;
+    item(index: number): SpeechRecognitionResult;
     [index: number]: SpeechRecognitionResult;
   }
   interface SpeechRecognitionResult {
     readonly isFinal: boolean;
     readonly length: number;
+    item(index: number): SpeechRecognitionAlternative;
     [index: number]: SpeechRecognitionAlternative;
   }
   interface SpeechRecognitionAlternative {
     readonly transcript: string;
     readonly confidence: number;
   }
+  const SpeechRecognition: {
+    prototype: SpeechRecognition;
+    new(): SpeechRecognition;
+  };
 }
 
 import { useState, useRef, useCallback } from 'react';
@@ -103,7 +113,7 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
         options.onResult(final.trim());
       }
     };
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       setError(event.error || 'Erreur de reconnaissance vocale');
       setListening(false);
     };
@@ -116,10 +126,10 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
     try {
       recognition.start();
       setListening(true);
-    } catch (e) {
+    } catch {
       setError('Impossible de démarrer la reconnaissance vocale.');
     }
-  }, [getRecognition, options.lang, options.onResult, options.onEnd]);
+  }, [getRecognition, options]);
 
   // Arrêter la reconnaissance
   const stop = useCallback(() => {

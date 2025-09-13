@@ -27,7 +27,7 @@ let globalSecurityMode: 'private' | 'normal' = 'normal';
 let masterSessionPassword: string | null = null;
 
 /** Cache en mémoire pour les données déchiffrées */
-const storageCache = new Map<string, any>();
+const storageCache = new Map<string, unknown>();
 
 /** Whitelist des clés qui ne doivent PAS être chiffrées */
 const ENCRYPTION_WHITELIST = new Set([

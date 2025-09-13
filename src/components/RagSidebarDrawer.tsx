@@ -66,7 +66,7 @@ export function RagSidebarDrawer({ open, onClose, usedDocs, onOpenRagDocs, works
   useEffect(() => {
     if (!open) return;
     async function loadDocs() {
-      // @ts-ignore
+      // @ts-expect-error - import.meta.glob is a Vite-specific feature
       const modules = import.meta.glob('../data/rag_docs/*.{txt,md}', { as: 'raw', eager: true });
       const dossierDocs: RagDoc[] = Object.entries(modules).map(([path, contenu], idx) => {
         const titre = path.split('/').pop()?.replace(/\.[^/.]+$/, '') || `Document ${idx + 1}`;
@@ -76,12 +76,14 @@ export function RagSidebarDrawer({ open, onClose, usedDocs, onOpenRagDocs, works
       let userDocs: RagDoc[] = [];
       const raw = localStorage.getItem(wsKey(workspaceId, 'rag_user_docs'));
       if (raw) {
-        try { userDocs = (JSON.parse(raw) as any[]); } catch {}
+        try { userDocs = (JSON.parse(raw) as RagDoc[]); } catch {
+          // Ignore parsing errors
+        }
       }
       setDocs([...dossierDocs, ...userDocs]);
     }
     loadDocs();
-  }, [open]);
+  }, [open, workspaceId]);
 
   const matches = (d: RagDoc) => d.titre.toLowerCase().includes(search.toLowerCase()) || d.contenu.toLowerCase().includes(search.toLowerCase());
   const filteredUsed = (usedDocs || []).filter(matches);

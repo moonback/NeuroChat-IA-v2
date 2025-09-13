@@ -43,7 +43,9 @@ export function useSpeechSynthesis() {
         if (typeof pitch === 'number') setPitch(pitch);
         if (typeof volume === 'number') setVolume(volume);
         if (typeof voiceURI === 'string') setVoiceURI(voiceURI);
-      } catch {}
+      } catch {
+        // Ignore parsing errors
+      }
     }
   }, []);
 

@@ -50,7 +50,7 @@ export const SecurityStatusIndicator: React.FC<SecurityStatusIndicatorProps> = (
   });
   
   const [showDetails, setShowDetails] = useState(false);
-  const [auditTrail, setAuditTrail] = useState<any[]>([]);
+  const [auditTrail, setAuditTrail] = useState<Array<{ timestamp: Date; action: string; details: string }>>([]);
   
   // Mise à jour des métriques en temps réel
   useEffect(() => {

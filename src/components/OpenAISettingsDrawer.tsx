@@ -12,7 +12,7 @@ interface OpenAISettingsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   openaiConfig: OpenAIGenerationConfig;
-  onConfigChange: (key: keyof OpenAIGenerationConfig, value: any) => void;
+  onConfigChange: (key: keyof OpenAIGenerationConfig, value: unknown) => void;
   onReset: () => void;
   onClose: () => void;
   DEFAULTS: Required<Pick<OpenAIGenerationConfig, 'temperature' | 'top_p' | 'max_tokens' | 'model'>>;

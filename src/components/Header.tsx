@@ -42,7 +42,7 @@ interface HeaderProps {
   setStructuredMode?: (v: boolean) => void;
   webSearching?: boolean;
   onOpenGeminiSettings?: () => void;
-  geminiConfig?: any;
+  geminiConfig?: Record<string, unknown>;
   provider?: 'gemini' | 'openai' | 'mistral';
   onChangeProvider?: (p: 'gemini' | 'openai' | 'mistral') => void;
   modePrive: boolean;
@@ -235,6 +235,15 @@ const Logo = ({ onNewDiscussion, isOnline, quality }: {
 
 // (Badges de statut supprimés dans la nouvelle version épurée)
 
+interface ActionButtonProps {
+  onClick?: () => void;
+  tooltip?: string;
+  variant?: "ghost" | "default" | "destructive" | "outline" | "secondary" | "link";
+  className?: string;
+  loading?: boolean;
+  children: React.ReactNode;
+}
+
 const ActionButton = ({ 
   children, 
   onClick, 
@@ -243,7 +252,7 @@ const ActionButton = ({
   className = "",
   loading = false,
   ...props 
-}: any) => (
+}: ActionButtonProps) => (
   <Button
     variant={variant}
     size="sm"
@@ -274,6 +283,15 @@ const ActionButton = ({
   </Button>
 );
 
+interface IconButtonProps {
+  onClick?: () => void;
+  tooltip?: string;
+  variant?: "ghost" | "default" | "destructive" | "outline" | "secondary" | "link";
+  className?: string;
+  active?: boolean;
+  children: React.ReactNode;
+}
+
 const IconButton = ({ 
   children, 
   onClick, 
@@ -282,7 +300,7 @@ const IconButton = ({
   className = "",
   active = false,
   ...props 
-}: any) => (
+}: IconButtonProps) => (
   <Button
     variant={variant}
     size="sm"
@@ -314,7 +332,7 @@ const TileButton = ({
 }: {
   onClick: () => void;
   label: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   active?: boolean;
   intent?: 'default' | 'danger' | 'info' | 'success' | 'warning';
   disabled?: boolean;
@@ -1230,7 +1248,7 @@ const MobileMenuSheet = ({
               
               {!modeEnfant && (
                 <TileButton
-                  onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('openai:settings:open') as any))}
+                  onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('openai:settings:open')))}
                   label={'OpenAI'}
                   icon={Brain}
                   tooltip="Réglages OpenAI"
@@ -1239,7 +1257,7 @@ const MobileMenuSheet = ({
               
               {!modeEnfant && (
                 <TileButton
-                  onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('mistral:settings:open') as any))}
+                  onClick={handleMenuAction(() => document.dispatchEvent(new CustomEvent('mistral:settings:open')))}
                   label={'Mistral'}
                   icon={Sparkles}
                   tooltip="Réglages Mistral"
@@ -1385,7 +1403,11 @@ export function Header(props: HeaderProps) {
 
   // Handlers optimisés avec feedback
   const handleVolumeToggle = useCallback(() => {
-      muted ? onUnmute() : onMute();
+    if (muted) {
+      onUnmute();
+    } else {
+      onMute();
+    }
   }, [muted, onMute, onUnmute]);
 
   const handleModeVocalToggle = useCallback(() => {
@@ -1424,7 +1446,7 @@ export function Header(props: HeaderProps) {
 
   const handleChildModeToggle = useCallback(() => {
     props.onToggleModeEnfant?.();
-  }, [props.onToggleModeEnfant]);
+  }, [props]);
 
   const closeMobileMenu = useCallback(() => {
     setShowMobileMenu(false);
@@ -1731,14 +1753,14 @@ export function Header(props: HeaderProps) {
 
         /* Breakpoint xs personnalisé pour très petits écrans */
         @media (min-width: 475px) {
-          .xs\:flex {
+          .xs:flex {
             display: flex;
           }
         }
 
         /* Améliorations pour les petits écrans */
         @media (max-width: 640px) {
-          .sm\:hidden {
+          .sm:hidden {
             display: none !important;
           }
         }
@@ -1749,7 +1771,7 @@ export function Header(props: HeaderProps) {
         }
 
         /* Effet de pression tactile */
-        .active\:scale-95:active {
+        .active:scale-95:active {
           transform: scale(0.95);
         }
 

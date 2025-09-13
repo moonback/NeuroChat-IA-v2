@@ -150,7 +150,7 @@ export function WebSourcesSidebar({ usedSources }: WebSourcesSidebarProps) {
       case 'favorites':
         result = result.filter(s => s.favorite);
         break;
-      case 'domains':
+      case 'domains': {
         // Grouper par domaine et ne montrer que les domaines avec plusieurs sources
         const domainCounts = result.reduce((acc, s) => {
           acc[s.domain || 'unknown'] = (acc[s.domain || 'unknown'] || 0) + 1;
@@ -158,6 +158,7 @@ export function WebSourcesSidebar({ usedSources }: WebSourcesSidebarProps) {
         }, {} as Record<string, number>);
         result = result.filter(s => domainCounts[s.domain || 'unknown'] > 1);
         break;
+      }
     }
 
     // Tri
