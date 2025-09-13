@@ -1298,8 +1298,10 @@ function App() {
 
 
   // Handler pour modifier un hyperparamètre Gemini
-  const handleGeminiConfigChange = (key: keyof GeminiGenerationConfig, value: string | number) => {
-    setGeminiConfig(cfg => ({ ...cfg, [key]: value }));
+  const handleGeminiConfigChange = (key: keyof GeminiGenerationConfig, value: unknown) => {
+    // Conversion sécurisée du type unknown vers string | number
+    const convertedValue = typeof value === 'string' || typeof value === 'number' ? value : String(value);
+    setGeminiConfig(cfg => ({ ...cfg, [key]: convertedValue }));
   };
 
   // Mémoire utilisateur supprimée: exemples retirés
@@ -1380,9 +1382,9 @@ function App() {
           setStructuredMode={setStructuredMode}
           webSearching={isWebSearching}
           onOpenGeminiSettings={() => { if (!modeEnfant) setShowGeminiSettings(true); }}
-          geminiConfig={geminiConfig}
+          geminiConfig={{ ...geminiConfig } as Record<string, unknown>}
           provider={provider}
-          onChangeProvider={(p) => { setProvider(p); localStorage.setItem('llm_provider', p); }}
+          onChangeProvider={(p) => { setProvider(p as 'gemini' | 'openai' | 'mistral'); localStorage.setItem('llm_provider', p); }}
           modePrive={modePrive}
           setModePrive={setModePrive}
           // Chiffrement persistant
