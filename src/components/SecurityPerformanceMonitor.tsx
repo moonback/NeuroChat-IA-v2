@@ -116,6 +116,22 @@ function saveAlerts(alerts: AlertItem[]): void {
 
 function addAlert(alert: Omit<AlertItem, 'id' | 'timestamp'>): void {
   const alerts = getAlerts();
+  
+  // Vérifier s'il existe déjà une alerte similaire non résolue
+  const existingAlert = alerts.find(a => 
+    !a.resolved && 
+    a.message === alert.message && 
+    a.type === alert.type && 
+    a.level === alert.level
+  );
+  
+  if (existingAlert) {
+    // Mettre à jour le timestamp de l'alerte existante
+    existingAlert.timestamp = new Date().toISOString();
+    saveAlerts(alerts);
+    return;
+  }
+  
   const newAlert: AlertItem = {
     ...alert,
     id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -225,7 +241,7 @@ export function SecurityPerformanceMonitor({
         setAlerts(getAlerts());
       }
       
-      // Ajouter des alertes de test pour démonstration
+      // Ajouter des alertes de test pour démonstration (seulement si aucune alerte n'existe)
       if (alerts.length === 0) {
         const testAlerts = [
           {
@@ -792,6 +808,53 @@ export function SecurityPerformanceMonitor({
                   >
                     Supprimer toutes les alertes
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // Supprimer seulement les alertes de test
+                      const filteredAlerts = alerts.filter(alert => 
+                        !alert.message.includes('Test d\'alerte')
+                      );
+                      setAlerts(filteredAlerts);
+                      saveAlerts(filteredAlerts);
+                    }}
+                    disabled={!alerts.some(alert => alert.message.includes('Test d\'alerte'))}
+                  >
+                    Supprimer alertes de test
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // Ajouter des alertes de test
+                      const testAlerts = [
+                        {
+                          type: 'security' as const,
+                          level: 'critical' as const,
+                          message: 'Test d\'alerte critique - Chiffrement désactivé',
+                          resolved: false,
+                        },
+                        {
+                          type: 'performance' as const,
+                          level: 'high' as const,
+                          message: 'Test d\'alerte performance - Utilisation mémoire élevée',
+                          resolved: false,
+                        },
+                        {
+                          type: 'error' as const,
+                          level: 'medium' as const,
+                          message: 'Test d\'alerte erreur - Problème de connexion',
+                          resolved: false,
+                        }
+                      ];
+                      
+                      testAlerts.forEach(alert => addAlert(alert));
+                      setAlerts(getAlerts());
+                    }}
+                  >
+                    Ajouter alertes de test
+                  </Button>
                 </div>
                 <div className="text-sm text-slate-500">
                   {alerts.length} alerte(s) au total
@@ -820,7 +883,14 @@ export function SecurityPerformanceMonitor({
                                 <AlertDescription>
                                   <div className="flex justify-between items-start">
                                     <div className="flex-1">
-                                      <p className="font-medium">{alert.message}</p>
+                                      <div className="flex items-center gap-2">
+                                        <p className="font-medium">{alert.message}</p>
+                                        {alert.message.includes('Test d\'alerte') && (
+                                          <Badge variant="secondary" className="text-xs">
+                                            TEST
+                                          </Badge>
+                                        )}
+                                      </div>
                                       {alert.details && (
                                         <p className="text-sm mt-1 opacity-75">{alert.details}</p>
                                       )}

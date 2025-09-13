@@ -1,21 +1,17 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { 
-  Globe, Search, ExternalLink, Clock, TrendingUp, Filter, X, ChevronLeft, ChevronRight, 
-  Star, Eye, BarChart3, Download, Trash2, RefreshCw, Settings, Bookmark, 
-  Calendar, Hash, Zap, Target, ArrowUpDown, MoreHorizontal, Copy, Share2,
-  AlertCircle, CheckCircle, Info, Heart, BookOpen, Tag, Users, Activity
+  Globe, Search, ExternalLink, Clock, Filter, X, ChevronLeft, ChevronRight, 
+  Star, Eye, BarChart3, Settings, Bookmark, 
+  Hash, ArrowUpDown, Share2, BookOpen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -55,8 +51,6 @@ type GroupBy = 'none' | 'domain' | 'category' | 'date' | 'quality';
 const LS_WEB_FAVORITES_KEY = 'web_sources_favorites';
 const LS_WEB_STATS_KEY = 'web_sources_stats';
 const LS_WEB_SETTINGS_KEY = 'web_sources_settings';
-const LS_WEB_TAGS_KEY = 'web_sources_tags';
-const LS_WEB_CATEGORIES_KEY = 'web_sources_categories';
 const LS_WEB_NOTES_KEY = 'web_sources_notes';
 
 // Utilitaires pour les favoris et statistiques
@@ -96,17 +90,7 @@ function saveWebSettings(settings: { viewMode: ViewMode; groupBy: GroupBy; items
   localStorage.setItem(LS_WEB_SETTINGS_KEY, JSON.stringify(settings));
 }
 
-function getWebTags(): Set<string> {
-  try {
-    return new Set(JSON.parse(localStorage.getItem(LS_WEB_TAGS_KEY) || '[]'));
-  } catch {
-    return new Set();
-  }
-}
 
-function saveWebTags(tags: Set<string>): void {
-  localStorage.setItem(LS_WEB_TAGS_KEY, JSON.stringify([...tags]));
-}
 
 function getWebNotes(): Record<string, string> {
   try {
@@ -210,12 +194,9 @@ function getQualityScore(domain: string, title: string, snippet?: string): numbe
 
 interface WebSourcesSidebarProps {
   usedSources: WebSource[];
-  onExport?: (sources: WebSource[]) => void;
-  onImport?: (file: File) => Promise<void>;
-  onClear?: () => void;
 }
 
-export function WebSourcesSidebar({ usedSources, onExport, onImport, onClear }: WebSourcesSidebarProps) {
+export function WebSourcesSidebar({ usedSources }: WebSourcesSidebarProps) {
   const [search, setSearch] = useState('');
   const [previewSource, setPreviewSource] = useState<WebSource | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('timestamp');
@@ -226,32 +207,23 @@ export function WebSourcesSidebar({ usedSources, onExport, onImport, onClear }: 
   const [showSettings, setShowSettings] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [selectedSources, setSelectedSources] = useState<Set<string>>(new Set());
-  const [editingSource, setEditingSource] = useState<WebSource | null>(null);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [groupBy, setGroupBy] = useState<GroupBy>('none');
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [settings, setSettings] = useState(getWebSettings());
-  const [tags, setTags] = useState<Set<string>>(new Set());
   const [notes, setNotes] = useState<Record<string, string>>({});
-  const [refreshKey, setRefreshKey] = useState(0);
 
   // Charger les données au démarrage
   useEffect(() => {
     setFavorites(getWebFavorites());
-    setTags(getWebTags());
     setNotes(getWebNotes());
     const savedSettings = getWebSettings();
     setSettings(savedSettings);
-    setViewMode(savedSettings.viewMode);
     setGroupBy(savedSettings.groupBy);
-    setShowAdvanced(savedSettings.showAdvanced);
   }, []);
 
   // Enrichir les sources avec les métadonnées
   const enrichedSources = useMemo(() => {
     const stats = getWebStats();
     const favs = getWebFavorites();
-    const allTags = getWebTags();
     const allNotes = getWebNotes();
     
     return usedSources.map(source => {
@@ -261,14 +233,14 @@ export function WebSourcesSidebar({ usedSources, onExport, onImport, onClear }: 
       const readingTime = estimateReadingTime(source.wordCount, source.snippet);
       
       return {
-        ...source,
+      ...source,
         domain,
         category,
         quality,
         readingTime,
-        useCount: stats[source.url]?.useCount || 1,
-        lastUsed: stats[source.url]?.lastUsed || source.timestamp,
-        favorite: favs.has(source.url),
+      useCount: stats[source.url]?.useCount || 1,
+      lastUsed: stats[source.url]?.lastUsed || source.timestamp,
+      favorite: favs.has(source.url),
         tags: source.tags || [],
         rating: stats[source.url]?.rating || 0,
         notes: allNotes[source.url] || '',
@@ -276,7 +248,7 @@ export function WebSourcesSidebar({ usedSources, onExport, onImport, onClear }: 
         pinned: source.pinned || false,
       };
     });
-  }, [usedSources, refreshKey]);
+  }, [usedSources]);
 
   // Gestion des favoris
   const toggleFavorite = useCallback((url: string) => {
@@ -288,23 +260,8 @@ export function WebSourcesSidebar({ usedSources, onExport, onImport, onClear }: 
     }
     setFavorites(newFavorites);
     saveWebFavorites(newFavorites);
-    setRefreshKey(k => k + 1);
   }, [favorites]);
 
-  // Gestion des tags
-  const addTag = useCallback((tag: string) => {
-    const newTags = new Set(tags);
-    newTags.add(tag);
-    setTags(newTags);
-    saveWebTags(newTags);
-  }, [tags]);
-
-  const removeTag = useCallback((tag: string) => {
-    const newTags = new Set(tags);
-    newTags.delete(tag);
-    setTags(newTags);
-    saveWebTags(newTags);
-  }, [tags]);
 
   // Gestion des notes
   const updateNote = useCallback((url: string, note: string) => {
@@ -318,7 +275,6 @@ export function WebSourcesSidebar({ usedSources, onExport, onImport, onClear }: 
     const stats = getWebStats();
     stats[url] = { ...stats[url], rating };
     saveWebStats(stats);
-    setRefreshKey(k => k + 1);
   }, []);
 
   // Gestion de la prévisualisation avec tracking
@@ -475,14 +431,6 @@ export function WebSourcesSidebar({ usedSources, onExport, onImport, onClear }: 
     setSelectedSources(newSelected);
   }, [selectedSources]);
 
-  const selectAll = useCallback(() => {
-    setSelectedSources(new Set(processedSources.map(s => s.url)));
-  }, [processedSources]);
-
-  const deselectAll = useCallback(() => {
-    setSelectedSources(new Set());
-  }, []);
-
   // Gestion des paramètres
   const updateSettings = useCallback((newSettings: Partial<typeof settings>) => {
     const updated = { ...settings, ...newSettings };
@@ -518,13 +466,14 @@ export function WebSourcesSidebar({ usedSources, onExport, onImport, onClear }: 
             key = 'Sans date';
           }
           break;
-        case 'quality':
+        case 'quality': {
           const quality = source.quality || 0;
           if (quality >= 4) key = 'Excellente (4-5)';
           else if (quality >= 3) key = 'Bonne (3-4)';
           else if (quality >= 2) key = 'Moyenne (2-3)';
           else key = 'Faible (1-2)';
           break;
+        }
       }
       
       if (!groups[key]) groups[key] = [];
@@ -536,10 +485,10 @@ export function WebSourcesSidebar({ usedSources, onExport, onImport, onClear }: 
 
   return (
     <TooltipProvider>
-      <aside
+    <aside
         className="absolute top-0 left-0 bottom-0 w-96 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-r border-slate-200/60 dark:border-slate-800/60 shadow-2xl hidden lg:flex flex-col z-40 transition-all duration-500"
-        onMouseEnter={() => setExpanded(true)}
-        onMouseLeave={() => setExpanded(false)}
+      onMouseEnter={() => setExpanded(true)}
+      onMouseLeave={() => setExpanded(false)}
         style={{ 
           transform: expanded ? 'translateX(0)' : 'translateX(calc(-100% + 60px))',
           width: expanded ? '24rem' : '60px'
@@ -590,14 +539,14 @@ export function WebSourcesSidebar({ usedSources, onExport, onImport, onClear }: 
                 <TooltipContent>Paramètres</TooltipContent>
               </Tooltip>
             </div>
-          </div>
-
-          {/* Statistiques rapides */}
+        </div>
+        
+        {/* Statistiques rapides */}
           <div className="grid grid-cols-3 gap-2 mb-4">
             <div className="text-center p-2 bg-white/70 dark:bg-slate-800/70 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
               <div className="text-xs text-slate-500 mb-1">Domaines</div>
               <div className="text-sm font-bold text-green-600">{stats.domains}</div>
-            </div>
+          </div>
             <div className="text-center p-2 bg-white/70 dark:bg-slate-800/70 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
               <div className="text-xs text-slate-500 mb-1">Récents</div>
               <div className="text-sm font-bold text-blue-600">{stats.recent}</div>
@@ -605,64 +554,64 @@ export function WebSourcesSidebar({ usedSources, onExport, onImport, onClear }: 
             <div className="text-center p-2 bg-white/70 dark:bg-slate-800/70 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
               <div className="text-xs text-slate-500 mb-1">Favoris</div>
               <div className="text-sm font-bold text-yellow-600">{stats.favorites}</div>
-            </div>
           </div>
+        </div>
 
           {/* Recherche avancée */}
           <div className="relative mb-4">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher sources, tags, domaines..."
               className="pl-10 pr-10 h-10 bg-white/80 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-green-500/50"
-            />
-            {search && (
+          />
+          {search && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setSearch('')}
+              onClick={() => setSearch('')}
                 className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-              >
-                <X className="w-4 h-4" />
+            >
+              <X className="w-4 h-4" />
               </Button>
-            )}
-          </div>
+          )}
+        </div>
 
           {/* Contrôles de filtrage et tri */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-slate-500" />
-              <Select value={filterBy} onValueChange={(value: FilterOption) => setFilterBy(value)}>
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-slate-500" />
+            <Select value={filterBy} onValueChange={(value: FilterOption) => setFilterBy(value)}>
                 <SelectTrigger className="h-9 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
                   <SelectItem value="all">Toutes les sources</SelectItem>
-                  <SelectItem value="recent">Récentes (24h)</SelectItem>
-                  <SelectItem value="favorites">Favoris</SelectItem>
+                <SelectItem value="recent">Récentes (24h)</SelectItem>
+                <SelectItem value="favorites">Favoris</SelectItem>
                   <SelectItem value="highQuality">Haute qualité</SelectItem>
                   <SelectItem value="pinned">Épinglées</SelectItem>
                   <SelectItem value="news">Actualités</SelectItem>
                   <SelectItem value="academic">Académique</SelectItem>
                   <SelectItem value="social">Social</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex items-center gap-2">
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center gap-2">
               <ArrowUpDown className="w-4 h-4 text-slate-500" />
-              <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+            <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
                 <SelectTrigger className="h-9 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="timestamp">Plus récent</SelectItem>
-                  <SelectItem value="useCount">Plus utilisé</SelectItem>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="timestamp">Plus récent</SelectItem>
+                <SelectItem value="useCount">Plus utilisé</SelectItem>
                   <SelectItem value="quality">Meilleure qualité</SelectItem>
                   <SelectItem value="rating">Mieux noté</SelectItem>
-                  <SelectItem value="domain">Domaine</SelectItem>
-                  <SelectItem value="title">Titre</SelectItem>
+                <SelectItem value="domain">Domaine</SelectItem>
+                <SelectItem value="title">Titre</SelectItem>
                   <SelectItem value="readingTime">Temps de lecture</SelectItem>
                 </SelectContent>
               </Select>
@@ -680,71 +629,71 @@ export function WebSourcesSidebar({ usedSources, onExport, onImport, onClear }: 
                   <SelectItem value="category">Par catégorie</SelectItem>
                   <SelectItem value="date">Par date</SelectItem>
                   <SelectItem value="quality">Par qualité</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              </SelectContent>
+            </Select>
           </div>
+        </div>
 
           {/* Pagination */}
           {processedSources.length > settings.itemsPerPage && (
             <div className="mt-4 p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
               <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
                   <span className="text-slate-600 dark:text-slate-400">Par page:</span>
-                  <Select 
+                <Select 
                     value={settings.itemsPerPage.toString()} 
                     onValueChange={(value) => updateSettings({ itemsPerPage: Number(value) })}
-                  >
+                >
                     <SelectTrigger className="h-8 w-16 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5</SelectItem>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="20">20</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
                 
                 <div className="flex items-center gap-2">
                   <span className="text-slate-600 dark:text-slate-400">
                     {startIndex + 1}-{Math.min(startIndex + settings.itemsPerPage, processedSources.length)} sur {processedSources.length}
                   </span>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
                       className="h-7 w-7 p-0"
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                    >
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
                       <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                       className="h-7 w-7 p-0"
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      disabled={currentPage === totalPages}
-                    >
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
                       <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  </Button>
                 </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Poignée visible lorsque repliée */}
-        {!expanded && (
-          <div className="absolute top-1/2 -translate-y-1/2 right-0 translate-x-full select-none">
-            <div className="w-[60px] h-32 rounded-r-xl bg-gradient-to-b from-green-500 to-emerald-600 text-white flex items-center justify-center text-xs font-bold [writing-mode:vertical-rl] cursor-pointer shadow-lg">
-              Sources Web
+                </div>
             </div>
           </div>
         )}
+      </div>
+
+      {/* Poignée visible lorsque repliée */}
+      {!expanded && (
+        <div className="absolute top-1/2 -translate-y-1/2 right-0 translate-x-full select-none">
+            <div className="w-[60px] h-32 rounded-r-xl bg-gradient-to-b from-green-500 to-emerald-600 text-white flex items-center justify-center text-xs font-bold [writing-mode:vertical-rl] cursor-pointer shadow-lg">
+              Sources Web
+          </div>
+        </div>
+      )}
 
         {/* Contenu principal avec ScrollArea */}
         <ScrollArea className="flex-1">
@@ -771,9 +720,7 @@ export function WebSourcesSidebar({ usedSources, onExport, onImport, onClear }: 
                       onSelect={() => toggleSelection(source.url)}
                       onPreview={() => handlePreview(source)}
                       onToggleFavorite={() => toggleFavorite(source.url)}
-                      onUpdateRating={(rating) => updateRating(source.url, rating)}
                       onUpdateNote={(note) => updateNote(source.url, note)}
-                      viewMode={viewMode}
                     />
                   ))}
                 </div>
@@ -829,10 +776,8 @@ const SourceCard: React.FC<{
   onSelect: () => void;
   onPreview: () => void;
   onToggleFavorite: () => void;
-  onUpdateRating: (rating: number) => void;
   onUpdateNote: (note: string) => void;
-  viewMode: ViewMode;
-}> = ({ source, isSelected, onSelect, onPreview, onToggleFavorite, onUpdateRating, onUpdateNote, viewMode }) => {
+}> = ({ source, isSelected, onSelect, onPreview, onToggleFavorite, onUpdateNote }) => {
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [noteValue, setNoteValue] = useState(source.notes || '');
 
@@ -855,9 +800,9 @@ const SourceCard: React.FC<{
           onChange={onSelect}
           className="w-4 h-4 text-green-600 bg-white border-slate-300 rounded focus:ring-green-500"
         />
-      </div>
+            </div>
 
-      <button
+                <button
         onClick={onPreview}
         className="w-full text-left p-4 pl-10 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 rounded-xl transition-colors"
       >
@@ -866,9 +811,9 @@ const SourceCard: React.FC<{
             <span className="text-lg">{getDomainIcon(source.domain || '')}</span>
             {source.favorite && <Star className="w-4 h-4 text-yellow-500 fill-yellow-400" />}
             {source.pinned && <Bookmark className="w-4 h-4 text-blue-500 fill-blue-400" />}
-          </div>
+                    </div>
           
-          <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 line-clamp-2 leading-tight">
                 {source.title}
@@ -902,24 +847,24 @@ const SourceCard: React.FC<{
                   <span>{source.readingTime} min</span>
                 </>
               )}
-            </div>
+                        </div>
             
             {source.snippet && (
               <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 line-clamp-2">
                 {source.snippet.slice(0, 120)}{source.snippet.length > 120 ? '...' : ''}
               </p>
-            )}
-            
-            {/* Métadonnées */}
+                      )}
+                      
+                      {/* Métadonnées */}
             <div className="mt-2 flex items-center justify-between">
               <div className="flex items-center gap-3 text-xs text-slate-400">
-                {source.useCount && source.useCount > 1 && (
+                        {source.useCount && source.useCount > 1 && (
                   <span className="flex items-center gap-1">
                     <Eye className="w-3 h-3" />
                     {source.useCount}
                   </span>
-                )}
-                {source.timestamp && (
+                        )}
+                        {source.timestamp && (
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {new Date(source.timestamp).toLocaleDateString('fr-FR', { 
@@ -936,16 +881,16 @@ const SourceCard: React.FC<{
                     {source.socialShares}
                   </span>
                 )}
-              </div>
-              
-              <div className="flex items-center gap-1">
+                  </div>
+                  
+                    <div className="flex items-center gap-1">
                 <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-green-500 transition-colors" />
-              </div>
+                    </div>
             </div>
-          </div>
-        </div>
-      </button>
-
+                    </div>
+                  </div>
+                </button>
+                
       {/* Actions rapides */}
       <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <Tooltip>
@@ -953,8 +898,8 @@ const SourceCard: React.FC<{
             <Button
               variant="ghost"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
+                  onClick={(e) => {
+                    e.stopPropagation();
                 onToggleFavorite();
               }}
               className="h-7 w-7 p-0"
@@ -983,7 +928,7 @@ const SourceCard: React.FC<{
           </TooltipTrigger>
           <TooltipContent>Ajouter une note</TooltipContent>
         </Tooltip>
-      </div>
+              </div>
 
       {/* Input de note */}
       {showNoteInput && (
@@ -1013,8 +958,8 @@ const SourceCard: React.FC<{
             >
               Sauvegarder
             </Button>
-          </div>
         </div>
+      </div>
       )}
     </div>
   );
@@ -1044,21 +989,21 @@ const SourcePreviewModal: React.FC<{
   return (
     <Dialog open={!!source} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0 flex-1">
+            <DialogHeader className="flex-shrink-0">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0 flex-1">
               <DialogTitle className="text-xl flex items-center gap-3">
                 <span className="text-2xl">{getDomainIcon(source.domain || '')}</span>
                 {source.title}
                 {source.favorite && <Star className="w-5 h-5 text-yellow-500 fill-yellow-400" />}
                 {source.pinned && <Bookmark className="w-5 h-5 text-blue-500 fill-blue-400" />}
-              </DialogTitle>
+                  </DialogTitle>
               
               <div className="mt-3 flex items-center gap-4 text-sm text-slate-500">
                 <Badge variant="outline" className="flex items-center gap-1">
                   <Globe className="w-3 h-3" />
                   {source.domain}
-                </Badge>
+                    </Badge>
                 
                 <Badge variant="secondary" className="flex items-center gap-1">
                   <span className={getCategoryIcon(source.category || '')}></span>
@@ -1069,60 +1014,60 @@ const SourcePreviewModal: React.FC<{
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {source.readingTime} min de lecture
-                  </span>
-                )}
+                      </span>
+                    )}
                 
                 {source.useCount && source.useCount > 1 && (
                   <span className="flex items-center gap-1">
                     <Eye className="w-3 h-3" />
                     {source.useCount} utilisations
-                  </span>
-                )}
-              </div>
-            </div>
+                      </span>
+                    )}
+                  </div>
+                </div>
             
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
                 onClick={onToggleFavorite}
                 className="flex items-center gap-2"
-              >
+                  >
                 <Star className={`w-4 h-4 ${source.favorite ? 'text-yellow-500 fill-yellow-400' : 'text-slate-400'}`} />
                 {source.favorite ? 'Favori' : 'Favoris'}
-              </Button>
+                  </Button>
               
-              <Button
-                variant="outline"
-                size="sm"
+                  <Button
+                    variant="outline"
+                    size="sm"
                 onClick={() => window.open(source.url, '_blank')}
                 className="flex items-center gap-2"
-              >
+                  >
                 <ExternalLink className="w-4 h-4" />
-                Ouvrir
-              </Button>
-            </div>
-          </div>
-        </DialogHeader>
+                    Ouvrir
+                  </Button>
+                </div>
+              </div>
+            </DialogHeader>
         
         <div className="flex-1 overflow-y-auto space-y-6">
           {/* URL */}
           <div className="p-4 border rounded-lg bg-slate-50 dark:bg-slate-900/50">
             <div className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">URL :</div>
-            <div className="text-sm font-mono text-blue-600 dark:text-blue-400 break-all">
+                <div className="text-sm font-mono text-blue-600 dark:text-blue-400 break-all">
               {source.url}
-            </div>
-          </div>
-          
+                </div>
+              </div>
+              
           {/* Extrait */}
           {source.snippet && (
-            <div className="p-4 border rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                <div className="p-4 border rounded-lg bg-slate-50 dark:bg-slate-900/50">
               <div className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Extrait :</div>
-              <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                  <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                 {source.snippet}
-              </div>
-            </div>
-          )}
+                  </div>
+                </div>
+              )}
 
           {/* Évaluation et notes */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1193,16 +1138,16 @@ const SourcePreviewModal: React.FC<{
               )}
             </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+            </div>
+          </DialogContent>
+        </Dialog>
   );
 };
 
 // Modal des paramètres
 const SettingsModal: React.FC<{
   settings: { viewMode: ViewMode; groupBy: GroupBy; itemsPerPage: number; showAdvanced: boolean; autoRefresh: boolean };
-  onUpdate: (settings: any) => void;
+  onUpdate: (settings: Partial<{ viewMode: ViewMode; groupBy: GroupBy; itemsPerPage: number; showAdvanced: boolean; autoRefresh: boolean }>) => void;
   onClose: () => void;
 }> = ({ settings, onUpdate, onClose }) => {
   return (
@@ -1298,7 +1243,19 @@ const SettingsModal: React.FC<{
 
 // Modal des statistiques
 const StatsModal: React.FC<{
-  stats: any;
+  stats: {
+    total: number;
+    domains: number;
+    categories: number;
+    recent: number;
+    favorites: number;
+    highQuality: number;
+    totalReadingTime: number;
+    averageQuality: number;
+    totalUseCount: number;
+    pinned: number;
+    archived: number;
+  };
   sources: WebSource[];
   onClose: () => void;
 }> = ({ stats, sources, onClose }) => {
