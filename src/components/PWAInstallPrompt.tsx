@@ -6,18 +6,12 @@ import { Progress } from '@/components/ui/progress';
 import { 
   Download, 
   X, 
-  Smartphone, 
   Monitor, 
-  Wifi, 
-  WifiOff,
   RefreshCw,
-  Trash2,
   Bell,
-  BellOff,
   Sparkles,
   Zap,
   Shield,
-  Clock,
   CheckCircle,
   AlertCircle,
   Info,
@@ -55,7 +49,6 @@ export const PWAInstallPrompt = ({
   const {
     isInstallable,
     isInstalled,
-    isOnline,
     isUpdateAvailable,
     installApp,
     updateApp,
@@ -72,8 +65,6 @@ export const PWAInstallPrompt = ({
   const [isMinimized, setIsMinimized] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [connectionQuality, setConnectionQuality] = useState<'fast' | 'slow' | 'offline'>('fast');
-  const [dataUsage, setDataUsage] = useState({ sent: 0, received: 0 });
-  const [lastSync, setLastSync] = useState<Date | null>(null);
 
   // Détecter la qualité de connexion
   useEffect(() => {
@@ -101,19 +92,6 @@ export const PWAInstallPrompt = ({
     }
   }, []);
 
-  // Surveiller l'utilisation des données
-  useEffect(() => {
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data.type === 'DATA_USAGE') {
-          setDataUsage(event.data.usage);
-        }
-        if (event.data.type === 'SYNC_COMPLETE') {
-          setLastSync(new Date());
-        }
-      });
-    }
-  }, []);
 
   // Gestion des notifications
   const removeNotification = useCallback((id: string) => {
@@ -219,22 +197,6 @@ export const PWAInstallPrompt = ({
     }
   };
 
-  const handleClearCache = async () => {
-    try {
-      await clearCache();
-      addNotification({
-        title: 'Cache vidé',
-        message: `Espace libéré: ${(Math.random() * 50 + 10).toFixed(1)} MB`,
-        level: 'success'
-      });
-    } catch {
-      addNotification({
-        title: 'Erreur',
-        message: 'Impossible de vider le cache',
-        level: 'error'
-      });
-    }
-  };
 
   const handleRequestNotifications = async () => {
     const granted = await requestNotificationPermission();
@@ -273,13 +235,6 @@ export const PWAInstallPrompt = ({
     }
   };
 
-  const formatDataSize = (bytes: number) => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  };
 
   if (isInstalled && !isUpdateAvailable && notifications.length === 0) {
     return null;
@@ -447,6 +402,32 @@ export const PWAInstallPrompt = ({
                         {connectionQuality === 'offline' ? 'Actif' : 'Prêt'}
                       </Badge>
                     </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs">Cache</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            await clearCache();
+                            addNotification({
+                              title: 'Cache vidé',
+                              message: `Espace libéré: ${(Math.random() * 50 + 10).toFixed(1)} MB`,
+                              level: 'success'
+                            });
+                          } catch {
+                            addNotification({
+                              title: 'Erreur',
+                              message: 'Impossible de vider le cache',
+                              level: 'error'
+                            });
+                          }
+                        }}
+                        className="h-6 text-xs"
+                      >
+                        Vider
+                      </Button>
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -488,127 +469,8 @@ export const PWAInstallPrompt = ({
 
       {/* Indicateur de statut amélioré */}
       <div className={cn("fixed top-4 left-4 z-40", className)}>
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Statut de connexion avec qualité */}
-          <Badge
-            variant={isOnline ? (connectionQuality === 'fast' ? "default" : "secondary") : "destructive"}
-            className="flex items-center gap-1"
-          >
-            {isOnline ? (
-              <Wifi className="h-3 w-3" />
-            ) : (
-              <WifiOff className="h-3 w-3" />
-            )}
-            {isOnline ? (connectionQuality === 'fast' ? 'Connexion rapide' : 'Connexion lente') : 'Hors ligne'}
-          </Badge>
-
-          {/* Statut PWA */}
-          {isInstalled && (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <Smartphone className="h-3 w-3" />
-              App installée
-            </Badge>
-          )}
-
-          {/* Dernière synchronisation */}
-          {lastSync && (
-            <Badge variant="outline" className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              Sync: {lastSync.toLocaleTimeString()}
-            </Badge>
-          )}
-
-          {/* Utilisation des données */}
-          {(dataUsage.sent > 0 || dataUsage.received > 0) && (
-            <Badge variant="outline" className="text-xs">
-              ↑{formatDataSize(dataUsage.sent)} ↓{formatDataSize(dataUsage.received)}
-            </Badge>
-          )}
-
-          {/* Permissions de notification */}
-          {notificationPermission === 'granted' ? (
-            <Badge variant="outline" className="flex items-center gap-1 text-emerald-600">
-              <Bell className="h-3 w-3" />
-              Notifications
-            </Badge>
-          ) : notificationPermission === 'default' ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRequestNotifications}
-              className="h-6 px-2 text-xs"
-            >
-              <BellOff className="h-3 w-3 mr-1" />
-              Activer notifications
-            </Button>
-          ) : null}
-        </div>
+        
       </div>
-
-      {/* Panneau de développement */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-4 left-4 z-40">
-          <Card className="w-72 bg-slate-900/95 text-white backdrop-blur-xl">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                PWA Developer Tools
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleClearCache}
-                  className="h-7 text-xs border-slate-700"
-                >
-                  <Trash2 className="h-3 w-3 mr-1" />
-                  Vider cache
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => addNotification({ 
-                    title: 'Test notification', 
-                    message: 'Ceci est un test', 
-                    level: 'info' 
-                  })}
-                  className="h-7 text-xs border-slate-700"
-                >
-                  <Bell className="h-3 w-3 mr-1" />
-                  Test notif
-                </Button>
-              </div>
-              
-              <div className="space-y-1 text-xs">
-                <div className="flex justify-between">
-                  <span>Installable:</span>
-                  <span className={isInstallable ? 'text-green-400' : 'text-red-400'}>
-                    {isInstallable ? 'Oui' : 'Non'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Installée:</span>
-                  <span className={isInstalled ? 'text-green-400' : 'text-red-400'}>
-                    {isInstalled ? 'Oui' : 'Non'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Service Worker:</span>
-                  <span className={'serviceWorker' in navigator ? 'text-green-400' : 'text-red-400'}>
-                    {'serviceWorker' in navigator ? 'Actif' : 'Inactif'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Connexion:</span>
-                  <span className="capitalize">{connectionQuality}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </>
   );
 };
