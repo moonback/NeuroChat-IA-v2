@@ -56,13 +56,7 @@ export default defineConfig({
   },
   // Configuration pour le développement PWA
   server: {
-    https: false, // PWA fonctionne en HTTP local
     host: true,
     port: 3000,
-  },
-  // Optimisations pour PWA
-  optimizeDeps: {
-    exclude: ['lucide-react'],
-    include: ['react', 'react-dom'],
   },
 });

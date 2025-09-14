@@ -174,9 +174,9 @@ export const usePWA = () => {
 
   // Fonction de synchronisation en arrière-plan
   const triggerBackgroundSync = useCallback(async () => {
-    if (pwaState.registration && 'sync' in window.ServiceWorkerRegistration.prototype) {
+    if (pwaState.registration && 'sync' in pwaState.registration) {
       try {
-        await pwaState.registration.sync.register('background-sync');
+        await (pwaState.registration as any).sync.register('background-sync');
         console.log('Synchronisation en arrière-plan déclenchée');
       } catch (error) {
         console.error('Erreur lors de la synchronisation:', error);

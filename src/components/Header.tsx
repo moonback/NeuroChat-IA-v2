@@ -499,38 +499,38 @@ const MobileActions = ({
   handleVolumeToggle: () => void;
   setShowMenu: (show: boolean) => void;
 }) => (
-  <div className="md:hidden flex items-center gap-2">
+  <div className="md:hidden flex items-center gap-1">
     {/* Actions essentielles */}
-    <div className="flex items-center gap-2 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl rounded-2xl p-2 border border-slate-200/60 dark:border-slate-700/60 shadow-lg">
+    <div className="flex items-center gap-1 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl rounded-xl p-1 border border-slate-200/60 dark:border-slate-700/60 shadow-lg">
       <ModernButton
         variant="primary"
-        size="lg"
+        size="sm"
         onClick={onNewDiscussion}
         tooltip="Nouvelle discussion"
-        className="w-12 h-12 p-0 shadow-2xl"
+        className="w-8 h-8 p-0"
       >
-        <PlusCircle className="w-6 h-6" />
+        <PlusCircle className="w-4 h-4" />
       </ModernButton>
       
       <ModernButton
         variant={muted ? "danger" : "success"}
-        size="lg"
+        size="sm"
         onClick={handleVolumeToggle}
         tooltip={muted ? 'Activer audio' : 'Désactiver audio'}
-        className="w-12 h-12 p-0"
+        className="w-8 h-8 p-0"
       >
-        {muted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+        {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
       </ModernButton>
     </div>
 
     {/* Menu */}
     <ModernButton
       variant="ghost"
-      size="lg"
+      size="sm"
       onClick={() => setShowMenu(true)}
-      className="w-12 h-12 p-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-lg"
+      className="w-8 h-8 p-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-lg"
     >
-      <Menu className="w-6 h-6" />
+      <Menu className="w-4 h-4" />
     </ModernButton>
   </div>
 );
@@ -963,32 +963,32 @@ export function Header(props: HeaderProps) {
                 <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
                   Actions
                 </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <ModernButton
-                    variant="primary"
-                    onClick={() => {
-                      props.onNewDiscussion();
-                      setShowMenu(false);
-                    }}
-                    className="h-5 flex-col gap-2"
-                  >
-                    <PlusCircle className="w-5 h-5" />
-                    <span className="text-xs">Nouveau</span>
-                  </ModernButton>
+                 <div className="grid grid-cols-2 gap-2">
+                   <ModernButton
+                     variant="primary"
+                     onClick={() => {
+                       props.onNewDiscussion();
+                       setShowMenu(false);
+                     }}
+                     className="h-12 flex-col gap-1"
+                   >
+                     <PlusCircle className="w-4 h-4" />
+                     <span className="text-xs">Nouveau</span>
+                   </ModernButton>
                   
-                  {!props.modeEnfant && (
-                    <ModernButton
-                      variant="secondary"
-                      onClick={() => {
-                        props.onOpenHistory();
-                        setShowMenu(false);
-                      }}
-                      className="h-16 flex-col gap-2"
-                    >
-                      <History className="w-5 h-5" />
-                      <span className="text-xs">Historique</span>
-                    </ModernButton>
-                  )}
+                   {!props.modeEnfant && (
+                     <ModernButton
+                       variant="secondary"
+                       onClick={() => {
+                         props.onOpenHistory();
+                         setShowMenu(false);
+                       }}
+                       className="h-12 flex-col gap-1"
+                     >
+                       <History className="w-4 h-4" />
+                       <span className="text-xs">Historique</span>
+                     </ModernButton>
+                   )}
                 </div>
               </div>
 
@@ -997,65 +997,65 @@ export function Header(props: HeaderProps) {
                 <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
                   Modes IA
                 </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {!props.modeEnfant && (
-                    <ModernButton
-                      variant={props.modePrive ? "danger" : "ghost"}
-                      onClick={() => {
-                        handlePrivateModeToggle();
-                        setShowMenu(false);
-                      }}
-                      active={props.modePrive}
-                      className="h-16 flex-col gap-2"
-                    >
-                      <Shield className="w-5 h-5" />
-                      <span className="text-xs">{props.modePrive ? 'Privé ON' : 'Privé OFF'}</span>
-                    </ModernButton>
-                  )}
-                  
-                  <ModernButton
-                    variant={props.modeEnfant ? "primary" : "ghost"}
-                    onClick={() => {
-                      handleChildModeToggle();
-                      setShowMenu(false);
-                    }}
-                    active={!!props.modeEnfant}
-                    className="h-16 flex-col gap-2"
-                  >
-                    <Baby className="w-5 h-5" />
-                    <span className="text-xs">{props.modeEnfant ? 'Enfant ON' : 'Enfant OFF'}</span>
-                  </ModernButton>
-                  
-                  {!props.modeEnfant && (
-                    <>
-                      <ModernButton
-                        variant={props.ragEnabled ? "success" : "ghost"}
-                        onClick={() => {
-                          handleRagToggle();
-                          setShowMenu(false);
-                        }}
-                        active={props.ragEnabled}
-                        className="h-16 flex-col gap-2"
-                      >
-                        <Database className="w-5 h-5" />
-                        <span className="text-xs">{props.ragEnabled ? 'RAG ON' : 'RAG OFF'}</span>
-                      </ModernButton>
-                      
-                      <ModernButton
-                        variant={props.webEnabled ? "success" : "ghost"}
-                        onClick={() => {
-                          handleWebToggle();
-                          setShowMenu(false);
-                        }}
-                        active={!!props.webEnabled}
-                        className="h-16 flex-col gap-2"
-                      >
-                        <Globe className="w-5 h-5" />
-                        <span className="text-xs">{props.webEnabled ? 'Web ON' : 'Web OFF'}</span>
-                      </ModernButton>
-                    </>
-                  )}
-                </div>
+                 <div className="grid grid-cols-2 gap-2">
+                   {!props.modeEnfant && (
+                     <ModernButton
+                       variant={props.modePrive ? "danger" : "ghost"}
+                       onClick={() => {
+                         handlePrivateModeToggle();
+                         setShowMenu(false);
+                       }}
+                       active={props.modePrive}
+                       className="h-12 flex-col gap-1"
+                     >
+                       <Shield className="w-4 h-4" />
+                       <span className="text-xs">{props.modePrive ? 'Privé ON' : 'Privé OFF'}</span>
+                     </ModernButton>
+                   )}
+                   
+                   <ModernButton
+                     variant={props.modeEnfant ? "primary" : "ghost"}
+                     onClick={() => {
+                       handleChildModeToggle();
+                       setShowMenu(false);
+                     }}
+                     active={!!props.modeEnfant}
+                     className="h-12 flex-col gap-1"
+                   >
+                     <Baby className="w-4 h-4" />
+                     <span className="text-xs">{props.modeEnfant ? 'Enfant ON' : 'Enfant OFF'}</span>
+                   </ModernButton>
+                   
+                   {!props.modeEnfant && (
+                     <>
+                       <ModernButton
+                         variant={props.ragEnabled ? "success" : "ghost"}
+                         onClick={() => {
+                           handleRagToggle();
+                           setShowMenu(false);
+                         }}
+                         active={props.ragEnabled}
+                         className="h-12 flex-col gap-1"
+                       >
+                         <Database className="w-4 h-4" />
+                         <span className="text-xs">{props.ragEnabled ? 'RAG ON' : 'RAG OFF'}</span>
+                       </ModernButton>
+                       
+                       <ModernButton
+                         variant={props.webEnabled ? "success" : "ghost"}
+                         onClick={() => {
+                           handleWebToggle();
+                           setShowMenu(false);
+                         }}
+                         active={!!props.webEnabled}
+                         className="h-12 flex-col gap-1"
+                       >
+                         <Globe className="w-4 h-4" />
+                         <span className="text-xs">{props.webEnabled ? 'Web ON' : 'Web OFF'}</span>
+                       </ModernButton>
+                     </>
+                   )}
+                 </div>
               </div>
 
               {/* Configuration */}
