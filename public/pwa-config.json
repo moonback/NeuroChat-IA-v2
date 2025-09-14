@@ -1,0 +1,31 @@
+{
+  "name": "NeuroChat IA",
+  "version": "0.0.0",
+  "buildTime": "2025-09-14T08:31:48.251Z",
+  "serviceWorker": {
+    "enabled": true,
+    "scope": "/",
+    "cacheStrategy": "stale-while-revalidate"
+  },
+  "manifest": {
+    "display": "standalone",
+    "themeColor": "#3b82f6",
+    "backgroundColor": "#0f172a"
+  },
+  "features": {
+    "installable": true,
+    "offline": true,
+    "notifications": true,
+    "backgroundSync": true,
+    "shortcuts": true
+  },
+  "performance": {
+    "lazyLoading": true,
+    "codeSplitting": true,
+    "compression": [
+      "gzip",
+      "brotli"
+    ],
+    "caching": "aggressive"
+  }
+}

@@ -3,6 +3,9 @@ import { Card } from '@/components/ui/card';
 import WorkspaceOpeningDialog from '@/components/WorkspaceOpeningDialog';
 import { ChatContainer } from '@/components/ChatContainer';
 import { VoiceInput } from '@/components/VoiceInput';
+import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
+import { PWAMeta } from '@/components/PWAMeta';
+import { PWAShortcuts } from '@/components/PWAShortcuts';
 import { GeminiGenerationConfig } from '@/services/geminiApi';
 import type { MistralGenerationConfig } from '@/services/mistralApi';
 import { streamMessage, type LlmConfig } from '@/services/llm';
@@ -1764,6 +1767,19 @@ function App() {
       
       {/* Modale d'ouverture d'espace de travail */}
       <WorkspaceOpeningDialog open={workspaceOpeningOpen} onOpenChange={setWorkspaceOpeningOpen} name={workspaceOpeningName} />
+      
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt />
+      
+      {/* PWA Meta Management */}
+      <PWAMeta />
+      
+      {/* PWA Shortcuts */}
+      <PWAShortcuts 
+        onNewDiscussion={handleNewDiscussion}
+        onToggleVoice={() => setModeVocalAuto(!modeVocalAuto)}
+        onTogglePrivateMode={() => setModePrive(!modePrive)}
+      />
       
       {/* Le chiffrement est maintenant automatique et permanent */}
     </div>
