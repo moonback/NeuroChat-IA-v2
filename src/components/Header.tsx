@@ -970,7 +970,7 @@ export function Header(props: HeaderProps) {
                       props.onNewDiscussion();
                       setShowMenu(false);
                     }}
-                    className="h-16 flex-col gap-2"
+                    className="h-5 flex-col gap-2"
                   >
                     <PlusCircle className="w-5 h-5" />
                     <span className="text-xs">Nouveau</span>

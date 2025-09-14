@@ -1,0 +1,32 @@
+{
+  "timestamp": "2025-09-14T08:31:48.251Z",
+  "version": "0.0.0",
+  "files": {
+    "manifest": "public/manifest.json",
+    "serviceWorker": "public/sw.js",
+    "browserConfig": "public/browserconfig.xml",
+    "version": "public/version.json",
+    "pwaConfig": "public/pwa-config.json"
+  },
+  "features": {
+    "installable": true,
+    "offline": true,
+    "notifications": true,
+    "backgroundSync": true,
+    "shortcuts": true,
+    "splashScreens": true,
+    "themeColor": true
+  },
+  "optimization": {
+    "codeSplitting": true,
+    "lazyLoading": true,
+    "compression": true,
+    "caching": true,
+    "minification": true
+  },
+  "compatibility": {
+    "ios": "Safari 11.3+",
+    "android": "Chrome 68+",
+    "desktop": "Chrome 68+, Firefox 63+, Edge 79+"
+  }
+}

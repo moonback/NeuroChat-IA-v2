@@ -51,6 +51,14 @@ export const PWAShortcuts = ({
       }
     };
 
+    // Gérer l'événement beforeinstallprompt
+    const handleBeforeInstallPrompt = (event: Event) => {
+      // Prévenir l'affichage automatique du prompt
+      event.preventDefault();
+      // Stocker l'événement pour l'utiliser plus tard
+      (window as any).deferredPrompt = event;
+    };
+
     // Gérer les actions depuis l'URL
     const handleURLActions = () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -99,6 +107,7 @@ export const PWAShortcuts = ({
     // Ajouter les écouteurs d'événements
     document.addEventListener('keydown', handleShortcut);
     window.addEventListener('load', handleURLActions);
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     navigator.serviceWorker?.addEventListener('message', handleServiceWorkerMessage);
 
     // Gérer les raccourcis au chargement
@@ -107,6 +116,7 @@ export const PWAShortcuts = ({
     return () => {
       document.removeEventListener('keydown', handleShortcut);
       window.removeEventListener('load', handleURLActions);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       navigator.serviceWorker?.removeEventListener('message', handleServiceWorkerMessage);
     };
   }, [isInstalled, onNewDiscussion, onToggleVoice, onTogglePrivateMode]);
