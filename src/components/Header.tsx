@@ -5,7 +5,8 @@ import {
   History, Settings2, Volume2, VolumeX, Sun, Moon, 
   PlusCircle, Mic, Shield, BookOpen, CheckSquare, Square, 
   Trash2, Menu, X, Baby, Layers,
-  Globe, Database, Pencil, HelpCircle, BarChart3
+  Globe, Database, Pencil, HelpCircle, BarChart3,
+  Smartphone, Download
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -14,6 +15,7 @@ import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
 import { HelpModal } from '@/components/HelpModal';
 import { MonitoringStatusIndicator } from '@/components/MonitoringStatusIndicator';
 import { SecurityPerformanceMonitor } from '@/components/SecurityPerformanceMonitor';
+import { usePWA } from '@/hooks/usePWA';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
 // =====================
@@ -706,6 +708,7 @@ export function Header(props: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const { isOnline, connectionQuality } = useOnlineStatus();
   const { audioRef, showPrivateIndicator } = usePrivateModeFeedback(props.modePrive);
+  const { isInstalled, isInstallable, installApp } = usePWA();
   const [showMenu, setShowMenu] = useState(false);
   const [showVocalSettings, setShowVocalSettings] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
@@ -829,13 +832,33 @@ export function Header(props: HeaderProps) {
                 quality={connectionQuality} 
               />
               
-              {/* Monitoring */}
-              <div className="ml-4">
-                <MonitoringStatusIndicator 
-                  compact={true} 
-                  onOpenMonitor={() => setShowMonitoringModal(true)}
-                />
-              </div>
+               {/* Monitoring */}
+               <div className="ml-4">
+                 <MonitoringStatusIndicator 
+                   compact={true} 
+                   onOpenMonitor={() => setShowMonitoringModal(true)}
+                 />
+               </div>
+               
+               {/* PWA Status */}
+               {(isInstalled || isInstallable) && (
+                 <div className="ml-2">
+                   {isInstalled ? (
+                     <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-medium">
+                       <Smartphone className="w-3 h-3" />
+                       <span className="hidden sm:inline">PWA</span>
+                     </div>
+                   ) : isInstallable ? (
+                     <button
+                       onClick={installApp}
+                       className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-medium hover:bg-blue-200 dark:hover:bg-blue-800/60 transition-colors"
+                     >
+                       <Download className="w-3 h-3" />
+                       <span className="hidden sm:inline">Installer</span>
+                     </button>
+                   ) : null}
+                 </div>
+               )}
               
               {/* Workspace selector */}
               <div className="ml-4">

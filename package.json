@@ -6,8 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:pwa": "node scripts/build-pwa.js && tsc -b && vite build",
+    "test:pwa": "node scripts/test-pwa.js",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "pwa:audit": "lighthouse http://localhost:4173 --view --only-categories=pwa"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
