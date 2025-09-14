@@ -1,4 +1,4 @@
-import { Bot, User, Copy, ThumbsUp, ThumbsDown, MoreHorizontal, Check, CheckCheck, Sparkles, Edit, Trash2, Reply } from 'lucide-react';
+import { Bot, User, Copy, Check, CheckCheck, Sparkles, Edit, Trash2, Reply } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useState, useRef, useEffect, useCallback } from 'react'; // Added useRef, useEffect, useCallback
@@ -14,13 +14,12 @@ interface MessageBubbleProps {
   onEdit?: (newText: string) => void; // Added onEdit prop
   onDelete?: () => void; // Added onDelete prop
   onReply?: (messageContent: string) => void; // Added onReply prop, passing message content
-  // memoryFactsCount supprimé - système de mémoire retiré
   sources?: Array<{ title: string; url: string }>;
 }
 
 export function MessageBubble({ message, isUser, timestamp, isLatest = false, imageUrl, onEdit, onDelete, onReply, sources }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
-  const [isLiked, setIsLiked] = useState<boolean | null>(null);
+  const [isLiked] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
   const [editing, setEditing] = useState(false); // New state for edit mode
   const [editValue, setEditValue] = useState(message); // State to hold edited text
@@ -62,10 +61,7 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
     }
   }, [message]);
 
-  const handleLike = useCallback((liked: boolean) => {
-    setIsLiked(liked);
-    toast.success(liked ? 'Merci pour ton retour !' : 'Avis pris en compte');
-  }, []);
+  
 
   const handleEdit = useCallback(() => {
     setEditing(true);
@@ -363,48 +359,6 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
                 </Button>
               )}
 
-              {/* Like/Dislike buttons (only for AI messages) */}
-              {!isUser && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleLike(true)}
-                    className={cn(
-                      "h-8 px-3 text-xs font-medium backdrop-blur-md border transition-all duration-200 hover:scale-105",
-                      isLiked === true
-                        ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border-green-200 dark:border-green-700 shadow-green-500/20"
-                        : "bg-white/60 dark:bg-slate-800/60 hover:bg-green-50 dark:hover:bg-green-900/20 border-white/30 dark:border-slate-700/30 hover:border-green-200 dark:hover:border-green-700"
-                    )}
-                  >
-                    <ThumbsUp className="w-3 h-3 mr-1" />
-                    {isLiked === true ? 'Aimé' : 'Aimer'}
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleLike(false)}
-                    className={cn(
-                      "h-8 px-3 text-xs font-medium backdrop-blur-md border transition-all duration-200 hover:scale-105",
-                      isLiked === false
-                        ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-700 shadow-red-500/20"
-                        : "bg-white/60 dark:bg-slate-800/60 hover:bg-red-50 dark:hover:bg-red-900/20 border-white/30 dark:border-slate-700/30 hover:border-red-200 dark:hover:border-red-700"
-                    )}
-                  >
-                    <ThumbsDown className="w-3 h-3 mr-1" />
-                    {isLiked === false ? 'Pas aimé' : 'Pas fan'}
-                  </Button>
-                </>
-              )}
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md hover:bg-white/90 dark:hover:bg-slate-800/90 border border-white/30 dark:border-slate-700/30 transition-all duration-200 hover:scale-105"
-              >
-                <MoreHorizontal className="w-3 h-3" />
-              </Button>
             </div>
           )}
         </div>
