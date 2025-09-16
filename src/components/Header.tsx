@@ -138,61 +138,6 @@ const usePrivateModeFeedback = (modePrive: boolean) => {
 // Composants modernisés
 // =====================
 
-// Badge de statut avec design premium
-const StatusBadge = ({ 
-  isOnline, 
-  quality 
-}: { 
-  isOnline: boolean; 
-  quality: 'excellent' | 'good' | 'poor' 
-}) => {
-  const getStatusConfig = () => {
-    if (!isOnline) return { 
-      color: 'bg-red-500', 
-      text: 'Hors ligne',
-      icon: 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400'
-    };
-    
-    switch (quality) {
-      case 'excellent': return { 
-        color: 'bg-emerald-500', 
-        text: 'Excellent',
-        icon: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
-      };
-      case 'good': return { 
-        color: 'bg-amber-500', 
-        text: 'Bon',
-        icon: 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400'
-      };
-      case 'poor': return { 
-        color: 'bg-orange-500', 
-        text: 'Faible',
-        icon: 'bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400'
-      };
-      default: return { 
-        color: 'bg-gray-500', 
-        text: 'Inconnu',
-        icon: 'bg-gray-100 dark:bg-gray-900/40 text-gray-600 dark:text-gray-400'
-      };
-    }
-  };
-
-  const config = getStatusConfig();
-
-  return (
-    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/50 backdrop-blur-sm">
-      <div className="relative">
-        <div className={`w-2 h-2 rounded-full ${config.color}`} />
-        {quality === 'excellent' && (
-          <div className={`absolute inset-0 w-2 h-2 rounded-full ${config.color} animate-ping opacity-75`} />
-        )}
-      </div>
-      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-        {config.text}
-      </span>
-    </div>
-  );
-};
 
 // Logo avec design épuré et moderne
 const Logo = ({ 
@@ -252,7 +197,6 @@ const Logo = ({
       </div>
     </div>
     
-    <StatusBadge isOnline={isOnline} quality={quality} />
   </div>
 );
 
