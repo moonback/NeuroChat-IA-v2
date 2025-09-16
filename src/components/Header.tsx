@@ -578,7 +578,7 @@ const DesktopActions = ({
     {/* Nouvelle discussion */}
     <ModernButton
       variant="primary"
-      size="lg"
+      size="sm"
       onClick={onNewDiscussion}
       tooltip="Nouvelle discussion"
       aria-label="Démarrer une nouvelle discussion"
