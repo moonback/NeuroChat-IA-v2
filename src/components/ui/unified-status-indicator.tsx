@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { colors, animations } from '@/lib/design-tokens';
 
 export interface UnifiedStatusIndicatorProps extends React.HTMLAttributes<HTMLDivElement> {
   status: 'online' | 'offline' | 'loading' | 'error' | 'warning' | 'success';

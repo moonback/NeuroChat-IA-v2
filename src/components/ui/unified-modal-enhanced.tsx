@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { componentsEnhanced, animationsEnhanced } from '@/lib/design-tokens-enhanced';
+import { componentsEnhanced } from '@/lib/design-tokens-enhanced';
 
 const UnifiedModalEnhanced = DialogPrimitive.Root;
 
