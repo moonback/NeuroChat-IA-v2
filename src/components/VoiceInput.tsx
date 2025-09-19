@@ -1,10 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, Mic, MicOff, ImageIcon, X, Paperclip, FileText, Bot } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import type { Provider } from '@/services/llm';
+
+// Import des composants unifiés
+import { 
+  UnifiedButton, 
+  UnifiedInput
+} from '@/components/ui/unified';
 
 // Minimal types for dynamically imported libraries to avoid `any`
 type PdfTextContent = { items: Array<{ str?: string }> };
@@ -290,16 +294,16 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
                       )}
                     </div>
                     
-                    <Button
+                    <UnifiedButton
                       type="button"
                       size="sm"
                       variant="ghost"
                       onClick={() => { setSelectedFile(null); setExtractedText(""); setFileInfo({ kind: 'other' }); }}
                       className="h-7 w-7 p-0 rounded-md hover:bg-red-100 dark:hover:bg-red-950/50 text-red-600 dark:text-red-400"
-                      title="Retirer le fichier"
+                      tooltip="Retirer le fichier"
                     >
                       <X className="h-4 w-4" />
-                    </Button>
+                    </UnifiedButton>
                   </div>
                 </div>
               )}
@@ -317,7 +321,7 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
                       onChange={handleFileChange}
                     />
                     
-                    <Button
+                    <UnifiedButton
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isLoading}
@@ -330,15 +334,15 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
                         "border border-slate-200/60 dark:border-slate-700/60 hover:border-blue-300/60 dark:hover:border-blue-600/60",
                         "shadow-lg hover:shadow-xl shadow-black/5 dark:shadow-black/20"
                       )}
-                      title="Joindre un fichier (image, PDF, DOCX)"
+                      tooltip="Joindre un fichier (image, PDF, DOCX)"
                     >
                       <Paperclip className="h-5 w-5 text-slate-600 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                    </Button>
+                    </UnifiedButton>
 
                     {/* Toggle Agent (Gemini/Mistral) */}
                     {(provider === 'gemini' || provider === 'mistral') && (
-                      <Button
+                      <UnifiedButton
                         type="button"
                         size="icon"
                         variant="ghost"
@@ -352,7 +356,7 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
                               : 'bg-gradient-to-br from-purple-100/90 to-purple-200/90 dark:from-purple-900/50 dark:to-purple-800/50 border-purple-300/60 dark:border-purple-600/60 shadow-lg shadow-purple-500/20'
                             : 'bg-gradient-to-br from-slate-100/90 to-slate-200/90 dark:from-slate-800/90 dark:to-slate-700/90 border border-slate-200/60 dark:border-slate-700/60 hover:from-slate-200/90 hover:to-slate-300/90 dark:hover:from-slate-700/90 dark:hover:to-slate-600/90'
                         )}
-                        title={agentEnabled ? `Désactiver ${provider === 'gemini' ? 'Agent Gemini' : 'Agent Mistral'}` : `Activer ${provider === 'gemini' ? 'Agent Gemini' : 'Agent Mistral'}`}
+                        tooltip={agentEnabled ? `Désactiver ${provider === 'gemini' ? 'Agent Gemini' : 'Agent Mistral'}` : `Activer ${provider === 'gemini' ? 'Agent Gemini' : 'Agent Mistral'}`}
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                         {provider === 'gemini' ? (
@@ -360,13 +364,13 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
                         ) : (
                           <Bot className={cn("w-5 h-5", agentEnabled ? 'text-purple-600 dark:text-purple-300 animate-pulse' : 'text-slate-600 dark:text-slate-300')} />
                         )}
-                      </Button>
+                      </UnifiedButton>
                     )}
                   </div>
 
                   {/* Input principal avec design moderne */}
                    <div className="flex-1 relative group">
-                    <Input
+                    <UnifiedInput
                       ref={inputRef}
                       value={displayValue}
                       onChange={(e) => setInputValue(e.target.value)}
@@ -408,7 +412,7 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
 
                   {/* Boutons d'action droite */}
                    <div className="flex items-center gap-2">
-                    <Button
+                    <UnifiedButton
                       type="button"
                       size="icon"
                       onClick={handleMicClick}
@@ -419,7 +423,7 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
                           ? "bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white border-red-600 shadow-lg shadow-red-500/30"
                           : "bg-gradient-to-br from-slate-100/90 to-slate-200/90 dark:from-slate-800/90 dark:to-slate-700/90 hover:from-green-100/90 hover:to-green-200/90 dark:hover:from-green-900/50 dark:hover:to-green-800/50 border border-slate-200/60 dark:border-slate-700/60 hover:border-green-300/60 dark:hover:border-green-600/60 shadow-lg hover:shadow-xl shadow-black/5 dark:shadow-black/20"
                       )}
-                      title={listening ? "Arrêter la dictée" : !isSupported ? "Non supporté" : "Démarrer la dictée"}
+                      tooltip={listening ? "Arrêter la dictée" : !isSupported ? "Non supporté" : "Démarrer la dictée"}
                     >
                       {listening ? (
                         <MicOff className="h-5 w-5 animate-pulse" />
@@ -427,9 +431,9 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
                         <Mic className="h-5 w-5 text-slate-600 dark:text-slate-300 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors" />
                       )}
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                    </Button>
+                    </UnifiedButton>
 
-                     <Button
+                     <UnifiedButton
                       onClick={handleSend}
                       disabled={!hasContent || isLoading}
                       size="icon"
@@ -448,7 +452,7 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
                         <Send className="h-5 w-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                       )}
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                    </Button>
+                    </UnifiedButton>
                   </div>
                 </div>
               </div>
@@ -484,14 +488,14 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
                         </div>
                       </div>
                       
-                       <Button
+                       <UnifiedButton
                         type="button"
                         onClick={handleMicClick}
                         className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-red-500/40 transition-all duration-200 px-6 py-3 rounded-xl border-2 border-red-400/30 group"
                       >
                         <MicOff className="w-4 h-4 mr-2 group-hover:animate-pulse" />
                         Arrêter
-                      </Button>
+                      </UnifiedButton>
                     </div>
                   </div>
                 </div>
