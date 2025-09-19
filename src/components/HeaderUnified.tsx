@@ -236,6 +236,7 @@ const WorkspaceSelector = ({
         onClick={() => setShowModal(true)}
         className="hidden md:flex items-center gap-2 max-w-[180px]"
         tooltip="Changer d'espace de travail"
+        data-workspace-button
       >
         <Database className="w-4 h-4" />
         <span className="truncate">
