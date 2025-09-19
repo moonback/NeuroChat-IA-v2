@@ -126,21 +126,23 @@
 
 ## 📊 Statistiques de Migration
 
-- **Composants migrés** : 5/5 (100%)
-- **Boutons migrés** : ~40 boutons
-- **Modals migrés** : 2 modals (workspace + help)
+- **Composants migrés** : 7/7 (100%)
+- **Boutons migrés** : ~60 boutons
+- **Modals migrés** : 6 modals (workspace + help + rag + 3 web sources)
 - **Containers migrés** : 1 container principal
+- **Inputs migrés** : 2 inputs avec icônes et boutons de suppression
+- **Badges migrés** : 4 badges pour compteurs et étiquettes
 - **Erreurs de linting** : 0
-- **Imports nettoyés** : 12 imports inutilisés supprimés
+- **Imports nettoyés** : 18 imports inutilisés supprimés
 
 ## 🔄 Prochaines Étapes Recommandées
 
 ### **Composants à Migrer**
-1. **RagSidebar.tsx** - Boutons et éléments de navigation
-2. **WebSourcesSidebar.tsx** - Interface de sources web
-3. **VocalAutoSettingsModal.tsx** - Interface de configuration vocale
-4. **MonitoringStatusIndicator.tsx** - Indicateurs de statut
-5. **SecurityPerformanceMonitor.tsx** - Composants de monitoring
+1. **VocalAutoSettingsModal.tsx** - Interface de configuration vocale
+2. **MonitoringStatusIndicator.tsx** - Indicateurs de statut
+3. **SecurityPerformanceMonitor.tsx** - Composants de monitoring
+4. **FloatingParticles.tsx** - Composant d'effets visuels
+5. **TypingIndicator.tsx** - Indicateur de frappe
 
 ### **Améliorations Futures**
 1. **Tests unitaires** pour les composants unifiés
