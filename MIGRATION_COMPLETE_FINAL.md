@@ -130,7 +130,7 @@ Votre application NeuroChat-IA-v2 est maintenant dotée d'un design system de **
 
 ---
 
-*Migration complète terminée le : ${new Date().toLocaleDateString('fr-FR')}*  
+*Migration complète terminée le : 15/01/2025*  
 *Statut : ✅ **SUCCÈS COMPLET** 🎉*
 
 ## 📋 **Résumé des Composants Unifiés**

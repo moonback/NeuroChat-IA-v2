@@ -235,5 +235,5 @@ La migration vers le design unifié est un **succès complet** ! L'application N
 
 ---
 
-*Migration effectuée le : ${new Date().toLocaleDateString('fr-FR')}*
+*Migration effectuée le : 15/01/2025*
 *Statut : ✅ TERMINÉE AVEC SUCCÈS*

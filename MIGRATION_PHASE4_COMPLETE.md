@@ -123,5 +123,5 @@ Votre application NeuroChat-IA-v2 est maintenant dotée d'un design system de **
 
 ---
 
-*Migration Phase 4 terminée le : ${new Date().toLocaleDateString('fr-FR')}*  
+*Migration Phase 4 terminée le : 15/01/2025*  
 *Statut : ✅ **SUCCÈS COMPLET** 🎉*

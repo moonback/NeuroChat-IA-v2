@@ -212,5 +212,5 @@ L'application NeuroChat-IA-v2 dispose maintenant d'un **système de design premi
 
 ---
 
-*Améliorations créées le : ${new Date().toLocaleDateString('fr-FR')}*  
+*Améliorations créées le : 15/01/2025*  
 *Statut : ✅ **AMÉLIORATIONS COMPLÈTES** 🎨✨*
