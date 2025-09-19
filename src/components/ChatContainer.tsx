@@ -589,10 +589,7 @@ import { cn } from '@/lib/utils';
 // Import des composants unifiés
 import { 
   UnifiedButton, 
-  UnifiedContainer, 
-  UnifiedCard,
-  UnifiedBadge,
-  UnifiedStatusIndicator
+  UnifiedContainer
 } from '@/components/ui/unified';
 
 interface Message {

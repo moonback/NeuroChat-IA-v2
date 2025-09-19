@@ -445,7 +445,7 @@ export function SecurityPerformanceMonitor({
             </CardTitle>
             <div className="flex items-center gap-2">
               <UnifiedButton
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={() => setAutoRefresh(!autoRefresh)}
                 className={cn(autoRefresh && 'bg-green-50 dark:bg-green-950/20')}
@@ -454,7 +454,7 @@ export function SecurityPerformanceMonitor({
                 Auto-refresh
               </UnifiedButton>
               <UnifiedButton
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={updateMetrics}
                 disabled={isRefreshing}
@@ -463,7 +463,7 @@ export function SecurityPerformanceMonitor({
                 Actualiser
               </UnifiedButton>
               <UnifiedButton
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={exportMetrics}
               >
@@ -471,7 +471,7 @@ export function SecurityPerformanceMonitor({
                 Exporter
               </UnifiedButton>
               <UnifiedButton
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={onClose || (() => {})}
               >

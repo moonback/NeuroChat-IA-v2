@@ -1,13 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   UnifiedButtonEnhanced, 
   UnifiedCardEnhanced, 
   UnifiedModalEnhanced, 
-  UnifiedModalContent, 
-  UnifiedModalHeader, 
-  UnifiedModalTitle,
-  UnifiedModalDescription,
-  UnifiedModalFooter,
   UnifiedInputEnhanced,
   UnifiedBadgeEnhanced,
   UnifiedContainerEnhanced
@@ -90,7 +85,7 @@ export function DesignShowcase() {
             {/* Bouton Glow */}
             <UnifiedCardEnhanced variant="glass" glow={true} className="p-6">
               <h3 className="font-semibold mb-4">Effet Glow</h3>
-              <UnifiedButtonEnhanced variant="success" glow={true} className="w-full">
+              <UnifiedButtonEnhanced variant="premium" glow={true} className="w-full">
                 <Zap className="h-4 w-4 mr-2" />
                 Bouton Glow
               </UnifiedButtonEnhanced>
@@ -200,7 +195,7 @@ export function DesignShowcase() {
               Shimmer
             </UnifiedBadgeEnhanced>
             
-            <UnifiedBadgeEnhanced variant="success" glow={true}>
+            <UnifiedBadgeEnhanced variant="premium" glow={true}>
               <Zap className="h-3 w-3 mr-1" />
               Glow
             </UnifiedBadgeEnhanced>
@@ -247,7 +242,7 @@ export function DesignShowcase() {
             />
             
             <UnifiedInputEnhanced
-              variant="success"
+              variant="premium"
               glass={true}
               placeholder="Input avec effet Glass"
               icon={<Settings className="w-4 h-4" />}
@@ -315,7 +310,7 @@ export function DesignShowcase() {
                     <UnifiedBadgeEnhanced variant="neon" glow={true}>
                       Neon
                     </UnifiedBadgeEnhanced>
-                    <UnifiedBadgeEnhanced variant="success" morph={true}>
+                    <UnifiedBadgeEnhanced variant="premium" morph={true}>
                       Success
                     </UnifiedBadgeEnhanced>
                   </div>
@@ -355,7 +350,7 @@ export function DesignShowcase() {
             <UnifiedBadgeEnhanced variant="neon" glow={true}>
               Modern
             </UnifiedBadgeEnhanced>
-            <UnifiedBadgeEnhanced variant="success" morph={true}>
+            <UnifiedBadgeEnhanced variant="premium" morph={true}>
               Accessible
             </UnifiedBadgeEnhanced>
           </div>

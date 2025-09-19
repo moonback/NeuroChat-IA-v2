@@ -19,8 +19,6 @@ import {
   UnifiedModalContent, 
   UnifiedModalHeader, 
   UnifiedModalTitle,
-  UnifiedInput,
-  UnifiedCard
 } from '@/components/ui/unified';
 
 export type WebSource = {
@@ -564,9 +562,9 @@ export function WebSourcesSidebar({ usedSources }: WebSourcesSidebarProps) {
             {/* Recherche avancée */}
             <div className="relative mb-4">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <Input
+              <UnifiedInput
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
                 placeholder="Rechercher sources, tags, domaines..."
                 className="pl-10 pr-10 h-10 bg-white/80 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-green-500/50"
           />
@@ -930,12 +928,12 @@ const SourceCard: React.FC<{
       {/* Input de note */}
       {showNoteInput && (
         <div className="absolute top-full left-0 right-0 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-20">
-          <Input
+          <UnifiedInput
             value={noteValue}
-            onChange={(e) => setNoteValue(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNoteValue(e.target.value)}
             placeholder="Ajouter une note..."
             className="mb-2"
-            onKeyDown={(e) => {
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
               if (e.key === 'Enter') handleNoteSubmit();
               if (e.key === 'Escape') setShowNoteInput(false);
             }}
@@ -1036,7 +1034,7 @@ const SourcePreviewModal: React.FC<{
                   </UnifiedButton>
               
                   <UnifiedButton
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                 onClick={() => window.open(source.url, '_blank')}
                 className="flex items-center gap-2"

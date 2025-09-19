@@ -83,7 +83,7 @@ export function VocalAutoSettingsModal({ open, onClose, config, onUpdate, onRese
 
         <UnifiedModalFooter className="mt-4 gap-2">
           {onReset && (
-            <UnifiedButton variant="outline" onClick={onReset} className="inline-flex items-center gap-2">
+            <UnifiedButton variant="secondary" onClick={onReset} className="inline-flex items-center gap-2">
               <Settings2 className="w-4 h-4" />
               Réinitialiser
             </UnifiedButton>

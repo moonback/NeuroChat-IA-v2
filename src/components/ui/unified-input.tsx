@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { components, borderRadius } from '@/lib/design-tokens';
 
 export interface UnifiedInputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   variant?: 'default' | 'error';
   size?: 'sm' | 'md' | 'lg';
 }

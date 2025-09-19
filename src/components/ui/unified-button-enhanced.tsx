@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cn } from '@/lib/utils';
-import { componentsEnhanced, animationsEnhanced, effects } from '@/lib/design-tokens-enhanced';
+import { componentsEnhanced, animationsEnhanced } from '@/lib/design-tokens-enhanced';
 
 export interface UnifiedButtonEnhancedProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {

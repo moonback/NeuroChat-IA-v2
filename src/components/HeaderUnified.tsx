@@ -9,7 +9,6 @@ import {
   Smartphone, Download, ChevronDown, Wifi, WifiOff
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { UnifiedInput } from '@/components/ui/unified-input';
 import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
 import { HelpModal } from '@/components/HelpModal';
@@ -26,8 +25,7 @@ import {
   UnifiedModalContent, 
   UnifiedModalHeader, 
   UnifiedModalTitle,
-  UnifiedStatusIndicator,
-  designTokens 
+  UnifiedStatusIndicator
 } from '@/components/ui/unified';
 
 // =====================

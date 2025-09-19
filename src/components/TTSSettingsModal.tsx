@@ -6,7 +6,6 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '
 // Import des composants unifiés
 import { 
   UnifiedButton,
-  UnifiedCard
 } from '@/components/ui/unified';
 
 interface TTSSettingsModalProps {
@@ -217,7 +216,7 @@ export function TTSSettingsModal({ open, onClose, rate, setRate, pitch, setPitch
         </div>
         {/* Animation d'onde lors du test de la voix, boutons, etc. */}
         <div className="flex gap-2 mt-6 items-center">
-          <UnifiedButton onClick={handleTestVoice} variant="outline" className="flex-1 flex items-center gap-2" disabled={availableVoices.length === 0}>
+          <UnifiedButton onClick={handleTestVoice} variant="secondary" className="flex-1 flex items-center gap-2" disabled={availableVoices.length === 0}>
             <Play className="w-4 h-4" /> Tester la voix
           </UnifiedButton>
           <div className="relative flex items-center justify-center w-10 h-8">

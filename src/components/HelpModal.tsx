@@ -13,8 +13,7 @@ import {
   UnifiedModalContent, 
   UnifiedModalHeader, 
   UnifiedModalTitle,
-  UnifiedButton,
-  UnifiedCard
+  UnifiedButton
 } from '@/components/ui/unified';
 
 interface HelpModalProps {

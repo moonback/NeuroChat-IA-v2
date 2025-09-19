@@ -7,8 +7,6 @@ import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader,
 // Import des composants unifiés
 import { 
   UnifiedButton, 
-  UnifiedBadge,
-  UnifiedCard
 } from '@/components/ui/unified';
 
 interface MessageBubbleProps {

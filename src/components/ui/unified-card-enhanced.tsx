@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { componentsEnhanced, animationsEnhanced, effects } from '@/lib/design-tokens-enhanced';
+import { componentsEnhanced, animationsEnhanced } from '@/lib/design-tokens-enhanced';
 
 export interface UnifiedCardEnhancedProps
   extends React.HTMLAttributes<HTMLDivElement> {

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { components, borderRadius, shadows, animations } from '@/lib/design-tokens';
+import { components, borderRadius, animations } from '@/lib/design-tokens';
 
 export interface UnifiedCardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'glass' | 'interactive';

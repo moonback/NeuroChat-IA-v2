@@ -1,12 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   UnifiedButtonEnhanced, 
   UnifiedModalEnhanced, 
-  UnifiedModalContent, 
-  UnifiedModalHeader, 
-  UnifiedModalTitle,
-  UnifiedModalDescription,
-  UnifiedModalFooter,
   UnifiedInputEnhanced,
   UnifiedContainerEnhanced
 } from '@/components/ui/unified-enhanced';
@@ -16,9 +11,7 @@ import {
   Moon, 
   Sun, 
   User, 
-  LogOut,
-  Search,
-  X
+  Search
 } from 'lucide-react';
 
 export function HeaderEnhanced() {

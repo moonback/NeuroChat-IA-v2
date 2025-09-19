@@ -10,8 +10,7 @@ import {
   UnifiedModalContent, 
   UnifiedModalHeader, 
   UnifiedModalTitle,
-  UnifiedInput,
-  UnifiedCard
+  UnifiedInput
 } from '@/components/ui/unified';
 
 export interface RagSidebarProps {
@@ -333,14 +332,23 @@ export function RagSidebar({ onOpenRagDocs, usedDocs, workspaceId = 'default' }:
         
         {/* Recherche */}
         <div className="relative mb-3">
-          <UnifiedInput
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher..."
-            className="w-full pl-8 pr-8"
-            icon={<Search className="w-4 h-4" />}
-            clearButton={search ? () => setSearch('') : undefined}
-          />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <UnifiedInput
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher..."
+              className="w-full pl-10 pr-10"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Contrôles de tri et filtrage */}
@@ -448,7 +456,7 @@ export function RagSidebar({ onOpenRagDocs, usedDocs, workspaceId = 'default' }:
           <div className="text-xs font-semibold text-slate-500 uppercase px-2 mb-2 flex items-center gap-2">
             Utilisés dans la conversation
             {used.length > 0 && (
-              <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5">{used.length}</Badge>
+              <UnifiedBadge variant="secondary" className="text-[9px] px-1.5 py-0.5">{used.length}</UnifiedBadge>
             )}
           </div>
           {used.length === 0 ? (

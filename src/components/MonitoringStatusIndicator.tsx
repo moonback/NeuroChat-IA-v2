@@ -257,14 +257,14 @@ export function MonitoringStatusIndicator({
       </TooltipProvider>
 
       {/* Bouton monitoring */}
-      <Button
+      <UnifiedButton
         variant="ghost"
         size="sm"
         onClick={onOpenMonitor}
         className="p-2"
       >
         <BarChart3 className="w-4 h-4" />
-      </Button>
+      </UnifiedButton>
 
       {/* Détails étendus */}
       {showDetails && (
