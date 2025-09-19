@@ -4,16 +4,24 @@ import {
   Star, Eye, BarChart3, Settings, Bookmark, 
   Hash, ArrowUpDown, Share2, BookOpen
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
+// Import des composants unifiés
+import { 
+  UnifiedButton, 
+  UnifiedBadge,
+  UnifiedModal, 
+  UnifiedModalContent, 
+  UnifiedModalHeader, 
+  UnifiedModalTitle,
+  UnifiedInput,
+  UnifiedCard
+} from '@/components/ui/unified';
 
 export type WebSource = {
   title: string;
@@ -512,27 +520,27 @@ export function WebSourcesSidebar({ usedSources }: WebSourcesSidebarProps) {
               <div className="flex items-center gap-1">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
+                    <UnifiedButton
                       variant="ghost"
-                      size="sm"
+                      size="icon"
                       onClick={() => setShowStats(!showStats)}
-                      className="h-8 w-8 p-0"
+                      className="h-8 w-8"
                     >
                       <BarChart3 className="w-4 h-4" />
-                    </Button>
+                    </UnifiedButton>
                   </TooltipTrigger>
                   <TooltipContent>Statistiques</TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
+                    <UnifiedButton
                       variant="ghost"
-                      size="sm"
+                      size="icon"
                       onClick={() => setShowSettings(!showSettings)}
-                      className="h-8 w-8 p-0"
+                      className="h-8 w-8"
                     >
                       <Settings className="w-4 h-4" />
-                    </Button>
+                    </UnifiedButton>
                   </TooltipTrigger>
                   <TooltipContent>Paramètres</TooltipContent>
                 </Tooltip>
@@ -563,14 +571,14 @@ export function WebSourcesSidebar({ usedSources }: WebSourcesSidebarProps) {
                 className="pl-10 pr-10 h-10 bg-white/80 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-green-500/50"
           />
           {search && (
-                <Button
+                <UnifiedButton
                   variant="ghost"
-                  size="sm"
+                  size="icon"
               onClick={() => setSearch('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6"
             >
               <X className="w-4 h-4" />
-                </Button>
+                </UnifiedButton>
           )}
         </div>
             {/* Contrôles de filtrage et tri */}
@@ -652,24 +660,24 @@ export function WebSourcesSidebar({ usedSources }: WebSourcesSidebarProps) {
                       {startIndex + 1}-{Math.min(startIndex + settings.itemsPerPage, processedSources.length)} sur {processedSources.length}
                     </span>
                 <div className="flex items-center gap-1">
-                  <Button
+                  <UnifiedButton
                     variant="ghost"
-                    size="sm"
-                        className="h-7 w-7 p-0"
+                    size="icon"
+                        className="h-7 w-7"
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                   >
                         <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <Button
+                  </UnifiedButton>
+                  <UnifiedButton
                     variant="ghost"
-                    size="sm"
-                        className="h-7 w-7 p-0"
+                    size="icon"
+                        className="h-7 w-7"
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                   >
                         <ChevronRight className="w-4 h-4" />
-                  </Button>
+                  </UnifiedButton>
                     </div>
                   </div>
                 </div>
@@ -686,9 +694,9 @@ export function WebSourcesSidebar({ usedSources }: WebSourcesSidebarProps) {
                       <div className="text-sm font-semibold text-slate-600 dark:text-slate-400">
                         {groupName}
                       </div>
-                      <Badge variant="secondary" className="text-xs">
+                      <UnifiedBadge variant="secondary" className="text-xs">
                         {sources.length}
-                      </Badge>
+                      </UnifiedBadge>
           </div>
         )}
                   <div className="space-y-3">
@@ -884,17 +892,17 @@ const SourceCard: React.FC<{
       <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
+            <UnifiedButton
               variant="ghost"
-              size="sm"
+              size="icon"
                   onClick={(e) => {
                     e.stopPropagation();
                 onToggleFavorite();
               }}
-              className="h-7 w-7 p-0"
+              className="h-7 w-7"
             >
               <Star className={`w-4 h-4 ${source.favorite ? 'text-yellow-500 fill-yellow-400' : 'text-slate-400'}`} />
-            </Button>
+            </UnifiedButton>
           </TooltipTrigger>
           <TooltipContent>
             {source.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
@@ -903,17 +911,17 @@ const SourceCard: React.FC<{
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
+            <UnifiedButton
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={(e) => {
                 e.stopPropagation();
                 setShowNoteInput(!showNoteInput);
               }}
-              className="h-7 w-7 p-0"
+              className="h-7 w-7"
             >
               <BookOpen className="w-4 h-4 text-slate-400" />
-            </Button>
+            </UnifiedButton>
           </TooltipTrigger>
           <TooltipContent>Ajouter une note</TooltipContent>
         </Tooltip>
@@ -934,19 +942,20 @@ const SourceCard: React.FC<{
             autoFocus
           />
           <div className="flex items-center justify-end gap-2">
-            <Button
+            <UnifiedButton
               variant="ghost"
               size="sm"
               onClick={() => setShowNoteInput(false)}
             >
               Annuler
-            </Button>
-            <Button
+            </UnifiedButton>
+            <UnifiedButton
+              variant="primary"
               size="sm"
               onClick={handleNoteSubmit}
             >
               Sauvegarder
-            </Button>
+            </UnifiedButton>
         </div>
       </div>
       )}
@@ -976,28 +985,28 @@ const SourcePreviewModal: React.FC<{
   };
 
   return (
-    <Dialog open={!!source} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
-            <DialogHeader className="flex-shrink-0">
+    <UnifiedModal open={!!source} onOpenChange={onClose}>
+      <UnifiedModalContent className="max-w-5xl max-h-[90vh] flex flex-col">
+            <UnifiedModalHeader className="flex-shrink-0">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
-              <DialogTitle className="text-xl flex items-center gap-3">
+              <UnifiedModalTitle className="text-xl flex items-center gap-3">
                 <span className="text-2xl">{getDomainIcon(source.domain || '')}</span>
                 {source.title}
                 {source.favorite && <Star className="w-5 h-5 text-yellow-500 fill-yellow-400" />}
                 {source.pinned && <Bookmark className="w-5 h-5 text-blue-500 fill-blue-400" />}
-                  </DialogTitle>
+                  </UnifiedModalTitle>
               
               <div className="mt-3 flex items-center gap-4 text-sm text-slate-500">
-                <Badge variant="outline" className="flex items-center gap-1">
+                <UnifiedBadge variant="outline" className="flex items-center gap-1">
                   <Globe className="w-3 h-3" />
                   {source.domain}
-                    </Badge>
+                </UnifiedBadge>
                 
-                <Badge variant="secondary" className="flex items-center gap-1">
+                <UnifiedBadge variant="secondary" className="flex items-center gap-1">
                   <span className={getCategoryIcon(source.category || '')}></span>
                   {source.category}
-                </Badge>
+                </UnifiedBadge>
                 
                 {source.readingTime && (
                   <span className="flex items-center gap-1">
@@ -1016,7 +1025,7 @@ const SourcePreviewModal: React.FC<{
                 </div>
             
                 <div className="flex items-center gap-2">
-                  <Button
+                  <UnifiedButton
                     variant="ghost"
                     size="sm"
                 onClick={onToggleFavorite}
@@ -1024,9 +1033,9 @@ const SourcePreviewModal: React.FC<{
                   >
                 <Star className={`w-4 h-4 ${source.favorite ? 'text-yellow-500 fill-yellow-400' : 'text-slate-400'}`} />
                 {source.favorite ? 'Favori' : 'Favoris'}
-                  </Button>
+                  </UnifiedButton>
               
-                  <Button
+                  <UnifiedButton
                     variant="outline"
                     size="sm"
                 onClick={() => window.open(source.url, '_blank')}
@@ -1034,10 +1043,10 @@ const SourcePreviewModal: React.FC<{
                   >
                 <ExternalLink className="w-4 h-4" />
                     Ouvrir
-                  </Button>
+                  </UnifiedButton>
                 </div>
               </div>
-            </DialogHeader>
+            </UnifiedModalHeader>
         
         <div className="flex-1 overflow-y-auto space-y-6">
           {/* URL */}
@@ -1128,8 +1137,8 @@ const SourcePreviewModal: React.FC<{
             </div>
           </div>
             </div>
-          </DialogContent>
-        </Dialog>
+          </UnifiedModalContent>
+        </UnifiedModal>
   );
 };
 
@@ -1140,14 +1149,14 @@ const SettingsModal: React.FC<{
   onClose: () => void;
 }> = ({ settings, onUpdate, onClose }) => {
   return (
-    <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+    <UnifiedModal open={true} onOpenChange={onClose}>
+      <UnifiedModalContent className="max-w-2xl">
+        <UnifiedModalHeader>
+          <UnifiedModalTitle className="flex items-center gap-2">
             <Settings className="w-5 h-5" />
             Paramètres des Sources Web
-          </DialogTitle>
-        </DialogHeader>
+          </UnifiedModalTitle>
+        </UnifiedModalHeader>
         
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
@@ -1225,8 +1234,8 @@ const SettingsModal: React.FC<{
             </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </UnifiedModalContent>
+    </UnifiedModal>
   );
 };
 
@@ -1272,14 +1281,14 @@ const StatsModal: React.FC<{
   }, [sources]);
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+    <UnifiedModal open={true} onOpenChange={onClose}>
+      <UnifiedModalContent className="max-w-4xl max-h-[90vh]">
+        <UnifiedModalHeader>
+          <UnifiedModalTitle className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5" />
             Statistiques des Sources Web
-          </DialogTitle>
-        </DialogHeader>
+          </UnifiedModalTitle>
+        </UnifiedModalHeader>
         
         <ScrollArea className="max-h-[70vh]">
           <div className="space-y-6">
@@ -1355,8 +1364,8 @@ const StatsModal: React.FC<{
             </div>
           </div>
         </ScrollArea>
-      </DialogContent>
-    </Dialog>
+      </UnifiedModalContent>
+    </UnifiedModal>
   );
 };
 

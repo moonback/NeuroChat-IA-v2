@@ -72,16 +72,9 @@ export function ChatContainer({
   }, [filteredMessages, deduplicateMessages]);
 
   return (
-    <div
-      className={cn(
-        "flex-1 relative transition-all duration-700 group",
-        modePrive 
-          ? "bg-gradient-to-br from-red-50/40 via-purple-50/50 to-blue-50/40 dark:from-red-950/30 dark:via-purple-950/40 dark:to-blue-950/30" 
-          : modeEnfant
-          ? "bg-gradient-to-br from-pink-50/50 via-yellow-50/60 to-orange-50/50 dark:from-pink-950/30 dark:via-yellow-950/40 dark:to-orange-950/30"
-          : "bg-gradient-to-br from-slate-50/70 via-white/90 to-blue-50/50 dark:from-slate-900/70 dark:via-slate-900/90 dark:to-slate-800/50",
-        "backdrop-blur-2xl"
-      )}
+    <UnifiedContainer
+      mode={modePrive ? 'private' : modeEnfant ? 'child' : 'normal'}
+      className="flex-1 relative transition-all duration-700 group backdrop-blur-2xl"
       style={{ minHeight: '0', height: '100%', maxHeight: '100vh' }}
     >
       {/* Effets de particules globaux */}
@@ -216,7 +209,7 @@ export function ChatContainer({
                             </div>
                           )}
 
-                          <Button 
+                          <UnifiedButton 
                             variant="ghost"
                             size="icon"
                             className={cn(
@@ -228,10 +221,10 @@ export function ChatContainer({
                                 : "hover:bg-blue-100 dark:hover:bg-slate-800 text-blue-600"
                             )}
                             onClick={handleShowChatInfo}
-                            title="Informations de conversation"
+                            tooltip="Informations de conversation"
                           >
                             <Info className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                          </Button>
+                          </UnifiedButton>
                         </div>
                       </div>
                     </div>
@@ -299,14 +292,14 @@ export function ChatContainer({
                                       </div>
                                     </div>
                                     {passage.sourceUrl && (
-                                      <Button
+                                      <UnifiedButton
                                         variant="ghost"
                                         size="icon"
                                         className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-xl group-hover/item:scale-110 transition-all duration-300"
                                         onClick={() => window.open(passage.sourceUrl, '_blank')}
                                       >
                                         <ExternalLink className="w-4 h-4" />
-                                      </Button>
+                                      </UnifiedButton>
                                     )}
                                   </div>
                                 </div>
@@ -315,7 +308,7 @@ export function ChatContainer({
                             
                             {ragMsg.passages.length > 2 && (
                               <div className="mt-4 flex justify-center">
-                                <Button
+                                <UnifiedButton
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => togglePassagesVisibility(ragMsg.id)}
@@ -332,7 +325,7 @@ export function ChatContainer({
                                       Voir {ragMsg.passages.length - 2} document{ragMsg.passages.length - 2 > 1 ? 's' : ''} de plus
                                     </>
                                   )}
-                                </Button>
+                                </UnifiedButton>
                               </div>
                             )}
                           </div>
@@ -373,7 +366,7 @@ export function ChatContainer({
       {/* Boutons de navigation flottants ultra-stylés */}
       {showScrollButton && (
         <div className="fixed bottom-36 right-8 z-50 flex flex-col gap-3 animate-in slide-in-from-right-3 duration-500">
-          <Button
+          <UnifiedButton
             onClick={scrollToTop}
             className={cn(
               "h-14 w-14 rounded-2xl text-white shadow-2xl hover:shadow-3xl transition-all duration-500 group relative overflow-hidden backdrop-blur-sm",
@@ -383,12 +376,12 @@ export function ChatContainer({
                 ? "bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-700 hover:to-pink-800"
                 : "bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800"
             )}
-            title="Aller au début"
+            tooltip="Aller au début"
           >
             <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <ChevronUp className="w-6 h-6 group-hover:scale-125 group-hover:-translate-y-1 transition-all duration-300 relative z-10" />
-          </Button>
-          <Button
+          </UnifiedButton>
+          <UnifiedButton
             onClick={scrollToBottom}
             className={cn(
               "h-14 w-14 rounded-2xl text-white shadow-2xl hover:shadow-3xl transition-all duration-500 group relative overflow-hidden backdrop-blur-sm",
@@ -398,11 +391,11 @@ export function ChatContainer({
                 ? "bg-gradient-to-r from-yellow-600 to-orange-700 hover:from-yellow-700 hover:to-orange-800"
                 : "bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800"
             )}
-            title="Aller à la fin"
+            tooltip="Aller à la fin"
           >
             <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <ArrowDown className="w-6 h-6 group-hover:scale-125 group-hover:translate-y-1 transition-all duration-300 relative z-10" />
-          </Button>
+          </UnifiedButton>
         </div>
       )}
 
@@ -446,14 +439,14 @@ export function ChatContainer({
                   {modePrive && <Shield className="w-5 h-5 text-red-500" />}
                   {modeEnfant && <Heart className="w-5 h-5 text-pink-500" />}
                 </h3>
-                <Button
+                <UnifiedButton
                   variant="ghost"
                   size="icon"
                   onClick={handleCloseChatInfo}
                   className="h-10 w-10 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 group transition-all duration-300"
                 >
                   <X className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                </Button>
+                </UnifiedButton>
               </div>
               
               <div className="space-y-8">
@@ -577,11 +570,12 @@ export function ChatContainer({
           </div>
         </div>
       )}
-    </div>
+    </UnifiedContainer>
   );
-}import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+}
+
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
-import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
 import { 
   ArrowDown, Zap, Brain, Clock, Info, ExternalLink, Shield, X, BookOpen, 
@@ -591,6 +585,15 @@ import {
 } from 'lucide-react';
 import { TypingIndicator } from './TypingIndicator';
 import { cn } from '@/lib/utils';
+
+// Import des composants unifiés
+import { 
+  UnifiedButton, 
+  UnifiedContainer, 
+  UnifiedCard,
+  UnifiedBadge,
+  UnifiedStatusIndicator
+} from '@/components/ui/unified';
 
 interface Message {
   id: string;

@@ -9,6 +9,7 @@ import {
   Smartphone, Download, ChevronDown, Wifi, WifiOff
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { UnifiedInput } from '@/components/ui/unified-input';
 import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
 import { HelpModal } from '@/components/HelpModal';
@@ -24,7 +25,9 @@ import {
   UnifiedModal, 
   UnifiedModalContent, 
   UnifiedModalHeader, 
-  UnifiedModalTitle
+  UnifiedModalTitle,
+  UnifiedStatusIndicator,
+  designTokens 
 } from '@/components/ui/unified';
 
 // =====================
@@ -144,9 +147,8 @@ const usePrivateModeFeedback = (modePrive: boolean) => {
 };
 
 // =====================
-// Composants modernisés
+// Composants modernisés avec design unifié
 // =====================
-
 
 // Logo avec design épuré et moderne
 const Logo = ({ 
@@ -177,13 +179,13 @@ const Logo = ({
           />
         </div>
         
-        {/* Indicateur de connexion */}
+        {/* Indicateur de connexion unifié */}
         <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-white dark:bg-slate-950 flex items-center justify-center shadow-sm border border-slate-200/50 dark:border-slate-800/50">
-          <div className={`w-1.5 h-1.5 rounded-full ${
-            !isOnline ? 'bg-red-500' :
-            quality === 'excellent' ? 'bg-emerald-500' :
-            quality === 'good' ? 'bg-amber-500' : 'bg-orange-500'
-          }`} />
+          <UnifiedStatusIndicator
+            status={!isOnline ? 'offline' : quality === 'excellent' ? 'success' : quality === 'good' ? 'warning' : 'error'}
+            size="sm"
+            pulse={isOnline && quality === 'excellent'}
+          />
         </div>
       </div>
       
@@ -205,11 +207,7 @@ const Logo = ({
   </div>
 );
 
-// ModernButton remplacé par UnifiedButton - voir imports ci-dessus
-
-// ButtonGroup remplacé par UnifiedButtonGroup - voir imports ci-dessus
-
-// Sélecteur d'espace de travail simplifié
+// Sélecteur d'espace de travail simplifié avec design unifié
 const WorkspaceSelector = ({ 
   modeEnfant, 
   workspaces, 
@@ -325,8 +323,6 @@ const WorkspaceSelector = ({
   );
 };
 
-// WorkspaceModal remplacé par UnifiedModal - voir ci-dessus
-
 // Actions mobiles simplifiées avec design unifié
 const MobileActions = ({ 
   muted, 
@@ -370,7 +366,7 @@ const MobileActions = ({
   </div>
 );
 
-// Actions desktop simplifiées
+// Actions desktop simplifiées avec design unifié
 const DesktopActions = ({ 
   modeEnfant, 
   onNewDiscussion, 
@@ -537,9 +533,9 @@ const PrivateModeBanner = ({ show }: { show: boolean }) => {
 };
 
 // =====================
-// Composant principal
+// Composant principal avec design unifié
 // =====================
-export function Header(props: HeaderProps) {
+export function HeaderUnified(props: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const { isOnline, connectionQuality } = useOnlineStatus();
   const { audioRef, showPrivateIndicator } = usePrivateModeFeedback(props.modePrive);
@@ -684,13 +680,15 @@ export function Header(props: HeaderProps) {
                        <span className="hidden sm:inline">PWA</span>
                      </div>
                    ) : isInstallable ? (
-                     <button
+                     <UnifiedButton
+                       variant="secondary"
+                       size="sm"
                        onClick={installApp}
-                       className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-medium hover:bg-blue-200 dark:hover:bg-blue-800/60 transition-colors"
+                       className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-medium"
                      >
                        <Download className="w-3 h-3" />
                        <span className="hidden sm:inline">Installer</span>
-                     </button>
+                     </UnifiedButton>
                    ) : null}
                  </div>
                )}
@@ -784,8 +782,8 @@ export function Header(props: HeaderProps) {
                 </h2>
                 <UnifiedButton
                   variant="ghost"
-                  onClick={() => setShowMenu(false)}
                   size="icon"
+                  onClick={() => setShowMenu(false)}
                 >
                   <X className="w-4 h-4" />
                 </UnifiedButton>
@@ -810,7 +808,7 @@ export function Header(props: HeaderProps) {
                      <Plus className="w-4 h-4" />
                      <span className="text-xs">Nouveau</span>
                    </UnifiedButton>
-                  
+                   
                    {!props.modeEnfant && (
                      <UnifiedButton
                        variant="secondary"
