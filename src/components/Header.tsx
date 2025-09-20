@@ -181,16 +181,26 @@ const Logo = ({
       </div>
       
       {/* Texte avec animation au hover */}
-      <div className="hidden sm:block">
-        <h1 className="text-lg font-bold bg-gradient-to-r from-slate-900 via-blue-700 to-violet-600 dark:from-white dark:via-blue-300 dark:to-violet-400 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-200">
+      <div className="hidden sm:flex flex-col justify-center">
+        <h1
+          className="text-2xl font-extrabold bg-gradient-to-r from-blue-700 via-violet-600 to-fuchsia-500 dark:from-white dark:via-blue-300 dark:to-fuchsia-400 bg-clip-text text-transparent group-hover:scale-110 transition-transform duration-200 drop-shadow-sm tracking-tight"
+          aria-label="NeuroChat"
+        >
           NeuroChat
         </h1>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100/80 dark:bg-slate-800/80 px-1.5 py-0.5 rounded-md">
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-100/80 dark:bg-blue-900/60 px-2 py-0.5 rounded-lg shadow-sm">
             v2.0
           </span>
-          <span className="text-xs text-slate-400 dark:text-slate-500">•</span>
-          <span className="text-xs text-slate-500 dark:text-slate-400">
+          <span className="text-xs text-slate-400 dark:text-slate-500 select-none">•</span>
+          <span
+            className={`text-xs font-medium px-2 py-0.5 rounded-lg transition-colors duration-200 ${
+              isOnline
+                ? 'bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300'
+                : 'bg-red-100/80 text-red-700 dark:bg-red-900/60 dark:text-red-300'
+            }`}
+            aria-live="polite"
+          >
             {isOnline ? 'En ligne' : 'Hors ligne'}
           </span>
         </div>
