@@ -357,6 +357,7 @@ export function ChatContainer({
                         timestamp={messageData.timestamp}
                         imageUrl={messageData.imageUrl}
                         sources={messageData.sources}
+                        generatedImage={messageData.generatedImage}
                         onEdit={onEditMessage ? (newText: string) => onEditMessage(messageData.id, newText) : undefined}
                         onDelete={onDeleteMessage ? () => onDeleteMessage(messageData.id) : undefined}
                         onReply={onReplyToMessage}
@@ -600,6 +601,17 @@ interface Message {
   imageUrl?: string;
   // memoryFactsCount supprimé - système de mémoire retiré
   sources?: Array<{ title: string; url: string }>;
+  generatedImage?: {
+    imageUrl: string;
+    prompt: string;
+    model: string;
+    generationTime: number;
+    metadata?: {
+      seed?: number;
+      steps?: number;
+      guidance?: number;
+    };
+  };
 }
 
 interface RagContextPassage {

@@ -32,6 +32,7 @@ const ENCRYPTION_ENABLED_KEY = 'nc_encryption_enabled';
 const MASTER_PASSWORD_KEY = 'nc_master_password_encrypted';
 // Lazy-loaded components pour réduire le bundle initial
 const TTSSettingsModalLazy = lazy(() => import('@/components/TTSSettingsModal').then(m => ({ default: m.TTSSettingsModal })));
+const ImageGenerationModalLazy = lazy(() => import('@/components/ImageGenerationModal').then(m => ({ default: m.ImageGenerationModal })));
 import { Header } from '@/components/Header';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { searchDocuments } from '@/services/ragSearch';
@@ -71,6 +72,17 @@ interface Message {
   imageUrl?: string;
   // memoryFactsCount supprimé - système de mémoire retiré
   sources?: Array<{ title: string; url: string }>;
+  generatedImage?: {
+    imageUrl: string;
+    prompt: string;
+    model: string;
+    generationTime: number;
+    metadata?: {
+      seed?: number;
+      steps?: number;
+      guidance?: number;
+    };
+  };
 }
 
 interface Discussion {
@@ -185,6 +197,7 @@ function App() {
   const [modeVocalAuto, setModeVocalAuto] = useState(false);
   // Ajout du state pour la modale de gestion des documents RAG
   const [showRagDocs, setShowRagDocs] = useState(false);
+  const [showImageGeneration, setShowImageGeneration] = useState(false);
   // showMemory supprimé - système de mémoire retiré
   // Ajout du state pour activer/désactiver le RAG
   const [ragEnabled, setRagEnabled] = useState(false);
@@ -606,7 +619,7 @@ function App() {
     };
   }, []);
 
-  const addMessage = (text: string, isUser: boolean, imageFile?: File, sources?: Array<{ title: string; url: string }>): Message => {
+  const addMessage = (text: string, isUser: boolean, imageFile?: File, sources?: Array<{ title: string; url: string }>, generatedImage?: Message['generatedImage']): Message => {
     // Validation des paramètres
     if (typeof text !== 'string') {
       console.error('Erreur: le texte du message doit être une chaîne de caractères');
@@ -623,6 +636,7 @@ function App() {
       timestamp: new Date(),
       imageUrl: imageFile ? URL.createObjectURL(imageFile) : undefined,
       sources,
+      generatedImage,
     };
     
     // Vérifier qu'il n'y a pas de doublon avant d'ajouter
@@ -644,6 +658,35 @@ function App() {
     
     return message;
   };
+
+  // Fonction pour gérer la génération d'images
+  const handleImageGenerated = useCallback((imageUrl: string, prompt: string) => {
+    // Créer un message utilisateur avec l'image générée
+    addMessage(
+      `🎨 Image générée: "${prompt}"`,
+      true,
+      undefined,
+      undefined,
+      {
+        imageUrl,
+        prompt,
+        model: 'stabilityai/stable-diffusion-xl-base-1.0', // Modèle par défaut
+        generationTime: 0, // Sera mis à jour par le modal
+        metadata: {
+          steps: 20,
+          guidance: 7.5
+        }
+      }
+    );
+
+    // Créer une réponse IA qui commente l'image
+    addMessage(
+      `Voici l'image que j'ai générée pour vous ! 🎨\n\n**Prompt utilisé:** "${prompt}"\n\nL'image a été créée avec l'IA Stable Diffusion XL. Vous pouvez la télécharger ou l'utiliser dans votre conversation.`,
+      false
+    );
+
+    toast.success('Image générée et ajoutée à la conversation !');
+  }, [addMessage]);
 
   // Gestion PIN mode enfant
   const handleConfirmChildPin = (pin: string) => {
@@ -1480,6 +1523,7 @@ function App() {
           onOpenHistory={handleOpenHistory}
           onOpenTTSSettings={() => setShowTTSSettings(true)}
           onOpenRagDocs={() => setShowRagDocs(true)}
+          onOpenImageGeneration={() => setShowImageGeneration(true)}
           // onOpenMemory supprimé - système de mémoire retiré
           workspaceId={workspaceId}
           workspaces={workspaces}
@@ -1780,6 +1824,15 @@ function App() {
         onToggleVoice={() => setModeVocalAuto(!modeVocalAuto)}
         onTogglePrivateMode={() => setModePrive(!modePrive)}
       />
+      
+      {/* Modal de génération d'images */}
+      <Suspense fallback={null}>
+        <ImageGenerationModalLazy
+          open={showImageGeneration}
+          onClose={() => setShowImageGeneration(false)}
+          onImageGenerated={handleImageGenerated}
+        />
+      </Suspense>
       
       {/* Le chiffrement est maintenant automatique et permanent */}
     </div>

@@ -6,7 +6,7 @@ import {
   PlusCircle, Mic, Shield, BookOpen, CheckSquare, Square, 
   Trash2, Menu, X, Baby, Layers,
   Globe, Database, Pencil, HelpCircle,
-  Smartphone, Download
+  Smartphone, Download, Image
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -27,6 +27,7 @@ interface HeaderProps {
   onOpenHistory: () => void;
   onOpenTTSSettings: () => void;
   onOpenRagDocs: () => void;
+  onOpenImageGeneration?: () => void;
   stop: () => void;
   modeVocalAuto: boolean;
   setModeVocalAuto: (v: boolean) => void;
@@ -675,6 +676,7 @@ const DesktopActions = ({
   handleWebToggle, 
   structuredMode,
   handleStructuredToggle,
+  onOpenImageGeneration,
   setShowMenu 
 }: {
   modeEnfant?: boolean;
@@ -692,6 +694,7 @@ const DesktopActions = ({
   handleWebToggle: () => void;
   structuredMode?: boolean;
   handleStructuredToggle?: () => void;
+  onOpenImageGeneration?: () => void;
   setShowMenu: (show: boolean) => void;
 }) => (
   <div
@@ -796,6 +799,20 @@ const DesktopActions = ({
       )}
     </ButtonGroup>
 
+    {/* Outils créatifs */}
+    <ButtonGroup label="Créatif">
+      {!modeEnfant && (
+        <ModernButton
+          variant="ghost"
+          onClick={() => onOpenImageGeneration?.()}
+          tooltip="Génération d'images IA"
+          className="w-9 h-9 p-0"
+        >
+          <Image className="w-4 h-4" />
+        </ModernButton>
+      )}
+    </ButtonGroup>
+
     {/* Settings */}
     <ModernButton
       variant="ghost"
@@ -851,7 +868,8 @@ export function Header(props: HeaderProps) {
     setWebEnabled,
     structuredMode,
     setStructuredMode,
-    onToggleModeEnfant
+    onToggleModeEnfant,
+    onOpenImageGeneration
   } = props;
 
   // Handlers
@@ -1006,6 +1024,7 @@ export function Header(props: HeaderProps) {
               handleWebToggle={handleWebToggle}
               structuredMode={props.structuredMode}
               handleStructuredToggle={handleStructuredToggle}
+              onOpenImageGeneration={onOpenImageGeneration}
               setShowMenu={setShowMenu}
             />
 
@@ -1205,6 +1224,18 @@ export function Header(props: HeaderProps) {
                       >
                         <BookOpen className="w-4 h-4 mr-3" />
                         Documents RAG
+                      </ModernButton>
+                      
+                      <ModernButton
+                        variant="ghost"
+                        onClick={() => {
+                          onOpenImageGeneration?.();
+                          setShowMenu(false);
+                        }}
+                        className="w-full justify-start h-12"
+                      >
+                        <Image className="w-4 h-4 mr-3" />
+                        Génération d'images IA
                       </ModernButton>
                     </>
                   )}

@@ -15,9 +15,20 @@ interface MessageBubbleProps {
   onDelete?: () => void; // Added onDelete prop
   onReply?: (messageContent: string) => void; // Added onReply prop, passing message content
   sources?: Array<{ title: string; url: string }>;
+  generatedImage?: {
+    imageUrl: string;
+    prompt: string;
+    model: string;
+    generationTime: number;
+    metadata?: {
+      seed?: number;
+      steps?: number;
+      guidance?: number;
+    };
+  };
 }
 
-export function MessageBubble({ message, isUser, timestamp, isLatest = false, imageUrl, onEdit, onDelete, onReply, sources }: MessageBubbleProps) {
+export function MessageBubble({ message, isUser, timestamp, isLatest = false, imageUrl, onEdit, onDelete, onReply, sources, generatedImage }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
   const [isLiked] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
@@ -189,6 +200,49 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
                   style={{ objectFit: 'contain' }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </div>
+            )}
+
+            {/* Generated image display */}
+            {generatedImage && (
+              <div className="relative mb-3 group">
+                <div className="relative">
+                  <img
+                    src={generatedImage.imageUrl}
+                    alt={`Image générée: ${generatedImage.prompt}`}
+                    loading="lazy"
+                    decoding="async"
+                    className="max-w-sm max-h-64 rounded-xl border-2 border-purple-200/50 dark:border-purple-600/30 shadow-lg transition-transform duration-300 hover:scale-[1.02]"
+                    style={{ objectFit: 'contain' }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  {/* Badge généré par IA */}
+                  <div className="absolute top-2 left-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    IA Générée
+                  </div>
+                </div>
+                
+                {/* Informations sur la génération */}
+                <div className="mt-2 p-3 bg-gradient-to-r from-purple-50/80 to-pink-50/80 dark:from-purple-950/40 dark:to-pink-950/40 rounded-lg border border-purple-200/50 dark:border-purple-800/50">
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                      Prompt: {generatedImage.prompt.length > 80 ? `${generatedImage.prompt.substring(0, 80)}...` : generatedImage.prompt}
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-purple-600 dark:text-purple-400">
+                      <span>Modèle: {generatedImage.model.split('/')[1]}</span>
+                      <span>•</span>
+                      <span>{Math.round(generatedImage.generationTime / 1000)}s</span>
+                      {generatedImage.metadata?.steps && (
+                        <>
+                          <span>•</span>
+                          <span>{generatedImage.metadata.steps} étapes</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
