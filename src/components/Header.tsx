@@ -6,8 +6,7 @@ import {
   Plus, Mic, Shield, BookOpen, CheckSquare, Square, 
   Trash2, Menu, X, Baby, Layers,
   Globe, Database, HelpCircle, BarChart3,
-  Smartphone, Download, ChevronDown, Wifi, WifiOff
-} from 'lucide-react';
+  Smartphone, Download, ChevronDown} from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
 import { UnifiedInput } from '@/components/ui/unified-input';
 import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
@@ -24,7 +23,8 @@ import {
   UnifiedModal, 
   UnifiedModalContent, 
   UnifiedModalHeader, 
-  UnifiedModalTitle
+  UnifiedModalTitle,
+  UnifiedStatusIndicator
 } from '@/components/ui/unified';
 
 // =====================
@@ -144,11 +144,10 @@ const usePrivateModeFeedback = (modePrive: boolean) => {
 };
 
 // =====================
-// Composants modernisés
+// Composants modernisés avec design unifié
 // =====================
 
-
-// Logo avec design professionnel et responsive
+// Logo avec design épuré et moderne
 const Logo = ({ 
   onNewDiscussion, 
   isOnline, 
@@ -167,49 +166,41 @@ const Logo = ({
         onNewDiscussion();
       }}
     >
-      {/* Logo professionnel */}
+      {/* Logo simplifié */}
       <div className="relative">
-        <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shadow-lg">
           <img 
             src="/logo-p.png" 
             alt="NeuroChat" 
-            className="w-6 h-6 lg:w-7 lg:h-7 object-contain brightness-0 invert"
+            className="w-5 h-5 object-contain brightness-0 invert"
           />
         </div>
         
-        {/* Indicateur de connexion */}
-        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 lg:w-3.5 lg:h-3.5 rounded-full bg-white dark:bg-slate-950 flex items-center justify-center shadow-sm border border-slate-200/50 dark:border-slate-800/50">
-          <div className={`w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full ${
-            !isOnline ? 'bg-red-500' :
-            quality === 'excellent' ? 'bg-emerald-500' :
-            quality === 'good' ? 'bg-amber-500' : 'bg-orange-500'
-          }`} />
+        {/* Indicateur de connexion unifié */}
+        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-white dark:bg-slate-950 flex items-center justify-center shadow-sm border border-slate-200/50 dark:border-slate-800/50">
+          <UnifiedStatusIndicator
+            status={!isOnline ? 'offline' : quality === 'excellent' ? 'success' : quality === 'good' ? 'warning' : 'error'}
+            size="sm"
+            pulse={isOnline && quality === 'excellent'}
+          />
         </div>
       </div>
       
-      {/* Texte professionnel */}
+      {/* Texte simplifié */}
       <div className="hidden sm:block">
-        <h1 className="text-lg lg:text-xl font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
-          NeuroChat-IA-v2
+        <h1 className="text-lg font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+          NeuroChat
         </h1>
-        <div className="flex items-center gap-2 text-xs lg:text-sm text-slate-500 dark:text-slate-400">
-          <span className="font-medium">Assistant IA Professionnel</span>
+        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <span>v2.0</span>
           <span>•</span>
-          <div className="flex items-center gap-1">
-            {isOnline ? <Wifi className="w-3 h-3 lg:w-4 lg:h-4" /> : <WifiOff className="w-3 h-3 lg:w-4 lg:h-4" />}
-            <span className="font-medium">{isOnline ? 'En ligne' : 'Hors ligne'}</span>
-          </div>
         </div>
       </div>
     </div>
   </div>
 );
 
-// ModernButton remplacé par UnifiedButton - voir imports ci-dessus
-
-// ButtonGroup remplacé par UnifiedButtonGroup - voir imports ci-dessus
-
-// Sélecteur d'espace de travail professionnel
+// Sélecteur d'espace de travail simplifié avec design unifié
 const WorkspaceSelector = ({ 
   modeEnfant, 
   workspaces, 
@@ -231,29 +222,14 @@ const WorkspaceSelector = ({
 
   return (
     <>
-      {/* Version desktop professionnelle */}
-      <UnifiedButton
-        variant="secondary"
-        size="lg"
-        onClick={() => setShowModal(true)}
-        className="hidden lg:flex items-center gap-3 px-4 py-3 max-w-[220px] rounded-full"
-        tooltip="Gérer les espaces de travail"
-        data-workspace-button
-      >
-        <Database className="w-5 h-5" />
-        <span className="truncate font-medium">
-          {currentWorkspace?.name || 'Espace par défaut'}
-        </span>
-        <ChevronDown className="w-4 h-4" />
-      </UnifiedButton>
-
-      {/* Version tablette */}
+      {/* Version desktop */}
       <UnifiedButton
         variant="secondary"
         size="md"
         onClick={() => setShowModal(true)}
-        className="hidden md:flex lg:hidden items-center gap-2 max-w-[160px] rounded-full"
+        className="hidden md:flex items-center gap-2 max-w-[180px]"
         tooltip="Changer d'espace de travail"
+        data-workspace-button
       >
         <Database className="w-4 h-4" />
         <span className="truncate">
@@ -267,7 +243,7 @@ const WorkspaceSelector = ({
         variant="secondary"
         size="sm"
         onClick={() => setShowModal(true)}
-        className="md:hidden flex items-center gap-1 max-w-[80px] rounded-full"
+        className="md:hidden flex items-center gap-1 max-w-[80px]"
       >
         <Database className="w-4 h-4" />
         <span className="truncate text-xs">
@@ -341,8 +317,6 @@ const WorkspaceSelector = ({
   );
 };
 
-// WorkspaceModal remplacé par UnifiedModal - voir ci-dessus
-
 // Actions mobiles simplifiées avec design unifié
 const MobileActions = ({ 
   muted, 
@@ -362,7 +336,6 @@ const MobileActions = ({
       size="icon"
       onClick={onNewDiscussion}
       tooltip="Nouvelle discussion"
-      className="rounded-full"
     >
       <Plus className="w-4 h-4" />
     </UnifiedButton>
@@ -372,7 +345,6 @@ const MobileActions = ({
       size="icon"
       onClick={handleVolumeToggle}
       tooltip={muted ? 'Activer audio' : 'Désactiver audio'}
-      className="rounded-full"
     >
       {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
     </UnifiedButton>
@@ -382,14 +354,13 @@ const MobileActions = ({
       variant="ghost"
       size="icon"
       onClick={() => setShowMenu(true)}
-      className="rounded-full"
     >
       <Menu className="w-4 h-4" />
     </UnifiedButton>
   </div>
 );
 
-// Actions desktop professionnelles et étendues
+// Actions desktop simplifiées avec design unifié
 const DesktopActions = ({ 
   modeEnfant, 
   onNewDiscussion, 
@@ -426,123 +397,115 @@ const DesktopActions = ({
   setShowMenu: (show: boolean) => void;
 }) => (
   <div
-    className="hidden lg:flex items-center gap-4"
+    className="hidden md:flex items-center gap-3"
     aria-label="Actions principales de la barre d'en-tête"
   >
-    {/* Nouvelle discussion - Version professionnelle */}
+    {/* Nouvelle discussion */}
     <UnifiedButton
       variant="primary"
-      size="lg"
+      size="md"
       onClick={onNewDiscussion}
-      tooltip="Démarrer une nouvelle discussion"
+      tooltip="Nouvelle discussion"
       aria-label="Démarrer une nouvelle discussion"
-      className="flex items-center gap-3 px-6 py-3 font-semibold rounded-full"
+      className="flex items-center gap-2"
     >
-      <Plus className="w-5 h-5" aria-hidden="true" />
-      <span>Nouvelle Discussion</span>
+      <Plus className="w-4 h-4" aria-hidden="true" />
+      <span className="font-medium">Nouveau</span>
     </UnifiedButton>
 
     {selectionActions}
 
-    {/* Contrôles audio professionnels */}
-    <div className="flex items-center gap-2">
+    {/* Contrôles audio avec ButtonGroup unifié */}
+    <UnifiedButtonGroup>
       <UnifiedButton
-        variant={muted ? "danger" : "success"}
+        variant="ghost"
         onClick={handleVolumeToggle}
         active={!muted}
         tooltip={muted ? 'Activer audio' : 'Désactiver audio'}
-        size="lg"
-        className="px-4 py-3 rounded-full"
+        size="icon"
       >
-        {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+        {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
       </UnifiedButton>
       
       {!modeEnfant && (
         <UnifiedButton
-          variant="secondary"
+          variant="ghost"
           onClick={handleModeVocalToggle}
-          tooltip="Mode vocal automatique"
-          size="lg"
-          className="px-4 py-3 rounded-full"
+          tooltip="Mode vocal"
+          size="icon"
         >
-          <Mic className="w-5 h-5" />
+          <Mic className="w-4 h-4" />
         </UnifiedButton>
       )}
-    </div>
+    </UnifiedButtonGroup>
 
-    {/* Modes IA professionnels */}
-    <div className="flex items-center gap-2">
+    {/* Modes IA avec ButtonGroup unifié */}
+    <UnifiedButtonGroup>
       {!modeEnfant && (
         <UnifiedButton
-          variant={modePrive ? "danger" : "secondary"}
+          variant="ghost"
           onClick={handlePrivateModeToggle}
           active={modePrive}
-          tooltip="Mode privé - Données non sauvegardées"
-          size="lg"
-          className="px-4 py-3 rounded-full"
+          tooltip="Mode privé"
+          size="icon"
         >
-          <Shield className="w-5 h-5" />
+          <Shield className="w-4 h-4" />
         </UnifiedButton>
       )}
       
       <UnifiedButton
-        variant={modeEnfant ? "primary" : "secondary"}
+        variant="ghost"
         onClick={handleChildModeToggle}
         active={!!modeEnfant}
-        tooltip="Mode enfant - Interface simplifiée"
-        size="lg"
-        className="px-4 py-3 rounded-full"
+        tooltip="Mode enfant"
+        size="icon"
       >
-        <Baby className="w-5 h-5" />
+        <Baby className="w-4 h-4" />
       </UnifiedButton>
       
       {!modeEnfant && (
         <>
           <UnifiedButton
-            variant={ragEnabled ? "success" : "secondary"}
+            variant="ghost"
             onClick={handleRagToggle}
             active={ragEnabled}
-            tooltip="RAG - Recherche dans les documents"
-            size="lg"
-            className="px-4 py-3 rounded-full"
+            tooltip="RAG"
+            size="icon"
           >
-            <Database className="w-5 h-5" />
+            <Database className="w-4 h-4" />
           </UnifiedButton>
           
           <UnifiedButton
-            variant={webEnabled ? "success" : "secondary"}
+            variant="ghost"
             onClick={handleWebToggle}
             active={!!webEnabled}
-            tooltip="Recherche web en temps réel"
-            size="lg"
-            className="px-4 py-3 rounded-full"
+            tooltip="Recherche web"
+            size="icon"
           >
-            <Globe className="w-5 h-5" />
+            <Globe className="w-4 h-4" />
           </UnifiedButton>
           
           <UnifiedButton
-            variant={structuredMode ? "success" : "secondary"}
+            variant="ghost"
             onClick={handleStructuredToggle}
             active={!!structuredMode}
-            tooltip="Mode structuré - Réponses organisées"
-            size="lg"
-            className="px-4 py-3 rounded-full"
+            tooltip="Mode structuré"
+            size="icon"
           >
-            <Layers className="w-5 h-5" />
+            <Layers className="w-4 h-4" />
           </UnifiedButton>
         </>
       )}
-    </div>
+    </UnifiedButtonGroup>
 
-    {/* Paramètres */}
+    {/* Settings */}
     <UnifiedButton
       variant="ghost"
       onClick={() => setShowMenu(true)}
-      tooltip="Paramètres et configuration"
-      size="lg"
-      className="px-4 py-3 rounded-full"
+      tooltip="Paramètres"
+      size="icon"
     >
-      <Settings2 className="w-5 h-5" />
+      <Settings2 className="w-4 h-4" />
     </UnifiedButton>
   </div>
 );
@@ -564,7 +527,7 @@ const PrivateModeBanner = ({ show }: { show: boolean }) => {
 };
 
 // =====================
-// Composant principal
+// Composant principal avec design unifié
 // =====================
 export function Header(props: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
@@ -684,144 +647,85 @@ export function Header(props: HeaderProps) {
           <source src="/bip2.ogg" type="audio/ogg" />
         </audio>
 
-        {/* Conteneur principal avec largeur complète */}
-        <div className="w-full">
-          {/* Barre principale - Desktop */}
-          <div className="hidden lg:block">
-            <div className="w-full px-6 xl:px-8 2xl:px-12">
-              <div className="flex items-center justify-between h-20">
-                {/* Logo et branding - Version desktop étendue */}
-                <div className="flex items-center flex-1 min-w-0">
-                  <Logo 
-                    onNewDiscussion={props.onNewDiscussion} 
-                    isOnline={isOnline} 
-                    quality={connectionQuality} 
-                  />
-                  
-                  {/* Monitoring */}
-                  <div className="ml-4">
-                    <MonitoringStatusIndicator 
-                      compact={true} 
-                      onOpenMonitor={() => setShowMonitoringModal(true)}
-                    />
-                  </div>
-                  
-                  {/* PWA Status */}
-                  {(isInstalled || isInstallable) && (
-                    <div className="ml-3">
-                      {isInstalled ? (
-                        <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-sm font-medium shadow-sm">
-                          <Smartphone className="w-4 h-4" />
-                          <span>PWA Installé</span>
-                        </div>
-                      ) : isInstallable ? (
-                        <button
-                          onClick={installApp}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-800/60 transition-colors shadow-sm"
-                        >
-                          <Download className="w-4 h-4" />
-                          <span>Installer PWA</span>
-                        </button>
-                      ) : null}
-                    </div>
-                  )}
-                 
-                  {/* Workspace selector */}
-                  <div className="ml-4">
-                    <WorkspaceSelector
-                      modeEnfant={props.modeEnfant}
-                      workspaces={props.workspaces}
-                      workspaceId={props.workspaceId}
-                      onChangeWorkspace={props.onChangeWorkspace}
-                      onCreateWorkspace={props.onCreateWorkspace}
-                    />
-                  </div>
-                </div>
-
-                {/* Actions desktop étendues */}
-                <DesktopActions
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo et branding */}
+            <div className="flex items-center flex-1 min-w-0">
+              <Logo 
+                onNewDiscussion={props.onNewDiscussion} 
+                isOnline={isOnline} 
+                quality={connectionQuality} 
+              />
+              
+               {/* Monitoring */}
+               <div className="ml-3">
+                 <MonitoringStatusIndicator 
+                   compact={true} 
+                   onOpenMonitor={() => setShowMonitoringModal(true)}
+                 />
+               </div>
+               
+               {/* PWA Status */}
+               {(isInstalled || isInstallable) && (
+                 <div className="ml-2">
+                   {isInstalled ? (
+                     <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-medium">
+                       <Smartphone className="w-3 h-3" />
+                       <span className="hidden sm:inline">PWA</span>
+                     </div>
+                   ) : isInstallable ? (
+                     <UnifiedButton
+                       variant="secondary"
+                       size="sm"
+                       onClick={installApp}
+                       className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-medium"
+                     >
+                       <Download className="w-3 h-3" />
+                       <span className="hidden sm:inline">Installer</span>
+                     </UnifiedButton>
+                   ) : null}
+                 </div>
+               )}
+              
+              {/* Workspace selector */}
+              <div className="ml-3">
+                <WorkspaceSelector
                   modeEnfant={props.modeEnfant}
-                  onNewDiscussion={props.onNewDiscussion}
-                  selectionActions={selectionActions}
-                  muted={props.muted}
-                  handleVolumeToggle={handleVolumeToggle}
-                  handleModeVocalToggle={handleModeVocalToggle}
-                  modePrive={props.modePrive}
-                  handlePrivateModeToggle={handlePrivateModeToggle}
-                  handleChildModeToggle={handleChildModeToggle}
-                  ragEnabled={props.ragEnabled}
-                  handleRagToggle={handleRagToggle}
-                  webEnabled={props.webEnabled}
-                  handleWebToggle={handleWebToggle}
-                  structuredMode={props.structuredMode}
-                  handleStructuredToggle={handleStructuredToggle}
-                  setShowMenu={setShowMenu}
+                  workspaces={props.workspaces}
+                  workspaceId={props.workspaceId}
+                  onChangeWorkspace={props.onChangeWorkspace}
+                  onCreateWorkspace={props.onCreateWorkspace}
                 />
               </div>
             </div>
-          </div>
 
-          {/* Barre mobile/tablette */}
-          <div className="lg:hidden">
-            <div className="w-full px-4 sm:px-6">
-              <div className="flex items-center justify-between h-16">
-                {/* Logo et branding mobile */}
-                <div className="flex items-center flex-1 min-w-0">
-                  <Logo 
-                    onNewDiscussion={props.onNewDiscussion} 
-                    isOnline={isOnline} 
-                    quality={connectionQuality} 
-                  />
-                  
-                  {/* Monitoring mobile */}
-                  <div className="ml-2">
-                    <MonitoringStatusIndicator 
-                      compact={true} 
-                      onOpenMonitor={() => setShowMonitoringModal(true)}
-                    />
-                  </div>
-                  
-                  {/* PWA Status mobile */}
-                  {(isInstalled || isInstallable) && (
-                    <div className="ml-2">
-                      {isInstalled ? (
-                        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-medium shadow-sm">
-                          <Smartphone className="w-3 h-3" />
-                          <span className="hidden sm:inline">PWA</span>
-                        </div>
-                      ) : isInstallable ? (
-                        <button
-                          onClick={installApp}
-                          className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-medium hover:bg-blue-200 dark:hover:bg-blue-800/60 transition-colors shadow-sm"
-                        >
-                          <Download className="w-3 h-3" />
-                          <span className="hidden sm:inline">Installer</span>
-                        </button>
-                      ) : null}
-                    </div>
-                  )}
-                 
-                  {/* Workspace selector mobile */}
-                  <div className="ml-2">
-                    <WorkspaceSelector
-                      modeEnfant={props.modeEnfant}
-                      workspaces={props.workspaces}
-                      workspaceId={props.workspaceId}
-                      onChangeWorkspace={props.onChangeWorkspace}
-                      onCreateWorkspace={props.onCreateWorkspace}
-                    />
-                  </div>
-                </div>
+            {/* Actions desktop */}
+            <DesktopActions
+              modeEnfant={props.modeEnfant}
+              onNewDiscussion={props.onNewDiscussion}
+              selectionActions={selectionActions}
+              muted={props.muted}
+              handleVolumeToggle={handleVolumeToggle}
+              handleModeVocalToggle={handleModeVocalToggle}
+              modePrive={props.modePrive}
+              handlePrivateModeToggle={handlePrivateModeToggle}
+              handleChildModeToggle={handleChildModeToggle}
+              ragEnabled={props.ragEnabled}
+              handleRagToggle={handleRagToggle}
+              webEnabled={props.webEnabled}
+              handleWebToggle={handleWebToggle}
+              structuredMode={props.structuredMode}
+              handleStructuredToggle={handleStructuredToggle}
+              setShowMenu={setShowMenu}
+            />
 
-                {/* Actions mobiles */}
-                <MobileActions
-                  muted={props.muted}
-                  onNewDiscussion={props.onNewDiscussion}
-                  handleVolumeToggle={handleVolumeToggle}
-                  setShowMenu={setShowMenu}
-                />
-              </div>
-            </div>
+            {/* Actions mobiles */}
+            <MobileActions
+              muted={props.muted}
+              onNewDiscussion={props.onNewDiscussion}
+              handleVolumeToggle={handleVolumeToggle}
+              setShowMenu={setShowMenu}
+            />
           </div>
         </div>
 
@@ -834,25 +738,25 @@ export function Header(props: HeaderProps) {
              <div className="w-full px-4 py-2">
               <div className="flex items-center gap-2 text-xs">
                 {props.modePrive && (
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 shadow-sm">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300">
                     <Shield className="w-3 h-3" />
                     <span className="font-medium">Privé</span>
                   </div>
                 )}
                 {props.modeEnfant && (
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 shadow-sm">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300">
                     <Baby className="w-3 h-3" />
                     <span className="font-medium">Enfant</span>
                   </div>
                 )}
                 {props.ragEnabled && (
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 shadow-sm">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
                     <Database className="w-3 h-3" />
                     <span className="font-medium">RAG</span>
                   </div>
                 )}
                 {props.webEnabled && (
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 shadow-sm">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
                     <Globe className="w-3 h-3" />
                     <span className="font-medium">Web</span>
                   </div>
@@ -872,8 +776,8 @@ export function Header(props: HeaderProps) {
                 </h2>
                 <UnifiedButton
                   variant="ghost"
-                  onClick={() => setShowMenu(false)}
                   size="icon"
+                  onClick={() => setShowMenu(false)}
                 >
                   <X className="w-4 h-4" />
                 </UnifiedButton>
@@ -898,7 +802,7 @@ export function Header(props: HeaderProps) {
                      <Plus className="w-4 h-4" />
                      <span className="text-xs">Nouveau</span>
                    </UnifiedButton>
-                  
+                   
                    {!props.modeEnfant && (
                      <UnifiedButton
                        variant="secondary"
