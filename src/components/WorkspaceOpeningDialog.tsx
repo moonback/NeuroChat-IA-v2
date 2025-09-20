@@ -71,7 +71,7 @@ export function WorkspaceOpeningDialog({ open, name, onOpenChange }: WorkspaceOp
         </div>
         
         {/* Styles CSS personnalisés */}
-        <style jsx>{`
+        <style >{`
           @keyframes loading-bar {
             0% { width: 0%; }
             50% { width: 70%; }
