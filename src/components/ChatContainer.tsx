@@ -963,24 +963,29 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
     <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 relative overflow-hidden">
       <FloatingParticles count={15} mode="normal" />
       
-      <div className="max-w-4xl mx-auto space-y-8 relative z-10">
-        <div className="space-y-4">
+      <div className="max-w-4xl mx-auto space-y-10 relative z-10">
+        <div className="space-y-6">
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-blue-600 via-indigo-600 to-cyan-600 blur-2xl opacity-20 animate-pulse" />
-            <h2 className="relative text-2xl sm:text-3xl font-black bg-gradient-to-r from-purple-600 via-blue-600 via-indigo-600 to-cyan-600 bg-clip-text text-transparent tracking-tight flex items-center justify-center gap-3">
-              <Brain className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500 animate-pulse" />
-              NeuroChat Assistant IA
-              <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 animate-spin" />
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-blue-600 via-indigo-600 to-cyan-600 blur-3xl opacity-30 animate-pulse pointer-events-none" />
+            <h2 className="relative text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-purple-600 via-blue-600 via-indigo-600 to-cyan-600 bg-clip-text text-transparent tracking-tight flex items-center justify-center gap-4 drop-shadow-lg">
+              <span className="flex items-center">
+                <Brain className="w-7 h-7 sm:w-9 sm:h-9 text-purple-500 animate-pulse drop-shadow" />
+              </span>
+              <span className="whitespace-nowrap">
+                NeuroChat <span className="hidden sm:inline">Assistant IA</span>
+              </span>
+              <span className="flex items-center">
+                <Sparkles className="w-7 h-7 sm:w-9 sm:h-9 text-blue-400 animate-spin-slow drop-shadow" />
+              </span>
             </h2>
           </div>
-          <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed max-w-3xl mx-auto">
-            Assistant IA intelligent pour vos conversations et projets
+          <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto font-medium">
+            L’assistant IA nouvelle génération pour vos conversations, projets et créativité.<br className="hidden sm:inline" />
+            <span className="inline-block mt-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-mono">
+              Sécurité avancée, multi-fournisseurs, RAG local, synthèse vocale, et plus encore.
+            </span>
           </p>
         </div>
-        
-
-
-
       </div>
     </div>
   );
