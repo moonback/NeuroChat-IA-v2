@@ -15,6 +15,7 @@ import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
 import { HelpModal } from '@/components/HelpModal';
 import { MonitoringStatusIndicator } from '@/components/MonitoringStatusIndicator';
 import { SecurityPerformanceMonitor } from '@/components/SecurityPerformanceMonitor';
+import { OptimizationMetrics } from '@/components/OptimizationMetrics';
 import { usePWA } from '@/hooks/usePWA';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
@@ -838,6 +839,7 @@ export function Header(props: HeaderProps) {
   const [showVocalSettings, setShowVocalSettings] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showMonitoringModal, setShowMonitoringModal] = useState(false);
+  const [showOptimizationMetrics, setShowOptimizationMetrics] = useState(false);
 
   // Destructuration des props pour éviter les dépendances circulaires
   const {
@@ -962,6 +964,13 @@ export function Header(props: HeaderProps) {
                  <MonitoringStatusIndicator 
                    compact={true} 
                    onOpenMonitor={() => setShowMonitoringModal(true)}
+                 />
+               </div>
+               
+               {/* Métriques d'Optimisation IA */}
+               <div className="ml-2">
+                 <OptimizationMetrics 
+                   compact={true}
                  />
                </div>
                
@@ -1301,6 +1310,12 @@ export function Header(props: HeaderProps) {
       <SecurityPerformanceMonitor 
         isOpen={showMonitoringModal} 
         onClose={() => setShowMonitoringModal(false)} 
+      />
+
+      {/* Modal des métriques d'optimisation IA */}
+      <OptimizationMetrics 
+        isOpen={showOptimizationMetrics} 
+        onClose={() => setShowOptimizationMetrics(false)} 
       />
 
       {/* Dialog de confirmation de suppression */}
