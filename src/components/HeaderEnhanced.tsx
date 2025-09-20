@@ -128,7 +128,7 @@ export function HeaderEnhanced() {
             <div>
               <label className="text-sm font-medium mb-2 block">Nom de l'espace de travail</label>
               <UnifiedInputEnhanced
-                variant="premium"
+                variant="base"
                 shimmer={true}
                 value={workspaceName}
                 onChange={(e) => setWorkspaceName(e.target.value)}

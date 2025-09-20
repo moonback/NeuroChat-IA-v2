@@ -257,66 +257,158 @@ const WorkspaceSelector = ({
         </span>
       </UnifiedButton>
 
-      {/* Modal workspace avec design unifié */}
+      {/* Modal workspace avec design amélioré */}
       <UnifiedModal open={showModal} onOpenChange={setShowModal}>
-        <UnifiedModalContent className="sm:max-w-md">
+        <UnifiedModalContent className="sm:max-w-lg">
           <UnifiedModalHeader>
-            <UnifiedModalTitle className="text-lg font-semibold text-slate-900 dark:text-white">
+            <UnifiedModalTitle className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+              <Database className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               Espaces de travail
             </UnifiedModalTitle>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
+              Organisez vos conversations par projets ou sujets
+            </p>
           </UnifiedModalHeader>
 
-          <div className="space-y-4">
-            {/* Création */}
-            <div className="flex gap-2">
-              <UnifiedInput
-                placeholder="Nouveau workspace"
-                className="flex-1"
-              />
-              <UnifiedButton
-                variant="primary"
-                size="icon"
-                onClick={() => {
-                  onCreateWorkspace?.();
-                  setShowModal(false);
-                }}
-                className="rounded-2xl"
-              >
+          <div className="space-y-6">
+            {/* Création améliorée */}
+            <div className="bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-2xl p-4 border border-blue-200/50 dark:border-blue-800/50">
+              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
                 <Plus className="w-4 h-4" />
-              </UnifiedButton>
+                Créer un nouvel espace
+              </h3>
+              <div className="flex gap-3">
+                <UnifiedInput
+                  placeholder="Nom de l'espace de travail..."
+                  className="flex-1 rounded-2xl"
+                />
+                <UnifiedButtonEnhanced
+                  variant="premium"
+                  size="icon"
+                  onClick={() => {
+                    onCreateWorkspace?.();
+                    setShowModal(false);
+                  }}
+                  shimmer={true}
+                  glow={true}
+                  className="rounded-2xl"
+                >
+                  <Plus className="w-4 h-4" />
+                </UnifiedButtonEnhanced>
+              </div>
             </div>
 
-            {/* Liste */}
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {workspaces?.map((workspace) => (
-                <div
-                  key={workspace.id}
-                  className={`p-3 rounded-lg border transition-all ${
-                    workspace.id === workspaceId
-                      ? 'border-blue-300 bg-blue-50 dark:bg-blue-950/40'
-                      : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-slate-900 dark:text-white">{workspace.name}</span>
-                    <div className="flex gap-1">
-                      {workspace.id !== workspaceId && (
-                        <UnifiedButton
+            {/* Liste améliorée */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                <Database className="w-4 h-4" />
+                Espaces disponibles ({workspaces?.length || 0})
+              </h3>
+              
+              <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
+                {workspaces?.map((workspace) => (
+                  <div
+                    key={workspace.id}
+                    className={`group p-4 rounded-2xl border transition-all duration-200 ${
+                      workspace.id === workspaceId
+                        ? 'border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 shadow-lg'
+                        : 'border-slate-200 dark:border-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-gray-50 dark:hover:from-slate-800 dark:hover:to-gray-800 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-3 h-3 rounded-full ${
+                          workspace.id === workspaceId 
+                            ? 'bg-blue-500 shadow-blue-500/50' 
+                            : 'bg-slate-300 dark:bg-slate-600'
+                        }`} />
+                        <div>
+                          <span className="font-semibold text-slate-900 dark:text-white">
+                            {workspace.name}
+                          </span>
+                          {workspace.id === workspaceId && (
+                            <UnifiedBadgeEnhanced
+                              variant="success"
+                              size="sm"
+                              className="ml-2"
+                            >
+                              Actif
+                            </UnifiedBadgeEnhanced>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        {workspace.id !== workspaceId && (
+                          <UnifiedButtonEnhanced
+                            variant="primary"
+                            size="sm"
+                            onClick={() => {
+                              onChangeWorkspace?.(workspace.id);
+                              setShowModal(false);
+                            }}
+                            shimmer={true}
+                            className="rounded-2xl"
+                          >
+                            Activer
+                          </UnifiedButtonEnhanced>
+                        )}
+                        
+                        <UnifiedButtonEnhanced
                           variant="ghost"
                           size="sm"
                           onClick={() => {
-                            onChangeWorkspace?.(workspace.id);
-                            setShowModal(false);
+                            // TODO: Implémenter la suppression
+                            console.log('Supprimer workspace:', workspace.id);
                           }}
-                          className="rounded-2xl"
+                          className="rounded-2xl text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
                         >
-                          Sélectionner
-                        </UnifiedButton>
-                      )}
+                          <Trash2 className="w-4 h-4" />
+                        </UnifiedButtonEnhanced>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+                
+                {(!workspaces || workspaces.length === 0) && (
+                  <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+                    <Database className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p className="text-sm">Aucun espace de travail créé</p>
+                    <p className="text-xs mt-1">Créez votre premier espace ci-dessus</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Actions rapides */}
+            <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+              <div className="flex gap-2">
+                <UnifiedButtonEnhanced
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    // TODO: Implémenter l'import/export
+                    console.log('Importer espaces');
+                  }}
+                  className="flex-1 rounded-2xl"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Importer
+                </UnifiedButtonEnhanced>
+                
+                <UnifiedButtonEnhanced
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    // TODO: Implémenter l'export
+                    console.log('Exporter espaces');
+                  }}
+                  className="flex-1 rounded-2xl"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Exporter
+                </UnifiedButtonEnhanced>
+              </div>
             </div>
           </div>
         </UnifiedModalContent>

@@ -215,12 +215,12 @@ export function DesignShowcase() {
               Floating
             </UnifiedBadgeEnhanced>
             
-            <UnifiedBadgeEnhanced variant="destructive" shimmer={true}>
+            <UnifiedBadgeEnhanced variant="error" shimmer={true}>
               <Shield className="h-3 w-3 mr-1" />
               Security
             </UnifiedBadgeEnhanced>
             
-            <UnifiedBadgeEnhanced variant="outline" glow={true}>
+            <UnifiedBadgeEnhanced variant="secondary" glow={true}>
               <Lock className="h-3 w-3 mr-1" />
               Private
             </UnifiedBadgeEnhanced>
@@ -233,24 +233,21 @@ export function DesignShowcase() {
           
           <div className="max-w-md mx-auto space-y-4">
             <UnifiedInputEnhanced
-              variant="premium"
+              variant="base"
               shimmer={true}
               placeholder="Input avec effet Shimmer"
-              icon={<Search className="w-4 h-4" />}
             />
             
             <UnifiedInputEnhanced
               variant="base"
               glow={true}
               placeholder="Input avec effet Glow"
-              icon={<User className="w-4 h-4" />}
             />
             
             <UnifiedInputEnhanced
-              variant="premium"
-              glass={true}
-              placeholder="Input avec effet Glass"
-              icon={<Settings className="w-4 h-4" />}
+              variant="success"
+              shimmer={true}
+              placeholder="Input avec effet Shimmer"
             />
           </div>
         </section>
@@ -302,10 +299,9 @@ export function DesignShowcase() {
                 
                 <div className="space-y-4">
                   <UnifiedInputEnhanced
-                    variant="premium"
+                    variant="base"
                     shimmer={true}
                     placeholder="Input avec effet Shimmer"
-                    icon={<Bell className="w-4 h-4" />}
                   />
                   
                   <div className="flex justify-center space-x-2">
