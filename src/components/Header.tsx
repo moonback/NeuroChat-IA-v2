@@ -6,7 +6,7 @@ import {
   PlusCircle, Mic, Shield, BookOpen, CheckSquare, Square, 
   Trash2, Menu, X, Baby, Layers,
   Globe, Database, Pencil, HelpCircle,
-  Smartphone, Download
+  Download
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -158,15 +158,13 @@ const Logo = ({
     >
       {/* Logo avec effet glassmorphism */}
       <div className="relative">
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 via-violet-500 to-purple-600 p-0.5 shadow-lg shadow-blue-500/25">
           <div className="w-full h-full rounded-[14px] bg-white dark:bg-slate-950 flex items-center justify-center">
             <img 
               src="/logo-p.png" 
               alt="NeuroChat" 
-              className="w-6 h-6 object-contain"
+              className="w-10 h-10 object-contain"
             />
           </div>
-        </div>
         
         {/* Indicateur de qualité */}
         <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-white dark:bg-slate-950 flex items-center justify-center shadow-sm border border-slate-200/50 dark:border-slate-800/50">
@@ -187,20 +185,7 @@ const Logo = ({
           NeuroChat
         </h1>
         <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-100/80 dark:bg-blue-900/60 px-2 py-0.5 rounded-lg shadow-sm">
-            v2.0
-          </span>
-          <span className="text-xs text-slate-400 dark:text-slate-500 select-none">•</span>
-          <span
-            className={`text-xs font-medium px-2 py-0.5 rounded-lg transition-colors duration-200 ${
-              isOnline
-                ? 'bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300'
-                : 'bg-red-100/80 text-red-700 dark:bg-red-900/60 dark:text-red-300'
-            }`}
-            aria-live="polite"
-          >
-            {isOnline ? 'En ligne' : 'Hors ligne'}
-          </span>
+          
         </div>
       </div>
     </div>
@@ -831,7 +816,7 @@ export function Header(props: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const { isOnline, connectionQuality } = useOnlineStatus();
   const { audioRef, showPrivateIndicator } = usePrivateModeFeedback(props.modePrive);
-  const { isInstalled, isInstallable, installApp } = usePWA();
+  usePWA();
   const [showMenu, setShowMenu] = useState(false);
   const [showVocalSettings, setShowVocalSettings] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
@@ -956,7 +941,7 @@ export function Header(props: HeaderProps) {
               
                
                {/* PWA Status */}
-               {(isInstalled || isInstallable) && (
+               {/* {(isInstalled || isInstallable) && (
                  <div className="ml-2">
                    {isInstalled ? (
                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-medium">
@@ -973,7 +958,7 @@ export function Header(props: HeaderProps) {
                      </button>
                    ) : null}
                  </div>
-               )}
+               )} */}
               
               {/* Workspace selector */}
               <div className="ml-4">
