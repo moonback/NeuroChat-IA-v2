@@ -7,7 +7,14 @@
 
 export { UnifiedButtonEnhanced } from './unified-button-enhanced';
 export { UnifiedCardEnhanced } from './unified-card-enhanced';
-export { UnifiedModalEnhanced } from './unified-modal-enhanced';
+export { 
+  UnifiedModalEnhanced,
+  UnifiedModalContent,
+  UnifiedModalHeader,
+  UnifiedModalFooter,
+  UnifiedModalTitle,
+  UnifiedModalDescription
+} from './unified-modal-enhanced';
 export { UnifiedInputEnhanced } from './unified-input-enhanced';
 export { UnifiedBadgeEnhanced } from './unified-badge-enhanced';
 export { UnifiedContainerEnhanced } from './unified-container-enhanced';
