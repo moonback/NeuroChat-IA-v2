@@ -181,16 +181,26 @@ const Logo = ({
       </div>
       
       {/* Texte avec animation au hover */}
-      <div className="hidden sm:block">
-        <h1 className="text-lg font-bold bg-gradient-to-r from-slate-900 via-blue-700 to-violet-600 dark:from-white dark:via-blue-300 dark:to-violet-400 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-200">
+      <div className="hidden sm:flex flex-col justify-center">
+        <h1
+          className="text-2xl font-extrabold bg-gradient-to-r from-blue-700 via-violet-600 to-fuchsia-500 dark:from-white dark:via-blue-300 dark:to-fuchsia-400 bg-clip-text text-transparent group-hover:scale-110 transition-transform duration-200 drop-shadow-sm tracking-tight"
+          aria-label="NeuroChat"
+        >
           NeuroChat
         </h1>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100/80 dark:bg-slate-800/80 px-1.5 py-0.5 rounded-md">
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-100/80 dark:bg-blue-900/60 px-2 py-0.5 rounded-lg shadow-sm">
             v2.0
           </span>
-          <span className="text-xs text-slate-400 dark:text-slate-500">•</span>
-          <span className="text-xs text-slate-500 dark:text-slate-400">
+          <span className="text-xs text-slate-400 dark:text-slate-500 select-none">•</span>
+          <span
+            className={`text-xs font-medium px-2 py-0.5 rounded-lg transition-colors duration-200 ${
+              isOnline
+                ? 'bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300'
+                : 'bg-red-100/80 text-red-700 dark:bg-red-900/60 dark:text-red-300'
+            }`}
+            aria-live="polite"
+          >
             {isOnline ? 'En ligne' : 'Hors ligne'}
           </span>
         </div>
@@ -209,7 +219,8 @@ const ModernButton = ({
   className = "",
   active = false,
   loading = false,
-  size = "default"
+  size = "default",
+  disabled = false
 }: {
   children: React.ReactNode;
   onClick?: () => void;
@@ -219,6 +230,7 @@ const ModernButton = ({
   active?: boolean;
   loading?: boolean;
   size?: "sm" | "default" | "lg" | "xl";
+  disabled?: boolean;
 }) => {
   const variants = {
     ghost: "hover:bg-slate-100/90 dark:hover:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm",
@@ -238,7 +250,7 @@ const ModernButton = ({
   return (
     <button
       onClick={onClick}
-      disabled={loading}
+      disabled={loading || disabled}
       data-tooltip-id="header-tooltip"
       data-tooltip-content={tooltip}
       className={`
@@ -291,13 +303,17 @@ const WorkspaceSelector = ({
   workspaces, 
   workspaceId, 
   onChangeWorkspace, 
-  onCreateWorkspace
+  onCreateWorkspace,
+  onRenameWorkspace,
+  onDeleteWorkspace
 }: {
   modeEnfant?: boolean;
   workspaces?: Array<{ id: string; name: string }>;
   workspaceId?: string;
   onChangeWorkspace?: (id: string) => void;
   onCreateWorkspace?: () => void;
+  onRenameWorkspace?: (id: string, name: string) => void;
+  onDeleteWorkspace?: (id: string) => void;
 }) => {
   const [showModal, setShowModal] = useState(false);
   
@@ -339,19 +355,23 @@ const WorkspaceSelector = ({
         currentWorkspaceId={workspaceId}
         onChangeWorkspace={onChangeWorkspace}
         onCreateWorkspace={onCreateWorkspace}
+        onRenameWorkspace={onRenameWorkspace}
+        onDeleteWorkspace={onDeleteWorkspace}
       />
     </>
   );
 };
 
-// Modal workspace modernisée
+// Modal workspace modernisée et améliorée
 const WorkspaceModal = ({
   open,
   onOpenChange,
   workspaces,
   currentWorkspaceId,
   onChangeWorkspace,
-  onCreateWorkspace
+  onCreateWorkspace,
+  onRenameWorkspace,
+  onDeleteWorkspace
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -359,71 +379,232 @@ const WorkspaceModal = ({
   currentWorkspaceId?: string;
   onChangeWorkspace?: (id: string) => void;
   onCreateWorkspace?: () => void;
+  onRenameWorkspace?: (id: string, name: string) => void;
+  onDeleteWorkspace?: (id: string) => void;
 }) => {
   const [newName, setNewName] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
+
+  const handleCreate = () => {
+    if (newName.trim() && onCreateWorkspace) {
+      onCreateWorkspace();
+      setNewName('');
+    }
+  };
+
+  const handleEdit = (workspace: { id: string; name: string }) => {
+    setEditingId(workspace.id);
+    setEditingName(workspace.name);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingId && editingName.trim() && onRenameWorkspace) {
+      onRenameWorkspace(editingId, editingName.trim());
+      setEditingId(null);
+      setEditingName('');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditingName('');
+  };
+
+  const handleDelete = (id: string) => {
+    if (onDeleteWorkspace && window.confirm('Êtes-vous sûr de vouloir supprimer cet espace de travail ?')) {
+      onDeleteWorkspace(id);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md rounded-2xl">
+      <DialogContent className="sm:max-w-lg rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+          <DialogTitle className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent flex items-center gap-3">
+            <Database className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             Espaces de travail
           </DialogTitle>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
+            Organisez vos conversations par projets ou sujets
+          </p>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {/* Création */}
-          <div className="flex gap-2">
-            <Input
-              placeholder="Nouveau workspace"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              className="flex-1 rounded-xl"
-            />
-            <ModernButton
-              variant="primary"
-              onClick={() => {
-                if (newName.trim() && onCreateWorkspace) {
-                  onCreateWorkspace();
-                  setNewName('');
-                  onOpenChange(false);
-                }
-              }}
-            >
+        <div className="space-y-6">
+          {/* Section de création améliorée */}
+          <div className="bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-2xl p-4 border border-blue-200/50 dark:border-blue-800/50">
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
               <PlusCircle className="w-4 h-4" />
-            </ModernButton>
+              Créer un nouvel espace
+            </h3>
+            <div className="flex gap-3">
+              <Input
+                placeholder="Nom de l'espace de travail..."
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+                className="flex-1 rounded-2xl"
+              />
+              <ModernButton
+                variant="primary"
+                onClick={handleCreate}
+                disabled={!newName.trim()}
+                className="rounded-2xl"
+              >
+                <PlusCircle className="w-4 h-4" />
+              </ModernButton>
+            </div>
           </div>
 
-          {/* Liste */}
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {workspaces.map((workspace) => (
-              <div
-                key={workspace.id}
-                className={`p-3 rounded-xl border transition-all ${
-                  workspace.id === currentWorkspaceId
-                    ? 'border-blue-300 bg-blue-50/80 dark:bg-blue-950/40'
-                    : 'border-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">{workspace.name}</span>
-                  <div className="flex gap-1">
-                    {workspace.id !== currentWorkspaceId && (
-                      <ModernButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          onChangeWorkspace?.(workspace.id);
-                          onOpenChange(false);
-                        }}
-                      >
-                        Sélectionner
-                      </ModernButton>
-                    )}
+          {/* Liste des espaces améliorée */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <Database className="w-4 h-4" />
+              Espaces disponibles ({workspaces.length})
+            </h3>
+            
+            <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
+              {workspaces.map((workspace) => (
+                <div
+                  key={workspace.id}
+                  className={`group p-4 rounded-2xl border transition-all duration-200 ${
+                    workspace.id === currentWorkspaceId
+                      ? 'border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 shadow-lg'
+                      : 'border-slate-200 dark:border-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-gray-50 dark:hover:from-slate-800 dark:hover:to-gray-800 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${
+                        workspace.id === currentWorkspaceId 
+                          ? 'bg-blue-500 shadow-blue-500/50' 
+                          : 'bg-slate-300 dark:bg-slate-600'
+                      }`} />
+                      
+                      {editingId === workspace.id ? (
+                        <Input
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveEdit();
+                            if (e.key === 'Escape') handleCancelEdit();
+                          }}
+                          className="h-8 px-2 py-1 text-sm"
+                          autoFocus
+                        />
+                      ) : (
+                        <div>
+                          <span className="font-semibold text-slate-900 dark:text-white">
+                            {workspace.name}
+                          </span>
+                          {workspace.id === currentWorkspaceId && (
+                            <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded-full">
+                              Actif
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      {editingId === workspace.id ? (
+                        <>
+                          <ModernButton
+                            variant="success"
+                            size="sm"
+                            onClick={handleSaveEdit}
+                            className="rounded-2xl"
+                          >
+                            <CheckSquare className="w-4 h-4" />
+                          </ModernButton>
+                          <ModernButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleCancelEdit}
+                            className="rounded-2xl"
+                          >
+                            <X className="w-4 h-4" />
+                          </ModernButton>
+                        </>
+                      ) : (
+                        <>
+                          {workspace.id !== currentWorkspaceId && (
+                            <ModernButton
+                              variant="primary"
+                              size="sm"
+                              onClick={() => {
+                                onChangeWorkspace?.(workspace.id);
+                                onOpenChange(false);
+                              }}
+                              className="rounded-2xl"
+                            >
+                              Activer
+                            </ModernButton>
+                          )}
+                          
+                          <ModernButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(workspace)}
+                            className="rounded-2xl"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </ModernButton>
+                          
+                          <ModernButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(workspace.id)}
+                            className="rounded-2xl text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </ModernButton>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+              
+              {workspaces.length === 0 && (
+                <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+                  <Database className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm">Aucun espace de travail créé</p>
+                  <p className="text-xs mt-1">Créez votre premier espace ci-dessus</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Actions rapides */}
+          <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+            <div className="flex gap-2">
+              <ModernButton
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  // TODO: Implémenter l'import/export
+                  console.log('Importer espaces');
+                }}
+                className="flex-1 rounded-2xl"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Importer
+              </ModernButton>
+              
+              <ModernButton
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  // TODO: Implémenter l'export
+                  console.log('Exporter espaces');
+                }}
+                className="flex-1 rounded-2xl"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Exporter
+              </ModernButton>
+            </div>
           </div>
         </div>
       </DialogContent>
@@ -812,6 +993,8 @@ export function Header(props: HeaderProps) {
                   workspaceId={props.workspaceId}
                   onChangeWorkspace={props.onChangeWorkspace}
                   onCreateWorkspace={props.onCreateWorkspace}
+                  onRenameWorkspace={props.onRenameWorkspace}
+                  onDeleteWorkspace={props.onDeleteWorkspace}
                 />
               </div>
             </div>
@@ -1165,6 +1348,29 @@ export function Header(props: HeaderProps) {
         
         .animate-slide-down {
           animation: slide-down 0.3s ease-out;
+        }
+        
+        /* Barre de défilement personnalisée */
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: rgb(148 163 184 / 0.5) transparent;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: rgb(148 163 184 / 0.5);
+          border-radius: 3px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background-color: rgb(148 163 184 / 0.8);
         }
         
         /* Optimisations mobile */
