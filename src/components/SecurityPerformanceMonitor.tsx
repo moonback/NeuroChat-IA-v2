@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -20,6 +18,13 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+// Import des composants unifiés
+import { 
+  UnifiedButton, 
+  UnifiedBadge,
+  UnifiedCard
+} from '@/components/ui/unified';
 
 // Types pour le monitoring
 interface SecurityMetrics {
@@ -431,7 +436,7 @@ export function SecurityPerformanceMonitor({
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-6xl max-h-[90vh] overflow-hidden">
+      <UnifiedCard className="w-full max-w-6xl max-h-[90vh] overflow-hidden">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -439,39 +444,39 @@ export function SecurityPerformanceMonitor({
               Monitoring Sécurité & Performance
             </CardTitle>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
+              <UnifiedButton
+                variant="secondary"
                 size="sm"
                 onClick={() => setAutoRefresh(!autoRefresh)}
                 className={cn(autoRefresh && 'bg-green-50 dark:bg-green-950/20')}
               >
                 <RefreshCw className={cn("w-4 h-4 mr-2", autoRefresh && "animate-spin")} />
                 Auto-refresh
-              </Button>
-              <Button
-                variant="outline"
+              </UnifiedButton>
+              <UnifiedButton
+                variant="secondary"
                 size="sm"
                 onClick={updateMetrics}
                 disabled={isRefreshing}
               >
                 <RefreshCw className={cn("w-4 h-4 mr-2", isRefreshing && "animate-spin")} />
                 Actualiser
-              </Button>
-              <Button
-                variant="outline"
+              </UnifiedButton>
+              <UnifiedButton
+                variant="secondary"
                 size="sm"
                 onClick={exportMetrics}
               >
                 <Download className="w-4 h-4 mr-2" />
                 Exporter
-              </Button>
-              <Button
-                variant="outline"
+              </UnifiedButton>
+              <UnifiedButton
+                variant="secondary"
                 size="sm"
                 onClick={onClose || (() => {})}
               >
                 Fermer
-              </Button>
+              </UnifiedButton>
             </div>
           </div>
         </CardHeader>
@@ -616,9 +621,9 @@ export function SecurityPerformanceMonitor({
                   <CardContent className="space-y-3">
                     <div className="flex justify-between">
                       <span>Statut</span>
-                      <Badge variant={stats?.security.encryptionActive ? "default" : "destructive"}>
+                      <UnifiedBadge variant={stats?.security.encryptionActive ? "default" : "destructive"}>
                         {stats?.security.encryptionActive ? "Actif" : "Inactif"}
-                      </Badge>
+                      </UnifiedBadge>
                     </div>
                     <div className="flex justify-between">
                       <span>Niveau</span>
@@ -628,9 +633,9 @@ export function SecurityPerformanceMonitor({
                     </div>
                     <div className="flex justify-between">
                       <span>Stockage sécurisé</span>
-                      <Badge variant={stats?.security.secureStorageEnabled ? "default" : "destructive"}>
+                      <UnifiedBadge variant={stats?.security.secureStorageEnabled ? "default" : "destructive"}>
                         {stats?.security.secureStorageEnabled ? "Oui" : "Non"}
-                      </Badge>
+                      </UnifiedBadge>
                     </div>
                   </CardContent>
                 </Card>
@@ -645,9 +650,9 @@ export function SecurityPerformanceMonitor({
                   <CardContent className="space-y-3">
                     <div className="flex justify-between">
                       <span>Gestionnaire actif</span>
-                      <Badge variant={stats?.security.keyManagerActive ? "default" : "destructive"}>
+                      <UnifiedBadge variant={stats?.security.keyManagerActive ? "default" : "destructive"}>
                         {stats?.security.keyManagerActive ? "Oui" : "Non"}
-                      </Badge>
+                      </UnifiedBadge>
                     </div>
                     <div className="flex justify-between">
                       <span>Clés totales</span>
@@ -781,8 +786,8 @@ export function SecurityPerformanceMonitor({
               {/* Actions sur les alertes */}
               <div className="flex justify-between items-center">
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
+                  <UnifiedButton
+                    variant="secondary"
                     size="sm"
                     onClick={() => {
                       const updatedAlerts = alerts.map(alert => ({ ...alert, resolved: true }));
@@ -792,9 +797,9 @@ export function SecurityPerformanceMonitor({
                     disabled={alerts.filter(a => !a.resolved).length === 0}
                   >
                     Marquer tout comme résolu
-                  </Button>
-                  <Button
-                    variant="outline"
+                  </UnifiedButton>
+                  <UnifiedButton
+                    variant="secondary"
                     size="sm"
                     onClick={() => {
                       setAlerts([]);
@@ -803,9 +808,9 @@ export function SecurityPerformanceMonitor({
                     disabled={alerts.length === 0}
                   >
                     Supprimer toutes les alertes
-                  </Button>
-                  <Button
-                    variant="outline"
+                  </UnifiedButton>
+                  <UnifiedButton
+                    variant="secondary"
                     size="sm"
                     onClick={() => {
                       // Supprimer seulement les alertes de test
@@ -818,9 +823,9 @@ export function SecurityPerformanceMonitor({
                     disabled={!alerts.some(alert => alert.message.includes('Test d\'alerte'))}
                   >
                     Supprimer alertes de test
-                  </Button>
-                  <Button
-                    variant="outline"
+                  </UnifiedButton>
+                  <UnifiedButton
+                    variant="secondary"
                     size="sm"
                     onClick={() => {
                       // Ajouter des alertes de test
@@ -850,7 +855,7 @@ export function SecurityPerformanceMonitor({
                     }}
                   >
                     Ajouter alertes de test
-                  </Button>
+                  </UnifiedButton>
                 </div>
                 <div className="text-sm text-slate-500">
                   {alerts.length} alerte(s) au total
@@ -882,9 +887,9 @@ export function SecurityPerformanceMonitor({
                                       <div className="flex items-center gap-2">
                                         <p className="font-medium">{alert.message}</p>
                                         {alert.message.includes('Test d\'alerte') && (
-                                          <Badge variant="secondary" className="text-xs">
+                                          <UnifiedBadge variant="secondary" className="text-xs">
                                             TEST
-                                          </Badge>
+                                          </UnifiedBadge>
                                         )}
                                       </div>
                                       {alert.details && (
@@ -895,10 +900,10 @@ export function SecurityPerformanceMonitor({
                                       </p>
                                     </div>
                                     <div className="flex items-center gap-2 ml-4">
-                                      <Badge variant="outline">
+                                      <UnifiedBadge variant="outline">
                                         {alert.level}
-                                      </Badge>
-                                      <Button
+                                      </UnifiedBadge>
+                                      <UnifiedButton
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => {
@@ -911,7 +916,7 @@ export function SecurityPerformanceMonitor({
                                         className="h-6 px-2 text-xs"
                                       >
                                         Résoudre
-                                      </Button>
+                                      </UnifiedButton>
                                     </div>
                                   </div>
                                 </AlertDescription>
@@ -944,9 +949,9 @@ export function SecurityPerformanceMonitor({
                                         {new Date(alert.timestamp).toLocaleString('fr-FR')}
                                       </p>
                                     </div>
-                                    <Badge variant="outline" className="ml-2">
+                                    <UnifiedBadge variant="outline" className="ml-2">
                                       Résolu
-                                    </Badge>
+                                    </UnifiedBadge>
                                   </div>
                                 </AlertDescription>
                               </div>
@@ -961,7 +966,7 @@ export function SecurityPerformanceMonitor({
             </TabsContent>
           </Tabs>
         </CardContent>
-      </Card>
+      </UnifiedCard>
     </div>
   );
 }

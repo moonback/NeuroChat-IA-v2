@@ -1,9 +1,13 @@
 import { Bot, User, Copy, Check, CheckCheck, Sparkles, Edit, Trash2, Reply } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useState, useRef, useEffect, useCallback } from 'react'; // Added useRef, useEffect, useCallback
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog'; // Added AlertDialog components
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
+
+// Import des composants unifiés
+import { 
+  UnifiedButton, 
+} from '@/components/ui/unified';
 
 interface MessageBubbleProps {
   message: string;
@@ -204,15 +208,15 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
                   rows={2}
                 />
                 <div className="flex gap-2 mt-1">
-                  <Button
+                  <UnifiedButton
                     size="sm"
-                    variant="secondary"
+                    variant="success"
                     onClick={handleEditSave}
                     disabled={editValue.trim() === message.trim() || editValue.trim() === ''}
                   >
                     Valider
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={handleEditCancel}>Annuler</Button>
+                  </UnifiedButton>
+                  <UnifiedButton size="sm" variant="ghost" onClick={handleEditCancel}>Annuler</UnifiedButton>
                 </div>
                 {/* Edit confirmation dialog */}
                 <AlertDialog open={showConfirmEdit} onOpenChange={setShowConfirmEdit}>
@@ -289,7 +293,7 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
               "flex items-center gap-1.5 transition-all duration-300 opacity-0 group-hover:opacity-100 transform translate-y-1 group-hover:translate-y-0",
               isUser ? "justify-end" : "justify-start"
             )}>
-              <Button
+              <UnifiedButton
                 variant="ghost"
                 size="sm"
                 onClick={copyToClipboard}
@@ -299,37 +303,38 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
                     ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border-green-200 dark:border-green-700"
                     : "bg-white/60 dark:bg-slate-800/60 hover:bg-white/90 dark:hover:bg-slate-800/90 border-white/30 dark:border-slate-700/30"
                 )}
+                tooltip="Copier le message"
               >
                 {copied ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
                 {copied ? 'Copié!' : 'Copier'}
-              </Button>
+              </UnifiedButton>
 
               {/* Edit button (only for user messages and if onEdit prop is provided) */}
               {isUser && onEdit && (
-                <Button
+                <UnifiedButton
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   onClick={handleEdit}
-                  className="h-8 w-8 p-0"
-                  title="Modifier"
+                  className="h-8 w-8"
+                  tooltip="Modifier"
                 >
                   <Edit className="w-4 h-4" />
-                </Button>
+                </UnifiedButton>
               )}
 
               {/* Delete button (only for user messages and if onDelete prop is provided) */}
               {isUser && onDelete && (
                 <AlertDialog open={showConfirmDelete} onOpenChange={setShowConfirmDelete}>
                   <AlertDialogTrigger asChild>
-                    <Button
+                    <UnifiedButton
                       variant="ghost"
-                      size="sm"
+                      size="icon"
                       onClick={() => setShowConfirmDelete(true)}
-                      className="h-8 w-8 p-0"
-                      title="Supprimer"
+                      className="h-8 w-8"
+                      tooltip="Supprimer"
                     >
                       <Trash2 className="w-4 h-4" />
-                    </Button>
+                    </UnifiedButton>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
@@ -348,15 +353,15 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
 
               {/* Reply button (if onReply prop is provided) */}
               {onReply && (
-                <Button
+                <UnifiedButton
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   onClick={() => onReply(message)} // Pass message content to reply handler
-                  className="h-8 w-8 p-0"
-                  title="Répondre"
+                  className="h-8 w-8"
+                  tooltip="Répondre"
                 >
                   <Reply className="w-4 h-4" />
-                </Button>
+                </UnifiedButton>
               )}
 
             </div>

@@ -1,7 +1,15 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Mic, Settings2 } from 'lucide-react';
+
+// Import des composants unifiés
+import { 
+  UnifiedButton, 
+  UnifiedModal, 
+  UnifiedModalContent, 
+  UnifiedModalHeader, 
+  UnifiedModalTitle,
+  UnifiedModalFooter,
+  UnifiedInput
+} from '@/components/ui/unified';
 
 interface VocalAutoSettingsModalProps {
   open: boolean;
@@ -13,22 +21,22 @@ interface VocalAutoSettingsModalProps {
 
 export function VocalAutoSettingsModal({ open, onClose, config, onUpdate, onReset }: VocalAutoSettingsModalProps) {
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-lg rounded-3xl border border-slate-200/50 dark:border-slate-800/50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+    <UnifiedModal open={open} onOpenChange={(v) => !v && onClose()}>
+      <UnifiedModalContent className="sm:max-w-lg">
+        <UnifiedModalHeader>
+          <UnifiedModalTitle className="flex items-center gap-2">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/40">
               <Mic className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             </span>
             Réglages du mode vocal
-          </DialogTitle>
-        </DialogHeader>
+          </UnifiedModalTitle>
+        </UnifiedModalHeader>
 
         <div className="mt-2 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-xs text-slate-600 dark:text-slate-300">Silence (ms)</label>
-              <Input
+              <UnifiedInput
                 type="number"
                 min={500}
                 max={8000}
@@ -39,7 +47,7 @@ export function VocalAutoSettingsModal({ open, onClose, config, onUpdate, onRese
             </div>
             <div className="space-y-1.5">
               <label className="text-xs text-slate-600 dark:text-slate-300">Cooldown (ms)</label>
-              <Input
+              <UnifiedInput
                 type="number"
                 min={0}
                 max={10000}
@@ -50,7 +58,7 @@ export function VocalAutoSettingsModal({ open, onClose, config, onUpdate, onRese
             </div>
             <div className="space-y-1.5">
               <label className="text-xs text-slate-600 dark:text-slate-300">Min. caractères</label>
-              <Input
+              <UnifiedInput
                 type="number"
                 min={1}
                 max={200}
@@ -61,7 +69,7 @@ export function VocalAutoSettingsModal({ open, onClose, config, onUpdate, onRese
             </div>
             <div className="space-y-1.5">
               <label className="text-xs text-slate-600 dark:text-slate-300">Min. mots</label>
-              <Input
+              <UnifiedInput
                 type="number"
                 min={1}
                 max={20}
@@ -73,17 +81,17 @@ export function VocalAutoSettingsModal({ open, onClose, config, onUpdate, onRese
           </div>
         </div>
 
-        <DialogFooter className="mt-4 gap-2">
+        <UnifiedModalFooter className="mt-4 gap-2">
           {onReset && (
-            <Button variant="outline" onClick={onReset} className="inline-flex items-center gap-2">
+            <UnifiedButton variant="secondary" onClick={onReset} className="inline-flex items-center gap-2">
               <Settings2 className="w-4 h-4" />
               Réinitialiser
-            </Button>
+            </UnifiedButton>
           )}
-          <Button onClick={onClose}>Fermer</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <UnifiedButton variant="primary" onClick={onClose}>Fermer</UnifiedButton>
+        </UnifiedModalFooter>
+      </UnifiedModalContent>
+    </UnifiedModal>
   );
 }
 

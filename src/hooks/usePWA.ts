@@ -1,16 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 
-interface PWAInstallPrompt {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
-
 interface PWAState {
   isInstallable: boolean;
   isInstalled: boolean;
   isOnline: boolean;
   isUpdateAvailable: boolean;
-  installPrompt: PWAInstallPrompt | null;
+  installPrompt: any | null;
   registration: ServiceWorkerRegistration | null;
 }
 
@@ -33,10 +28,7 @@ export const usePWA = () => {
       setPwaState(prev => ({
         ...prev,
         isInstallable: true,
-        installPrompt: {
-          prompt: () => prompt.prompt(),
-          userChoice: prompt.userChoice,
-        },
+        installPrompt: prompt,
       }));
     };
 

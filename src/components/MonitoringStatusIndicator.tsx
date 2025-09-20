@@ -1,5 +1,3 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Activity, 
@@ -13,6 +11,12 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMonitoring } from '@/hooks/useMonitoring';
+
+// Import des composants unifiés
+import { 
+  UnifiedButton, 
+  UnifiedBadge
+} from '@/components/ui/unified';
 
 interface MonitoringStatusIndicatorProps {
   onOpenMonitor?: () => void;
@@ -134,7 +138,7 @@ export function MonitoringStatusIndicator({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
+            <UnifiedButton
               variant="ghost"
               size="sm"
               onClick={onOpenMonitor}
@@ -146,7 +150,7 @@ export function MonitoringStatusIndicator({
               {(activeAlerts > 0 || criticalAlerts > 0) && (
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
               )}
-            </Button>
+            </UnifiedButton>
           </TooltipTrigger>
           <TooltipContent>
             <div className="space-y-2">
@@ -177,13 +181,13 @@ export function MonitoringStatusIndicator({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Badge 
+            <UnifiedBadge 
               variant="outline" 
               className={cn("flex items-center gap-1 px-2 py-1", getSecurityColor())}
             >
               {getSecurityIcon()}
               <span className="text-xs font-medium">{getSecurityLabel()}</span>
-            </Badge>
+            </UnifiedBadge>
           </TooltipTrigger>
           <TooltipContent>
             <div className="space-y-1">
@@ -200,13 +204,13 @@ export function MonitoringStatusIndicator({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Badge 
+            <UnifiedBadge 
               variant="outline" 
               className={cn("flex items-center gap-1 px-2 py-1", getPerformanceColor())}
             >
               {getPerformanceIcon()}
               <span className="text-xs font-medium">{performanceScore}%</span>
-            </Badge>
+            </UnifiedBadge>
           </TooltipTrigger>
           <TooltipContent>
             <div className="space-y-1">
@@ -223,7 +227,7 @@ export function MonitoringStatusIndicator({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Badge 
+            <UnifiedBadge 
               variant="outline" 
               className={cn("flex items-center gap-1 px-2 py-1", getAlertsColor())}
             >
@@ -231,7 +235,7 @@ export function MonitoringStatusIndicator({
               <span className="text-xs font-medium">
                 {activeAlerts > 0 ? activeAlerts : 'OK'}
               </span>
-            </Badge>
+            </UnifiedBadge>
           </TooltipTrigger>
           <TooltipContent>
             <div className="space-y-1">
@@ -253,14 +257,14 @@ export function MonitoringStatusIndicator({
       </TooltipProvider>
 
       {/* Bouton monitoring */}
-      <Button
+      <UnifiedButton
         variant="ghost"
         size="sm"
         onClick={onOpenMonitor}
         className="p-2"
       >
         <BarChart3 className="w-4 h-4" />
-      </Button>
+      </UnifiedButton>
 
       {/* Détails étendus */}
       {showDetails && (

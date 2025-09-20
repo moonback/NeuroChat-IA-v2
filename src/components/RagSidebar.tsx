@@ -1,9 +1,17 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { FileText, FileSpreadsheet, FileCode2, FileType2, File, Search, Upload, Folder, User, Eye, ArrowUpDown, Filter, X, ChevronLeft, ChevronRight, Star } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+
+// Import des composants unifiés
+import { 
+  UnifiedButton, 
+  UnifiedBadge,
+  UnifiedModal, 
+  UnifiedModalContent, 
+  UnifiedModalHeader, 
+  UnifiedModalTitle,
+  UnifiedInput
+} from '@/components/ui/unified';
 
 export interface RagSidebarProps {
   onOpenRagDocs?: () => void;
@@ -324,21 +332,23 @@ export function RagSidebar({ onOpenRagDocs, usedDocs, workspaceId = 'default' }:
         
         {/* Recherche */}
         <div className="relative mb-3">
-          <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher..."
-            className="w-full pl-8 pr-8 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <UnifiedInput
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher..."
+              className="w-full pl-10 pr-10"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Contrôles de tri et filtrage */}
@@ -400,24 +410,24 @@ export function RagSidebar({ onOpenRagDocs, usedDocs, workspaceId = 'default' }:
               {totalPages > 1 && (
                 <div className="flex items-center gap-1">
                   <span>Page {currentPage}/{totalPages}</span>
-                  <Button
+                  <UnifiedButton
                     variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
+                    size="icon"
+                    className="h-6 w-6"
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                   >
                     <ChevronLeft className="w-3 h-3" />
-                  </Button>
-                  <Button
+                  </UnifiedButton>
+                  <UnifiedButton
                     variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
+                    size="icon"
+                    className="h-6 w-6"
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                   >
                     <ChevronRight className="w-3 h-3" />
-                  </Button>
+                  </UnifiedButton>
                 </div>
               )}
             </div>
@@ -425,9 +435,9 @@ export function RagSidebar({ onOpenRagDocs, usedDocs, workspaceId = 'default' }:
         )}
 
         <div className="mt-2">
-          <Button size="sm" className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700" onClick={onOpenRagDocs}>
+          <UnifiedButton size="sm" variant="primary" className="w-full" onClick={onOpenRagDocs}>
             <Upload className="w-4 h-4 mr-2" /> Gérer les documents
-          </Button>
+          </UnifiedButton>
         </div>
       </div>
 
@@ -446,7 +456,7 @@ export function RagSidebar({ onOpenRagDocs, usedDocs, workspaceId = 'default' }:
           <div className="text-xs font-semibold text-slate-500 uppercase px-2 mb-2 flex items-center gap-2">
             Utilisés dans la conversation
             {used.length > 0 && (
-              <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5">{used.length}</Badge>
+              <UnifiedBadge variant="secondary" className="text-[9px] px-1.5 py-0.5">{used.length}</UnifiedBadge>
             )}
           </div>
           {used.length === 0 ? (
@@ -555,16 +565,16 @@ export function RagSidebar({ onOpenRagDocs, usedDocs, workspaceId = 'default' }:
       </div>
 
       {previewDoc && (
-        <Dialog open={!!previewDoc} onOpenChange={() => setPreviewDoc(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-            <DialogHeader className="flex-shrink-0">
+        <UnifiedModal open={!!previewDoc} onOpenChange={() => setPreviewDoc(null)}>
+          <UnifiedModalContent className="max-w-4xl max-h-[90vh] flex flex-col">
+            <UnifiedModalHeader className="flex-shrink-0">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
-                  <DialogTitle className="truncate flex items-center gap-2">
+                  <UnifiedModalTitle className="truncate flex items-center gap-2">
                     {getIcon(previewDoc.extension || '')}
                     {previewDoc.titre}
                     {previewDoc.favorite && <Star className="w-4 h-4 text-yellow-500 fill-yellow-400" />}
-                  </DialogTitle>
+                  </UnifiedModalTitle>
                   <div className="mt-2 flex items-center gap-3 text-sm text-slate-500">
                     {getOriginBadge(previewDoc.origine)}
                     {previewDoc.size && (
@@ -584,24 +594,24 @@ export function RagSidebar({ onOpenRagDocs, usedDocs, workspaceId = 'default' }:
                     )}
                   </div>
                 </div>
-                <Button
+                <UnifiedButton
                   variant="ghost"
                   size="sm"
                   onClick={() => toggleFavorite(previewDoc.id)}
                   className="flex-shrink-0"
-                  title={previewDoc.favorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                  tooltip={previewDoc.favorite ? "Retirer des favoris" : "Ajouter aux favoris"}
                 >
                   <Star className={`w-4 h-4 ${previewDoc.favorite ? 'text-yellow-500 fill-yellow-400' : 'text-slate-400'}`} />
-                </Button>
+                </UnifiedButton>
               </div>
-            </DialogHeader>
+            </UnifiedModalHeader>
             <div className="flex-1 overflow-y-auto p-4 border rounded-lg bg-slate-50 dark:bg-slate-900/50">
               <pre className="whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-mono">
                 {previewDoc.contenu}
               </pre>
             </div>
-          </DialogContent>
-        </Dialog>
+          </UnifiedModalContent>
+        </UnifiedModal>
       )}
     </aside>
   );

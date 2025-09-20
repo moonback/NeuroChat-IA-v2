@@ -1,8 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X, RefreshCcw, Play, Volume2, Sliders, Activity, UploadCloud, DownloadCloud, Trash2, Info } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
+
+// Import des composants unifiés
+import { 
+  UnifiedButton,
+} from '@/components/ui/unified';
 
 interface TTSSettingsModalProps {
   open: boolean;
@@ -212,9 +216,9 @@ export function TTSSettingsModal({ open, onClose, rate, setRate, pitch, setPitch
         </div>
         {/* Animation d'onde lors du test de la voix, boutons, etc. */}
         <div className="flex gap-2 mt-6 items-center">
-          <Button onClick={handleTestVoice} variant="outline" className="flex-1 flex items-center gap-2" disabled={availableVoices.length === 0}>
+          <UnifiedButton onClick={handleTestVoice} variant="secondary" className="flex-1 flex items-center gap-2" disabled={availableVoices.length === 0}>
             <Play className="w-4 h-4" /> Tester la voix
-          </Button>
+          </UnifiedButton>
           <div className="relative flex items-center justify-center w-10 h-8">
             {isTesting && (
               <span className="absolute left-0 right-0 top-0 bottom-0 flex items-center justify-center">
@@ -222,24 +226,24 @@ export function TTSSettingsModal({ open, onClose, rate, setRate, pitch, setPitch
               </span>
             )}
           </div>
-          <Button onClick={handleReset} variant="secondary" className="flex-1 flex items-center gap-2">
+          <UnifiedButton onClick={handleReset} variant="secondary" className="flex-1 flex items-center gap-2">
             <RefreshCcw className="w-4 h-4" /> Réinitialiser tout
-          </Button>
+          </UnifiedButton>
         </div>
         <div className="flex gap-2 mt-4">
-          <Button onClick={handleExport} variant="secondary" className="flex-1 flex items-center gap-2">
+          <UnifiedButton onClick={handleExport} variant="secondary" className="flex-1 flex items-center gap-2">
             <DownloadCloud className="w-4 h-4" /> Exporter
-          </Button>
-          <Button onClick={() => fileInputRef.current?.click()} variant="secondary" className="flex-1 flex items-center gap-2">
+          </UnifiedButton>
+          <UnifiedButton onClick={() => fileInputRef.current?.click()} variant="secondary" className="flex-1 flex items-center gap-2">
             <UploadCloud className="w-4 h-4" /> Importer
-          </Button>
+          </UnifiedButton>
           <input type="file" accept="application/json" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImport} />
-          <Button onClick={handleDelete} variant="destructive" className="flex-1 flex items-center gap-2">
+          <UnifiedButton onClick={handleDelete} variant="danger" className="flex-1 flex items-center gap-2">
             <Trash2 className="w-4 h-4" /> Supprimer
-          </Button>
+          </UnifiedButton>
         </div>
         <DrawerFooter className="flex flex-row gap-2 justify-end pt-3">
-          <Button onClick={onClose} className="w-full text-base py-3">Fermer</Button>
+          <UnifiedButton onClick={onClose} className="w-full text-base py-3">Fermer</UnifiedButton>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

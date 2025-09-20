@@ -1,0 +1,400 @@
+/**
+ * 🎨 Animations CSS Améliorées pour NeuroChat-IA-v2
+ * 
+ * Animations premium avec effets visuels avancés
+ * pour une expérience utilisateur sophistiquée
+ */
+
+/* =====================
+   ANIMATIONS DE BASE
+   ===================== */
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.6);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+}
+
+@keyframes morph {
+  0%, 100% {
+    border-radius: 1rem;
+  }
+  50% {
+    border-radius: 2rem;
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* =====================
+   ANIMATIONS DE COMPOSANTS
+   ===================== */
+
+@keyframes button-hover {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes card-float {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.02);
+  }
+}
+
+@keyframes input-focus {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  }
+}
+
+@keyframes badge-bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* =====================
+   ANIMATIONS DE SÉCURITÉ
+   ===================== */
+
+@keyframes security-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
+@keyframes private-mode {
+  0%, 100% {
+    background: linear-gradient(45deg, rgba(239, 68, 68, 0.1), rgba(147, 51, 234, 0.1));
+  }
+  50% {
+    background: linear-gradient(45deg, rgba(239, 68, 68, 0.2), rgba(147, 51, 234, 0.2));
+  }
+}
+
+@keyframes child-mode {
+  0%, 100% {
+    background: linear-gradient(45deg, rgba(236, 72, 153, 0.1), rgba(251, 191, 36, 0.1));
+  }
+  50% {
+    background: linear-gradient(45deg, rgba(236, 72, 153, 0.2), rgba(251, 191, 36, 0.2));
+  }
+}
+
+/* =====================
+   ANIMATIONS DE MODES
+   ===================== */
+
+@keyframes premium-mode {
+  0%, 100% {
+    background: linear-gradient(45deg, rgba(251, 191, 36, 0.1), rgba(249, 115, 22, 0.1));
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+  }
+  50% {
+    background: linear-gradient(45deg, rgba(251, 191, 36, 0.2), rgba(249, 115, 22, 0.2));
+    box-shadow: 0 0 30px rgba(251, 191, 36, 0.5);
+  }
+}
+
+@keyframes neon-mode {
+  0%, 100% {
+    background: linear-gradient(45deg, rgba(6, 182, 212, 0.1), rgba(147, 51, 234, 0.1));
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+  }
+  50% {
+    background: linear-gradient(45deg, rgba(6, 182, 212, 0.2), rgba(147, 51, 234, 0.2));
+    box-shadow: 0 0 30px rgba(6, 182, 212, 0.5);
+  }
+}
+
+/* =====================
+   ANIMATIONS D'ENTRÉE/SORTIE
+   ===================== */
+
+@keyframes slide-in-up {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-down {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-left {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-right {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes zoom-in {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in-scale {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* =====================
+   CLASSES UTILITAIRES
+   ===================== */
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-wiggle {
+  animation: wiggle 1s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+.animate-morph {
+  animation: morph 3s ease-in-out infinite;
+}
+
+.animate-gradient-shift {
+  animation: gradient-shift 3s ease infinite;
+  background-size: 200% 200%;
+}
+
+.animate-button-hover {
+  animation: button-hover 0.3s ease-out;
+}
+
+.animate-card-float {
+  animation: card-float 4s ease-in-out infinite;
+}
+
+.animate-input-focus {
+  animation: input-focus 0.3s ease-out;
+}
+
+.animate-badge-bounce {
+  animation: badge-bounce 0.6s ease-out;
+}
+
+.animate-security-pulse {
+  animation: security-pulse 2s infinite;
+}
+
+.animate-private-mode {
+  animation: private-mode 3s ease-in-out infinite;
+}
+
+.animate-child-mode {
+  animation: child-mode 3s ease-in-out infinite;
+}
+
+.animate-premium-mode {
+  animation: premium-mode 3s ease-in-out infinite;
+}
+
+.animate-neon-mode {
+  animation: neon-mode 3s ease-in-out infinite;
+}
+
+.animate-slide-in-up {
+  animation: slide-in-up 0.5s ease-out;
+}
+
+.animate-slide-in-down {
+  animation: slide-in-down 0.5s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.5s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.5s ease-out;
+}
+
+.animate-zoom-in {
+  animation: zoom-in 0.3s ease-out;
+}
+
+.animate-fade-in-scale {
+  animation: fade-in-scale 0.3s ease-out;
+}
+
+/* =====================
+   RESPONSIVE ANIMATIONS
+   ===================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shimmer,
+  .animate-float,
+  .animate-wiggle,
+  .animate-glow,
+  .animate-pulse-glow,
+  .animate-morph,
+  .animate-gradient-shift,
+  .animate-card-float,
+  .animate-security-pulse,
+  .animate-private-mode,
+  .animate-child-mode,
+  .animate-premium-mode,
+  .animate-neon-mode {
+    animation: none;
+  }
+}
+
+/* =====================
+   PERFORMANCE OPTIMIZATIONS
+   ===================== */
+
+.animate-shimmer,
+.animate-float,
+.animate-wiggle,
+.animate-glow,
+.animate-pulse-glow,
+.animate-morph,
+.animate-gradient-shift,
+.animate-card-float,
+.animate-security-pulse,
+.animate-private-mode,
+.animate-child-mode,
+.animate-premium-mode,
+.animate-neon-mode {
+  will-change: transform, opacity, box-shadow;
+}
+
+/* =====================
+   DARK MODE ANIMATIONS
+   ===================== */
+
+@media (prefers-color-scheme: dark) {
+  @keyframes glow-dark {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba(96, 165, 250, 0.5);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(96, 165, 250, 0.8), 0 0 30px rgba(96, 165, 250, 0.6);
+    }
+  }
+  
+  .animate-glow {
+    animation: glow-dark 2s ease-in-out infinite;
+  }
+}

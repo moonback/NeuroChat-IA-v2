@@ -1,12 +1,14 @@
 import { Moon, Sun } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
+
+// Import des composants unifiés
+import { UnifiedButton } from '@/components/ui/unified';
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <Button
+    <UnifiedButton
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
@@ -18,6 +20,6 @@ export function ThemeToggle() {
         <Moon className="h-5 w-5 text-slate-600 transition-transform duration-200 group-hover:-rotate-12" />
       )}
       <span className="sr-only">Toggle theme</span>
-    </Button>
+    </UnifiedButton>
   );
 }
