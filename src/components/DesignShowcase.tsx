@@ -2,19 +2,16 @@ import { useState } from 'react';
 import { 
   UnifiedButtonEnhanced, 
   UnifiedCardEnhanced, 
-  UnifiedModalEnhanced, 
-  UnifiedInputEnhanced,
-  UnifiedBadgeEnhanced,
-  UnifiedContainerEnhanced
-} from '@/components/ui/unified-enhanced';
-import { 
-  UnifiedModal,
+  UnifiedModalEnhanced,
   UnifiedModalContent,
   UnifiedModalHeader,
   UnifiedModalTitle,
   UnifiedModalDescription,
-  UnifiedModalFooter
-} from '@/components/ui/unified';
+  UnifiedModalFooter,
+  UnifiedInputEnhanced,
+  UnifiedBadgeEnhanced,
+  UnifiedContainerEnhanced
+} from '@/components/ui/unified-enhanced';
 import { 
   Star, 
   Heart, 

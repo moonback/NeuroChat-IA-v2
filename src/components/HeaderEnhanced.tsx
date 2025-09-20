@@ -1,18 +1,15 @@
 import { useState } from 'react';
 import { 
   UnifiedButtonEnhanced, 
-  UnifiedModalEnhanced, 
-  UnifiedInputEnhanced,
-  UnifiedContainerEnhanced
-} from '@/components/ui/unified-enhanced';
-import { 
-  UnifiedModal,
+  UnifiedModalEnhanced,
   UnifiedModalContent,
   UnifiedModalHeader,
   UnifiedModalTitle,
   UnifiedModalDescription,
-  UnifiedModalFooter
-} from '@/components/ui/unified';
+  UnifiedModalFooter,
+  UnifiedInputEnhanced,
+  UnifiedContainerEnhanced
+} from '@/components/ui/unified-enhanced';
 import { 
   Settings, 
   HelpCircle, 
