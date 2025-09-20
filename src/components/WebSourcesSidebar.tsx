@@ -15,6 +15,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { 
   UnifiedButton, 
   UnifiedBadge,
+  UnifiedInput,
   UnifiedModal, 
   UnifiedModalContent, 
   UnifiedModalHeader, 

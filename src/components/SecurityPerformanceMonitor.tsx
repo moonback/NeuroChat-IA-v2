@@ -787,7 +787,7 @@ export function SecurityPerformanceMonitor({
               <div className="flex justify-between items-center">
                 <div className="flex gap-2">
                   <UnifiedButton
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     onClick={() => {
                       const updatedAlerts = alerts.map(alert => ({ ...alert, resolved: true }));
@@ -799,7 +799,7 @@ export function SecurityPerformanceMonitor({
                     Marquer tout comme résolu
                   </UnifiedButton>
                   <UnifiedButton
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     onClick={() => {
                       setAlerts([]);
@@ -810,7 +810,7 @@ export function SecurityPerformanceMonitor({
                     Supprimer toutes les alertes
                   </UnifiedButton>
                   <UnifiedButton
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     onClick={() => {
                       // Supprimer seulement les alertes de test
@@ -825,7 +825,7 @@ export function SecurityPerformanceMonitor({
                     Supprimer alertes de test
                   </UnifiedButton>
                   <UnifiedButton
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     onClick={() => {
                       // Ajouter des alertes de test

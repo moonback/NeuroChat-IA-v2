@@ -8,6 +8,14 @@ import {
   UnifiedContainerEnhanced
 } from '@/components/ui/unified-enhanced';
 import { 
+  UnifiedModal,
+  UnifiedModalContent,
+  UnifiedModalHeader,
+  UnifiedModalTitle,
+  UnifiedModalDescription,
+  UnifiedModalFooter
+} from '@/components/ui/unified';
+import { 
   Star, 
   Heart, 
   Zap, 
