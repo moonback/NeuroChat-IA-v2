@@ -198,6 +198,7 @@ function App() {
   // Ajout du state pour la modale de gestion des documents RAG
   const [showRagDocs, setShowRagDocs] = useState(false);
   const [showImageGeneration, setShowImageGeneration] = useState(false);
+  const [imageGenerationPrompt, setImageGenerationPrompt] = useState('');
   // showMemory supprimé - système de mémoire retiré
   // Ajout du state pour activer/désactiver le RAG
   const [ragEnabled, setRagEnabled] = useState(false);
@@ -795,6 +796,69 @@ function App() {
     // Vérifier que le message n'est pas vide
     if (!userMessage.trim()) {
       toast.error('Le message ne peut pas être vide');
+      return;
+    }
+
+    // Détecter si l'utilisateur demande une génération d'image
+    const imageGenerationKeywords = [
+      'génère une image', 'génère image', 'crée une image', 'crée image',
+      'générer une image', 'générer image', 'créer une image', 'créer image',
+      'génère moi une image', 'crée moi une image', 'fais moi une image',
+      'dessine', 'dessine moi', 'illustre', 'illustre moi',
+      'image de', 'photo de', 'picture of', 'generate image', 'create image',
+      'génère', 'crée', 'dessine', 'illustre', 'image', 'photo',
+      'peins', 'peins moi', 'dessine-moi', 'illustre-moi',
+      'créer un dessin', 'faire un dessin', 'générer un dessin',
+      'créer une illustration', 'faire une illustration', 'générer une illustration'
+    ];
+
+    const isImageRequest = imageGenerationKeywords.some(keyword => 
+      userMessage.toLowerCase().includes(keyword.toLowerCase())
+    ) || (
+      // Cas spécial : si l'utilisateur tape juste "image" ou "photo" sans contexte
+      userMessage.toLowerCase().trim() === 'image' || 
+      userMessage.toLowerCase().trim() === 'photo' ||
+      userMessage.toLowerCase().trim() === 'dessine' ||
+      userMessage.toLowerCase().trim() === 'illustre'
+    );
+
+    if (isImageRequest && !modeEnfant) {
+      // Ajouter le message utilisateur à la conversation
+      addMessage(userMessage, true);
+      
+      // Extraire le prompt de génération d'image du message
+      let imagePrompt = userMessage;
+      
+      // Nettoyer le prompt en supprimant les mots-clés de génération
+      const cleanPrompt = imagePrompt
+        .replace(/\b(génère une? image|crée une? image|générer une? image|créer une? image|génère moi une? image|crée moi une? image|fais moi une? image|dessine|dessine moi|illustre|illustre moi|image de|photo de|picture of|generate image|create image|génère|crée|dessine|illustre|image|photo|peins|peins moi|dessine-moi|illustre-moi|créer un dessin|faire un dessin|générer un dessin|créer une illustration|faire une illustration|générer une illustration)\b/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
+      // Si le prompt nettoyé n'est pas vide, l'utiliser, sinon utiliser le message original
+      let finalPrompt = cleanPrompt || userMessage;
+      
+      // Si l'utilisateur a tapé juste "image", "photo", "dessine" ou "illustre", proposer un prompt par défaut
+      if (userMessage.toLowerCase().trim() === 'image' || 
+          userMessage.toLowerCase().trim() === 'photo' ||
+          userMessage.toLowerCase().trim() === 'dessine' ||
+          userMessage.toLowerCase().trim() === 'illustre') {
+        finalPrompt = 'un paysage magnifique';
+      } else if (finalPrompt.length < 3) {
+        // Si le prompt est trop court, proposer un prompt par défaut
+        finalPrompt = 'une image créative et artistique';
+      }
+      
+      // Ajouter une réponse de l'IA qui confirme l'ouverture du générateur
+      addMessage(
+        `🎨 Parfait ! J'ouvre le générateur d'images pour vous. Vous pouvez maintenant créer votre image avec le prompt : "${finalPrompt}"`,
+        false
+      );
+      
+      // Ouvrir le modal de génération d'images avec le prompt
+      setImageGenerationPrompt(finalPrompt);
+      setShowImageGeneration(true);
+      toast.success('🎨 Ouverture du générateur d\'images...');
       return;
     }
 
@@ -1826,13 +1890,17 @@ function App() {
       />
       
       {/* Modal de génération d'images */}
-      <Suspense fallback={null}>
-        <ImageGenerationModalLazy
-          open={showImageGeneration}
-          onClose={() => setShowImageGeneration(false)}
-          onImageGenerated={handleImageGenerated}
-        />
-      </Suspense>
+        <Suspense fallback={null}>
+          <ImageGenerationModalLazy
+            open={showImageGeneration}
+            onClose={() => {
+              setShowImageGeneration(false);
+              setImageGenerationPrompt('');
+            }}
+            onImageGenerated={handleImageGenerated}
+            initialPrompt={imageGenerationPrompt}
+          />
+        </Suspense>
       
       {/* Le chiffrement est maintenant automatique et permanent */}
     </div>
