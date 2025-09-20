@@ -19,6 +19,9 @@ export { UnifiedInputEnhanced } from './unified-input-enhanced';
 export { UnifiedBadgeEnhanced } from './unified-badge-enhanced';
 export { UnifiedContainerEnhanced } from './unified-container-enhanced';
 
+// Export des design tokens Enhanced
+export { default as designTokensEnhanced } from '@/lib/design-tokens-enhanced';
+
 // Re-export des composants de base pour compatibilité
 export { UnifiedButton } from './unified-button';
 export { UnifiedCard } from './unified-card';

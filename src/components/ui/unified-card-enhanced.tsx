@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { componentsEnhanced, animationsEnhanced } from '@/lib/design-tokens-enhanced';
+import { componentsEnhanced, animationsEnhanced, shadowsEnhanced } from '@/lib/design-tokens-enhanced';
 
 export interface UnifiedCardEnhancedProps
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -8,47 +8,35 @@ export interface UnifiedCardEnhancedProps
   shimmer?: boolean;
   glow?: boolean;
   morph?: boolean;
-  floating?: boolean;
-  glass?: boolean;
-  children: React.ReactNode;
+  hover?: boolean;
+  floating?: boolean; // Alias pour morph
 }
 
 const UnifiedCardEnhanced = React.forwardRef<HTMLDivElement, UnifiedCardEnhancedProps>(
   ({ 
-    className, 
+    className,
     variant = 'base',
     shimmer = false,
     glow = false,
     morph = false,
-    floating = false,
-    glass = false,
+    hover = true,
     children,
     ...props 
   }, ref) => {
-    
-    // Déterminer les classes d'effets
-    const effectClasses = React.useMemo(() => {
-      const effects = [];
-      
-      if (shimmer) effects.push('animate-shimmer');
-      if (glow) effects.push('hover-glow');
-      if (morph) effects.push('hover-morph');
-      if (floating) effects.push('animate-float');
-      if (glass) effects.push('backdrop-blur-glass');
-      
-      return effects.join(' ');
-    }, [shimmer, glow, morph, floating, glass]);
-    
     return (
       <div
         ref={ref}
         className={cn(
-          // Classes de base améliorées
+          // Classes de base
+          componentsEnhanced.card.base,
+          // Variant
           componentsEnhanced.card[variant],
           // Animations
-          animationsEnhanced.micro.cardHover,
+          hover && animationsEnhanced.micro.card,
           // Effets spéciaux
-          effectClasses,
+          shimmer && animationsEnhanced.special.shimmer,
+          glow && shadowsEnhanced.hover.glow,
+          morph && 'hover:rotate-1 hover:scale-105',
           // Classes personnalisées
           className
         )}
@@ -56,14 +44,14 @@ const UnifiedCardEnhanced = React.forwardRef<HTMLDivElement, UnifiedCardEnhanced
       >
         {children}
         
-        {/* Effet shimmer */}
+        {/* Effet de brillance pour shimmer */}
         {shimmer && (
-          <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer rounded-2xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer" />
         )}
         
-        {/* Effet glow */}
-        {glow && (
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 hover:opacity-100 transition-opacity duration-300" />
+        {/* Effet de glow pour neon */}
+        {glow && variant === 'neon' && (
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 via-blue-500/10 to-purple-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         )}
       </div>
     );

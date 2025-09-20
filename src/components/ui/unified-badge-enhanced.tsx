@@ -1,74 +1,67 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { animationsEnhanced } from '@/lib/design-tokens-enhanced';
+import { animationsEnhanced, shadowsEnhanced } from '@/lib/design-tokens-enhanced';
 
 export interface UnifiedBadgeEnhancedProps
   extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'secondary' | 'destructive' | 'outline' | 'premium' | 'neon';
+  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' | 'premium' | 'neon';
   size?: 'sm' | 'md' | 'lg';
   shimmer?: boolean;
   glow?: boolean;
+  pulse?: boolean;
   morph?: boolean;
-  floating?: boolean;
-  children: React.ReactNode;
+  floating?: boolean; // Alias pour morph
 }
 
 const UnifiedBadgeEnhanced = React.forwardRef<HTMLDivElement, UnifiedBadgeEnhancedProps>(
   ({ 
-    className, 
+    className,
     variant = 'default',
     size = 'md',
     shimmer = false,
     glow = false,
+    pulse = false,
     morph = false,
     floating = false,
     children,
     ...props 
   }, ref) => {
-    
-    // Déterminer les classes d'effets
-    const effectClasses = React.useMemo(() => {
-      const effects = [];
-      
-      if (shimmer) effects.push('animate-shimmer');
-      if (glow) effects.push('hover-glow');
-      if (morph) effects.push('hover-morph');
-      if (floating) effects.push('animate-float');
-      
-      return effects.join(' ');
-    }, [shimmer, glow, morph, floating]);
-    
-    // Classes de variant
+    const actualMorph = morph || floating;
     const variantClasses = {
-      default: 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg',
-      secondary: 'bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700',
-      destructive: 'bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg',
-      outline: 'border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 bg-transparent',
-      premium: 'bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white shadow-lg',
-      neon: 'bg-slate-900 text-cyan-400 border border-cyan-500/30 shadow-lg shadow-cyan-500/20',
+      default: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700',
+      primary: 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg',
+      secondary: 'bg-gradient-to-r from-slate-500 to-gray-500 text-white shadow-lg',
+      success: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg',
+      warning: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg',
+      error: 'bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg',
+      info: 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg',
+      premium: 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg shadow-amber-500/30',
+      neon: 'bg-gradient-to-r from-cyan-400 to-purple-500 text-white shadow-lg shadow-cyan-500/30',
     };
-    
-    // Classes de taille
+
     const sizeClasses = {
-      sm: 'px-2 py-1 text-xs rounded-md',
-      md: 'px-3 py-1.5 text-sm rounded-lg',
-      lg: 'px-4 py-2 text-base rounded-xl',
+      sm: 'px-2 py-1 text-xs',
+      md: 'px-3 py-1.5 text-sm',
+      lg: 'px-4 py-2 text-base',
     };
-    
+
     return (
       <div
         ref={ref}
         className={cn(
           // Classes de base
-          'inline-flex items-center justify-center font-medium transition-all duration-300',
+          'inline-flex items-center justify-center whitespace-nowrap font-medium transition-all duration-200 rounded-full',
           // Variant
           variantClasses[variant],
           // Taille
           sizeClasses[size],
           // Animations
-          animationsEnhanced.micro.buttonHover,
+          animationsEnhanced.micro.button,
           // Effets spéciaux
-          effectClasses,
+          shimmer && 'bg-gradient-to-r from-transparent via-white/30 to-transparent bg-[length:200%_100%] animate-shimmer',
+          glow && shadowsEnhanced.hover.glow,
+          pulse && animationsEnhanced.special.pulse,
+          actualMorph && 'hover:scale-105 hover:rotate-1',
           // Classes personnalisées
           className
         )}
@@ -76,14 +69,14 @@ const UnifiedBadgeEnhanced = React.forwardRef<HTMLDivElement, UnifiedBadgeEnhanc
       >
         {children}
         
-        {/* Effet shimmer */}
+        {/* Effet de brillance pour shimmer */}
         {shimmer && (
-          <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer rounded-lg" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-shimmer rounded-full" />
         )}
         
-        {/* Effet glow */}
-        {glow && (
-          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 hover:opacity-100 transition-opacity duration-300" />
+        {/* Effet de glow pour neon */}
+        {glow && variant === 'neon' && (
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 via-purple-500/20 to-cyan-400/20 rounded-full blur-sm opacity-0 hover:opacity-100 transition-opacity duration-300" />
         )}
       </div>
     );

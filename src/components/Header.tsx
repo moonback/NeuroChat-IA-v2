@@ -27,6 +27,12 @@ import {
   UnifiedStatusIndicator
 } from '@/components/ui/unified';
 
+// Import des composants améliorés
+import { 
+  UnifiedButtonEnhanced,
+  UnifiedBadgeEnhanced
+} from '@/components/ui/unified-enhanced';
+
 // =====================
 // Types améliorés
 // =====================
@@ -227,7 +233,7 @@ const WorkspaceSelector = ({
         variant="secondary"
         size="md"
         onClick={() => setShowModal(true)}
-        className="hidden md:flex items-center gap-2 max-w-[180px]"
+        className="hidden md:flex items-center gap-2 max-w-[180px] rounded-2xl"
         tooltip="Changer d'espace de travail"
         data-workspace-button
       >
@@ -243,7 +249,7 @@ const WorkspaceSelector = ({
         variant="secondary"
         size="sm"
         onClick={() => setShowModal(true)}
-        className="md:hidden flex items-center gap-1 max-w-[80px]"
+        className="md:hidden flex items-center gap-1 max-w-[80px] rounded-2xl"
       >
         <Database className="w-4 h-4" />
         <span className="truncate text-xs">
@@ -274,6 +280,7 @@ const WorkspaceSelector = ({
                   onCreateWorkspace?.();
                   setShowModal(false);
                 }}
+                className="rounded-2xl"
               >
                 <Plus className="w-4 h-4" />
               </UnifiedButton>
@@ -301,6 +308,7 @@ const WorkspaceSelector = ({
                             onChangeWorkspace?.(workspace.id);
                             setShowModal(false);
                           }}
+                          className="rounded-2xl"
                         >
                           Sélectionner
                         </UnifiedButton>
@@ -336,6 +344,7 @@ const MobileActions = ({
       size="icon"
       onClick={onNewDiscussion}
       tooltip="Nouvelle discussion"
+      className="rounded-2xl"
     >
       <Plus className="w-4 h-4" />
     </UnifiedButton>
@@ -345,6 +354,7 @@ const MobileActions = ({
       size="icon"
       onClick={handleVolumeToggle}
       tooltip={muted ? 'Activer audio' : 'Désactiver audio'}
+      className="rounded-2xl"
     >
       {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
     </UnifiedButton>
@@ -354,6 +364,7 @@ const MobileActions = ({
       variant="ghost"
       size="icon"
       onClick={() => setShowMenu(true)}
+      className="rounded-2xl"
     >
       <Menu className="w-4 h-4" />
     </UnifiedButton>
@@ -400,18 +411,20 @@ const DesktopActions = ({
     className="hidden md:flex items-center gap-3"
     aria-label="Actions principales de la barre d'en-tête"
   >
-    {/* Nouvelle discussion */}
-    <UnifiedButton
-      variant="primary"
+    {/* Nouvelle discussion - Version améliorée */}
+    <UnifiedButtonEnhanced
+      variant="premium"
       size="md"
       onClick={onNewDiscussion}
       tooltip="Nouvelle discussion"
       aria-label="Démarrer une nouvelle discussion"
-      className="flex items-center gap-2"
+      shimmer={true}
+      glow={true}
+      className="flex items-center gap-2 rounded-2xl"
     >
       <Plus className="w-4 h-4" aria-hidden="true" />
       <span className="font-medium">Nouveau</span>
-    </UnifiedButton>
+    </UnifiedButtonEnhanced>
 
     {selectionActions}
 
@@ -423,6 +436,7 @@ const DesktopActions = ({
         active={!muted}
         tooltip={muted ? 'Activer audio' : 'Désactiver audio'}
         size="icon"
+        className="rounded-2xl"
       >
         {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
       </UnifiedButton>
@@ -433,6 +447,7 @@ const DesktopActions = ({
           onClick={handleModeVocalToggle}
           tooltip="Mode vocal"
           size="icon"
+          className="rounded-2xl"
         >
           <Mic className="w-4 h-4" />
         </UnifiedButton>
@@ -448,6 +463,7 @@ const DesktopActions = ({
           active={modePrive}
           tooltip="Mode privé"
           size="icon"
+          className="rounded-2xl"
         >
           <Shield className="w-4 h-4" />
         </UnifiedButton>
@@ -459,6 +475,7 @@ const DesktopActions = ({
         active={!!modeEnfant}
         tooltip="Mode enfant"
         size="icon"
+        className="rounded-2xl"
       >
         <Baby className="w-4 h-4" />
       </UnifiedButton>
@@ -471,6 +488,7 @@ const DesktopActions = ({
             active={ragEnabled}
             tooltip="RAG"
             size="icon"
+            className="rounded-2xl"
           >
             <Database className="w-4 h-4" />
           </UnifiedButton>
@@ -481,6 +499,7 @@ const DesktopActions = ({
             active={!!webEnabled}
             tooltip="Recherche web"
             size="icon"
+            className="rounded-2xl"
           >
             <Globe className="w-4 h-4" />
           </UnifiedButton>
@@ -491,6 +510,7 @@ const DesktopActions = ({
             active={!!structuredMode}
             tooltip="Mode structuré"
             size="icon"
+            className="rounded-2xl"
           >
             <Layers className="w-4 h-4" />
           </UnifiedButton>
@@ -504,6 +524,7 @@ const DesktopActions = ({
       onClick={() => setShowMenu(true)}
       tooltip="Paramètres"
       size="icon"
+      className="rounded-2xl"
     >
       <Settings2 className="w-4 h-4" />
     </UnifiedButton>
@@ -605,6 +626,7 @@ export function Header(props: HeaderProps) {
           onClick={props.onToggleSelectMode}
           tooltip={props.selectMode ? 'Quitter la sélection' : 'Sélectionner des messages'}
           size="sm"
+          className="rounded-2xl"
         >
           {props.selectMode ? <CheckSquare className="w-4 h-4 mr-2" /> : <Square className="w-4 h-4 mr-2" />}
           {props.selectMode ? 'Sélection' : 'Sélectionner'}
@@ -617,6 +639,7 @@ export function Header(props: HeaderProps) {
               onClick={props.selectedCount === props.totalCount ? props.onDeselectAll : props.onSelectAll}
               tooltip={props.selectedCount === props.totalCount ? 'Tout désélectionner' : 'Tout sélectionner'}
               size="sm"
+              className="rounded-2xl"
             >
               {props.selectedCount === props.totalCount ? 'Désélectionner' : 'Tout sélectionner'}
             </UnifiedButton>
@@ -627,6 +650,7 @@ export function Header(props: HeaderProps) {
                 onClick={props.onRequestDelete}
                 tooltip={`Supprimer ${props.selectedCount} message${props.selectedCount > 1 ? 's' : ''}`}
                 size="sm"
+                className="rounded-2xl"
               >
                 <Trash2 className="w-4 h-4 mr-1" />
                 ({props.selectedCount})
@@ -665,27 +689,34 @@ export function Header(props: HeaderProps) {
                  />
                </div>
                
-               {/* PWA Status */}
-               {(isInstalled || isInstallable) && (
-                 <div className="ml-2">
-                   {isInstalled ? (
-                     <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-medium">
-                       <Smartphone className="w-3 h-3" />
-                       <span className="hidden sm:inline">PWA</span>
-                     </div>
-                   ) : isInstallable ? (
-                     <UnifiedButton
-                       variant="secondary"
-                       size="sm"
-                       onClick={installApp}
-                       className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-medium"
-                     >
-                       <Download className="w-3 h-3" />
-                       <span className="hidden sm:inline">Installer</span>
-                     </UnifiedButton>
-                   ) : null}
-                 </div>
-               )}
+                  {/* PWA Status - Version améliorée */}
+                  {(isInstalled || isInstallable) && (
+                    <div className="ml-2">
+                      {isInstalled ? (
+                        <UnifiedBadgeEnhanced
+                          variant="success"
+                          size="sm"
+                          glow={true}
+                          className="flex items-center gap-1"
+                        >
+                          <Smartphone className="w-3 h-3" />
+                          <span className="hidden sm:inline">PWA</span>
+                        </UnifiedBadgeEnhanced>
+                      ) : isInstallable ? (
+                        <UnifiedButtonEnhanced
+                          variant="neon"
+                          size="sm"
+                          shimmer={true}
+                          glow={true}
+                          onClick={installApp}
+                          className="flex items-center gap-1"
+                        >
+                          <Download className="w-3 h-3" />
+                          <span className="hidden sm:inline">Installer</span>
+                        </UnifiedButtonEnhanced>
+                      ) : null}
+                    </div>
+                  )}
               
               {/* Workspace selector */}
               <div className="ml-3">
@@ -738,28 +769,48 @@ export function Header(props: HeaderProps) {
              <div className="w-full px-4 py-2">
               <div className="flex items-center gap-2 text-xs">
                 {props.modePrive && (
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300">
+                  <UnifiedBadgeEnhanced
+                    variant="error"
+                    size="sm"
+                    pulse={true}
+                    className="flex items-center gap-1"
+                  >
                     <Shield className="w-3 h-3" />
                     <span className="font-medium">Privé</span>
-                  </div>
+                  </UnifiedBadgeEnhanced>
                 )}
                 {props.modeEnfant && (
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300">
+                  <UnifiedBadgeEnhanced
+                    variant="warning"
+                    size="sm"
+                    shimmer={true}
+                    className="flex items-center gap-1"
+                  >
                     <Baby className="w-3 h-3" />
                     <span className="font-medium">Enfant</span>
-                  </div>
+                  </UnifiedBadgeEnhanced>
                 )}
                 {props.ragEnabled && (
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+                  <UnifiedBadgeEnhanced
+                    variant="success"
+                    size="sm"
+                    glow={true}
+                    className="flex items-center gap-1"
+                  >
                     <Database className="w-3 h-3" />
                     <span className="font-medium">RAG</span>
-                  </div>
+                  </UnifiedBadgeEnhanced>
                 )}
                 {props.webEnabled && (
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                  <UnifiedBadgeEnhanced
+                    variant="info"
+                    size="sm"
+                    morph={true}
+                    className="flex items-center gap-1"
+                  >
                     <Globe className="w-3 h-3" />
                     <span className="font-medium">Web</span>
-                  </div>
+                  </UnifiedBadgeEnhanced>
                 )}
               </div>
             </div>
@@ -778,6 +829,7 @@ export function Header(props: HeaderProps) {
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowMenu(false)}
+                  className="rounded-2xl"
                 >
                   <X className="w-4 h-4" />
                 </UnifiedButton>
@@ -797,12 +849,12 @@ export function Header(props: HeaderProps) {
                        props.onNewDiscussion();
                        setShowMenu(false);
                      }}
-                     className="h-12 flex-col gap-1"
+                     className="h-12 flex-col gap-1 rounded-2xl"
                    >
                      <Plus className="w-4 h-4" />
                      <span className="text-xs">Nouveau</span>
                    </UnifiedButton>
-                   
+                  
                    {!props.modeEnfant && (
                      <UnifiedButton
                        variant="secondary"
@@ -810,7 +862,7 @@ export function Header(props: HeaderProps) {
                          props.onOpenHistory();
                          setShowMenu(false);
                        }}
-                       className="h-12 flex-col gap-1"
+                       className="h-12 flex-col gap-1 rounded-2xl"
                      >
                        <History className="w-4 h-4" />
                        <span className="text-xs">Historique</span>
@@ -833,7 +885,7 @@ export function Header(props: HeaderProps) {
                          setShowMenu(false);
                        }}
                        active={props.modePrive}
-                       className="h-12 flex-col gap-1"
+                       className="h-12 flex-col gap-1 rounded-2xl"
                      >
                        <Shield className="w-4 h-4" />
                        <span className="text-xs">{props.modePrive ? 'Privé ON' : 'Privé OFF'}</span>
@@ -847,7 +899,7 @@ export function Header(props: HeaderProps) {
                        setShowMenu(false);
                      }}
                      active={!!props.modeEnfant}
-                     className="h-12 flex-col gap-1"
+                     className="h-12 flex-col gap-1 rounded-2xl"
                    >
                      <Baby className="w-4 h-4" />
                      <span className="text-xs">{props.modeEnfant ? 'Enfant ON' : 'Enfant OFF'}</span>
@@ -862,7 +914,7 @@ export function Header(props: HeaderProps) {
                            setShowMenu(false);
                          }}
                          active={props.ragEnabled}
-                         className="h-12 flex-col gap-1"
+                         className="h-12 flex-col gap-1 rounded-2xl"
                        >
                          <Database className="w-4 h-4" />
                          <span className="text-xs">{props.ragEnabled ? 'RAG ON' : 'RAG OFF'}</span>
@@ -875,7 +927,7 @@ export function Header(props: HeaderProps) {
                            setShowMenu(false);
                          }}
                          active={!!props.webEnabled}
-                         className="h-12 flex-col gap-1"
+                         className="h-12 flex-col gap-1 rounded-2xl"
                        >
                          <Globe className="w-4 h-4" />
                          <span className="text-xs">{props.webEnabled ? 'Web ON' : 'Web OFF'}</span>
@@ -899,7 +951,7 @@ export function Header(props: HeaderProps) {
                           props.onOpenTTSSettings();
                           setShowMenu(false);
                         }}
-                        className="w-full justify-start h-12"
+                        className="w-full justify-start h-12 rounded-2xl"
                       >
                         <Volume2 className="w-4 h-4 mr-3" />
                         Synthèse vocale
@@ -911,7 +963,7 @@ export function Header(props: HeaderProps) {
                           props.onOpenRagDocs();
                           setShowMenu(false);
                         }}
-                        className="w-full justify-start h-12"
+                        className="w-full justify-start h-12 rounded-2xl"
                       >
                         <BookOpen className="w-4 h-4 mr-3" />
                         Documents RAG
@@ -925,7 +977,7 @@ export function Header(props: HeaderProps) {
                       toggleTheme();
                       setShowMenu(false);
                     }}
-                    className="w-full justify-start h-12"
+                    className="w-full justify-start h-12 rounded-2xl"
                   >
                     {theme === 'dark' ? <Sun className="w-4 h-4 mr-3" /> : <Moon className="w-4 h-4 mr-3" />}
                     {theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
@@ -937,7 +989,7 @@ export function Header(props: HeaderProps) {
                       setShowMonitoringModal(true);
                       setShowMenu(false);
                     }}
-                    className="w-full justify-start h-12"
+                    className="w-full justify-start h-12 rounded-2xl"
                   >
                     <BarChart3 className="w-4 h-4 mr-3" />
                     Monitoring système
@@ -954,7 +1006,7 @@ export function Header(props: HeaderProps) {
                         }
                         setShowMenu(false);
                       }}
-                      className="w-full justify-start h-12"
+                      className="w-full justify-start h-12 rounded-2xl"
                     >
                       <Database className="w-4 h-4 mr-3" />
                       Espaces de travail
@@ -967,7 +1019,7 @@ export function Header(props: HeaderProps) {
                       setShowHelpModal(true);
                       setShowMenu(false);
                     }}
-                    className="w-full justify-start h-12"
+                    className="w-full justify-start h-12 rounded-2xl"
                   >
                     <HelpCircle className="w-4 h-4 mr-3" />
                     Aide et documentation
@@ -1018,12 +1070,12 @@ export function Header(props: HeaderProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-3">
-            <AlertDialogCancel className="rounded-lg">
+            <AlertDialogCancel className="rounded-2xl">
               Annuler
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={props.onDeleteConfirmed} 
-              className="rounded-lg bg-red-600 hover:bg-red-700"
+              className="rounded-2xl bg-red-600 hover:bg-red-700"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Supprimer

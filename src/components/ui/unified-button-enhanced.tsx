@@ -5,7 +5,7 @@ import { componentsEnhanced, animationsEnhanced } from '@/lib/design-tokens-enha
 
 export interface UnifiedButtonEnhancedProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'premium';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'premium' | 'neon' | 'glass';
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'icon';
   asChild?: boolean;
   loading?: boolean;
@@ -14,8 +14,9 @@ export interface UnifiedButtonEnhancedProps
   shimmer?: boolean;
   glow?: boolean;
   morph?: boolean;
-  glass?: boolean;
-  neon?: boolean;
+  pulse?: boolean;
+  glass?: boolean; // Alias pour variant="glass"
+  neon?: boolean; // Alias pour variant="neon"
 }
 
 const UnifiedButtonEnhanced = React.forwardRef<HTMLButtonElement, UnifiedButtonEnhancedProps>(
@@ -26,47 +27,41 @@ const UnifiedButtonEnhanced = React.forwardRef<HTMLButtonElement, UnifiedButtonE
     asChild = false, 
     loading = false,
     active = false,
-    tooltip,
     shimmer = false,
     glow = false,
     morph = false,
+    pulse = false,
     glass = false,
     neon = false,
+    tooltip,
     children,
     ...props 
   }, ref) => {
+    // Gestion des alias
+    const actualVariant = glass ? 'glass' : neon ? 'neon' : variant;
     const Comp = asChild ? Slot : 'button';
-    
-    // Déterminer les classes d'effets
-    const effectClasses = React.useMemo(() => {
-      const effects = [];
-      
-      if (shimmer) effects.push('animate-shimmer');
-      if (glow) effects.push('hover-glow');
-      if (morph) effects.push('hover-morph');
-      if (glass) effects.push('backdrop-blur-glass');
-      if (neon) effects.push('shadow-lg shadow-blue-500/25');
-      
-      return effects.join(' ');
-    }, [shimmer, glow, morph, glass, neon]);
     
     return (
       <Comp
         className={cn(
-          // Classes de base améliorées
+          // Classes de base
           componentsEnhanced.button.base,
           // Variant
-          componentsEnhanced.button.variants[variant],
+          componentsEnhanced.button.variants[actualVariant],
           // Taille
           componentsEnhanced.button.sizes[size],
           // Animations
-          animationsEnhanced.micro.buttonHover,
+          animationsEnhanced.micro.button,
           // Effets spéciaux
-          effectClasses,
+          shimmer && componentsEnhanced.button.effects.shimmer,
+          glow && componentsEnhanced.button.effects.glow,
+          morph && componentsEnhanced.button.effects.morph,
           // État actif
-          active && 'ring-2 ring-blue-500/50 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300',
+          active && 'ring-2 ring-blue-500/50 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-lg',
           // État de chargement
           loading && 'animate-pulse',
+          // Pulse effect
+          pulse && animationsEnhanced.special.pulse,
           // Classes personnalisées
           className
         )}
@@ -83,14 +78,14 @@ const UnifiedButtonEnhanced = React.forwardRef<HTMLButtonElement, UnifiedButtonE
           children
         )}
         
-        {/* Effet shimmer */}
+        {/* Effet de brillance pour shimmer */}
         {shimmer && (
-          <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
         )}
         
-        {/* Effet glow */}
-        {glow && (
-          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 hover:opacity-100 transition-opacity duration-300" />
+        {/* Effet de glow pour neon */}
+        {glow && actualVariant === 'neon' && (
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 via-blue-500/20 to-purple-500/20 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         )}
       </Comp>
     );

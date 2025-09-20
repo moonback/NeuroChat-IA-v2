@@ -4,73 +4,72 @@ import { componentsEnhanced, animationsEnhanced } from '@/lib/design-tokens-enha
 
 export interface UnifiedInputEnhancedProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
-  variant?: 'base' | 'error' | 'success' | 'premium';
+  variant?: 'base' | 'error' | 'success';
   shimmer?: boolean;
   glow?: boolean;
-  glass?: boolean;
-  icon?: React.ReactNode;
-  clearButton?: (() => void) | undefined;
+  clearButton?: () => void;
 }
 
 const UnifiedInputEnhanced = React.forwardRef<HTMLInputElement, UnifiedInputEnhancedProps>(
   ({ 
-    className, 
-    type = 'text',
+    className,
     variant = 'base',
     shimmer = false,
     glow = false,
-    glass = false,
-    icon,
     clearButton,
+    type = 'text',
     ...props 
   }, ref) => {
-    
-    // Déterminer les classes d'effets
-    const effectClasses = React.useMemo(() => {
-      const effects = [];
-      
-      if (shimmer) effects.push('animate-shimmer');
-      if (glow) effects.push('focus-glow');
-      if (glass) effects.push('backdrop-blur-glass');
-      
-      return effects.join(' ');
-    }, [shimmer, glow, glass]);
-    
+    const [showClear, setShowClear] = React.useState(false);
+    const [value, setValue] = React.useState(props.value || '');
+
+    React.useEffect(() => {
+      setValue(props.value || '');
+    }, [props.value]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setValue(e.target.value);
+      setShowClear(e.target.value.length > 0);
+      props.onChange?.(e);
+    };
+
+    const handleClear = () => {
+      setValue('');
+      setShowClear(false);
+      clearButton?.();
+    };
+
     return (
       <div className="relative">
-        {/* Icône */}
-        {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-            {icon}
-          </div>
-        )}
-        
         <input
           type={type}
           className={cn(
-            // Classes de base améliorées
+            // Classes de base
+            componentsEnhanced.input.base,
+            // Variant
             componentsEnhanced.input[variant],
             // Animations
-            animationsEnhanced.micro.buttonHover,
+            animationsEnhanced.micro.button,
             // Effets spéciaux
-            effectClasses,
-            // Padding pour l'icône
-            icon && 'pl-10',
-            // Padding pour le bouton de suppression
+            shimmer && 'bg-gradient-to-r from-white/50 via-white/80 to-white/50 bg-[length:200%_100%] animate-shimmer',
+            glow && 'shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30',
+            // Padding pour le bouton clear
             clearButton && 'pr-10',
             // Classes personnalisées
             className
           )}
           ref={ref}
+          value={value}
+          onChange={handleChange}
           {...props}
         />
         
         {/* Bouton de suppression */}
-        {clearButton && (
+        {clearButton && showClear && (
           <button
             type="button"
-            onClick={clearButton}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+            onClick={handleClear}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors duration-200"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -78,14 +77,9 @@ const UnifiedInputEnhanced = React.forwardRef<HTMLInputElement, UnifiedInputEnha
           </button>
         )}
         
-        {/* Effet shimmer */}
-        {shimmer && (
-          <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer rounded-xl" />
-        )}
-        
-        {/* Effet glow */}
+        {/* Effet de glow pour neon */}
         {glow && (
-          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 focus-within:opacity-100 transition-opacity duration-300" />
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 via-blue-500/10 to-purple-500/10 rounded-lg blur-sm opacity-0 focus-within:opacity-100 transition-opacity duration-300 pointer-events-none" />
         )}
       </div>
     );
