@@ -330,10 +330,10 @@ function App() {
           setUsedWebSources([]);
           
           // Toast de confirmation avec détails de sécurité
-          toast.success('🔐 Mode Privé Ultra-Sécurisé Activé', {
-            description: 'Protection AES-256 • Auto-destruction • Zéro persistance',
-            duration: 3000,
-          });
+          // toast.success('🔐 Mode Privé Ultra-Sécurisé Activé', {
+          //   description: 'Protection AES-256 • Auto-destruction • Zéro persistance',
+          //   duration: 3000,
+          // });
           
           // Afficher les stats de sécurité
           const keyStats = getKeyManagerStats();
