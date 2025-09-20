@@ -5,7 +5,7 @@ import {
   History, Settings2, Volume2, VolumeX, Sun, Moon, 
   PlusCircle, Mic, Shield, BookOpen, CheckSquare, Square, 
   Trash2, Menu, X, Baby, Layers,
-  Globe, Database, Pencil, HelpCircle, BarChart3,
+  Globe, Database, Pencil, HelpCircle,
   Smartphone, Download
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
@@ -13,8 +13,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
 import { HelpModal } from '@/components/HelpModal';
-import { MonitoringStatusIndicator } from '@/components/MonitoringStatusIndicator';
-import { SecurityPerformanceMonitor } from '@/components/SecurityPerformanceMonitor';
 import { usePWA } from '@/hooks/usePWA';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
@@ -837,7 +835,6 @@ export function Header(props: HeaderProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [showVocalSettings, setShowVocalSettings] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
-  const [showMonitoringModal, setShowMonitoringModal] = useState(false);
 
   // Destructuration des props pour éviter les dépendances circulaires
   const {
@@ -957,13 +954,6 @@ export function Header(props: HeaderProps) {
                 quality={connectionQuality} 
               />
               
-               {/* Monitoring */}
-               <div className="ml-4">
-                 <MonitoringStatusIndicator 
-                   compact={true} 
-                   onOpenMonitor={() => setShowMonitoringModal(true)}
-                 />
-               </div>
                
                {/* PWA Status */}
                {(isInstalled || isInstallable) && (
@@ -1231,17 +1221,6 @@ export function Header(props: HeaderProps) {
                     {theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
                   </ModernButton>
                   
-                  <ModernButton
-                    variant="ghost"
-                    onClick={() => {
-                      setShowMonitoringModal(true);
-                      setShowMenu(false);
-                    }}
-                    className="w-full justify-start h-12"
-                  >
-                    <BarChart3 className="w-4 h-4 mr-3" />
-                    Monitoring système
-                  </ModernButton>
                   
                   {!props.modeEnfant && (
                     <ModernButton
@@ -1297,11 +1276,6 @@ export function Header(props: HeaderProps) {
 
       <HelpModal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} />
 
-      {/* Modal de monitoring */}
-      <SecurityPerformanceMonitor 
-        isOpen={showMonitoringModal} 
-        onClose={() => setShowMonitoringModal(false)} 
-      />
 
       {/* Dialog de confirmation de suppression */}
       <AlertDialog open={props.showConfirmDelete} onOpenChange={props.setShowConfirmDelete}>
