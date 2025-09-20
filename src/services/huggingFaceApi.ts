@@ -50,37 +50,10 @@ export interface HuggingFaceModel {
 export const AVAILABLE_MODELS: HuggingFaceModel[] = [
   {
     id: 'stabilityai/stable-diffusion-xl-base-1.0',
-    name: 'Stable Diffusion XL',
-    description: 'Modèle haute qualité, excellent pour les images détaillées',
+    name: 'SDXL Ultra',
+    description: 'Modèle haute qualité - Qualité professionnelle',
     category: 'stable-diffusion',
     maxResolution: '1024x1024',
-    estimatedTime: 15,
-    cost: 'free'
-  },
-  {
-    id: 'runwayml/stable-diffusion-v1-5',
-    name: 'Stable Diffusion 1.5',
-    description: 'Modèle rapide et efficace pour la génération générale',
-    category: 'stable-diffusion',
-    maxResolution: '512x512',
-    estimatedTime: 8,
-    cost: 'free'
-  },
-  {
-    id: 'CompVis/stable-diffusion-v1-4',
-    name: 'Stable Diffusion 1.4',
-    description: 'Version classique, très stable',
-    category: 'stable-diffusion',
-    maxResolution: '512x512',
-    estimatedTime: 10,
-    cost: 'free'
-  },
-  {
-    id: 'stabilityai/stable-diffusion-2-1',
-    name: 'Stable Diffusion 2.1',
-    description: 'Version améliorée avec de meilleurs résultats',
-    category: 'stable-diffusion',
-    maxResolution: '768x768',
     estimatedTime: 12,
     cost: 'free'
   }
@@ -98,7 +71,39 @@ function ensureApiKey(): string {
 }
 
 /**
- * Génère une image via l'API Hugging Face
+ * Optimise automatiquement les paramètres selon le modèle sélectionné
+ */
+function getOptimizedConfig(
+  model: string, 
+  config: {
+    width: number;
+    height: number;
+    numInferenceSteps: number;
+    guidanceScale: number;
+    negativePrompt: string;
+  }
+) {
+  const { width, height, numInferenceSteps, guidanceScale, negativePrompt } = config;
+  
+  // Configuration optimisée pour SDXL Ultra uniquement
+  const optimization = {
+    defaultSteps: 25, // SDXL optimisé pour 25 étapes
+    defaultGuidance: 7.5,
+    defaultNegativePrompt: 'blurry, low quality, distorted, ugly, deformed, bad anatomy',
+    maxResolution: 1024
+  };
+  
+  return {
+    width: Math.min(width, optimization.maxResolution),
+    height: Math.min(height, optimization.maxResolution),
+    numInferenceSteps: numInferenceSteps || optimization.defaultSteps,
+    guidanceScale: guidanceScale || optimization.defaultGuidance,
+    negativePrompt: negativePrompt || optimization.defaultNegativePrompt
+  };
+}
+
+/**
+ * Génère une image via l'API Hugging Face avec paramètres optimisés
  */
 export async function generateImage(
   request: ImageGenerationRequest
@@ -119,6 +124,15 @@ export async function generateImage(
     }
   } = request;
 
+  // Optimisation automatique des paramètres selon le modèle
+  const optimizedConfig = getOptimizedConfig(model, {
+    width,
+    height,
+    numInferenceSteps,
+    guidanceScale,
+    negativePrompt
+  });
+
   // Validation des paramètres
   if (!prompt || prompt.trim().length === 0) {
     throw new Error('Le prompt ne peut pas être vide');
@@ -128,15 +142,15 @@ export async function generateImage(
     throw new Error('Le prompt ne peut pas dépasser 500 caractères');
   }
 
-  // Préparation du payload
+  // Préparation du payload avec paramètres optimisés
   const payload: Record<string, any> = {
     inputs: prompt.trim(),
     parameters: {
-      width: Math.min(Math.max(width, 256), 1024),
-      height: Math.min(Math.max(height, 256), 1024),
-      num_inference_steps: Math.min(Math.max(numInferenceSteps, 10), 50),
-      guidance_scale: Math.min(Math.max(guidanceScale, 1.0), 20.0),
-      negative_prompt: negativePrompt
+      width: Math.min(Math.max(optimizedConfig.width, 256), optimizedConfig.width),
+      height: Math.min(Math.max(optimizedConfig.height, 256), optimizedConfig.height),
+      num_inference_steps: Math.min(Math.max(optimizedConfig.numInferenceSteps, 1), 50),
+      guidance_scale: Math.min(Math.max(optimizedConfig.guidanceScale, 0.0), 20.0),
+      negative_prompt: optimizedConfig.negativePrompt
     }
   };
 
@@ -314,15 +328,20 @@ export function getModelInfo(modelId: string): HuggingFaceModel | undefined {
  * Obtient les modèles recommandés selon le type de génération
  */
 export function getRecommendedModels(type: 'portrait' | 'landscape' | 'artistic' | 'realistic'): HuggingFaceModel[] {
-  const recommendations: Record<string, string[]> = {
-    portrait: ['stabilityai/stable-diffusion-xl-base-1.0', 'stabilityai/stable-diffusion-2-1'],
-    landscape: ['stabilityai/stable-diffusion-xl-base-1.0', 'runwayml/stable-diffusion-v1-5'],
-    artistic: ['stabilityai/stable-diffusion-2-1', 'CompVis/stable-diffusion-v1-4'],
-    realistic: ['stabilityai/stable-diffusion-xl-base-1.0', 'stabilityai/stable-diffusion-2-1']
-  };
-  
-  const modelIds = recommendations[type] || recommendations.realistic;
-  return modelIds
-    .map(id => getModelInfo(id))
-    .filter((model): model is HuggingFaceModel => model !== undefined);
+  // Avec un seul modèle, on retourne toujours SDXL Ultra
+  return AVAILABLE_MODELS;
+}
+
+/**
+ * Obtient les modèles les plus performants
+ */
+export function getTopPerformingModels(): HuggingFaceModel[] {
+  return AVAILABLE_MODELS;
+}
+
+/**
+ * Obtient les modèles les plus rapides
+ */
+export function getFastestModels(): HuggingFaceModel[] {
+  return AVAILABLE_MODELS;
 }

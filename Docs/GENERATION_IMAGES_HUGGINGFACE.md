@@ -6,11 +6,12 @@ NeuroChat-IA-v2 intègre maintenant la génération d'images via l'API Hugging F
 
 ## 🚀 Fonctionnalités
 
-### Modèles Supportés
-- **Stable Diffusion XL** - Modèle haute qualité pour images détaillées
-- **Stable Diffusion 1.5** - Modèle rapide et efficace
-- **Stable Diffusion 1.4** - Version classique très stable
-- **Stable Diffusion 2.1** - Version améliorée avec meilleurs résultats
+### Modèle Supporté
+
+- **SDXL Ultra** - Modèle haute qualité, qualité professionnelle
+  - Résolution maximale : 1024x1024
+  - Temps de génération : ~12 secondes
+  - Optimisé pour tous types d'images (portraits, paysages, artistique, réaliste)
 
 ### Types de Génération
 - **Réaliste** - Images photoréalistes

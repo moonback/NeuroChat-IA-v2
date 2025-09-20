@@ -7,8 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   Image, 
   Sparkles, 
@@ -20,11 +19,8 @@ import {
   Clock, 
   Palette,
   X,
-  Check,
-  AlertCircle,
-  Info
+  Check
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { 
   generateImage, 
@@ -103,9 +99,9 @@ export function ImageGenerationModal({
       
       setGeneratedImages(prev => [result, ...prev]);
       toast.success('Image générée avec succès !');
-    } catch (error) {
-      console.error('Erreur génération image:', error);
-      toast.error(error instanceof Error ? error.message : 'Erreur lors de la génération');
+    } catch (err) {
+      console.error('Erreur génération image:', err);
+      toast.error(err instanceof Error ? err.message : 'Erreur lors de la génération');
     } finally {
       setIsGenerating(false);
     }
@@ -138,9 +134,9 @@ export function ImageGenerationModal({
       const results = await generateMultipleImages(requests);
       setGeneratedImages(prev => [...results, ...prev]);
       toast.success(`${results.length} image(s) générée(s) avec succès !`);
-    } catch (error) {
-      console.error('Erreur génération multiple:', error);
-      toast.error(error instanceof Error ? error.message : 'Erreur lors de la génération multiple');
+    } catch (err) {
+      console.error('Erreur génération multiple:', err);
+      toast.error(err instanceof Error ? err.message : 'Erreur lors de la génération multiple');
     } finally {
       setIsGenerating(false);
     }
@@ -169,7 +165,7 @@ export function ImageGenerationModal({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       toast.success('Image téléchargée');
-    } catch (error) {
+    } catch {
       toast.error('Erreur lors du téléchargement');
     }
   }, []);
@@ -178,7 +174,7 @@ export function ImageGenerationModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-xl">
             <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
@@ -197,7 +193,7 @@ export function ImageGenerationModal({
             {/* Type de génération */}
             <div className="space-y-3">
               <Label className="text-sm font-semibold">Type de génération</Label>
-              <Select value={generationType} onValueChange={(value: any) => setGenerationType(value)}>
+              <Select value={generationType} onValueChange={(value: string) => setGenerationType(value as 'portrait' | 'landscape' | 'artistic' | 'realistic')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -519,21 +515,6 @@ export function ImageGenerationModal({
           </div>
         </div>
 
-        {/* Informations */}
-        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-          <div className="flex items-start gap-3">
-            <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
-            <div className="text-sm text-blue-800 dark:text-blue-200">
-              <p className="font-medium mb-1">💡 Conseils pour de meilleurs résultats :</p>
-              <ul className="space-y-1 text-xs">
-                <li>• Soyez précis dans votre description (style, couleurs, composition)</li>
-                <li>• Utilisez des mots-clés artistiques (photorealistic, digital art, oil painting)</li>
-                <li>• Plus d'étapes = meilleure qualité mais plus lent</li>
-                <li>• Le prompt négatif aide à éviter les éléments indésirables</li>
-              </ul>
-            </div>
-          </div>
-        </div>
       </DialogContent>
     </Dialog>
   );
