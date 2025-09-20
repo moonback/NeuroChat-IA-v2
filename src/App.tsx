@@ -108,6 +108,10 @@ function App() {
         initializeSecureStorage();
         initializeKeyManager();
         
+        // 🚀 Initialisation des optimisations des modèles IA
+        const { initializeOptimizations } = await import('./services/llm');
+        initializeOptimizations();
+        
         // 🔍 Démarrer le monitoring de sécurité et performance
         startMonitoring();
         
