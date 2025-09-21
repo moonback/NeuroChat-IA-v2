@@ -964,7 +964,7 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
       <FloatingParticles count={15} mode="normal" />
       
       <div className="max-w-4xl mx-auto space-y-10 relative z-10">
-        <div className="space-y-6">
+        <div className="space-y-6 p-8 rounded-3xl bg-white/10 dark:bg-slate-900/20 backdrop-blur-xl border border-white/20 dark:border-slate-700/30 shadow-2xl">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-blue-600 via-indigo-600 to-cyan-600 blur-3xl opacity-30 animate-pulse pointer-events-none" />
             <h2 className="relative text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-purple-600 via-blue-600 via-indigo-600 to-cyan-600 bg-clip-text text-transparent tracking-tight flex items-center justify-center gap-4 drop-shadow-lg">
@@ -980,7 +980,7 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
             </h2>
           </div>
           <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto font-medium">
-            L’assistant IA nouvelle génération pour vos conversations, projets et créativité.<br className="hidden sm:inline" />
+            L'assistant IA nouvelle génération pour vos conversations, projets et créativité.<br className="hidden sm:inline" />
             <span className="inline-block mt-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-mono">
               Sécurité avancée, multi-fournisseurs, RAG local, synthèse vocale, et plus encore.
             </span>
