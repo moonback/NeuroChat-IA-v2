@@ -980,7 +980,7 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
             </h2>
           </div>
           <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto font-medium">
-            L'assistant IA nouvelle génération pour vos conversations, projets et créativité.<br className="hidden sm:inline" />
+            L'assistant IA nouvelle génération<br className="hidden sm:inline" />
             <span className="inline-block mt-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-mono">
               Sécurité avancée, multi-fournisseurs, RAG local, synthèse vocale, et plus encore.
             </span>
