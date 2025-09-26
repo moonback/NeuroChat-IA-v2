@@ -135,7 +135,7 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
         <div className={cn(
           "relative flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 select-none items-center justify-center rounded-2xl shadow-lg transition-all duration-300 hover:scale-105",
           isUser
-            ? "bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 text-white shadow-green-500/25"
+            ? "bg-gradient-to-br from-blue-500 via-blue-500 to-blue-600 text-white shadow-blue-500/25"
             : "bg-gradient-to-br from-violet-500 via-blue-500 to-indigo-600 text-white shadow-blue-500/25"
         )}>
           {isUser ? (
@@ -165,7 +165,7 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
           <div className={cn(
             "rounded-2xl px-4 sm:px-5 py-3 sm:py-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl border relative group/message",
             isUser
-              ? "bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 text-white rounded-br-lg border-emerald-400/30 shadow-emerald-500/20"
+              ? "bg-gradient-to-br from-blue-500 via-blue-500 to-blue-600 text-white rounded-br-lg border-blue-400/30 shadow-blue-500/20"
               : "bg-gradient-to-br from-white via-slate-50 to-gray-50 dark:from-slate-800 dark:via-slate-750 dark:to-slate-700 text-slate-800 dark:text-slate-200 rounded-bl-lg border-slate-200/50 dark:border-slate-600/30 shadow-slate-500/10",
             isLatest && !isUser && "ring-2 ring-blue-300/50 dark:ring-blue-600/50 ring-opacity-60 shadow-blue-500/20"
           )}
