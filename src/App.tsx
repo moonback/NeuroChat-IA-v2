@@ -217,12 +217,20 @@ function App() {
   const [provider, setProvider] = useState<'gemini' | 'openai' | 'mistral'>(
     (localStorage.getItem('llm_provider') as 'gemini' | 'openai' | 'mistral') || 'gemini'
   );
-  const [mistralConfig, setMistralConfig] = useState<MistralGenerationConfig>({
+  /**
+   * État de configuration du modèle Mistral
+   * - Utilise les valeurs par défaut recommandées
+   * - Permet la personnalisation dynamique via setMistralConfig
+   * - Le modèle est récupéré depuis les variables d'environnement ou fallback
+   */
+  const [mistralConfig, setMistralConfig] = useState<MistralGenerationConfig>(() => ({
     temperature: 0.7,
     top_p: 0.95,
     max_tokens: 4096,
-    model: (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest',
-  });
+    model: typeof import.meta.env.VITE_MISTRAL_MODEL === 'string' && import.meta.env.VITE_MISTRAL_MODEL.trim() !== ''
+      ? import.meta.env.VITE_MISTRAL_MODEL
+      : 'mistral-small-latest',
+  }));
   const [openaiConfig, setOpenaiConfig] = useState({
     temperature: 0.7,
     top_p: 0.95,
