@@ -6,7 +6,7 @@ import {
   PlusCircle, Mic, Shield, BookOpen, CheckSquare, Square, 
   Trash2, Menu, X, Baby,
   Globe, Database, Pencil, HelpCircle,
-  Download
+  Download, Sparkles
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -27,6 +27,7 @@ interface HeaderProps {
   onOpenHistory: () => void;
   onOpenTTSSettings: () => void;
   onOpenRagDocs: () => void;
+  onOpenBoltPrompt?: () => void;
   stop: () => void;
   modeVocalAuto: boolean;
   setModeVocalAuto: (v: boolean) => void;
@@ -641,7 +642,7 @@ const MobileActions = ({
   </div>
 );
 
-// Actions desktop modernisées
+// Actions desktop modernisées - CORRIGÉ
 const DesktopActions = ({ 
   modeEnfant, 
   onNewDiscussion, 
@@ -649,14 +650,15 @@ const DesktopActions = ({
   muted, 
   handleVolumeToggle, 
   handleModeVocalToggle, 
-  // modePrive, 
-  // handlePrivateModeToggle, 
-  // handleChildModeToggle, 
-  // ragEnabled, 
-  // handleRagToggle, 
-  // webEnabled, 
-  // handleWebToggle, 
-  setShowMenu 
+  modePrive,
+  handlePrivateModeToggle,
+  handleChildModeToggle,
+  ragEnabled,
+  handleRagToggle,
+  webEnabled,
+  handleWebToggle,
+  setShowMenu,
+  ...unusedProps
 }: {
   modeEnfant?: boolean;
   onNewDiscussion: () => void;
@@ -672,7 +674,11 @@ const DesktopActions = ({
   webEnabled?: boolean;
   handleWebToggle: () => void;
   setShowMenu: (show: boolean) => void;
-}) => (
+}) => {
+  // Supprimer les avertissements pour les props non utilisées
+  void unusedProps;
+  
+  return (
   <div
     className="hidden md:flex items-center gap-4"
     aria-label="Actions principales de la barre d'en-tête"
@@ -776,7 +782,8 @@ const DesktopActions = ({
       <Settings2 className="w-4 h-4" />
     </ModernButton>
   </div>
-);
+  );
+};
 
 // Banner mode privé modernisé
 const PrivateModeBanner = ({ show }: { show: boolean }) => {
@@ -1166,6 +1173,18 @@ export function Header(props: HeaderProps) {
                       >
                         <BookOpen className="w-4 h-4 mr-3" />
                         Documents RAG
+                      </ModernButton>
+                      
+                      <ModernButton
+                        variant="ghost"
+                        onClick={() => {
+                          props.onOpenBoltPrompt?.();
+                          setShowMenu(false);
+                        }}
+                        className="w-full justify-start h-12"
+                      >
+                        <Sparkles className="w-4 h-4 mr-3" />
+                        Prompts bolt.new
                       </ModernButton>
                     </>
                   )}
