@@ -18,7 +18,6 @@ export function ChatContainer({
   const {
     virtuosoRef,
     showScrollButton,
-    scrollProgress,
     handleAtBottomChange,
     handleRangeChange,
     scrollToBottom,
@@ -27,14 +26,14 @@ export function ChatContainer({
 
   const [showAllPassages, setShowAllPassages] = useState<{ [id: string]: boolean }>({});
   const [showChatInfo, setShowChatInfo] = useState(false);
-  const [ragFilter, setRagFilter] = useState<'all' | 'messages' | 'rag'>('all');
-  const [headerHovered, setHeaderHovered] = useState(false);
+  const [ragFilter] = useState<'all' | 'messages' | 'rag'>('all');
+  // const [setRagFilter] = useState<'all' | 'messages' | 'rag'>('all'); // TODO: Implémenter l'UI pour changer le filtre RAG
+  // const [headerHovered, setHeaderHovered] = useState(false);
 
   const togglePassagesVisibility = useCallback((id: string) => {
     setShowAllPassages(prev => ({ ...prev, [id]: !prev[id] }));
   }, []);
 
-  const handleShowChatInfo = useCallback(() => setShowChatInfo(true), []);
   const handleCloseChatInfo = useCallback(() => setShowChatInfo(false), []);
 
   // Filtrer les messages selon le filtre RAG
@@ -107,133 +106,7 @@ export function ChatContainer({
                 components={{
                   Header: () => (
                     <div className="sticky top-0 z-30 mb-6 animate-in slide-in-from-top-2 duration-700">
-                      <div 
-                        className={cn(
-                          "flex items-center justify-between p-6 rounded-3xl border backdrop-blur-2xl shadow-2xl hover:shadow-3xl transition-all duration-500 group relative overflow-hidden",
-                          modePrive 
-                            ? "bg-gradient-to-r from-red-50/90 via-purple-50/90 to-blue-50/90 dark:from-red-950/60 dark:via-purple-950/60 dark:to-blue-950/60 border-red-200/50 dark:border-red-800/50"
-                            : modeEnfant
-                            ? "bg-gradient-to-r from-pink-50/90 via-yellow-50/90 to-orange-50/90 dark:from-pink-950/60 dark:via-yellow-950/60 dark:to-orange-950/60 border-pink-200/50 dark:border-pink-800/50"
-                            : "bg-white/95 dark:bg-slate-900/95 border-white/60 dark:border-slate-800/60"
-                        )}
-                        onMouseEnter={() => setHeaderHovered(true)}
-                        onMouseLeave={() => setHeaderHovered(false)}
-                      >
-                        {/* Effet de brillance au hover */}
-                        <div className={cn(
-                          "absolute inset-0 transition-opacity duration-500",
-                          headerHovered ? "opacity-100" : "opacity-0",
-                          modePrive 
-                            ? "bg-gradient-to-r from-red-400/10 via-purple-400/10 to-blue-400/10"
-                            : modeEnfant
-                            ? "bg-gradient-to-r from-pink-400/10 via-yellow-400/10 to-orange-400/10"
-                            : "bg-gradient-to-r from-blue-400/10 via-indigo-400/10 to-purple-400/10"
-                        )} />
-                        
-                        <div className="flex items-center gap-6 min-w-0 flex-1 relative z-10">
-                          <div className="flex items-center gap-4">
-                            {/* <div className="relative">
-                              <div className={cn(
-                                "w-4 h-4 rounded-full animate-pulse shadow-lg",
-                                modePrive ? "bg-red-500 shadow-red-500/50" : 
-                                modeEnfant ? "bg-pink-500 shadow-pink-500/50" : 
-                                "bg-emerald-500 shadow-emerald-500/50"
-                              )} />
-                              <div className={cn(
-                                "absolute inset-0 rounded-full animate-ping opacity-40",
-                                modePrive ? "bg-red-500" : 
-                                modeEnfant ? "bg-pink-500" : 
-                                "bg-emerald-500"
-                              )} />
-                            </div> */}
-                            <div>
-                              <div className="text-base font-black text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                                {messages.filter(msg => !(msg as RagContextMessage).isRagContext).length} message{messages.length !== 1 ? 's' : ''}
-                                {modePrive && <Shield className="w-4 h-4 text-red-500" />}
-                                {modeEnfant && <Heart className="w-4 h-4 text-pink-500" />}
-                              </div>
-                              <div className={cn(
-                                "text-xs font-medium flex items-center gap-2",
-                                modePrive ? "text-red-600 dark:text-red-400" :
-                                modeEnfant ? "text-pink-600 dark:text-pink-400" :
-                                "text-emerald-600 dark:text-emerald-400"
-                              )}>
-                                <Activity className="w-4 h-4" />
-                                {modePrive ? "Session Ultra-Sécurisée" : 
-                                 modeEnfant ? "Mode Enfant Actif" : 
-                                 "Conversation Active"}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Barre de progression du scroll ultra-stylée */}
-                          <div className="hidden md:flex items-center gap-3 flex-1 max-w-40">
-                            <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden shadow-inner">
-                              <div 
-                                className={cn(
-                                  "h-full rounded-full transition-all duration-300 shadow-sm",
-                                  modePrive 
-                                    ? "bg-gradient-to-r from-red-500 via-purple-500 to-blue-500"
-                                    : modeEnfant
-                                    ? "bg-gradient-to-r from-pink-500 via-yellow-500 to-orange-500"
-                                    : "bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"
-                                )}
-                                style={{ width: `${scrollProgress}%` }}
-                              />
-                            </div>
-                            <span className="text-xs font-mono text-slate-500 dark:text-slate-400 min-w-fit px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-md">
-                              {Math.round(scrollProgress)}%
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 relative z-10">
-                          {/* Filtre RAG ultra-amélioré */}
-                          {messages.some(msg => (msg as RagContextMessage).isRagContext) && (
-                            <div className="hidden sm:flex items-center gap-1 p-1.5 bg-slate-100/80 dark:bg-slate-800/80 rounded-xl shadow-inner backdrop-blur-sm">
-                              {[
-                                { key: 'all', icon: Layers, tooltip: 'Tout', color: 'text-slate-500' },
-                                { key: 'messages', icon: MessageSquare, tooltip: 'Messages', color: 'text-blue-500' },
-                                { key: 'rag', icon: Database, tooltip: 'RAG', color: 'text-emerald-500' }
-                              ].map(filter => (
-                                <button
-                                  key={filter.key}
-                                  onClick={() => setRagFilter(filter.key as 'all' | 'messages' | 'rag')}
-                                  className={cn(
-                                    "p-2 rounded-lg transition-all duration-300 relative group",
-                                    ragFilter === filter.key
-                                      ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg scale-105"
-                                      : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
-                                  )}
-                                  title={filter.tooltip}
-                                >
-                                  <filter.icon className="w-4 h-4" />
-                                  {ragFilter === filter.key && (
-                                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-lg animate-pulse" />
-                                  )}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-
-                          <Button 
-                            variant="ghost"
-                            size="icon"
-                            className={cn(
-                              "h-10 w-10 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 backdrop-blur-sm group",
-                              modePrive 
-                                ? "hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600"
-                                : modeEnfant
-                                ? "hover:bg-pink-100 dark:hover:bg-pink-900/30 text-pink-600"
-                                : "hover:bg-blue-100 dark:hover:bg-slate-800 text-blue-600"
-                            )}
-                            onClick={handleShowChatInfo}
-                            title="Informations de conversation"
-                          >
-                            <Info className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                          </Button>
-                        </div>
-                      </div>
+                      
                     </div>
                   )
                 }}
@@ -473,8 +346,8 @@ import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
 import { 
   ArrowDown, Zap, Brain, Info, ExternalLink, Shield, X, BookOpen, 
-  Sparkles, Activity, MessageSquare, Bot, User, ChevronUp, ChevronDown,
-  Layers, Database, Heart,
+  Sparkles, Bot, User, ChevronUp, ChevronDown,
+  Database, Heart,
   Crown, Flame
 } from 'lucide-react';
 import { TypingIndicator } from './TypingIndicator';

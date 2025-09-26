@@ -6,8 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   MessageCircle, Settings, Mic, Brain, Shield, Globe, 
   Database, Baby, History, Volume2, Palette,
-  HelpCircle, Zap, Users, Lock
+  HelpCircle, Zap, Users, Lock, X
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -17,17 +18,36 @@ interface HelpModalProps {
 export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-        <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="flex items-center gap-3 text-2xl">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <HelpCircle className="w-6 h-6 text-white" />
+      <DialogContent className="w-screen h-screen max-w-none max-h-none p-0 overflow-hidden rounded-none">
+        <DialogHeader className="px-6 py-4 border-b">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+                <HelpCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold">
+                  Guide d'utilisation NeuroChat
+                </DialogTitle>
+                <p className="text-sm text-muted-foreground">
+                  Découvrez toutes les fonctionnalités de votre assistant IA
+                </p>
+              </div>
             </div>
-            Guide d'utilisation NeuroChat
-          </DialogTitle>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 px-6">
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="flex-1 px-6">
           <Tabs defaultValue="getting-started" className="w-full">
             <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="getting-started">Démarrage</TabsTrigger>
@@ -230,16 +250,26 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
               </div>
             </TabsContent>
           </Tabs>
-        </ScrollArea>
+          </ScrollArea>
+        </div>
         
-        <div className="p-6 pt-0 border-t">
-          <div className="flex justify-between items-center">
-            <div className="text-sm text-slate-500 dark:text-slate-400">
-              Besoin d'aide supplémentaire ? Contactez le support.
+        {/* Footer avec actions rapides */}
+        <div className="px-6 py-4 border-t bg-muted/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Badge variant="secondary" className="text-xs">
+                <HelpCircle className="w-3 h-3 mr-1" />
+                Guide d'aide
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                Documentation complète
+              </Badge>
             </div>
-            <Button onClick={onClose} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
-              Fermer
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button onClick={onClose} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
+                Fermer
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>

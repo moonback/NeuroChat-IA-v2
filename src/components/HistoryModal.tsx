@@ -3,7 +3,8 @@ import { History, X, Search, MessageCircle, Users, Trash2, CheckSquare, Square, 
 import { Button } from '@/components/ui/button';
 import { Discussion } from '@/hooks/useDiscussions';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 
 // Interface sans le champ category
 export interface DiscussionWithCategory extends Discussion {
@@ -124,22 +125,37 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
   if (!open) return null;
 
   return (
-    <Drawer open={open} onOpenChange={onClose}>
-      <DrawerContent className="max-w-12xl px-2 sm:px-6 py-2 sm:py-6 rounded-3xl shadow-2xl border-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-white dark:from-slate-950 dark:via-indigo-950 dark:to-slate-950 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20 max-h-[95vh] overflow-y-auto">
-        <DrawerHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <History className="w-7 h-7 text-blue-500 mr-2" />
-            <DrawerTitle className="text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
-              Discussions récentes ({filtered.length})
-            </DrawerTitle>
-            <button onClick={onClose} className="ml-auto text-slate-500 hover:text-red-500 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-red-400" title="Fermer" aria-label="Fermer">
-              <X className="w-6 h-6" />
-            </button>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="w-screen h-screen max-w-none max-h-none p-0 overflow-hidden rounded-none">
+        <DialogHeader className="px-6 py-4 border-b">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+                <History className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold">
+                  Discussions récentes ({filtered.length})
+                </DialogTitle>
+                <p className="text-sm text-muted-foreground">
+                  Gérez vos conversations sauvegardées
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
-        </DrawerHeader>
+        </DialogHeader>
         
-        {/* Barre de recherche, tri et contrôles */}
-        <div className="flex flex-col gap-2 px-7 py-4 bg-gradient-to-r from-blue-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950 sticky top-0 z-10 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex-1 overflow-hidden">
+          <div className="h-full overflow-y-auto">
           <div className="flex flex-col sm:flex-row items-center gap-2">
             <div className="flex items-center w-full sm:w-1/2 relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
@@ -429,12 +445,33 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
               )}
             </>
           )}
+          </div>
         </div>
-        
-        <DrawerFooter className="flex flex-row gap-2 justify-end pt-3">
-          <Button onClick={onClose} className="w-full text-base py-3">Fermer</Button>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+
+        {/* Footer avec actions rapides */}
+        <div className="px-6 py-4 border-t bg-muted/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Badge variant="secondary" className="text-xs">
+                <History className="w-3 h-3 mr-1" />
+                Historique
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                Conversations sauvegardées
+              </Badge>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onClose}
+              >
+                Fermer
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 } 

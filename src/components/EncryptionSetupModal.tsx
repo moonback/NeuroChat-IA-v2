@@ -8,14 +8,14 @@
  */
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Shield, Lock, Eye, EyeOff, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { Shield, Lock, Eye, EyeOff, CheckCircle, AlertTriangle, Info, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface EncryptionSetupModalProps {
@@ -124,59 +124,74 @@ export const EncryptionSetupModal: React.FC<EncryptionSetupModalProps> = ({
   
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <div className="p-2 bg-gradient-to-r from-green-500 to-blue-600 rounded-xl">
-              <Shield className="w-6 h-6 text-white" />
+      <DialogContent className="w-screen h-screen max-w-none max-h-none p-0 overflow-hidden rounded-none">
+        <DialogHeader className="px-6 py-4 border-b">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg">
+                <Shield className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold">
+                  Activer le Chiffrement AES-256
+                </DialogTitle>
+                <p className="text-sm text-muted-foreground">
+                  Protégez vos conversations avec un chiffrement de niveau gouvernemental
+                </p>
+              </div>
             </div>
-            Activer le Chiffrement AES-256
-          </DialogTitle>
-          <DialogDescription>
-            Protégez vos conversations avec un chiffrement de niveau gouvernemental.
-            Vos données seront sécurisées même si quelqu'un accède à votre appareil.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="space-y-6">
-          {/* Fonctionnalités de sécurité */}
-          <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 rounded-xl border border-green-200/50 dark:border-green-800/50">
-            <h4 className="font-semibold text-green-800 dark:text-green-200 mb-3 flex items-center gap-2">
-              <CheckCircle className="w-4 h-4" />
-              Protection Incluse
-            </h4>
-            <div className="space-y-2 text-sm text-green-700 dark:text-green-300">
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                Chiffrement AES-256-GCM (niveau militaire)
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                Dérivation PBKDF2 avec 600,000 itérations
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                Authentification AEAD intégrée
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                Stockage persistant sécurisé
-              </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
           </div>
-          
-          {/* Option de mot de passe */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="custom-password" className="text-sm font-medium">
-                Utiliser mon propre mot de passe
-              </Label>
-              <Switch
-                id="custom-password"
-                checked={useCustomPassword}
-                onCheckedChange={setUseCustomPassword}
-              />
+        </DialogHeader>
+        
+        <div className="flex-1 overflow-hidden">
+          <div className="h-full p-6 overflow-y-auto">
+            {/* Fonctionnalités de sécurité */}
+            <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 rounded-xl border border-green-200/50 dark:border-green-800/50">
+              <h4 className="font-semibold text-green-800 dark:text-green-200 mb-3 flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" />
+                Protection Incluse
+              </h4>
+              <div className="space-y-2 text-sm text-green-700 dark:text-green-300">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                  Chiffrement AES-256-GCM (niveau militaire)
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                  Dérivation PBKDF2 avec 600,000 itérations
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                  Authentification AEAD intégrée
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                  Stockage persistant sécurisé
+                </div>
+              </div>
             </div>
+            
+            {/* Option de mot de passe */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="custom-password" className="text-sm font-medium">
+                  Utiliser mon propre mot de passe
+                </Label>
+                <Switch
+                  id="custom-password"
+                  checked={useCustomPassword}
+                  onCheckedChange={setUseCustomPassword}
+                />
+              </div>
             
             {!useCustomPassword && (
               <Alert>
@@ -309,6 +324,44 @@ export const EncryptionSetupModal: React.FC<EncryptionSetupModalProps> = ({
             </Button>
           </div>
         </div>
+
+        {/* Footer avec actions rapides */}
+        <div className="px-6 py-4 border-t bg-muted/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Badge variant="secondary" className="text-xs">
+                <Shield className="w-3 h-3 mr-1" />
+                Chiffrement AES-256
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                Sécurité gouvernementale
+              </Badge>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" onClick={onClose}>
+                Annuler
+              </Button>
+              <Button 
+                onClick={handleSetup}
+                disabled={!canProceed || isLoading}
+                className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                    Activation...
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4 mr-2" />
+                    Activer le Chiffrement
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
       </DialogContent>
     </Dialog>
   );

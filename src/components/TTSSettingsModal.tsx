@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { X, RefreshCcw, Play, Volume2, Sliders, Activity, UploadCloud, DownloadCloud, Trash2, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 
 interface TTSSettingsModalProps {
   open: boolean;
@@ -88,21 +89,37 @@ export function TTSSettingsModal({ open, onClose, rate, setRate, pitch, setPitch
   
 
   return (
-    <Drawer open={open} onOpenChange={onClose}>
-      <DrawerContent className="max-w-12xl px-2 sm:px-6 py-2 sm:py-6 rounded-3xl shadow-2xl border-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20 max-h-[95vh] overflow-y-auto">
-        <DrawerHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <Sliders className="w-5 h-5 text-blue-500" />
-            <DrawerTitle className="text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
-              Réglages de la synthèse vocale
-            </DrawerTitle>
-            <button onClick={onClose} className="ml-auto text-slate-500 hover:text-red-500 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-red-400" title="Fermer" aria-label="Fermer">
-              <X className="w-6 h-6" />
-            </button>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="w-screen h-screen max-w-none max-h-none p-0 overflow-hidden rounded-none">
+        <DialogHeader className="px-6 py-4 border-b">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+                <Sliders className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold">
+                  Réglages de la synthèse vocale
+                </DialogTitle>
+                <p className="text-sm text-muted-foreground">
+                  Configurez la voix, la vitesse, la tonalité et le volume
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
-        </DrawerHeader>
-        {/* Ancien contenu de la modale ici, sans le header/titre ni bouton fermer */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        </DialogHeader>
+        <div className="flex-1 overflow-hidden">
+          <div className="h-full p-6 overflow-y-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {/* Voix */}
           <div className="relative bg-gradient-to-br from-white/90 to-blue-50/60 dark:from-slate-900/80 dark:to-blue-950/40 rounded-2xl shadow-md border border-blue-100 dark:border-blue-900/30 p-4 flex flex-col gap-2 transition-all duration-200 hover:shadow-xl">
             <div className="flex items-center gap-2 mb-1">
@@ -209,39 +226,62 @@ export function TTSSettingsModal({ open, onClose, rate, setRate, pitch, setPitch
               <span>Fort</span>
             </div>
           </div>
-        </div>
-        {/* Animation d'onde lors du test de la voix, boutons, etc. */}
-        <div className="flex gap-2 mt-6 items-center">
-          <Button onClick={handleTestVoice} variant="outline" className="flex-1 flex items-center gap-2" disabled={availableVoices.length === 0}>
-            <Play className="w-4 h-4" /> Tester la voix
-          </Button>
-          <div className="relative flex items-center justify-center w-10 h-8">
-            {isTesting && (
-              <span className="absolute left-0 right-0 top-0 bottom-0 flex items-center justify-center">
-                <span className="block w-8 h-4 bg-gradient-to-r from-blue-400 via-purple-400 to-green-400 rounded-full animate-pulse" style={{ opacity: 0.5 }}></span>
-              </span>
-            )}
+            </div>
+            {/* Animation d'onde lors du test de la voix, boutons, etc. */}
+            <div className="flex gap-2 mt-6 items-center">
+              <Button onClick={handleTestVoice} variant="outline" className="flex-1 flex items-center gap-2" disabled={availableVoices.length === 0}>
+                <Play className="w-4 h-4" /> Tester la voix
+              </Button>
+              <div className="relative flex items-center justify-center w-10 h-8">
+                {isTesting && (
+                  <span className="absolute left-0 right-0 top-0 bottom-0 flex items-center justify-center">
+                    <span className="block w-8 h-4 bg-gradient-to-r from-blue-400 via-purple-400 to-green-400 rounded-full animate-pulse" style={{ opacity: 0.5 }}></span>
+                  </span>
+                )}
+              </div>
+              <Button onClick={handleReset} variant="secondary" className="flex-1 flex items-center gap-2">
+                <RefreshCcw className="w-4 h-4" /> Réinitialiser tout
+              </Button>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <Button onClick={handleExport} variant="secondary" className="flex-1 flex items-center gap-2">
+                <DownloadCloud className="w-4 h-4" /> Exporter
+              </Button>
+              <Button onClick={() => fileInputRef.current?.click()} variant="secondary" className="flex-1 flex items-center gap-2">
+                <UploadCloud className="w-4 h-4" /> Importer
+              </Button>
+              <input type="file" accept="application/json" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImport} />
+              <Button onClick={handleDelete} variant="destructive" className="flex-1 flex items-center gap-2">
+                <Trash2 className="w-4 h-4" /> Supprimer
+              </Button>
+            </div>
           </div>
-          <Button onClick={handleReset} variant="secondary" className="flex-1 flex items-center gap-2">
-            <RefreshCcw className="w-4 h-4" /> Réinitialiser tout
-          </Button>
         </div>
-        <div className="flex gap-2 mt-4">
-          <Button onClick={handleExport} variant="secondary" className="flex-1 flex items-center gap-2">
-            <DownloadCloud className="w-4 h-4" /> Exporter
-          </Button>
-          <Button onClick={() => fileInputRef.current?.click()} variant="secondary" className="flex-1 flex items-center gap-2">
-            <UploadCloud className="w-4 h-4" /> Importer
-          </Button>
-          <input type="file" accept="application/json" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImport} />
-          <Button onClick={handleDelete} variant="destructive" className="flex-1 flex items-center gap-2">
-            <Trash2 className="w-4 h-4" /> Supprimer
-          </Button>
+
+        {/* Footer avec actions rapides */}
+        <div className="px-6 py-4 border-t bg-muted/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Badge variant="secondary" className="text-xs">
+                <Volume2 className="w-3 h-3 mr-1" />
+                Synthèse vocale
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                Configuration avancée
+              </Badge>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onClose}
+              >
+                Fermer
+              </Button>
+            </div>
+          </div>
         </div>
-        <DrawerFooter className="flex flex-row gap-2 justify-end pt-3">
-          <Button onClick={onClose} className="w-full text-base py-3">Fermer</Button>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+      </DialogContent>
+    </Dialog>
   );
 } 

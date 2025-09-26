@@ -3,8 +3,8 @@ import { X, Trash2, UploadCloud, Eye, Pencil, FileText, FileSpreadsheet, FileCod
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface RagDocsModalProps {
   open: boolean;
@@ -374,62 +374,47 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
     });
 
   // Statistiques
-  const stats = {
-    total: docs.length,
-    dossier: docs.filter(d => d.origine === 'dossier').length,
-    utilisateur: docs.filter(d => d.origine === 'utilisateur').length,
-  };
+  // const stats = {
+  //   total: docs.length,
+  //   dossier: docs.filter(d => d.origine === 'dossier').length,
+  //   utilisateur: docs.filter(d => d.origine === 'utilisateur').length,
+  // };
 
   if (!open) return null;
 
   return (
-    <Drawer open={open} onOpenChange={onClose}>
-      <DrawerContent className="max-w-[100vw] px-2 sm:px-6 py-2 sm:py-6 rounded-3xl shadow-2xl border-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20 max-h-[95vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <DrawerHeader className="pb-4 border-b border-slate-200/50 dark:border-slate-700/50">
+    <>
+      <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="w-screen h-screen max-w-none max-h-none p-0 overflow-hidden rounded-none">
+        <DialogHeader className="px-6 py-4 border-b">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
-                <UploadCloud className="w-6 h-6 text-white" />
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+                <UploadCloud className="w-5 h-5 text-white" />
               </div>
               <div>
-                <DrawerTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent">
+                <DialogTitle className="text-xl font-bold">
                   Documents RAG
-                </DrawerTitle>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
+                </DialogTitle>
+                <p className="text-sm text-muted-foreground">
                   Gérez vos documents pour la recherche augmentée
                 </p>
               </div>
             </div>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={onClose} 
-              className="hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/20"
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
-
-          {/* Stats Bar */}
-          <div className="flex flex-wrap gap-2 mt-4">
-            <div className="px-3 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium">
-              <Folder className="w-3 h-3 inline mr-1" />
-              {stats.dossier} dossier
-            </div>
-            <div className="px-3 py-1 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium">
-              <User className="w-3 h-3 inline mr-1" />
-              {stats.utilisateur} utilisateur
-            </div>
-            
-            <div className="px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium">
-              Total: {stats.total}
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
           </div>
-        </DrawerHeader>
+        </DialogHeader>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-hidden">
+          <div className="h-full overflow-y-auto p-6 space-y-6">
           {/* Import Section (ouverture via modal) */}
           <div className="grid grid-cols-1 gap-6">
             <Card className="overflow-hidden">
@@ -770,78 +755,84 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
               </div>
             </div>
           )}
+          </div>
         </div>
 
-        {/* Footer */}
-        <DrawerFooter className="border-t border-slate-200/50 dark:border-slate-700/50 pt-4">
-          <div className="flex gap-3">
-            <Button onClick={onClose} variant="outline" className="flex-1">
-              Fermer
-            </Button>
-            {selectedIds.length > 0 && (
-              <Button 
-                onClick={() => {
-                  setSelectedIds([]);
-                  toast.success('Sélection effacée');
-                }}
-                variant="ghost"
-                className="px-6"
-              >
-                Déselectionner tout
-              </Button>
-            )}
-          </div>
-        </DrawerFooter>
-
-        {/* Delete Confirmation Modal */}
-        <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-red-600">
-                <Trash2 className="w-5 h-5" />
-                Supprimer les documents
-              </DialogTitle>
-            </DialogHeader>
-            <div className="py-4">
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                Cette action est <span className="font-semibold text-red-600">irréversible</span>.
-              </p>
-              <p className="text-sm">
-                Voulez-vous vraiment supprimer <span className="font-semibold">{selectedIds.length}</span> document{selectedIds.length > 1 ? 's' : ''} ?
-              </p>
+        {/* Footer avec actions rapides */}
+        <div className="px-6 py-4 border-t bg-muted/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Badge variant="secondary" className="text-xs">
+                <UploadCloud className="w-3 h-3 mr-1" />
+                Documents RAG
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                Recherche augmentée
+              </Badge>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>
-                Annuler
-              </Button>
+            <div className="flex items-center space-x-2">
               <Button
-                variant="destructive"
-                onClick={() => {
-                  const userRaw = localStorage.getItem(wsKey(workspaceId, 'rag_user_docs'));
-                  let userDocs: RagDoc[] = [];
-                  if (userRaw) {
-                    try { userDocs = JSON.parse(userRaw); } catch {
-        // Ignore parsing errors
-      }
-                  }
-                  userDocs = userDocs.filter(doc => !selectedIds.includes(doc.id));
-                  localStorage.setItem(wsKey(workspaceId, 'rag_user_docs'), JSON.stringify(userDocs));
-                  setDocs(docs => docs.filter(doc => !selectedIds.includes(doc.id)));
-                  setSelectedIds([]);
-                  setOpenDeleteModal(false);
-                  toast.success('Documents supprimés.');
-                }}
+                variant="outline"
+                size="sm"
+                onClick={onClose}
               >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Supprimer définitivement
+                Fermer
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
 
-        {/* Import Modal */}
-        <Dialog open={openImportModal} onOpenChange={setOpenImportModal}>
-          <DialogContent className="sm:max-w-lg" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+    {/* Delete Confirmation Modal */}
+    <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-red-600">
+            <Trash2 className="w-5 h-5" />
+            Supprimer les documents
+          </DialogTitle>
+        </DialogHeader>
+        <div className="py-4">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+            Cette action est <span className="font-semibold text-red-600">irréversible</span>.
+          </p>
+          <p className="text-sm">
+            Voulez-vous vraiment supprimer <span className="font-semibold">{selectedIds.length}</span> document{selectedIds.length > 1 ? 's' : ''} ?
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>
+            Annuler
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              const userRaw = localStorage.getItem(wsKey(workspaceId, 'rag_user_docs'));
+              let userDocs: RagDoc[] = [];
+              if (userRaw) {
+                try { userDocs = JSON.parse(userRaw); } catch {
+                  // Ignore parsing errors
+                }
+              }
+              userDocs = userDocs.filter(doc => !selectedIds.includes(doc.id));
+              localStorage.setItem(wsKey(workspaceId, 'rag_user_docs'), JSON.stringify(userDocs));
+              setDocs(docs => docs.filter(doc => !selectedIds.includes(doc.id)));
+              setSelectedIds([]);
+              setOpenDeleteModal(false);
+              toast.success('Documents supprimés.');
+            }}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Supprimer définitivement
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Import Modal */}
+    <Dialog open={openImportModal} onOpenChange={setOpenImportModal}>
+      <DialogContent className="sm:max-w-lg" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Upload className="w-5 h-5 text-blue-500" />
@@ -925,7 +916,6 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
             </DialogContent>
           </Dialog>
         )}
-      </DrawerContent>
-    </Drawer>
-  );
-}
+      </>
+    );
+  }
