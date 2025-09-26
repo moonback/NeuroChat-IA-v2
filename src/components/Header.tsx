@@ -642,7 +642,7 @@ const MobileActions = ({
   </div>
 );
 
-// Actions desktop modernisées
+// Actions desktop modernisées - CORRIGÉ
 const DesktopActions = ({ 
   modeEnfant, 
   onNewDiscussion, 
@@ -650,6 +650,13 @@ const DesktopActions = ({
   muted, 
   handleVolumeToggle, 
   handleModeVocalToggle, 
+  modePrive,
+  handlePrivateModeToggle,
+  handleChildModeToggle,
+  ragEnabled,
+  handleRagToggle,
+  webEnabled,
+  handleWebToggle,
   setShowMenu,
   ...unusedProps
 }: {

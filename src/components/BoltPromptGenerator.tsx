@@ -28,7 +28,8 @@ import type {
   BoltPromptConfig, 
   GeneratedBoltPrompt, 
   BoltPromptCategory,
-  BoltPromptPreset 
+  BoltPromptPreset,
+  BoltPromptVariable 
 } from '@/types/boltPrompt';
 
 interface BoltPromptGeneratorProps {
@@ -90,6 +91,11 @@ export function BoltPromptGenerator({ className }: BoltPromptGeneratorProps) {
   const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedBoltPrompt | null>(null);
   const [activeTab, setActiveTab] = useState<'templates' | 'presets' | 'history'>('templates');
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Helper function pour vérifier si un template est sélectionné
+  const isTemplateSelected = (templateId: string): boolean => {
+    return selectedTemplate?.id === templateId;
+  };
 
   const templates = useMemo(() => boltPromptService.getTemplates(), []);
   const presets = useMemo(() => boltPromptService.getPresets(), []);
@@ -178,7 +184,7 @@ export function BoltPromptGenerator({ className }: BoltPromptGeneratorProps) {
   };
 
   // Rendu d'un champ de configuration
-  const renderConfigField = (variable: any) => {
+  const renderConfigField = (variable: BoltPromptVariable) => {
     const value = config[variable.name as keyof BoltPromptConfig] || variable.defaultValue;
 
     switch (variable.type) {
@@ -216,7 +222,7 @@ export function BoltPromptGenerator({ className }: BoltPromptGeneratorProps) {
                 <SelectValue placeholder={variable.placeholder} />
               </SelectTrigger>
               <SelectContent>
-                {variable.options?.map((option: any) => (
+                {variable.options?.map((option: { value: string; label: string }) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
@@ -237,7 +243,7 @@ export function BoltPromptGenerator({ className }: BoltPromptGeneratorProps) {
               {variable.required && <span className="text-red-500 ml-1">*</span>}
             </Label>
             <div className="flex flex-wrap gap-2">
-              {variable.options?.map((option: any) => {
+              {variable.options?.map((option: { value: string; label: string }) => {
                 const isSelected = Array.isArray(value) && value.includes(option.value);
                 return (
                   <Badge
@@ -313,12 +319,12 @@ export function BoltPromptGenerator({ className }: BoltPromptGeneratorProps) {
   };
 
   return (
-    <div className={cn('w-full max-w-6xl mx-auto p-6 space-y-6', className)}>
+    <div className={cn('w-full max-w-12xl mx-auto p-6 space-y-6', className)}>
       
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Configuration */}
-        <Card className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+        <Card className="p-6 space-y-6 flex flex-col max-h-[80vh] overflow-hidden">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Configuration</h2>
             <Button variant="outline" size="sm" onClick={resetConfig}>
@@ -328,7 +334,7 @@ export function BoltPromptGenerator({ className }: BoltPromptGeneratorProps) {
 
           {/* Sélection du template */}
           {!selectedTemplate ? (
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'templates' | 'presets' | 'history')}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="templates">Templates</TabsTrigger>
                 <TabsTrigger value="presets">Presets</TabsTrigger>
@@ -343,7 +349,7 @@ export function BoltPromptGenerator({ className }: BoltPromptGeneratorProps) {
                         key={template.id}
                         className={cn(
                           'p-4 cursor-pointer transition-all hover:shadow-md',
-                          selectedTemplate?.id === template.id && 'ring-2 ring-blue-500'
+                          isTemplateSelected(template.id) ? 'ring-2 ring-blue-500' : ''
                         )}
                         onClick={() => setSelectedTemplate(template)}
                       >
@@ -471,34 +477,38 @@ export function BoltPromptGenerator({ className }: BoltPromptGeneratorProps) {
           {selectedTemplate && (
             <>
               <Separator />
-              <div className="space-y-4">
+              <div className="space-y-4 flex-1 overflow-hidden">
                 <h3 className="font-medium">Paramètres du projet</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  {selectedTemplate.variables.map(renderConfigField)}
-                </div>
+                <ScrollArea className="flex-1">
+                  <div className="grid grid-cols-1 gap-4 pr-4">
+                    {selectedTemplate.variables.map(renderConfigField)}
+                  </div>
+                </ScrollArea>
               </div>
             </>
           )}
 
-          {/* Bouton de génération */}
-          <Button
-            onClick={handleGeneratePrompt}
-            disabled={!selectedTemplate || isGenerating}
-            className="w-full"
-            size="lg"
-          >
-            {isGenerating ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                Génération...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Générer le Prompt
-              </>
-            )}
-          </Button>
+          {/* Bouton de génération - Toujours visible */}
+          <div className="flex-shrink-0 pt-4 border-t">
+            <Button
+              onClick={handleGeneratePrompt}
+              disabled={!selectedTemplate || isGenerating}
+              className="w-full"
+              size="lg"
+            >
+              {isGenerating ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Génération...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Générer le Prompt
+                </>
+              )}
+            </Button>
+          </div>
         </Card>
 
         {/* Résultat */}
