@@ -35,16 +35,25 @@ function formatDate(date: Date): string {
 // Illustration SVG pour l'état vide
 function EmptyIllustration() {
   return (
-    <div className="flex flex-col items-center justify-center py-12 opacity-80 select-none">
-      <svg width="90" height="90" viewBox="0 0 90 90" fill="none" className="mb-4">
-        <rect x="10" y="20" width="70" height="50" rx="10" fill="#e0e7ef" />
-        <rect x="20" y="30" width="50" height="8" rx="4" fill="#b6c3e0" />
-        <rect x="20" y="45" width="35" height="6" rx="3" fill="#cfd8ea" />
-        <rect x="20" y="57" width="25" height="6" rx="3" fill="#cfd8ea" />
-        <circle cx="70" cy="60" r="6" fill="#b6c3e0" />
-      </svg>
-      <div className="text-muted-foreground text-lg font-semibold mb-1">Aucune discussion sauvegardée</div>
-      <div className="text-xs text-slate-400">Vos conversations récentes apparaîtront ici.</div>
+    <div className="flex flex-col items-center justify-center py-16 opacity-80 select-none">
+      <div className="relative mb-6">
+        <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-200 dark:from-blue-900/30 dark:to-indigo-800/30 rounded-2xl flex items-center justify-center">
+          <History className="w-12 h-12 text-blue-600 dark:text-blue-400" />
+        </div>
+        <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-orange-400 to-pink-500 rounded-full flex items-center justify-center">
+          <MessageCircle className="w-4 h-4 text-white" />
+        </div>
+      </div>
+      <div className="text-center space-y-2">
+        <div className="text-muted-foreground text-xl font-bold">Aucune discussion sauvegardée</div>
+        <div className="text-sm text-slate-400 max-w-md">
+          Vos conversations récentes apparaîtront ici. Commencez une nouvelle discussion pour voir l'historique.
+        </div>
+      </div>
+      <div className="mt-6 flex items-center gap-2 text-xs text-slate-400">
+        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+        <span>En attente de conversations...</span>
+      </div>
     </div>
   );
 }
@@ -155,296 +164,305 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
         </DialogHeader>
         
         <div className="flex-1 overflow-hidden">
-          <div className="h-full overflow-y-auto">
-          <div className="flex flex-col sm:flex-row items-center gap-2">
-            <div className="flex items-center w-full sm:w-1/2 relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-              <input
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Rechercher une discussion..."
-                className="w-full pl-8 pr-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                aria-label="Rechercher"
-              />
-            </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <select
-                value={sort}
-                onChange={e => setSort(e.target.value as 'date-desc' | 'date-asc' | 'alpha')}
-                className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                aria-label="Trier"
-              >
-                <option value="date-desc">Plus récentes</option>
-                <option value="date-asc">Plus anciennes</option>
-                <option value="alpha">Alphabétique</option>
-              </select>
+          <div className="h-full flex flex-col">
+            {/* Barre de recherche et contrôles */}
+            <div className="p-6 border-b bg-slate-50/50 dark:bg-slate-900/50">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="flex items-center w-full sm:w-1/2 relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Rechercher une discussion..."
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                    aria-label="Rechercher"
+                  />
+                </div>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <select
+                    value={sort}
+                    onChange={e => setSort(e.target.value as 'date-desc' | 'date-asc' | 'alpha')}
+                    className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                    aria-label="Trier"
+                  >
+                    <option value="date-desc">Plus récentes</option>
+                    <option value="date-asc">Plus anciennes</option>
+                    <option value="alpha">Alphabétique</option>
+                  </select>
+                  
+                  {/* Toggle vue compact/détaillé */}
+                  <div className="flex items-center gap-1 bg-blue-50 dark:bg-indigo-950 rounded-xl p-1">
+                    <button
+                      onClick={() => setViewMode('compact')}
+                      className={`p-2 rounded-lg transition-all ${viewMode === 'compact' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+                      title="Vue compacte"
+                    >
+                      <Grid3X3 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('detailed')}
+                      className={`p-2 rounded-lg transition-all ${viewMode === 'detailed' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+                      title="Vue détaillée"
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
               
-              {/* Toggle vue compact/détaillé */}
-              <div className="flex items-center gap-1 bg-blue-50 dark:bg-indigo-950 rounded-lg p-1">
+              {/* Boutons sélection multiple */}
+              <div className="flex items-center gap-3 pt-4">
                 <button
-                  onClick={() => setViewMode('compact')}
-                  className={`p-1.5 rounded-md transition-all ${viewMode === 'compact' ? 'bg-blue-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-700'}`}
-                  title="Vue compacte"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-semibold bg-blue-50 dark:bg-indigo-950 hover:bg-blue-100 dark:hover:bg-indigo-900 transition"
+                  onClick={selectAll}
+                  type="button"
+                  title={selected.length === filtered.length ? 'Tout désélectionner' : 'Tout sélectionner'}
                 >
-                  <Grid3X3 className="w-4 h-4" />
+                  {selected.length === filtered.length ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                  {selected.length === filtered.length ? 'Tout désélectionner' : 'Tout sélectionner'}
                 </button>
-                <button
-                  onClick={() => setViewMode('detailed')}
-                  className={`p-1.5 rounded-md transition-all ${viewMode === 'detailed' ? 'bg-blue-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-700'}`}
-                  title="Vue détaillée"
-                >
-                  <List className="w-4 h-4" />
-                </button>
+                <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-semibold bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 text-red-700 dark:text-red-300 transition disabled:opacity-50"
+                      type="button"
+                      disabled={selected.length === 0}
+                      title="Supprimer la sélection"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Supprimer ({selected.length})
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Supprimer {selected.length} discussion{selected.length > 1 ? 's' : ''} ?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Cette action est irréversible. Les discussions sélectionnées seront définitivement supprimées.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteSelected}>Supprimer</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                
+                {/* Pagination info */}
+                <div className="ml-auto flex items-center gap-2 text-sm text-slate-500">
+                  <span>Page {currentPage} sur {totalPages}</span>
+                  <span>•</span>
+                  <span>{filtered.length} discussion{filtered.length > 1 ? 's' : ''}</span>
+                </div>
               </div>
             </div>
-          </div>
-          
-          {/* Boutons sélection multiple */}
-          <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <button
-              className="flex items-center gap-1 px-3 py-1 rounded-lg border text-xs font-semibold bg-blue-50 dark:bg-indigo-950 hover:bg-blue-100 dark:hover:bg-indigo-900 transition"
-              onClick={selectAll}
-              type="button"
-              title={selected.length === filtered.length ? 'Tout désélectionner' : 'Tout sélectionner'}
-            >
-              {selected.length === filtered.length ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-              {selected.length === filtered.length ? 'Tout désélectionner' : 'Tout sélectionner'}
-            </button>
-            <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
-              <AlertDialogTrigger asChild>
-                <button
-                  className="flex items-center gap-1 px-3 py-1 rounded-lg border text-xs font-semibold bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 text-red-700 dark:text-red-300 transition disabled:opacity-50"
-                  type="button"
-                  disabled={selected.length === 0}
-                  title="Supprimer la sélection"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Supprimer ({selected.length})
-                </button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Supprimer {selected.length} discussion{selected.length > 1 ? 's' : ''} ?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Cette action est irréversible. Les discussions sélectionnées seront définitivement supprimées.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDeleteSelected}>Supprimer</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            
-            {/* Pagination info */}
-            <div className="ml-auto flex items-center gap-2 text-xs text-slate-500">
-              <span>Page {currentPage} sur {totalPages}</span>
-              <span>•</span>
-              <span>{filtered.length} discussion{filtered.length > 1 ? 's' : ''}</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Liste ou grille des discussions */}
-        <div className="px-7 py-6">
-          {filtered.length === 0 ? (
-            <EmptyIllustration />
-          ) : (
-            <>
-              <div className={viewMode === 'compact' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' : 'space-y-4'}>
-                {paginatedItems.map((discussion, idx) => {
-                  const nbMessages = discussion.messages.length;
-                  const nbQuestions = discussion.messages.filter(m => m.isUser).length;
-                  const nbReponses = nbMessages - nbQuestions;
-                  const date = discussion.messages[0]?.timestamp ? new Date(discussion.messages[0].timestamp) : null;
-                  const realIdx = history.findIndex(d => d === discussion);
-                  const actualIdx = (currentPage - 1) * itemsPerPage + idx;
-                  
-                  return (
-                    <div
-                      key={realIdx}
-                      className={`group border rounded-xl p-4 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950 hover:shadow-lg transition-all duration-200 cursor-pointer animate-fadeIn ${
-                        viewMode === 'compact' ? 'hover:scale-[1.02]' : 'hover:shadow-xl'
-                      }`}
-                      onClick={() => {
-                        if (editingIdx !== actualIdx) onLoad(discussion);
-                      }}
-                    >
-                      {/* Header avec sélection */}
-                      <div className="flex items-start gap-3 mb-3">
-                        <input
-                          type="checkbox"
-                          checked={selected.includes(realIdx)}
-                          onChange={() => toggleSelect(realIdx)}
-                          className="mt-1 accent-blue-500"
-                          onClick={e => e.stopPropagation()}
-                        />
-                        <div className="flex-1 min-w-0">
-                          {editingIdx === actualIdx ? (
-                            <input
-                              type="text"
-                              value={editingValue}
-                              onChange={e => setEditingValue(e.target.value)}
-                              autoFocus
-                              className="w-full text-sm font-semibold bg-transparent border-b border-blue-400 focus:outline-none"
-                              onClick={e => e.stopPropagation()}
-                            />
-                          ) : (
-                            <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate text-sm sm:text-base">
-                              {discussion.title || `Discussion ${realIdx + 1}`}
-                            </h3>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-slate-500 dark:text-slate-400">
-                            {date ? formatDate(date) : ''}
-                          </span>
-                          {discussion.childMode && (
-                            <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60">
-                              <Baby className="w-3 h-3" /> Mode enfant
-                            </span>
-                          )}
-                          {viewMode === 'detailed' && (
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              {editingIdx === actualIdx ? (
-                                <>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={(e) => { e.stopPropagation(); onRename(realIdx, editingValue); setEditingIdx(null); }}
-                                    className="h-6 w-6 p-0 text-green-500"
-                                  >
-                                    ✓
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={(e) => { e.stopPropagation(); setEditingIdx(null); }}
-                                    className="h-6 w-6 p-0 text-red-500"
-                                  >
-                                    ✕
-                                  </Button>
-                                </>
-                              ) : (
-                                <>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
+            {/* Zone principale des discussions */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-6">
+                {filtered.length === 0 ? (
+                  <EmptyIllustration />
+                ) : (
+                  <>
+                    <div className={viewMode === 'compact' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' : 'space-y-4'}>
+                      {paginatedItems.map((discussion, idx) => {
+                        const nbMessages = discussion.messages.length;
+                        const nbQuestions = discussion.messages.filter(m => m.isUser).length;
+                        const nbReponses = nbMessages - nbQuestions;
+                        const date = discussion.messages[0]?.timestamp ? new Date(discussion.messages[0].timestamp) : null;
+                        const realIdx = history.findIndex(d => d === discussion);
+                        const actualIdx = (currentPage - 1) * itemsPerPage + idx;
+                        
+                        return (
+                          <div
+                            key={realIdx}
+                            className={`group border rounded-2xl p-5 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950 hover:shadow-xl transition-all duration-300 cursor-pointer ${
+                              viewMode === 'compact' ? 'hover:scale-[1.02] hover:shadow-2xl' : 'hover:shadow-2xl'
+                            } ${selected.includes(realIdx) ? 'ring-2 ring-blue-500 bg-blue-100 dark:bg-blue-900/20' : ''}`}
+                            onClick={() => {
+                              if (editingIdx !== actualIdx) onLoad(discussion);
+                            }}
+                          >
+                            {/* Header avec sélection */}
+                            <div className="flex items-start gap-3 mb-4">
+                              <input
+                                type="checkbox"
+                                checked={selected.includes(realIdx)}
+                                onChange={() => toggleSelect(realIdx)}
+                                className="mt-1 accent-blue-500 w-4 h-4"
+                                onClick={e => e.stopPropagation()}
+                              />
+                              <div className="flex-1 min-w-0">
+                                {editingIdx === actualIdx ? (
+                                  <input
+                                    type="text"
+                                    value={editingValue}
+                                    onChange={e => setEditingValue(e.target.value)}
+                                    autoFocus
+                                    className="w-full text-base font-semibold bg-transparent border-b-2 border-blue-400 focus:outline-none"
+                                    onClick={e => e.stopPropagation()}
+                                  />
+                                ) : (
+                                  <h3 className="font-bold text-slate-900 dark:text-slate-100 truncate text-base sm:text-lg">
+                                    {discussion.title || `Discussion ${realIdx + 1}`}
+                                  </h3>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+                                  {date ? formatDate(date) : ''}
+                                </span>
+                                {discussion.childMode && (
+                                  <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60">
+                                    <Baby className="w-3 h-3" /> Mode enfant
+                                  </span>
+                                )}
+                                {viewMode === 'detailed' && (
+                                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {editingIdx === actualIdx ? (
+                                      <>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={(e) => { e.stopPropagation(); onRename(realIdx, editingValue); setEditingIdx(null); }}
+                                          className="h-7 w-7 p-0 text-green-500 hover:bg-green-100"
+                                        >
+                                          ✓
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={(e) => { e.stopPropagation(); setEditingIdx(null); }}
+                                          className="h-7 w-7 p-0 text-red-500 hover:bg-red-100"
+                                        >
+                                          ✕
+                                        </Button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={(e) => { e.stopPropagation(); setEditingIdx(actualIdx); setEditingValue(discussion.title || ''); }}
+                                          className="h-7 w-7 p-0 text-blue-500 hover:bg-blue-100"
+                                        >
+                                          ✎
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={(e) => { e.stopPropagation(); onDelete(realIdx); }}
+                                          className="h-7 w-7 p-0 text-red-500 hover:bg-red-100"
+                                        >
+                                          🗑
+                                        </Button>
+                                      </>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Aperçu du contenu */}
+                            {viewMode === 'detailed' && (
+                              <div className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg">
+                                {discussion.messages.map(m => m.text).join(' ').slice(0, 200)}...
+                              </div>
+                            )}
+                            
+                            {/* Stats */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4 text-sm text-slate-500">
+                                <span className="flex items-center gap-2 font-medium">
+                                  <MessageCircle className="w-4 h-4" />
+                                  {nbMessages} messages
+                                </span>
+                                {viewMode === 'detailed' && (
+                                  <span className="flex items-center gap-2 font-medium">
+                                    <Users className="w-4 h-4" />
+                                    {nbQuestions}Q/{nbReponses}R
+                                  </span>
+                                )}
+                              </div>
+                              
+                              {/* Actions compactes */}
+                              {viewMode === 'compact' && (
+                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
                                     onClick={(e) => { e.stopPropagation(); setEditingIdx(actualIdx); setEditingValue(discussion.title || ''); }}
-                                    className="h-6 w-6 p-0 text-blue-500"
+                                    className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-500"
+                                    title="Renommer"
                                   >
-                                    ✎
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={(e) => { e.stopPropagation(); onDelete(realIdx); }}
-                                    className="h-6 w-6 p-0 text-red-500"
-                                  >
-                                    🗑
-                                  </Button>
-                                </>
+                                    <MoreHorizontal className="w-4 h-4" />
+                                  </button>
+                                </div>
                               )}
                             </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Aperçu du contenu */}
-                      {viewMode === 'detailed' && (
-                        <div className="text-xs text-slate-600 dark:text-slate-400 mb-3 line-clamp-2">
-                          {discussion.messages.map(m => m.text).join(' ').slice(0, 150)}...
-                        </div>
-                      )}
-                      
-                      {/* Stats */}
-                      <div className="flex items-center justify_between">
-                        <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <span className="flex items_center gap-1">
-                            <MessageCircle className="w-3 h-3" />
-                            {nbMessages}
-                          </span>
-                          {viewMode === 'detailed' && (
-                            <span className="flex items-center gap-1">
-                              <Users className="w-3 h-3" />
-                              {nbQuestions}Q/{nbReponses}R
-                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-center gap-3 mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                          disabled={currentPage === 1}
+                          className="flex items-center gap-2"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                          Précédent
+                        </Button>
+                        
+                        <div className="flex items-center gap-2">
+                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            const page = i + 1;
+                            return (
+                              <Button
+                                key={page}
+                                variant={currentPage === page ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setCurrentPage(page)}
+                                className="w-10 h-10 p-0"
+                              >
+                                {page}
+                              </Button>
+                            );
+                          })}
+                          {totalPages > 5 && (
+                            <>
+                              <span className="text-slate-400">...</span>
+                              <Button
+                                variant={currentPage === totalPages ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setCurrentPage(totalPages)}
+                                className="w-10 h-10 p-0"
+                              >
+                                {totalPages}
+                              </Button>
+                            </>
                           )}
                         </div>
                         
-                        {/* Actions compactes */}
-                        {viewMode === 'compact' && (
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setEditingIdx(actualIdx); setEditingValue(discussion.title || ''); }}
-                              className="p-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-500"
-                              title="Renommer"
-                            >
-                              <MoreHorizontal className="w-3 h-3" />
-                            </button>
-                          </div>
-                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                          disabled={currentPage === totalPages}
+                          className="flex items-center gap-2"
+                        >
+                          Suivant
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-              
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      const page = i + 1;
-                      return (
-                        <Button
-                          key={page}
-                          variant={currentPage === page ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setCurrentPage(page)}
-                          className="w-8 h-8 p-0"
-                        >
-                          {page}
-                        </Button>
-                      );
-                    })}
-                    {totalPages > 5 && (
-                      <>
-                        <span className="text-slate-400">...</span>
-                        <Button
-                          variant={currentPage === totalPages ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setCurrentPage(totalPages)}
-                          className="w-8 h-8 p-0"
-                        >
-                          {totalPages}
-                        </Button>
-                      </>
                     )}
-                  </div>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 

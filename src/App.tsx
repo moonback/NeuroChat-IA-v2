@@ -8,6 +8,7 @@ import { PWAMeta } from '@/components/PWAMeta';
 import { PWAShortcuts } from '@/components/PWAShortcuts';
 import { GeminiGenerationConfig } from '@/services/geminiApi';
 import type { MistralGenerationConfig } from '@/services/mistralApi';
+import type { OpenAIGenerationConfig } from '@/services/openaiApi';
 import { streamMessage, type LlmConfig } from '@/services/llm';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { toast } from 'sonner';
@@ -44,7 +45,7 @@ import type { DiscussionWithCategory } from '@/components/HistoryModal';
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
 // Services de mémoire supprimés - système de mémoire retiré
 const GeminiSettingsDrawerLazy = lazy(() => import('@/components/GeminiSettingsDrawer').then(m => ({ default: m.GeminiSettingsDrawer })));
-const OpenAISettingsDrawerLazy = lazy(() => import('@/components/OpenAISettingsDrawer').then(m => ({ default: m.OpenAISettingsDrawer })));
+const OpenAISettingsDrawerLazy = lazy(() => import('@/components/OpenAISettingsDrawer').then(m => ({ default: m.OpenAISettingsModal })));
 const MistralSettingsDrawerLazy = lazy(() => import('@/components/MistralSettingsDrawer').then(m => ({ default: m.MistralSettingsDrawer })));
 // Retrait du sélecteur de personnalités
 
@@ -1693,9 +1694,9 @@ function App() {
       <Suspense fallback={null}>
         <OpenAISettingsDrawerLazy
           open={modeEnfant ? false : showOpenAISettings}
-          onOpenChange={(open) => !modeEnfant && setShowOpenAISettings(open)}
+          onOpenChange={(open: boolean) => !modeEnfant && setShowOpenAISettings(open)}
           openaiConfig={openaiConfig}
-          onConfigChange={(key, value) => setOpenaiConfig(cfg => ({ ...cfg, [key]: value }))}
+          onConfigChange={(key: keyof OpenAIGenerationConfig, value: unknown) => setOpenaiConfig(cfg => ({ ...cfg, [key]: value }))}
           onReset={() => setOpenaiConfig({ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' })}
           onClose={() => setShowOpenAISettings(false)}
           DEFAULTS={{ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' }}
