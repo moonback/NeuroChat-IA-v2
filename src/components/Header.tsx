@@ -1027,209 +1027,150 @@ export function Header(props: HeaderProps) {
         {/* Sheet menu mobile modernisé */}
         <Sheet open={showMenu} onOpenChange={setShowMenu}>
           <SheetContent side="right" className="p-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-l border-slate-200/50 dark:border-slate-800/50 w-[90vw] max-w-md">
-            <SheetHeader className="p-6 border-b border-slate-200/50 dark:border-slate-800/50">
+            <SheetHeader className="p-4 border-b border-slate-200/50 dark:border-slate-800/50">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                <h2 className="text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
                   Paramètres
                 </h2>
-                <ModernButton
-                  variant="ghost"
-                  onClick={() => setShowMenu(false)}
-                  className="w-8 h-8 p-0"
-                >
+                <ModernButton variant="ghost" onClick={() => setShowMenu(false)} className="w-8 h-8 p-0">
                   <X className="w-4 h-4" />
                 </ModernButton>
               </div>
             </SheetHeader>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-8">
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
               {/* Actions principales */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
-                  Actions
-                </h3>
-                 <div className="grid grid-cols-2 gap-2">
-                   <ModernButton
-                     variant="primary"
-                     onClick={() => {
-                       props.onNewDiscussion();
-                       setShowMenu(false);
-                     }}
-                     className="h-12 flex-col gap-1"
-                   >
-                     <PlusCircle className="w-4 h-4" />
-                     <span className="text-xs">Nouveau</span>
-                   </ModernButton>
-                  
-                   {!props.modeEnfant && (
-                     <ModernButton
-                       variant="secondary"
-                       onClick={() => {
-                         props.onOpenHistory();
-                         setShowMenu(false);
-                       }}
-                       className="h-12 flex-col gap-1"
-                     >
-                       <History className="w-4 h-4" />
-                       <span className="text-xs">Historique</span>
-                     </ModernButton>
-                   )}
+              <div>
+                <div className="grid grid-cols-2 gap-2">
+                  <ModernButton
+                    variant="primary"
+                    onClick={() => { props.onNewDiscussion(); setShowMenu(false); }}
+                    className="h-10 flex-col gap-0.5 text-xs"
+                  >
+                    <PlusCircle className="w-4 h-4" />
+                    Nouveau
+                  </ModernButton>
+                  {!props.modeEnfant && (
+                    <ModernButton
+                      variant="secondary"
+                      onClick={() => { props.onOpenHistory(); setShowMenu(false); }}
+                      className="h-10 flex-col gap-0.5 text-xs"
+                    >
+                      <History className="w-4 h-4" />
+                      Historique
+                    </ModernButton>
+                  )}
                 </div>
               </div>
 
               {/* Modes et fonctionnalités */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
-                  Modes IA
-                </h3>
-                 <div className="grid grid-cols-2 gap-2">
-                   {!props.modeEnfant && (
-                     <ModernButton
-                       variant={props.modePrive ? "danger" : "ghost"}
-                       onClick={() => {
-                         handlePrivateModeToggle();
-                         setShowMenu(false);
-                       }}
-                       active={props.modePrive}
-                       className="h-12 flex-col gap-1"
-                     >
-                       <Shield className="w-4 h-4" />
-                       <span className="text-xs">{props.modePrive ? 'Privé ON' : 'Privé OFF'}</span>
-                     </ModernButton>
-                   )}
-                   
-                   <ModernButton
-                     variant={props.modeEnfant ? "primary" : "ghost"}
-                     onClick={() => {
-                       handleChildModeToggle();
-                       setShowMenu(false);
-                     }}
-                     active={!!props.modeEnfant}
-                     className="h-12 flex-col gap-1"
-                   >
-                     <Baby className="w-4 h-4" />
-                     <span className="text-xs">{props.modeEnfant ? 'Enfant ON' : 'Enfant OFF'}</span>
-                   </ModernButton>
-                   
-                   {!props.modeEnfant && (
-                     <>
-                       <ModernButton
-                         variant={props.ragEnabled ? "success" : "ghost"}
-                         onClick={() => {
-                           handleRagToggle();
-                           setShowMenu(false);
-                         }}
-                         active={props.ragEnabled}
-                         className="h-12 flex-col gap-1"
-                       >
-                         <Database className="w-4 h-4" />
-                         <span className="text-xs">{props.ragEnabled ? 'RAG ON' : 'RAG OFF'}</span>
-                       </ModernButton>
-                       
-                       <ModernButton
-                         variant={props.webEnabled ? "success" : "ghost"}
-                         onClick={() => {
-                           handleWebToggle();
-                           setShowMenu(false);
-                         }}
-                         active={!!props.webEnabled}
-                         className="h-12 flex-col gap-1"
-                       >
-                         <Globe className="w-4 h-4" />
-                         <span className="text-xs">{props.webEnabled ? 'Web ON' : 'Web OFF'}</span>
-                       </ModernButton>
-                     </>
-                   )}
-                 </div>
+              <div>
+                <div className="grid grid-cols-2 gap-2">
+                  {!props.modeEnfant && (
+                    <ModernButton
+                      variant={props.modePrive ? "danger" : "ghost"}
+                      onClick={() => { handlePrivateModeToggle(); setShowMenu(false); }}
+                      active={props.modePrive}
+                      className="h-10 flex-col gap-0.5 text-xs"
+                    >
+                      <Shield className="w-4 h-4" />
+                      {props.modePrive ? 'Privé ON' : 'Privé OFF'}
+                    </ModernButton>
+                  )}
+                  <ModernButton
+                    variant={props.modeEnfant ? "primary" : "ghost"}
+                    onClick={() => { handleChildModeToggle(); setShowMenu(false); }}
+                    active={!!props.modeEnfant}
+                    className="h-10 flex-col gap-0.5 text-xs"
+                  >
+                    <Baby className="w-4 h-4" />
+                    {props.modeEnfant ? 'Enfant ON' : 'Enfant OFF'}
+                  </ModernButton>
+                  {!props.modeEnfant && (
+                    <>
+                      <ModernButton
+                        variant={props.ragEnabled ? "success" : "ghost"}
+                        onClick={() => { handleRagToggle(); setShowMenu(false); }}
+                        active={props.ragEnabled}
+                        className="h-10 flex-col gap-0.5 text-xs"
+                      >
+                        <Database className="w-4 h-4" />
+                        {props.ragEnabled ? 'RAG ON' : 'RAG OFF'}
+                      </ModernButton>
+                      <ModernButton
+                        variant={props.webEnabled ? "success" : "ghost"}
+                        onClick={() => { handleWebToggle(); setShowMenu(false); }}
+                        active={!!props.webEnabled}
+                        className="h-10 flex-col gap-0.5 text-xs"
+                      >
+                        <Globe className="w-4 h-4" />
+                        {props.webEnabled ? 'Web ON' : 'Web OFF'}
+                      </ModernButton>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Configuration */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
-                  Configuration
-                </h3>
-                <div className="space-y-3">
+              <div>
+                <div className="space-y-2">
                   {!props.modeEnfant && (
                     <>
                       <ModernButton
                         variant="ghost"
-                        onClick={() => {
-                          props.onOpenTTSSettings();
-                          setShowMenu(false);
-                        }}
-                        className="w-full justify-start h-12"
+                        onClick={() => { props.onOpenTTSSettings(); setShowMenu(false); }}
+                        className="w-full justify-start h-10 text-sm"
                       >
-                        <Volume2 className="w-4 h-4 mr-3" />
+                        <Volume2 className="w-4 h-4 mr-2" />
                         Synthèse vocale
                       </ModernButton>
-                      
                       <ModernButton
                         variant="ghost"
-                        onClick={() => {
-                          props.onOpenRagDocs();
-                          setShowMenu(false);
-                        }}
-                        className="w-full justify-start h-12"
+                        onClick={() => { props.onOpenRagDocs(); setShowMenu(false); }}
+                        className="w-full justify-start h-10 text-sm"
                       >
-                        <BookOpen className="w-4 h-4 mr-3" />
+                        <BookOpen className="w-4 h-4 mr-2" />
                         Documents RAG
                       </ModernButton>
-                      
                       <ModernButton
                         variant="ghost"
-                        onClick={() => {
-                          props.onOpenBoltPrompt?.();
-                          setShowMenu(false);
-                        }}
-                        className="w-full justify-start h-12"
+                        onClick={() => { props.onOpenBoltPrompt?.(); setShowMenu(false); }}
+                        className="w-full justify-start h-10 text-sm"
                       >
-                        <Sparkles className="w-4 h-4 mr-3" />
+                        <Sparkles className="w-4 h-4 mr-2" />
                         Prompts bolt.new
                       </ModernButton>
                     </>
                   )}
-                  
                   <ModernButton
                     variant="ghost"
-                    onClick={() => {
-                      toggleTheme();
-                      setShowMenu(false);
-                    }}
-                    className="w-full justify-start h-12"
+                    onClick={() => { toggleTheme(); setShowMenu(false); }}
+                    className="w-full justify-start h-10 text-sm"
                   >
-                    {theme === 'dark' ? <Sun className="w-4 h-4 mr-3" /> : <Moon className="w-4 h-4 mr-3" />}
+                    {theme === 'dark' ? <Sun className="w-4 h-4 mr-2" /> : <Moon className="w-4 h-4 mr-2" />}
                     {theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
                   </ModernButton>
-                  
-                  
                   {!props.modeEnfant && (
                     <ModernButton
                       variant="ghost"
                       onClick={() => {
-                        // Ouvrir le modal des espaces de travail
                         const workspaceButton = document.querySelector('[data-workspace-button]');
-                        if (workspaceButton) {
-                          (workspaceButton as HTMLButtonElement).click();
-                        }
+                        if (workspaceButton) (workspaceButton as HTMLButtonElement).click();
                         setShowMenu(false);
                       }}
-                      className="w-full justify-start h-12"
+                      className="w-full justify-start h-10 text-sm"
                     >
-                      <Database className="w-4 h-4 mr-3" />
+                      <Database className="w-4 h-4 mr-2" />
                       Espaces de travail
                     </ModernButton>
                   )}
-                  
                   <ModernButton
                     variant="ghost"
-                    onClick={() => {
-                      setShowHelpModal(true);
-                      setShowMenu(false);
-                    }}
-                    className="w-full justify-start h-12"
+                    onClick={() => { setShowHelpModal(true); setShowMenu(false); }}
+                    className="w-full justify-start h-10 text-sm"
                   >
-                    <HelpCircle className="w-4 h-4 mr-3" />
-                    Aide et documentation
+                    <HelpCircle className="w-4 h-4 mr-2" />
+                    Aide & doc
                   </ModernButton>
                 </div>
               </div>
