@@ -351,12 +351,12 @@ export function BoltPromptGenerator({ className }: BoltPromptGeneratorProps) {
   };
 
   return (
-    <div className={cn('w-full max-w-12xl mx-auto p-6 space-y-6', className)}>
+    <div className={cn('w-full h-full p-6 space-y-6 overflow-hidden', className)}>
       
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Configuration */}
-        <Card className="p-4 space-y-4 flex flex-col h-[70vh] overflow-hidden">
+        <Card className="p-4 space-y-4 flex flex-col h-[calc(100vh-12rem)] overflow-hidden">
           <div className="flex items-center justify-between flex-shrink-0">
             <h2 className="text-xl font-semibold">Configuration</h2>
             <Button variant="outline" size="sm" onClick={resetConfig}>
@@ -586,7 +586,7 @@ Exemple: 'Je veux créer une plateforme de gestion de projets pour les équipes 
         </Card>
 
         {/* Résultat */}
-        <Card className="p-6 space-y-6">
+        <Card className="p-6 space-y-6 h-[calc(100vh-12rem)] overflow-hidden flex flex-col">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Prompt Généré</h2>
             {generatedPrompt && (
@@ -604,8 +604,8 @@ Exemple: 'Je veux créer une plateforme de gestion de projets pour les équipes 
           </div>
 
           {generatedPrompt ? (
-            <div className="space-y-4">
-              <ScrollArea className="h-96">
+            <div className="space-y-4 flex-1 flex flex-col">
+              <ScrollArea className="flex-1">
                 <div className="bg-muted p-4 rounded-lg">
                   <pre className="whitespace-pre-wrap text-sm font-mono">
                     {generatedPrompt.generatedPrompt}
@@ -614,7 +614,7 @@ Exemple: 'Je veux créer une plateforme de gestion de projets pour les équipes 
               </ScrollArea>
 
               {/* Rating */}
-              <div className="space-y-2">
+              <div className="space-y-2 flex-shrink-0">
                 <Label>Évaluez ce prompt</Label>
                 <div className="flex items-center space-x-1">
                   {[1, 2, 3, 4, 5].map((rating) => (
@@ -633,7 +633,7 @@ Exemple: 'Je veux créer une plateforme de gestion de projets pour les équipes 
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-96 text-muted-foreground">
+            <div className="flex items-center justify-center flex-1 text-muted-foreground">
               <div className="text-center space-y-2">
                 <Sparkles className="w-12 h-12 mx-auto opacity-50" />
                 <p>Générez un prompt pour voir le résultat ici</p>
