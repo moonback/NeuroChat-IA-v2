@@ -6,13 +6,15 @@ import {
   PlusCircle, Mic, Shield, BookOpen, CheckSquare, Square, 
   Trash2, Menu, X, Baby,
   Globe, Database, Pencil, HelpCircle,
-  Download
+  Download, Github
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { VocalAutoSettingsModal } from '@/components/VocalAutoSettingsModal';
 import { HelpModal } from '@/components/HelpModal';
+import { GitHubAccessModal } from '@/components/GitHubAccessModal';
+import type { GitHubFile } from '@/services/githubService';
 import { usePWA } from '@/hooks/usePWA';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
@@ -63,6 +65,7 @@ interface HeaderProps {
   onCreateWorkspace?: () => void;
   onRenameWorkspace?: (id: string, name: string) => void;
   onDeleteWorkspace?: (id: string) => void;
+  onGitHubFileSelect?: (file: GitHubFile) => void;
 }
 
 // =====================
@@ -649,14 +652,17 @@ const DesktopActions = ({
   muted, 
   handleVolumeToggle, 
   handleModeVocalToggle, 
-  // modePrive, 
+  modePrive, 
   // handlePrivateModeToggle, 
   // handleChildModeToggle, 
   // ragEnabled, 
   // handleRagToggle, 
   // webEnabled, 
   // handleWebToggle, 
-  setShowMenu 
+  setShowMenu,
+  onGitHubFileSelect,
+  showGitHubModal,
+  setShowGitHubModal
 }: {
   modeEnfant?: boolean;
   onNewDiscussion: () => void;
@@ -672,6 +678,9 @@ const DesktopActions = ({
   webEnabled?: boolean;
   handleWebToggle: () => void;
   setShowMenu: (show: boolean) => void;
+  onGitHubFileSelect?: (file: GitHubFile) => void;
+  showGitHubModal: boolean;
+  setShowGitHubModal: (show: boolean) => void;
 }) => (
   <div
     className="hidden md:flex items-center gap-4"
@@ -766,6 +775,15 @@ const DesktopActions = ({
       )}
     </ButtonGroup> */}
 
+    {/* GitHub */}
+    <GitHubAccessModal 
+      onFileSelect={onGitHubFileSelect || (() => {})}
+      modePrive={modePrive}
+      modeEnfant={modeEnfant}
+      open={showGitHubModal}
+      onOpenChange={setShowGitHubModal}
+    />
+
     {/* Settings */}
     <ModernButton
       variant="ghost"
@@ -803,6 +821,7 @@ export function Header(props: HeaderProps) {
   const { audioRef, showPrivateIndicator } = usePrivateModeFeedback(props.modePrive);
   usePWA();
   const [showMenu, setShowMenu] = useState(false);
+  const [showGitHubModal, setShowGitHubModal] = useState(false);
   const [showVocalSettings, setShowVocalSettings] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
 
@@ -968,6 +987,9 @@ export function Header(props: HeaderProps) {
               webEnabled={props.webEnabled}
               handleWebToggle={handleWebToggle}
               setShowMenu={setShowMenu}
+              onGitHubFileSelect={props.onGitHubFileSelect}
+              showGitHubModal={showGitHubModal}
+              setShowGitHubModal={setShowGitHubModal}
             />
 
             {/* Actions mobiles */}
@@ -1166,6 +1188,18 @@ export function Header(props: HeaderProps) {
                       >
                         <BookOpen className="w-4 h-4 mr-3" />
                         Documents RAG
+                      </ModernButton>
+                      
+                      <ModernButton
+                        variant="ghost"
+                        onClick={() => {
+                          setShowGitHubModal(true);
+                          setShowMenu(false);
+                        }}
+                        className="w-full justify-start h-12"
+                      >
+                        <Github className="w-4 h-4 mr-3" />
+                        GitHub
                       </ModernButton>
                     </>
                   )}

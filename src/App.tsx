@@ -42,6 +42,7 @@ const HistoryModalLazy = lazy(() => import('@/components/HistoryModal').then(m =
 import type { DiscussionWithCategory } from '@/components/HistoryModal';
 
 import { SYSTEM_PROMPT } from './services/geminiSystemPrompt';
+import { generateGitHubContextForGemini, type GitHubFile } from './services/githubService';
 // Services de mémoire supprimés - système de mémoire retiré
 const GeminiSettingsDrawerLazy = lazy(() => import('@/components/GeminiSettingsDrawer').then(m => ({ default: m.GeminiSettingsDrawer })));
 const OpenAISettingsDrawerLazy = lazy(() => import('@/components/OpenAISettingsDrawer').then(m => ({ default: m.OpenAISettingsDrawer })));
@@ -57,6 +58,7 @@ import { RagSidebar } from '@/components/RagSidebar';
 import { RagSidebarDrawer } from '@/components/RagSidebarDrawer';
 import { WebSourcesSidebar } from '@/components/WebSourcesSidebar';
 import { WebSourcesDrawer } from '@/components/WebSourcesDrawer';
+import { GitHubFilesSidebar } from '@/components/GitHubFilesSidebar';
 import type { WebSource } from '@/components/WebSourcesSidebar';
 import { AgentStatus } from '@/components/AgentStatus';
 import { useWorkspace, useWorkspaceOpeningModal } from '@/hooks/useWorkspace';
@@ -202,6 +204,10 @@ function App() {
   const [usedWebSources, setUsedWebSources] = useState<WebSource[]>([]);
   // Sidebar Web mobile
   const [showWebSidebarMobile, setShowWebSidebarMobile] = useState(false);
+  // Fichiers GitHub sélectionnés pour l'analyse
+  const [selectedGitHubFiles, setSelectedGitHubFiles] = useState<GitHubFile[]>([]);
+  // Sidebar GitHub mobile
+  const [showGitHubSidebarMobile, setShowGitHubSidebarMobile] = useState(false);
   // --- Sélection multiple de messages pour suppression groupée ---
   const [selectMode, setSelectMode] = useState(false);
   const [selectedMessageIds, setSelectedMessageIds] = useState<string[]>([]);
@@ -718,7 +724,30 @@ function App() {
     setMessages(prev => [...prev, ragMsg as unknown as Message]);
   };
 
+  // Fonction pour gérer la sélection de fichiers GitHub
+  const handleGitHubFileSelect = useCallback((file: GitHubFile) => {
+    setSelectedGitHubFiles(prev => {
+      // Éviter les doublons
+      if (prev.some(f => f.path === file.path)) {
+        toast.info('Ce fichier est déjà sélectionné');
+        return prev;
+      }
+      
+      const newFiles = [...prev, file];
+      toast.success(`Fichier "${file.name}" ajouté au contexte GitHub`);
+      return newFiles;
+    });
+  }, []);
 
+  // Fonction pour supprimer un fichier GitHub
+  const handleRemoveGitHubFile = useCallback((filePath: string) => {
+    setSelectedGitHubFiles(prev => prev.filter(f => f.path !== filePath));
+  }, []);
+
+  // Fonction pour effacer tous les fichiers GitHub
+  const handleClearAllGitHubFiles = useCallback(() => {
+    setSelectedGitHubFiles([]);
+  }, []);
 
   const handleSendMessage = async (userMessage: string, imageFile?: File) => {
 
@@ -897,7 +926,18 @@ function App() {
 
       // Important: ne pas inclure à nouveau la question utilisateur dans le prompt système
       // pour éviter qu'elle soit envoyée deux fois au modèle.
-      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memoryContext}${(ragEnabled || autoUseRag) ? ragContext : ""}${webContext}`;
+      
+      // Construire le contexte GitHub
+      const githubContext = selectedGitHubFiles.length > 0 
+        ? '\n\n' + selectedGitHubFiles.map(file => generateGitHubContextForGemini({
+            file,
+            repository: { owner: '', repo: '', branch: '' }, // Ces infos seront remplies par le service
+            timestamp: new Date(),
+            contextId: file.path
+          })).join('\n\n')
+        : '';
+      
+      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memoryContext}${(ragEnabled || autoUseRag) ? ragContext : ""}${webContext}${githubContext}`;
        // Timeline retirée
       // LOG prompt final
       const llmCfg: LlmConfig = {
@@ -1460,6 +1500,7 @@ function App() {
           onCreateWorkspace={createWorkspace}
           onRenameWorkspace={renameWorkspace}
           onDeleteWorkspace={deleteWorkspace}
+          onGitHubFileSelect={handleGitHubFileSelect}
           
           stop={stop}
           modeVocalAuto={modeVocalAuto}
@@ -1580,6 +1621,54 @@ function App() {
                   onClose={() => setShowWebSidebarMobile(false)}
                   usedSources={usedWebSources}
                 />
+              </>
+            )}
+
+            {/* Sidebar GitHub à droite (desktop) quand des fichiers GitHub sont sélectionnés */}
+            {selectedGitHubFiles.length > 0 && !modeEnfant && (
+              <>
+                <div className="hidden lg:block">
+                  <GitHubFilesSidebar
+                    files={selectedGitHubFiles}
+                    onRemoveFile={handleRemoveGitHubFile}
+                    onClearAll={handleClearAllGitHubFiles}
+                    modePrive={modePrive}
+                    modeEnfant={modeEnfant}
+                  />
+                </div>
+                {/* Bouton flottant pour mobile */}
+                <button
+                  className="lg:hidden fixed right-3 bottom-44 z-40 rounded-full px-4 py-2 text-white bg-gradient-to-r from-purple-500 to-pink-600 shadow-xl border border-white/20"
+                  onClick={() => setShowGitHubSidebarMobile(true)}
+                  aria-label="Ouvrir les fichiers GitHub"
+                >
+                  GitHub
+                </button>
+                {/* Drawer GitHub pour mobile */}
+                <div className="lg:hidden">
+                  {showGitHubSidebarMobile && (
+                    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold">Fichiers GitHub</h3>
+                          <button
+                            onClick={() => setShowGitHubSidebarMobile(false)}
+                            className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        <GitHubFilesSidebar
+                          files={selectedGitHubFiles}
+                          onRemoveFile={handleRemoveGitHubFile}
+                          onClearAll={handleClearAllGitHubFiles}
+                          modePrive={modePrive}
+                          modeEnfant={modeEnfant}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </>
             )}
           </div>
