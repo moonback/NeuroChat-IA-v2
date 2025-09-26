@@ -1111,6 +1111,45 @@ export function Header(props: HeaderProps) {
                 </div>
               </div>
 
+              {/* Sélecteur de Provider */}
+              {!props.modeEnfant && props.provider && props.onChangeProvider && (
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    Provider IA
+                  </h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    <ModernButton
+                      variant={props.provider === 'gemini' ? "primary" : "ghost"}
+                      onClick={() => { props.onChangeProvider?.('gemini'); setShowMenu(false); }}
+                      active={props.provider === 'gemini'}
+                      className="h-10 flex-col gap-0.5 text-xs"
+                    >
+                      <div className="w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-500" />
+                      Gemini
+                    </ModernButton>
+                    <ModernButton
+                      variant={props.provider === 'openai' ? "primary" : "ghost"}
+                      onClick={() => { props.onChangeProvider?.('openai'); setShowMenu(false); }}
+                      active={props.provider === 'openai'}
+                      className="h-10 flex-col gap-0.5 text-xs"
+                    >
+                      <div className="w-4 h-4 rounded-full bg-gradient-to-r from-green-500 to-emerald-500" />
+                      OpenAI
+                    </ModernButton>
+                    <ModernButton
+                      variant={props.provider === 'mistral' ? "primary" : "ghost"}
+                      onClick={() => { props.onChangeProvider?.('mistral'); setShowMenu(false); }}
+                      active={props.provider === 'mistral'}
+                      className="h-10 flex-col gap-0.5 text-xs"
+                    >
+                      <div className="w-4 h-4 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" />
+                      Mistral
+                    </ModernButton>
+                  </div>
+                </div>
+              )}
+
               {/* Configuration */}
               <div>
                 <div className="space-y-2">
