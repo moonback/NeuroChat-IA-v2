@@ -317,24 +317,27 @@ export function VoiceInput({ onSendMessage, isLoading, provider = 'gemini', agen
                       onChange={handleFileChange}
                     />
                     
-                    <Button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isLoading}
-                      size="icon"
-                      variant="ghost"
-                       className={cn(
-                         "h-10 w-10 rounded-xl transition-all duration-300 relative overflow-hidden group",
-                        "bg-gradient-to-br from-slate-100/90 to-slate-200/90 dark:from-slate-800/90 dark:to-slate-700/90",
-                        "hover:from-blue-100/90 hover:to-blue-200/90 dark:hover:from-blue-900/50 dark:hover:to-blue-800/50",
-                        "border border-slate-200/60 dark:border-slate-700/60 hover:border-blue-300/60 dark:hover:border-blue-600/60",
-                        "shadow-lg hover:shadow-xl shadow-black/5 dark:shadow-black/20"
-                      )}
-                      title="Joindre un fichier (image, PDF, DOCX)"
-                    >
-                      <Paperclip className="h-5 w-5 text-slate-600 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                    </Button>
+                    {/* Bouton d'upload de fichier - caché pour Mistral */}
+                    {provider !== 'mistral' && (
+                      <Button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isLoading}
+                        size="icon"
+                        variant="ghost"
+                         className={cn(
+                           "h-10 w-10 rounded-xl transition-all duration-300 relative overflow-hidden group",
+                          "bg-gradient-to-br from-slate-100/90 to-slate-200/90 dark:from-slate-800/90 dark:to-slate-700/90",
+                          "hover:from-blue-100/90 hover:to-blue-200/90 dark:hover:from-blue-900/50 dark:hover:to-blue-800/50",
+                          "border border-slate-200/60 dark:border-slate-700/60 hover:border-blue-300/60 dark:hover:border-blue-600/60",
+                          "shadow-lg hover:shadow-xl shadow-black/5 dark:shadow-black/20"
+                        )}
+                        title="Joindre un fichier (image, PDF, DOCX)"
+                      >
+                        <Paperclip className="h-5 w-5 text-slate-600 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                      </Button>
+                    )}
 
                     {/* Toggle Agent (Gemini/Mistral) */}
                     {(provider === 'gemini' || provider === 'mistral') && (
