@@ -47,10 +47,10 @@ export const OpenAISettingsDrawer: React.FC<OpenAISettingsDrawerProps> = ({
     <DrawerContent className="max-w-full w-[95vw] sm:w-[100%] px-2 py-2">
       <DrawerHeader className="pb-2">
         <div className="flex items-center gap-2">
-          <div className="bg-gradient-to-br from-emerald-500 via-blue-500 to-indigo-500 p-1.5 rounded-xl shadow">
+          <div className="bg-gradient-to-br from-slate-500 via-slate-500 to-slate-500 p-1.5 rounded-xl shadow">
             <Sliders className="w-5 h-5 text-white" />
           </div>
-          <DrawerTitle className="text-lg font-bold bg-gradient-to-r from-emerald-600 via-blue-600 to-indigo-600 dark:from-emerald-300 dark:via-blue-300 dark:to-indigo-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
+          <DrawerTitle className="text-lg font-bold bg-gradient-to-r from-slate-600 via-slate-600 to-slate-600 dark:from-slate-300 dark:via-slate-300 dark:to-slate-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
             Réglages OpenAI
           </DrawerTitle>
         </div>

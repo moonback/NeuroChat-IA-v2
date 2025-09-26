@@ -93,7 +93,7 @@ export function TTSSettingsModal({ open, onClose, rate, setRate, pitch, setPitch
         <DrawerHeader className="pb-2">
           <div className="flex items-center gap-2">
             <Sliders className="w-5 h-5 text-blue-500" />
-            <DrawerTitle className="text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
+            <DrawerTitle className="text-lg font-bold bg-gradient-to-r from-slate-600 via-slate-600 to-slate-600 dark:from-slate-300 dark:via-slate-300 dark:to-slate-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
               Réglages de la synthèse vocale
             </DrawerTitle>
             <button onClick={onClose} className="ml-auto text-slate-500 hover:text-red-500 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-red-400" title="Fermer" aria-label="Fermer">
@@ -218,7 +218,7 @@ export function TTSSettingsModal({ open, onClose, rate, setRate, pitch, setPitch
           <div className="relative flex items-center justify-center w-10 h-8">
             {isTesting && (
               <span className="absolute left-0 right-0 top-0 bottom-0 flex items-center justify-center">
-                <span className="block w-8 h-4 bg-gradient-to-r from-blue-400 via-purple-400 to-green-400 rounded-full animate-pulse" style={{ opacity: 0.5 }}></span>
+                <span className="block w-8 h-4 bg-gradient-to-r from-slate-400 via-slate-400 to-green-400 rounded-full animate-pulse" style={{ opacity: 0.5 }}></span>
               </span>
             )}
           </div>

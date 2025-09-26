@@ -125,11 +125,11 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
 
   return (
     <Drawer open={open} onOpenChange={onClose}>
-      <DrawerContent className="max-w-12xl px-2 sm:px-6 py-2 sm:py-6 rounded-3xl shadow-2xl border-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-white dark:from-slate-950 dark:via-indigo-950 dark:to-slate-950 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20 max-h-[95vh] overflow-y-auto">
+      <DrawerContent className="max-w-12xl px-2 sm:px-6 py-2 sm:py-6 rounded-3xl shadow-2xl border-0 bg-gradient-to-br from-slate-50 via-slate-50 to-white dark:from-slate-950 dark:via-slate-950 dark:to-slate-950 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20 max-h-[95vh] overflow-y-auto">
         <DrawerHeader className="pb-2">
           <div className="flex items-center gap-2">
             <History className="w-7 h-7 text-blue-500 mr-2" />
-            <DrawerTitle className="text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
+            <DrawerTitle className="text-lg font-bold bg-gradient-to-r from-slate-600 via-slate-600 to-slate-600 dark:from-slate-300 dark:via-slate-300 dark:to-slate-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
               Discussions récentes ({filtered.length})
             </DrawerTitle>
             <button onClick={onClose} className="ml-auto text-slate-500 hover:text-red-500 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-red-400" title="Fermer" aria-label="Fermer">
@@ -139,7 +139,7 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
         </DrawerHeader>
         
         {/* Barre de recherche, tri et contrôles */}
-        <div className="flex flex-col gap-2 px-7 py-4 bg-gradient-to-r from-blue-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950 sticky top-0 z-10 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex flex-col gap-2 px-7 py-4 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-950 sticky top-0 z-10 border-b border-slate-100 dark:border-slate-800">
           <div className="flex flex-col sm:flex-row items-center gap-2">
             <div className="flex items-center w-full sm:w-1/2 relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
@@ -248,7 +248,7 @@ export function HistoryModal({ open, onClose, history, onLoad, onDelete, onRenam
                   return (
                     <div
                       key={realIdx}
-                      className={`group border rounded-xl p-4 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950 hover:shadow-lg transition-all duration-200 cursor-pointer animate-fadeIn ${
+                      className={`group border rounded-xl p-4 bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-950 hover:shadow-lg transition-all duration-200 cursor-pointer animate-fadeIn ${
                         viewMode === 'compact' ? 'hover:scale-[1.02]' : 'hover:shadow-xl'
                       }`}
                       onClick={() => {

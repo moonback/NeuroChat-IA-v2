@@ -76,10 +76,10 @@ export function ChatContainer({
       className={cn(
         "flex-1 relative transition-all duration-700 group",
         modePrive 
-          ? "bg-gradient-to-br from-red-50/40 via-purple-50/50 to-blue-50/40 dark:from-red-950/30 dark:via-purple-950/40 dark:to-blue-950/30" 
+          ? "bg-gradient-to-br from-red-50/40 via-slate-50/50 to-slate-50/40 dark:from-red-950/30 dark:via-slate-950/40 dark:to-slate-950/30" 
           : modeEnfant
           ? "bg-gradient-to-br from-pink-50/50 via-yellow-50/60 to-orange-50/50 dark:from-pink-950/30 dark:via-yellow-950/40 dark:to-orange-950/30"
-          : "bg-gradient-to-br from-slate-50/70 via-white/90 to-blue-50/50 dark:from-slate-900/70 dark:via-slate-900/90 dark:to-slate-800/50",
+          : "bg-gradient-to-br from-slate-50/70 via-white/90 to-slate-50/50 dark:from-slate-900/70 dark:via-slate-900/90 dark:to-slate-800/50",
         "backdrop-blur-2xl"
       )}
       style={{ minHeight: '0', height: '100%', maxHeight: '100vh' }}
@@ -111,7 +111,7 @@ export function ChatContainer({
                         className={cn(
                           "flex items-center justify-between p-6 rounded-3xl border backdrop-blur-2xl shadow-2xl hover:shadow-3xl transition-all duration-500 group relative overflow-hidden",
                           modePrive 
-                            ? "bg-gradient-to-r from-red-50/90 via-purple-50/90 to-blue-50/90 dark:from-red-950/60 dark:via-purple-950/60 dark:to-blue-950/60 border-red-200/50 dark:border-red-800/50"
+                            ? "bg-gradient-to-r from-red-50/90 via-slate-50/90 to-slate-50/90 dark:from-red-950/60 dark:via-slate-950/60 dark:to-slate-950/60 border-red-200/50 dark:border-red-800/50"
                             : modeEnfant
                             ? "bg-gradient-to-r from-pink-50/90 via-yellow-50/90 to-orange-50/90 dark:from-pink-950/60 dark:via-yellow-950/60 dark:to-orange-950/60 border-pink-200/50 dark:border-pink-800/50"
                             : "bg-white/95 dark:bg-slate-900/95 border-white/60 dark:border-slate-800/60"
@@ -124,10 +124,10 @@ export function ChatContainer({
                           "absolute inset-0 transition-opacity duration-500",
                           headerHovered ? "opacity-100" : "opacity-0",
                           modePrive 
-                            ? "bg-gradient-to-r from-red-400/10 via-purple-400/10 to-blue-400/10"
+                            ? "bg-gradient-to-r from-red-400/10 via-slate-400/10 to-slate-400/10"
                             : modeEnfant
                             ? "bg-gradient-to-r from-pink-400/10 via-yellow-400/10 to-orange-400/10"
-                            : "bg-gradient-to-r from-blue-400/10 via-indigo-400/10 to-purple-400/10"
+                            : "bg-gradient-to-r from-slate-400/10 via-slate-400/10 to-slate-400/10"
                         )} />
                         
                         <div className="flex items-center gap-6 min-w-0 flex-1 relative z-10">
@@ -173,10 +173,10 @@ export function ChatContainer({
                                 className={cn(
                                   "h-full rounded-full transition-all duration-300 shadow-sm",
                                   modePrive 
-                                    ? "bg-gradient-to-r from-red-500 via-purple-500 to-blue-500"
+                                    ? "bg-gradient-to-r from-red-500 via-slate-500 to-slate-500"
                                     : modeEnfant
                                     ? "bg-gradient-to-r from-pink-500 via-yellow-500 to-orange-500"
-                                    : "bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"
+                                    : "bg-gradient-to-r from-slate-500 via-slate-500 to-slate-500"
                                 )}
                                 style={{ width: `${scrollProgress}%` }}
                               />
@@ -202,14 +202,14 @@ export function ChatContainer({
                                   className={cn(
                                     "p-2 rounded-lg transition-all duration-300 relative group",
                                     ragFilter === filter.key
-                                      ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg scale-105"
+                                      ? "bg-gradient-to-r from-slate-500 to-slate-500 text-white shadow-lg scale-105"
                                       : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
                                   )}
                                   title={filter.tooltip}
                                 >
                                   <filter.icon className="w-4 h-4" />
                                   {ragFilter === filter.key && (
-                                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-lg animate-pulse" />
+                                    <div className="absolute inset-0 bg-gradient-to-r from-slate-400/20 to-slate-400/20 rounded-lg animate-pulse" />
                                   )}
                                 </button>
                               ))}
@@ -393,10 +393,10 @@ export function ChatContainer({
             className={cn(
               "h-14 w-14 rounded-2xl text-white shadow-2xl hover:shadow-3xl transition-all duration-500 group relative overflow-hidden backdrop-blur-sm",
               modePrive 
-                ? "bg-gradient-to-r from-purple-600 to-blue-700 hover:from-purple-700 hover:to-blue-800"
+                ? "bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800"
                 : modeEnfant
                 ? "bg-gradient-to-r from-yellow-600 to-orange-700 hover:from-yellow-700 hover:to-orange-800"
-                : "bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800"
+                : "bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800"
             )}
             title="Aller à la fin"
           >
@@ -413,7 +413,7 @@ export function ChatContainer({
             className={cn(
               "rounded-3xl p-8 max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-3xl border backdrop-blur-2xl animate-in slide-in-from-bottom-4 zoom-in-95 duration-500 relative overflow-hidden",
               modePrive 
-                ? "bg-gradient-to-br from-red-50/95 via-purple-50/95 to-blue-50/95 dark:from-red-950/90 dark:via-purple-950/90 dark:to-blue-950/90 border-red-200/50 dark:border-red-800/50"
+                ? "bg-gradient-to-br from-red-50/95 via-slate-50/95 to-slate-50/95 dark:from-red-950/90 dark:via-slate-950/90 dark:to-slate-950/90 border-red-200/50 dark:border-red-800/50"
                 : modeEnfant
                 ? "bg-gradient-to-br from-pink-50/95 via-yellow-50/95 to-orange-50/95 dark:from-pink-950/90 dark:via-yellow-950/90 dark:to-orange-950/90 border-pink-200/50 dark:border-pink-800/50"
                 : "bg-white/95 dark:bg-slate-900/95 border-white/60 dark:border-slate-800/60"
@@ -423,10 +423,10 @@ export function ChatContainer({
             <div className={cn(
               "absolute inset-0 opacity-30",
               modePrive 
-                ? "bg-gradient-to-br from-red-400/10 via-purple-400/10 to-blue-400/10"
+                ? "bg-gradient-to-br from-red-400/10 via-slate-400/10 to-slate-400/10"
                 : modeEnfant
                 ? "bg-gradient-to-br from-pink-400/10 via-yellow-400/10 to-orange-400/10"
-                : "bg-gradient-to-br from-blue-400/10 via-indigo-400/10 to-purple-400/10"
+                : "bg-gradient-to-br from-slate-400/10 via-slate-400/10 to-slate-400/10"
             )} />
             
             <div className="relative z-10">
@@ -852,16 +852,16 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
         
         {/* Effets de fond ultra-dynamiques */}
         <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-red-600/20 via-purple-600/20 to-blue-600/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-red-600/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
-          <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-gradient-to-r from-blue-600/20 via-indigo-600/20 to-purple-600/20 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-red-600/20 via-slate-600/20 to-slate-600/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-gradient-to-r from-slate-600/20 via-slate-600/20 to-red-600/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-gradient-to-r from-slate-600/20 via-slate-600/20 to-slate-600/20 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }} />
         </div>
         
         <div className="max-w-4xl mx-auto space-y-12 relative z-10">
           <div className="space-y-8">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-purple-600 via-pink-600 to-blue-600 blur-3xl opacity-40 animate-pulse" />
-              <h2 className="relative text-3xl sm:text-5xl font-black bg-gradient-to-r from-red-600 via-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent tracking-tight flex items-center justify-center gap-6">
+              <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-slate-600 via-slate-600 to-slate-600 blur-3xl opacity-40 animate-pulse" />
+              <h2 className="relative text-3xl sm:text-5xl font-black bg-gradient-to-r from-red-600 via-slate-600 via-slate-600 to-slate-600 bg-clip-text text-transparent tracking-tight flex items-center justify-center gap-6">
                 <Shield className="w-12 h-12 sm:w-16 sm:h-16 text-red-500 animate-pulse" />
                 Session Ultra-Privée
                 <Crown className="w-12 h-12 sm:w-16 sm:h-16 text-purple-500 animate-pulse" />
@@ -869,7 +869,7 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
             </div>
             <p className="text-slate-600 dark:text-slate-300 text-lg sm:text-xl leading-relaxed max-w-4xl mx-auto">
               <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-purple-600">Maximum Sécurité</span> 
-              {' '}• <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">Zero Traçage</span> 
+              {' '}• <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-600 to-slate-600">Zero Traçage</span> 
               {' '}• <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-pink-600">Auto-Destruction</span>
             </p>
           </div>
@@ -932,8 +932,8 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
 
           {/* Indicateur de sécurité en temps réel ultra-stylé */}
           <div className="animate-in slide-in-from-bottom-4 duration-1000" style={{ animationDelay: '700ms' }}>
-            <div className="relative p-8 bg-gradient-to-r from-red-50/20 via-purple-50/20 via-pink-50/20 to-blue-50/20 dark:from-red-950/30 dark:via-purple-950/30 dark:via-pink-950/30 dark:to-blue-950/30 rounded-2xl border border-red-200/30 dark:border-red-800/30 backdrop-blur-md shadow-2xl hover:shadow-4xl group transition-all duration-500">
-              <div className="absolute inset-0 bg-gradient-to-r from-red-400/10 via-purple-400/10 to-blue-400/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative p-8 bg-gradient-to-r from-red-50/20 via-slate-50/20 via-slate-50/20 to-slate-50/20 dark:from-red-950/30 dark:via-slate-950/30 dark:via-slate-950/30 dark:to-slate-950/30 rounded-2xl border border-red-200/30 dark:border-red-800/30 backdrop-blur-md shadow-2xl hover:shadow-4xl group transition-all duration-500">
+              <div className="absolute inset-0 bg-gradient-to-r from-red-400/10 via-slate-400/10 to-slate-400/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               
               <div className="relative z-10 flex items-center justify-center gap-4 text-lg">
                 <div className="flex items-center gap-2">
@@ -966,8 +966,8 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
       <div className="max-w-4xl mx-auto space-y-10 relative z-10">
         <div className="space-y-6 p-8 rounded-3xl bg-white/10 dark:bg-slate-900/20 backdrop-blur-xl border border-white/20 dark:border-slate-700/30 shadow-2xl">
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-blue-600 via-indigo-600 to-cyan-600 blur-3xl opacity-30 animate-pulse pointer-events-none" />
-            <h2 className="relative text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-purple-600 via-blue-600 via-indigo-600 to-cyan-600 bg-clip-text text-transparent tracking-tight flex items-center justify-center gap-4 drop-shadow-lg">
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-600 via-slate-600 via-slate-600 to-slate-600 blur-3xl opacity-30 animate-pulse pointer-events-none" />
+            <h2 className="relative text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-slate-600 via-slate-600 via-slate-600 to-slate-600 bg-clip-text text-transparent tracking-tight flex items-center justify-center gap-4 drop-shadow-lg">
               <span className="flex items-center">
                 <Brain className="w-7 h-7 sm:w-9 sm:h-9 text-purple-500 animate-pulse drop-shadow" />
               </span>

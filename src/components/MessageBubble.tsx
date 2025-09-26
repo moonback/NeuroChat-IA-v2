@@ -124,7 +124,7 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
     >
       {/* Subtle background glow for latest message */}
       {isLatest && !isUser && (
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-2xl blur-xl -z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 via-slate-500/5 to-slate-500/5 rounded-2xl blur-xl -z-10" />
       )}
 
       <div className={cn(
@@ -174,7 +174,7 @@ export function MessageBubble({ message, isUser, timestamp, isLatest = false, im
             {/* Subtle inner glow */}
             <div className={cn(
               "absolute inset-0 rounded-2xl opacity-0 group-hover/message:opacity-100 transition-opacity duration-300",
-              isUser ? "bg-gradient-to-br from-white/10 to-transparent" : "bg-gradient-to-br from-blue-500/5 to-purple-500/5"
+              isUser ? "bg-gradient-to-br from-white/10 to-transparent" : "bg-gradient-to-br from-slate-500/5 to-slate-500/5"
             )} />
 
             {/* Image display with enhanced styling */}

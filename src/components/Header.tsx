@@ -178,7 +178,7 @@ const Logo = ({
       {/* Texte avec animation au hover */}
       <div className="hidden sm:flex flex-col justify-center">
         <h1
-          className="text-2xl font-extrabold bg-gradient-to-r from-blue-700 via-violet-600 to-fuchsia-500 dark:from-white dark:via-blue-300 dark:to-fuchsia-400 bg-clip-text text-transparent group-hover:scale-110 transition-transform duration-200 drop-shadow-sm tracking-tight"
+          className="text-2xl font-extrabold bg-gradient-to-r from-slate-700 via-slate-600 to-slate-500 dark:from-white dark:via-slate-300 dark:to-slate-400 bg-clip-text text-transparent group-hover:scale-110 transition-transform duration-200 drop-shadow-sm tracking-tight"
           aria-label="NeuroChat"
         >
           NeuroChat
@@ -216,7 +216,7 @@ const ModernButton = ({
 }) => {
   const variants = {
     ghost: "hover:bg-slate-100/90 dark:hover:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm",
-    primary: "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 hover:from-blue-700 hover:via-blue-800 hover:to-blue-900 text-white shadow-xl shadow-blue-600/30 border border-blue-500/20 backdrop-blur-sm",
+    primary: "bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800 hover:from-slate-700 hover:via-slate-800 hover:to-slate-900 text-white shadow-xl shadow-slate-600/30 border border-slate-500/20 backdrop-blur-sm",
     secondary: "bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-700 hover:from-slate-300 hover:to-slate-400 dark:hover:from-slate-700 dark:hover:to-slate-600 text-slate-700 dark:text-slate-300 border border-slate-300/50 dark:border-slate-600/50 backdrop-blur-sm",
     danger: "bg-gradient-to-r from-red-600 via-red-700 to-red-800 hover:from-red-700 hover:via-red-800 hover:to-red-900 text-white shadow-xl shadow-red-600/30 border border-red-500/20 backdrop-blur-sm",
     success: "bg-gradient-to-r from-emerald-600 via-emerald-700 to-emerald-800 hover:from-emerald-700 hover:via-emerald-800 hover:to-emerald-900 text-white shadow-xl shadow-emerald-600/30 border border-emerald-500/20 backdrop-blur-sm"
@@ -414,7 +414,7 @@ const WorkspaceModal = ({
 
         <div className="space-y-6">
           {/* Section de création améliorée */}
-          <div className="bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-2xl p-4 border border-blue-200/50 dark:border-blue-800/50">
+          <div className="bg-slate-50/50 dark:bg-slate-900/30 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/50">
             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
               <PlusCircle className="w-4 h-4" />
               Créer un nouvel espace
@@ -451,7 +451,7 @@ const WorkspaceModal = ({
                   key={workspace.id}
                   className={`group p-4 rounded-2xl border transition-all duration-200 ${
                     workspace.id === currentWorkspaceId
-                      ? 'border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 shadow-lg'
+                      ? 'border-slate-300 bg-gradient-to-r from-slate-50 to-slate-50 dark:from-slate-950/40 dark:to-slate-950/40 shadow-lg'
                       : 'border-slate-200 dark:border-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-gray-50 dark:hover:from-slate-800 dark:hover:to-gray-800 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600'
                   }`}
                 >

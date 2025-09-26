@@ -51,10 +51,10 @@ export const GeminiSettingsDrawer: React.FC<GeminiSettingsDrawerProps> = ({
     <DrawerContent className="max-w-full w-[95vw] sm:w-[100%] px-2 py-2">
       <DrawerHeader className="pb-2">
         <div className="flex items-center gap-2">
-          <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-500 p-1.5 rounded-xl shadow">
+          <div className="bg-gradient-to-br from-slate-500 via-slate-500 to-slate-500 p-1.5 rounded-xl shadow">
             <Sliders className="w-5 h-5 text-white" />
           </div>
-          <DrawerTitle className="text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
+          <DrawerTitle className="text-lg font-bold bg-gradient-to-r from-slate-600 via-slate-600 to-slate-600 dark:from-slate-300 dark:via-slate-300 dark:to-slate-300 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
             Réglages Gemini
           </DrawerTitle>
         </div>
@@ -67,7 +67,7 @@ export const GeminiSettingsDrawer: React.FC<GeminiSettingsDrawerProps> = ({
       <button
         type="button"
         onClick={() => onToggleAgent?.(!agentEnabled)}
-        className={`w-full mb-2 flex items-center justify-between p-3 rounded-xl border transition-all duration-200 shadow-sm ${agentEnabled ? 'border-indigo-400/40 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/30 dark:to-blue-950/20' : 'border-indigo-100 dark:border-indigo-900/30 bg-white/70 dark:bg-slate-900/70'} hover:scale-[1.01] active:scale-100`}
+        className={`w-full mb-2 flex items-center justify-between p-3 rounded-xl border transition-all duration-200 shadow-sm ${agentEnabled ? 'border-slate-400/40 bg-gradient-to-r from-slate-50 to-slate-50 dark:from-slate-950/30 dark:to-slate-950/20' : 'border-slate-100 dark:border-slate-900/30 bg-white/70 dark:bg-slate-900/70'} hover:scale-[1.01] active:scale-100`}
         aria-pressed={agentEnabled}
       >
         <div className="flex items-center gap-3">

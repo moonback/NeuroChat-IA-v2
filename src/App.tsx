@@ -1430,7 +1430,7 @@ function App() {
   }, [autoVoiceTimeout]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Halo de fond en bas de page */}
       <div className="bottom-horizon-glow" aria-hidden="true" />
       {/* Menu historique des discussions */}
@@ -1549,7 +1549,7 @@ function App() {
                 </div>
                 {/* Bouton flottant pour mobile */}
                 <button
-                  className="lg:hidden fixed right-3 bottom-28 z-40 rounded-full px-4 py-2 text-white bg-gradient-to-r from-blue-500 to-indigo-600 shadow-xl border border-white/20"
+                  className="lg:hidden fixed right-3 bottom-28 z-40 rounded-full px-4 py-2 text-white bg-gradient-to-r from-slate-500 to-slate-600 shadow-xl border border-white/20"
                   onClick={() => setShowRagSidebarMobile(true)}
                   aria-label="Ouvrir les documents RAG"
                 >
