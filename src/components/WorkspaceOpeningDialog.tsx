@@ -25,7 +25,7 @@ export function WorkspaceOpeningDialog({ open, name, onOpenChange }: WorkspaceOp
           {/* Animation de chargement améliorée */}
           <div className="relative">
             {/* Cercle principal avec gradient */}
-            <div className="h-16 w-16 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 p-0.5">
+            <div className="h-16 w-16 rounded-full bg-gradient-to-r from-slate-500 via-slate-500 to-slate-600 p-0.5">
               <div className="h-full w-full rounded-full bg-white dark:bg-slate-950 flex items-center justify-center">
                 <Loader2 className="h-8 w-8 text-blue-600 dark:text-blue-400 animate-spin" />
               </div>
@@ -61,7 +61,7 @@ export function WorkspaceOpeningDialog({ open, name, onOpenChange }: WorkspaceOp
           {/* Barre de progression */}
           <div className="w-full max-w-xs">
             <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 rounded-full animate-pulse" 
+              <div className="h-full bg-gradient-to-r from-slate-500 via-slate-500 to-slate-600 rounded-full animate-pulse" 
                    style={{ 
                      width: '70%',
                      animation: 'loading-bar 2s ease-in-out infinite'

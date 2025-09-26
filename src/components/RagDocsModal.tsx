@@ -384,16 +384,16 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
 
   return (
     <Drawer open={open} onOpenChange={onClose}>
-      <DrawerContent className="max-w-[100vw] px-2 sm:px-6 py-2 sm:py-6 rounded-3xl shadow-2xl border-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20 max-h-[95vh] overflow-hidden flex flex-col">
+      <DrawerContent className="max-w-[100vw] px-2 sm:px-6 py-2 sm:py-6 rounded-3xl shadow-2xl border-0 bg-gradient-to-br from-slate-50 via-slate-50 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 backdrop-blur-xl ring-1 ring-white/20 dark:ring-slate-700/20 max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
         <DrawerHeader className="pb-4 border-b border-slate-200/50 dark:border-slate-700/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-slate-500 to-slate-600 shadow-lg">
                 <UploadCloud className="w-6 h-6 text-white" />
               </div>
               <div>
-                <DrawerTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent">
+                <DrawerTitle className="text-2xl font-bold bg-gradient-to-r from-slate-600 via-slate-600 to-slate-600 dark:from-slate-300 dark:via-slate-300 dark:to-slate-300 bg-clip-text text-transparent">
                   Documents RAG
                 </DrawerTitle>
                 <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -453,7 +453,7 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
                 </div>
                 <Button
                   onClick={() => setOpenImportModal(true)}
-                  className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                  className="bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700"
                   size="lg"
                 >
                   <Upload className="w-4 h-4 mr-2" />
@@ -558,10 +558,10 @@ export function RagDocsModal({ open, onClose, workspaceId = 'default' }: RagDocs
           {filteredDocs.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 opacity-60">
               <div className="relative mb-6">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-slate-100 to-slate-100 dark:from-slate-900/30 dark:to-slate-900/30 flex items-center justify-center">
                   <FilePlus2 className="w-12 h-12 text-blue-500 dark:text-blue-400" />
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-br from-slate-500 to-slate-500 flex items-center justify-center">
                   <Search className="w-4 h-4 text-white" />
                 </div>
               </div>

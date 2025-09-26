@@ -30,7 +30,7 @@ export function BoltPromptModal({ open, onOpenChange }: BoltPromptModalProps) {
         <DialogHeader className="px-6 py-4 border-b">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+              <div className="p-2 bg-slate-600 rounded-lg">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <div>
