@@ -924,27 +924,6 @@ export function Header(props: HeaderProps) {
                 quality={connectionQuality} 
               />
               
-               
-               {/* PWA Status */}
-               {/* {(isInstalled || isInstallable) && (
-                 <div className="ml-2">
-                   {isInstalled ? (
-                     <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-medium">
-                       <Smartphone className="w-3 h-3" />
-                       <span className="hidden sm:inline">PWA</span>
-                     </div>
-                   ) : isInstallable ? (
-                     <button
-                       onClick={installApp}
-                       className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-medium hover:bg-blue-200 dark:hover:bg-blue-800/60 transition-colors"
-                     >
-                       <Download className="w-3 h-3" />
-                       <span className="hidden sm:inline">Installer</span>
-                     </button>
-                   ) : null}
-                 </div>
-               )} */}
-              
               {/* Workspace selector */}
               <div className="ml-4">
                 <WorkspaceSelector

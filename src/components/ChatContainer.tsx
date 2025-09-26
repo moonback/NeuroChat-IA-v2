@@ -132,7 +132,7 @@ export function ChatContainer({
                         
                         <div className="flex items-center gap-6 min-w-0 flex-1 relative z-10">
                           <div className="flex items-center gap-4">
-                            <div className="relative">
+                            {/* <div className="relative">
                               <div className={cn(
                                 "w-4 h-4 rounded-full animate-pulse shadow-lg",
                                 modePrive ? "bg-red-500 shadow-red-500/50" : 
@@ -145,7 +145,7 @@ export function ChatContainer({
                                 modeEnfant ? "bg-pink-500" : 
                                 "bg-emerald-500"
                               )} />
-                            </div>
+                            </div> */}
                             <div>
                               <div className="text-base font-black text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                 {messages.filter(msg => !(msg as RagContextMessage).isRagContext).length} message{messages.length !== 1 ? 's' : ''}
@@ -459,119 +459,7 @@ export function ChatContainer({
               <div className="space-y-8">
                 <ConversationStats messages={messages} />
                 
-                <div className={cn(
-                  "p-6 rounded-2xl border backdrop-blur-sm",
-                  modePrive 
-                    ? "bg-red-50/80 dark:bg-red-950/40 border-red-200/50 dark:border-red-800/50"
-                    : modeEnfant
-                    ? "bg-pink-50/80 dark:bg-pink-950/40 border-pink-200/50 dark:border-pink-800/50"
-                    : "bg-slate-50/80 dark:bg-slate-800/80 border-slate-200/50 dark:border-slate-700/50"
-                )}>
-                  <h4 className="font-black text-base text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-3">
-                    <div className={cn(
-                      "w-8 h-8 rounded-xl flex items-center justify-center",
-                      modePrive 
-                        ? "bg-gradient-to-r from-red-500 to-purple-500"
-                        : modeEnfant
-                        ? "bg-gradient-to-r from-pink-500 to-orange-500"
-                        : "bg-gradient-to-r from-blue-500 to-indigo-500"
-                    )}>
-                      <Clock className="w-4 h-4 text-white" />
-                    </div>
-                    Activité récente
-                  </h4>
-                  <div className="text-xs text-slate-600 dark:text-slate-400 space-y-3">
-                    {messages.length > 0 ? (
-                      <>
-                        <div className="flex items-center justify-between p-3 bg-white/60 dark:bg-slate-700/60 rounded-xl">
-                          <span>Dernier message:</span>
-                          <span className="font-medium">{messages[messages.length - 1]?.timestamp.toLocaleTimeString()}</span>
-                        </div>
-                        <div className="flex items-center justify-between p-3 bg-white/60 dark:bg-slate-700/60 rounded-xl">
-                          <span>Durée conversation:</span>
-                          <span className="font-medium">{Math.round((Date.now() - messages[0]?.timestamp.getTime()) / 60000)} min</span>
-                        </div>
-                        <div className="flex items-center justify-between p-3 bg-white/60 dark:bg-slate-700/60 rounded-xl">
-                          <span>Mode actuel:</span>
-                          <span className={cn(
-                            "font-medium px-2 py-1 rounded-full text-xs",
-                            modePrive 
-                              ? "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300"
-                              : modeEnfant
-                              ? "bg-pink-100 dark:bg-pink-900 text-pink-700 dark:text-pink-300"
-                              : "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
-                          )}>
-                            {modePrive ? "🔒 Ultra-Privé" : modeEnfant ? "👶 Enfant" : "💼 Enterprise"}
-                          </span>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="text-center p-6 text-slate-500">
-                        <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                        Aucune activité pour le moment
-                      </div>
-                    )}
-                  </div>
-                </div>
 
-                {/* Section bonus selon le mode */}
-                {modePrive && (
-                  <div className="p-6 bg-gradient-to-r from-red-50/80 to-purple-50/80 dark:from-red-950/40 dark:to-purple-950/40 rounded-2xl border border-red-200/50 dark:border-red-800/50">
-                    <h4 className="font-black text-base text-red-800 dark:text-red-200 mb-3 flex items-center gap-2">
-                      <Shield className="w-5 h-5" />
-                      Protection Gouvernementale AES-256
-                    </h4>
-                    <div className="space-y-2 text-xs text-red-600 dark:text-red-400">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        Chiffrement AES-256-GCM niveau militaire
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        PBKDF2 600,000 itérations (résistant force brute)
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        Authentification AEAD intégrée
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        Gestion sécurisée des clés en mémoire
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        Auto-destruction à la fermeture
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        Zéro persistance sur disque
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {modeEnfant && (
-                  <div className="p-6 bg-gradient-to-r from-pink-50/80 to-orange-50/80 dark:from-pink-950/40 dark:to-orange-950/40 rounded-2xl border border-pink-200/50 dark:border-pink-800/50">
-                    <h4 className="font-black text-base text-pink-800 dark:text-pink-200 mb-3 flex items-center gap-2">
-                      <Heart className="w-5 h-5" />
-                      Zone Sécurisée
-                    </h4>
-                    <div className="space-y-2 text-xs text-pink-600 dark:text-pink-400">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        Contenu adapté à l'âge
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        Surveillance parentale active
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        Environnement 100% sûr
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -584,10 +472,10 @@ import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
 import { 
-  ArrowDown, Zap, Brain, Clock, Info, ExternalLink, Shield, X, BookOpen, 
+  ArrowDown, Zap, Brain, Info, ExternalLink, Shield, X, BookOpen, 
   Sparkles, Activity, MessageSquare, Bot, User, ChevronUp, ChevronDown,
-  Layers, Database, Eye, Heart,
-  Crown, Diamond, Flame
+  Layers, Database, Heart,
+  Crown, Flame
 } from 'lucide-react';
 import { TypingIndicator } from './TypingIndicator';
 import { cn } from '@/lib/utils';
@@ -874,61 +762,7 @@ const HeroSection = ({ modeEnfant, modePrive }: { modeEnfant: boolean; modePrive
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { 
-                icon: Shield, 
-                title: "Protection Gouvernementale", 
-                desc: "AES-256-GCM + PBKDF2 600k itérations + AEAD", 
-                color: "from-red-500 via-red-600 to-red-700",
-                detail: "🔐 MIL-GRADE",
-                bgGradient: "from-red-500/20 to-red-600/20"
-              },
-              { 
-                icon: Zap, 
-                title: "Suppression Immédiate", 
-                desc: "Auto-destruction en temps réel des données", 
-                color: "from-purple-500 via-purple-600 to-purple-700",
-                detail: "⚡ Instant Delete",
-                bgGradient: "from-purple-500/20 to-purple-600/20"
-              },
-              { 
-                icon: Eye, 
-                title: "Mode Fantôme", 
-                desc: "Invisibilité totale - aucune trace laissée", 
-                color: "from-blue-500 via-blue-600 to-blue-700",
-                detail: "👻 Ghost Mode",
-                bgGradient: "from-blue-500/20 to-blue-600/20"
-              }
-            ].map((feature, idx) => (
-              <div 
-                key={feature.title}
-                className="group relative"
-                style={{ animationDelay: `${idx * 200}ms` }}
-              >
-                <div className={`absolute inset-0 bg-gradient-to-r ${feature.bgGradient} rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 scale-110`} />
-                
-                <div className="relative p-8 bg-white/10 dark:bg-slate-800/20 rounded-2xl border border-white/20 dark:border-slate-700/20 backdrop-blur-2xl shadow-2xl hover:shadow-red-500/20 hover:scale-110 hover:rotate-2 transition-all duration-700 overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 group-hover:from-white/15 transition-all duration-500" />
-                  
-                  <div className="relative z-10">
-                    <div className={`w-16 h-16 bg-gradient-to-r ${feature.color} rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:rotate-12 group-hover:scale-125 transition-all duration-500 shadow-2xl`}>
-                      <feature.icon className="w-8 h-8 text-white drop-shadow-lg" />
-                    </div>
-                    <h3 className="font-black text-base text-slate-800 dark:text-slate-200 mb-3">{feature.title}</h3>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">{feature.desc}</p>
-                    <div className="text-xs text-slate-500 dark:text-slate-500 font-mono bg-slate-100/50 dark:bg-slate-800/50 px-3 py-2 rounded-lg border">
-                      {feature.detail}
-                    </div>
-                  </div>
-
-                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <Diamond className="w-5 h-5 text-yellow-400 animate-spin" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          
 
           {/* Indicateur de sécurité en temps réel ultra-stylé */}
           <div className="animate-in slide-in-from-bottom-4 duration-1000" style={{ animationDelay: '700ms' }}>
