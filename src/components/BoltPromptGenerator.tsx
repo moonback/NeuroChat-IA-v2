@@ -19,7 +19,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Copy, Download, Star, Sparkles, Code, Smartphone, Brain, Globe } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Copy, Download, Star, Sparkles, Code, Smartphone, Brain, Globe, Wand2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { boltPromptService } from '@/services/boltPromptService';
@@ -91,6 +92,8 @@ export function BoltPromptGenerator({ className }: BoltPromptGeneratorProps) {
   const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedBoltPrompt | null>(null);
   const [activeTab, setActiveTab] = useState<'templates' | 'presets' | 'history'>('templates');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [projectDescription, setProjectDescription] = useState('');
+  const [isAutoFilling, setIsAutoFilling] = useState(false);
 
   // Helper function pour vérifier si un template est sélectionné
   const isTemplateSelected = (templateId: string): boolean => {
@@ -129,6 +132,7 @@ export function BoltPromptGenerator({ className }: BoltPromptGeneratorProps) {
     setSelectedTemplate(null);
     setSelectedPreset(null);
     setGeneratedPrompt(null);
+    setProjectDescription('');
   };
 
   // Générer le prompt
@@ -180,6 +184,34 @@ export function BoltPromptGenerator({ className }: BoltPromptGeneratorProps) {
     if (generatedPrompt) {
       boltPromptService.updateGeneratedPromptRating(generatedPrompt.id, rating);
       toast.success('Note enregistrée !');
+    }
+  };
+
+  // Auto-remplissage des paramètres via Gemini
+  const handleAutoFill = async () => {
+    if (!selectedTemplate || !projectDescription.trim()) {
+      toast.error('Veuillez sélectionner un template et saisir une description');
+      return;
+    }
+
+    setIsAutoFilling(true);
+    try {
+      const autoFilledConfig = await boltPromptService.autoFillConfigFromDescription(
+        projectDescription,
+        selectedTemplate.id
+      );
+      
+      setConfig(prev => ({
+        ...prev,
+        ...autoFilledConfig
+      }));
+      
+      toast.success('Tous les paramètres ont été auto-remplis avec des valeurs intelligentes !');
+    } catch (error) {
+      console.error('Erreur auto-remplissage:', error);
+      toast.error('Erreur lors de l\'auto-remplissage des paramètres');
+    } finally {
+      setIsAutoFilling(false);
     }
   };
 
@@ -472,6 +504,49 @@ export function BoltPromptGenerator({ className }: BoltPromptGeneratorProps) {
                   </Button>
                 </div>
                 
+                <Separator />
+              </div>
+
+              {/* Auto-remplissage via description */}
+              <div className="flex-shrink-0 space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="project-description">
+                    Description du projet (optionnel)
+                  </Label>
+                  <div className="flex gap-2">
+                    <Textarea
+                      id="project-description"
+                      value={projectDescription}
+                      onChange={(e) => setProjectDescription(e.target.value)}
+                      placeholder="Décrivez votre projet en détail... 
+
+Exemple: 'Je veux créer une plateforme de gestion de projets pour les équipes de développement. Elle doit permettre de créer des projets, assigner des tâches, suivre le temps, générer des rapports, et intégrer Git. L'interface doit être moderne avec React et TypeScript, et supporter le mode sombre. Le public cible sont les développeurs et chefs de projet. Le budget est de 5000€ et je veux que ce soit prêt en 2 mois.'"
+                      className="flex-1 min-h-[80px] resize-none"
+                    />
+                    <Button
+                      onClick={handleAutoFill}
+                      disabled={!projectDescription.trim() || isAutoFilling}
+                      variant="outline"
+                      size="sm"
+                      className="self-start"
+                    >
+                      {isAutoFilling ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+                          Analyse...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="w-4 h-4 mr-2" />
+                          Auto-remplir
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    💡 Décrivez votre projet et Gemini remplira automatiquement TOUS les paramètres avec des valeurs intelligentes
+                  </p>
+                </div>
                 <Separator />
               </div>
 

@@ -12,8 +12,10 @@ import type {
   BoltPromptConfig, 
   GeneratedBoltPrompt, 
   BoltPromptCategory,
-  BoltPromptPreset 
+  BoltPromptPreset,
+  BoltPromptVariable 
 } from '@/types/boltPrompt';
+import { sendMessageToGemini } from './geminiApi';
 
 // Templates prédéfinis pour différents types de projets
 const DEFAULT_TEMPLATES: BoltPromptTemplate[] = [
@@ -795,6 +797,246 @@ class BoltPromptService {
           templateId: p.templateId
         }))
     };
+  }
+
+  /**
+   * 🤖 Auto-remplissage des paramètres via Gemini
+   * Analyse une description de projet et remplit automatiquement les paramètres
+   */
+  async autoFillConfigFromDescription(
+    description: string, 
+    templateId: string
+  ): Promise<Partial<BoltPromptConfig>> {
+    const template = this.getTemplate(templateId);
+    if (!template) {
+      throw new Error('Template introuvable');
+    }
+
+    const systemPrompt = `Tu es un expert en analyse de projets de développement avec une expertise approfondie en technologies web, mobile, et desktop.
+
+MISSION: Analyse la description de projet et remplis AUTOMATIQUEMENT TOUS les champs possibles avec des valeurs intelligentes et réalistes.
+
+TEMPLATE: "${template.name}"
+CATÉGORIE: ${template.category}
+
+CHAMPS À REMPLIR (remplis TOUS les champs, même avec des valeurs par défaut intelligentes):
+
+${template.variables.map((v: BoltPromptVariable) => {
+  const options = v.options ? `\n    Options disponibles: ${v.options.map(o => `${o.value} (${o.label})`).join(', ')}` : '';
+  const defaultValue = v.defaultValue ? `\n    Valeur par défaut: ${v.defaultValue}` : '';
+  return `- ${v.name} (${v.type}): ${v.description || v.label}${options}${defaultValue}`;
+}).join('\n')}
+
+RÈGLES CRITIQUES:
+1. RÉPONDS UNIQUEMENT EN JSON VALIDE - COMMENCE DIRECTEMENT PAR { ET FINIS PAR }
+2. PAS DE TEXTE AVANT NI APRÈS LE JSON
+3. PAS DE MARKDOWN (backticks json ou backticks)
+4. REMPLIS TOUS LES CHAMPS - même si l'info n'est pas explicite, déduis intelligemment
+5. Pour projectType: déduis le type de projet (ex: "Application Web", "API REST", "Jeu Mobile")
+6. Pour techStack: liste les technologies mentionnées + technologies complémentaires logiques
+7. Pour features: extrais les fonctionnalités mentionnées + fonctionnalités essentielles manquantes
+8. Pour targetAudience: déduis le public cible (ex: "Développeurs", "Entreprises", "Grand public")
+9. Pour complexity: évalue la complexité (simple/intermediate/advanced/expert)
+10. Pour timeline: estime une durée réaliste (ex: "2-4 semaines", "1-2 mois")
+11. Pour budget: estime un budget réaliste (ex: "Gratuit", "500-2000€", "5000-10000€")
+12. Pour constraints: liste les contraintes techniques/business mentionnées
+13. Pour goals: extrais les objectifs business/techniques
+14. Pour inspiration: suggère des références similaires
+15. Pour additionalContext: ajoute des détails techniques pertinents
+
+EXEMPLE DE RÉPONSE JSON:
+{
+  "projectType": "Application Web Moderne",
+  "techStack": ["React", "TypeScript", "Tailwind CSS", "Node.js"],
+  "features": ["Authentification", "Dashboard", "API REST", "Base de données"],
+  "targetAudience": "Développeurs et entreprises",
+  "complexity": "intermediate",
+  "timeline": "3-4 semaines",
+  "budget": "2000-5000€",
+  "constraints": ["Responsive design", "Performance optimisée"],
+  "goals": ["Automatiser les processus", "Améliorer la productivité"],
+  "inspiration": "Applications similaires sur le marché",
+  "additionalContext": "Focus sur l'UX moderne et la scalabilité"
+}`;
+
+    try {
+      const response = await sendMessageToGemini(
+        [{ text: description, isUser: true }],
+        undefined,
+        systemPrompt,
+        { temperature: 0.3, maxOutputTokens: 2048 }
+      );
+
+      // Nettoyer la réponse pour extraire le JSON
+      let jsonString = response.trim();
+      
+      // Supprimer le markdown si présent
+      jsonString = jsonString.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+      
+      // Chercher le JSON dans la réponse
+      const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        console.error('Réponse Gemini:', response);
+        throw new Error('Réponse JSON invalide de Gemini - Aucun JSON trouvé');
+      }
+
+      let parsedConfig;
+      try {
+        parsedConfig = JSON.parse(jsonMatch[0]);
+      } catch (parseError) {
+        console.error('Erreur de parsing JSON:', parseError);
+        console.error('JSON extrait:', jsonMatch[0]);
+        throw new Error('Réponse JSON invalide de Gemini - Erreur de parsing');
+      }
+      
+      // Valider et nettoyer les données avec valeurs par défaut intelligentes
+      const validatedConfig: Partial<BoltPromptConfig> = {};
+      
+      template.variables.forEach((variable: BoltPromptVariable) => {
+        const value = parsedConfig[variable.name];
+        
+        // Fonction pour obtenir une valeur par défaut intelligente
+        const getDefaultValue = (varName: string, varType: string) => {
+          switch (varName) {
+            case 'projectType':
+              return 'Application Web Moderne';
+            case 'techStack':
+              return ['React', 'TypeScript', 'Tailwind CSS'];
+            case 'features':
+              return ['Interface utilisateur', 'API REST', 'Base de données'];
+            case 'targetAudience':
+              return 'Utilisateurs finaux';
+            case 'complexity':
+              return 'intermediate';
+            case 'timeline':
+              return '2-4 semaines';
+            case 'budget':
+              return '1000-3000€';
+            case 'constraints':
+              return ['Responsive design', 'Performance optimisée'];
+            case 'goals':
+              return ['Améliorer la productivité', 'Automatiser les processus'];
+            case 'inspiration':
+              return 'Applications similaires sur le marché';
+            case 'additionalContext':
+              return 'Focus sur l\'expérience utilisateur moderne';
+            default:
+              return varType === 'boolean' ? false : 
+                     varType === 'number' ? 0 : 
+                     varType === 'multiselect' ? [] : '';
+          }
+        };
+
+        // Validation et assignation avec fallback
+        switch (variable.type) {
+          case 'multiselect':
+            if (Array.isArray(value) && value.length > 0) {
+              (validatedConfig as Record<string, unknown>)[variable.name] = value;
+            } else {
+              (validatedConfig as Record<string, unknown>)[variable.name] = getDefaultValue(variable.name, variable.type);
+            }
+            break;
+          case 'boolean':
+            if (typeof value === 'boolean') {
+              (validatedConfig as Record<string, unknown>)[variable.name] = value;
+            } else {
+              (validatedConfig as Record<string, unknown>)[variable.name] = getDefaultValue(variable.name, variable.type);
+            }
+            break;
+          case 'number':
+            if (typeof value === 'number' && value > 0) {
+              (validatedConfig as Record<string, unknown>)[variable.name] = value;
+            } else {
+              (validatedConfig as Record<string, unknown>)[variable.name] = getDefaultValue(variable.name, variable.type);
+            }
+            break;
+          case 'text':
+          case 'select':
+            if (typeof value === 'string' && value.trim().length > 0) {
+              (validatedConfig as Record<string, unknown>)[variable.name] = value;
+            } else {
+              (validatedConfig as Record<string, unknown>)[variable.name] = getDefaultValue(variable.name, variable.type);
+            }
+            break;
+        }
+      });
+
+      return validatedConfig;
+    } catch (error) {
+      console.error('Erreur lors de l\'auto-remplissage:', error);
+      
+      // Fallback : remplissage local basique si Gemini échoue
+      console.log('Tentative de remplissage local en fallback...');
+      const fallbackConfig: Partial<BoltPromptConfig> = {};
+      
+      template.variables.forEach((variable: BoltPromptVariable) => {
+        // Analyse basique de la description pour extraire des mots-clés
+        const descriptionLower = description.toLowerCase();
+        
+        switch (variable.name) {
+          case 'projectType':
+            if (descriptionLower.includes('web') || descriptionLower.includes('site')) {
+              fallbackConfig.projectType = 'Application Web';
+            } else if (descriptionLower.includes('mobile') || descriptionLower.includes('app')) {
+              fallbackConfig.projectType = 'Application Mobile';
+            } else if (descriptionLower.includes('api') || descriptionLower.includes('service')) {
+              fallbackConfig.projectType = 'API REST';
+            } else {
+              fallbackConfig.projectType = 'Application Web Moderne';
+            }
+            break;
+            
+          case 'techStack': {
+            const techs = [];
+            if (descriptionLower.includes('react')) techs.push('React');
+            if (descriptionLower.includes('vue')) techs.push('Vue.js');
+            if (descriptionLower.includes('angular')) techs.push('Angular');
+            if (descriptionLower.includes('typescript')) techs.push('TypeScript');
+            if (descriptionLower.includes('javascript')) techs.push('JavaScript');
+            if (descriptionLower.includes('tailwind')) techs.push('Tailwind CSS');
+            if (descriptionLower.includes('node')) techs.push('Node.js');
+            if (descriptionLower.includes('python')) techs.push('Python');
+            if (descriptionLower.includes('java')) techs.push('Java');
+            fallbackConfig.techStack = techs.length > 0 ? techs : ['React', 'TypeScript', 'Tailwind CSS'];
+            break;
+          }
+            
+          case 'complexity':
+            if (descriptionLower.includes('simple') || descriptionLower.includes('basique')) {
+              fallbackConfig.complexity = 'simple';
+            } else if (descriptionLower.includes('avancé') || descriptionLower.includes('complexe') || descriptionLower.includes('expert')) {
+              fallbackConfig.complexity = 'advanced';
+            } else {
+              fallbackConfig.complexity = 'intermediate';
+            }
+            break;
+            
+          case 'targetAudience':
+            if (descriptionLower.includes('développeur') || descriptionLower.includes('dev')) {
+              fallbackConfig.targetAudience = 'Développeurs';
+            } else if (descriptionLower.includes('entreprise') || descriptionLower.includes('business')) {
+              fallbackConfig.targetAudience = 'Entreprises';
+            } else {
+              fallbackConfig.targetAudience = 'Utilisateurs finaux';
+            }
+            break;
+            
+          default:
+            // Valeurs par défaut pour les autres champs
+            if (variable.type === 'multiselect') {
+              (fallbackConfig as Record<string, unknown>)[variable.name] = [];
+            } else if (variable.type === 'boolean') {
+              (fallbackConfig as Record<string, unknown>)[variable.name] = false;
+            } else if (variable.type === 'number') {
+              (fallbackConfig as Record<string, unknown>)[variable.name] = 0;
+            } else {
+              (fallbackConfig as Record<string, unknown>)[variable.name] = '';
+            }
+        }
+      });
+      
+      return fallbackConfig;
+    }
   }
 }
 
