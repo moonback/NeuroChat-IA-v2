@@ -119,17 +119,17 @@ function App() {
         setPersistentEncryptionEnabled(persistentInitialized);
         
         if (persistentInitialized) {
-          // console.log('✅ Chiffrement persistant activé avec succès');
-          // toast.success('🔐 Chiffrement AES-256 activé', {
-          //   description: 'Vos conversations sont maintenant protégées par défaut',
-          //   duration: 3000,
-          // });
+          console.log('✅ Chiffrement persistant activé avec succès');
+          toast.success('🔐 Chiffrement AES-256 activé', {
+            description: 'Vos conversations sont maintenant protégées par défaut',
+            duration: 3000,
+          });
         } else {
           // console.error('❌ ÉCHEC CRITIQUE: Le chiffrement obligatoire n\'a pas pu être activé');
-          toast.error('Erreur système critique', {
-            description: 'Le chiffrement AES-256 obligatoire n\'a pas pu être initialisé',
-            duration: 10000,
-          });
+          // toast.error('Erreur système critique', {
+          //   description: 'Le chiffrement AES-256 obligatoire n\'a pas pu être initialisé',
+          //   duration: 10000,
+          // });
         }
         
         // console.log('🔐 Système de sécurité AES-256 initialisé avec succès');

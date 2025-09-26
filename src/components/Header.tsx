@@ -649,13 +649,13 @@ const DesktopActions = ({
   muted, 
   handleVolumeToggle, 
   handleModeVocalToggle, 
-  modePrive, 
-  handlePrivateModeToggle, 
-  handleChildModeToggle, 
-  ragEnabled, 
-  handleRagToggle, 
-  webEnabled, 
-  handleWebToggle, 
+  // modePrive, 
+  // handlePrivateModeToggle, 
+  // handleChildModeToggle, 
+  // ragEnabled, 
+  // handleRagToggle, 
+  // webEnabled, 
+  // handleWebToggle, 
   setShowMenu 
 }: {
   modeEnfant?: boolean;
@@ -717,7 +717,7 @@ const DesktopActions = ({
     </ButtonGroup>
 
     {/* Modes IA */}
-    <ButtonGroup label="Modes">
+    {/* <ButtonGroup label="Modes">
       {!modeEnfant && (
         <ModernButton
           variant="ghost"
@@ -764,7 +764,7 @@ const DesktopActions = ({
           
         </>
       )}
-    </ButtonGroup>
+    </ButtonGroup> */}
 
     {/* Settings */}
     <ModernButton
