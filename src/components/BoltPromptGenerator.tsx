@@ -324,8 +324,8 @@ export function BoltPromptGenerator({ className }: BoltPromptGeneratorProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Configuration */}
-        <Card className="p-6 space-y-6 flex flex-col max-h-[80vh] overflow-hidden">
-          <div className="flex items-center justify-between">
+        <Card className="p-4 space-y-4 flex flex-col h-[70vh] overflow-hidden">
+          <div className="flex items-center justify-between flex-shrink-0">
             <h2 className="text-xl font-semibold">Configuration</h2>
             <Button variant="outline" size="sm" onClick={resetConfig}>
               Réinitialiser
@@ -334,162 +334,161 @@ export function BoltPromptGenerator({ className }: BoltPromptGeneratorProps) {
 
           {/* Sélection du template */}
           {!selectedTemplate ? (
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'templates' | 'presets' | 'history')}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="templates">Templates</TabsTrigger>
-                <TabsTrigger value="presets">Presets</TabsTrigger>
-                <TabsTrigger value="history">Historique</TabsTrigger>
-              </TabsList>
+            <div className="flex-1 overflow-hidden">
+              <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'templates' | 'presets' | 'history')} className="h-full flex flex-col">
+                <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
+                  <TabsTrigger value="templates">Templates</TabsTrigger>
+                  <TabsTrigger value="presets">Presets</TabsTrigger>
+                  <TabsTrigger value="history">Historique</TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="templates" className="space-y-4">
-                <ScrollArea className="h-80">
-                  <div className="space-y-3">
-                    {templates.map((template) => (
-                      <Card
-                        key={template.id}
-                        className={cn(
-                          'p-4 cursor-pointer transition-all hover:shadow-md',
-                          isTemplateSelected(template.id) ? 'ring-2 ring-blue-500' : ''
-                        )}
-                        onClick={() => setSelectedTemplate(template)}
-                      >
-                        <div className="flex items-start space-x-3">
-                          <div className="flex-shrink-0">
-                            {CATEGORY_ICONS[template.category]}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-2">
-                              <h3 className="font-medium">{template.name}</h3>
-                              <Badge variant="secondary" className="text-xs">
-                                {CATEGORY_LABELS[template.category]}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {template.description}
-                            </p>
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {template.tags.slice(0, 3).map((tag) => (
-                                <Badge key={tag} variant="outline" className="text-xs">
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-
-              <TabsContent value="presets" className="space-y-4">
-                <ScrollArea className="h-80">
-                  <div className="space-y-3">
-                    {presets.map((preset) => (
-                      <Card
-                        key={preset.id}
-                        className={cn(
-                          'p-4 cursor-pointer transition-all hover:shadow-md',
-                          selectedPreset?.id === preset.id && 'ring-2 ring-blue-500'
-                        )}
-                        onClick={() => setSelectedPreset(preset)}
-                      >
-                        <div className="flex items-start space-x-3">
-                          <div className="flex-shrink-0">
-                            {CATEGORY_ICONS[preset.category]}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-2">
-                              <h3 className="font-medium">{preset.name}</h3>
-                              <Badge variant="secondary" className="text-xs">
-                                {CATEGORY_LABELS[preset.category]}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {preset.description}
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-
-              <TabsContent value="history" className="space-y-4">
-                <ScrollArea className="h-80">
-                  <div className="space-y-3">
-                    {generatedPrompts.slice(0, 10).map((prompt) => (
-                      <Card
-                        key={prompt.id}
-                        className="p-4 cursor-pointer transition-all hover:shadow-md"
-                        onClick={() => setGeneratedPrompt(prompt)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-medium">
-                              {templates.find(t => t.id === prompt.templateId)?.name || 'Template'}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              {new Date(prompt.createdAt).toLocaleDateString('fr-FR')}
-                            </p>
-                          </div>
-                          {prompt.rating && (
-                            <div className="flex items-center space-x-1">
-                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                              <span className="text-sm">{prompt.rating}</span>
-                            </div>
+                <TabsContent value="templates" className="flex-1 overflow-hidden mt-4">
+                  <ScrollArea className="h-full">
+                    <div className="space-y-3 pr-4">
+                      {templates.map((template) => (
+                        <Card
+                          key={template.id}
+                          className={cn(
+                            'p-4 cursor-pointer transition-all hover:shadow-md',
+                            isTemplateSelected(template.id) ? 'ring-2 ring-blue-500' : ''
                           )}
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-            </Tabs>
+                          onClick={() => setSelectedTemplate(template)}
+                        >
+                          <div className="flex items-start space-x-3">
+                            <div className="flex-shrink-0">
+                              {CATEGORY_ICONS[template.category]}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center space-x-2">
+                                <h3 className="font-medium">{template.name}</h3>
+                                <Badge variant="secondary" className="text-xs">
+                                  {CATEGORY_LABELS[template.category]}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {template.description}
+                              </p>
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {template.tags.slice(0, 3).map((tag) => (
+                                  <Badge key={tag} variant="outline" className="text-xs">
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+
+                <TabsContent value="presets" className="flex-1 overflow-hidden mt-4">
+                  <ScrollArea className="h-full">
+                    <div className="space-y-3 pr-4">
+                      {presets.map((preset) => (
+                        <Card
+                          key={preset.id}
+                          className={cn(
+                            'p-4 cursor-pointer transition-all hover:shadow-md',
+                            selectedPreset?.id === preset.id && 'ring-2 ring-blue-500'
+                          )}
+                          onClick={() => setSelectedPreset(preset)}
+                        >
+                          <div className="flex items-start space-x-3">
+                            <div className="flex-shrink-0">
+                              {CATEGORY_ICONS[preset.category]}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center space-x-2">
+                                <h3 className="font-medium">{preset.name}</h3>
+                                <Badge variant="secondary" className="text-xs">
+                                  {CATEGORY_LABELS[preset.category]}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {preset.description}
+                              </p>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+
+                <TabsContent value="history" className="flex-1 overflow-hidden mt-4">
+                  <ScrollArea className="h-full">
+                    <div className="space-y-3 pr-4">
+                      {generatedPrompts.slice(0, 10).map((prompt) => (
+                        <Card
+                          key={prompt.id}
+                          className="p-4 cursor-pointer transition-all hover:shadow-md"
+                          onClick={() => setGeneratedPrompt(prompt)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="font-medium">
+                                {templates.find(t => t.id === prompt.templateId)?.name || 'Template'}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                {new Date(prompt.createdAt).toLocaleDateString('fr-FR')}
+                              </p>
+                            </div>
+                            {prompt.rating && (
+                              <div className="flex items-center space-x-1">
+                                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                <span className="text-sm">{prompt.rating}</span>
+                              </div>
+                            )}
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+              </Tabs>
+            </div>
           ) : (
             /* Template sélectionné - Affichage du formulaire */
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">
-                    {CATEGORY_ICONS[selectedTemplate.category]}
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <div className="flex-shrink-0 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="flex-shrink-0">
+                      {CATEGORY_ICONS[selectedTemplate.category]}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg">{selectedTemplate.name}</h3>
+                      {/* <p className="text-sm text-muted-foreground">{selectedTemplate.description}</p> */}
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">{selectedTemplate.name}</h3>
-                    <p className="text-sm text-muted-foreground">{selectedTemplate.description}</p>
-                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setSelectedTemplate(null)}
+                  >
+                    Changer de template
+                  </Button>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setSelectedTemplate(null)}
-                >
-                  Changer de template
-                </Button>
+                
+                <Separator />
               </div>
-              
-              <Separator />
-            </div>
-          )}
 
-          {/* Configuration des variables */}
-          {selectedTemplate && (
-            <>
-              <Separator />
-              <div className="space-y-4 flex-1 overflow-hidden">
-                <h3 className="font-medium">Paramètres du projet</h3>
+              {/* Configuration des variables */}
+              <div className="flex-1 overflow-hidden flex flex-col space-y-3">
+                <h3 className="font-medium flex-shrink-0 text-lg">Paramètres du projet</h3>
                 <ScrollArea className="flex-1">
-                  <div className="grid grid-cols-1 gap-4 pr-4">
+                  <div className="space-y-3 pr-4">
                     {selectedTemplate.variables.map(renderConfigField)}
                   </div>
                 </ScrollArea>
               </div>
-            </>
+            </div>
           )}
 
           {/* Bouton de génération - Toujours visible */}
-          <div className="flex-shrink-0 pt-4 border-t">
+          <div className="flex-shrink-0 pt-3 border-t">
             <Button
               onClick={handleGeneratePrompt}
               disabled={!selectedTemplate || isGenerating}
