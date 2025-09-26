@@ -4,7 +4,7 @@ import { useTheme } from '@/hooks/useTheme';
 import {
   History, Settings2, Volume2, VolumeX, Sun, Moon, 
   PlusCircle, Mic, Shield, BookOpen, CheckSquare, Square, 
-  Trash2, Menu, X, Baby, Layers,
+  Trash2, Menu, X, Baby,
   Globe, Database, Pencil, HelpCircle,
   Download
 } from 'lucide-react';
@@ -35,8 +35,6 @@ interface HeaderProps {
   setRagEnabled: (v: boolean) => void;
   webEnabled?: boolean;
   setWebEnabled?: (v: boolean) => void;
-  structuredMode?: boolean;
-  setStructuredMode?: (v: boolean) => void;
   webSearching?: boolean;
   onOpenGeminiSettings?: () => void;
   geminiConfig?: Record<string, unknown>;
@@ -658,8 +656,6 @@ const DesktopActions = ({
   handleRagToggle, 
   webEnabled, 
   handleWebToggle, 
-  structuredMode,
-  handleStructuredToggle,
   setShowMenu 
 }: {
   modeEnfant?: boolean;
@@ -675,8 +671,6 @@ const DesktopActions = ({
   handleRagToggle: () => void;
   webEnabled?: boolean;
   handleWebToggle: () => void;
-  structuredMode?: boolean;
-  handleStructuredToggle?: () => void;
   setShowMenu: (show: boolean) => void;
 }) => (
   <div
@@ -768,15 +762,6 @@ const DesktopActions = ({
             <Globe className="w-4 h-4" />
           </ModernButton>
           
-          <ModernButton
-            variant="ghost"
-            onClick={handleStructuredToggle}
-            active={!!structuredMode}
-            tooltip="Mode structuré"
-            className="w-9 h-9 p-0"
-          >
-            <Layers className="w-4 h-4" />
-          </ModernButton>
         </>
       )}
     </ButtonGroup>
@@ -834,8 +819,6 @@ export function Header(props: HeaderProps) {
     setRagEnabled,
     webEnabled,
     setWebEnabled,
-    structuredMode,
-    setStructuredMode,
     onToggleModeEnfant
   } = props;
 
@@ -866,11 +849,6 @@ export function Header(props: HeaderProps) {
     }
   }, [webEnabled, setWebEnabled]);
 
-  const handleStructuredToggle = useCallback(() => {
-    if (setStructuredMode) {
-      setStructuredMode(!structuredMode);
-    }
-  }, [structuredMode, setStructuredMode]);
 
   const handleChildModeToggle = useCallback(() => {
     onToggleModeEnfant?.();
@@ -989,8 +967,6 @@ export function Header(props: HeaderProps) {
               handleRagToggle={handleRagToggle}
               webEnabled={props.webEnabled}
               handleWebToggle={handleWebToggle}
-              structuredMode={props.structuredMode}
-              handleStructuredToggle={handleStructuredToggle}
               setShowMenu={setShowMenu}
             />
 

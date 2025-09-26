@@ -307,13 +307,6 @@ function App() {
   const [childPin, setChildPin] = useState<string>(localStorage.getItem('mode_enfant_pin') || '');
   const [showChildPinDialog, setShowChildPinDialog] = useState<boolean>(false);
   const [showChildChangePinDialog, setShowChildChangePinDialog] = useState<boolean>(false);
-  // --- Mode réponses structurées ---
-  const [structuredMode, setStructuredMode] = useState<boolean>(() => {
-    try { return localStorage.getItem('structured_mode') === 'true'; } catch { return false; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem('structured_mode', structuredMode ? 'true' : 'false'); } catch { /* Ignore storage errors */ }
-  }, [structuredMode]);
   // --- Timeline de raisonnement ---
   // Timeline retirée
   // 🔐 Gestion du mode privé avec chiffrement AES-256
@@ -703,34 +696,6 @@ function App() {
         "- N'affiche jamais de liens externes bruts ; si un lien est nécessaire, invite toujours à demander l'aide d'un adulte."
       ].join('\n');
       return `${base}\n\n${childBlock}`;
-    }
-    if (structuredMode) {
-      const structuredBlock = [
-        'MODE RÉPONSES STRUCTURÉES ACTIF :',
-        '### 1. RÉSUMÉ EXPRESS',
-        '- Synthèse en 1-2 phrases maximum',
-        '- Points clés immédiatement visibles',
-        '',
-        '### 2. ACTION / MÉTHODE',
-        '- Maximum 5 étapes numérotées',
-        '- Ordre logique et pratique',
-        '- Instructions claires et concises',
-        '',
-        '### 3. PRÉCISIONS UTILES',
-        '- Exemples concrets si pertinent',
-        '- Points d\'attention et limites',
-        '- Alternatives possibles',
-        '',
-        '### 4. SUITE (si nécessaire)',
-        '- Prochaines étapes recommandées',
-        '- Ressources additionnelles',
-        '',
-        'Note: Adapter le format selon la complexité:',
-        '- Question simple = Résumé + Action uniquement',
-        '- Question complexe = Structure complète',
-        '- Listes uniquement si nécessaire pour la clarté'
-      ].join('\n');
-      return `${base}\n\n${structuredBlock}`;
     }
     return base;
   };
@@ -1496,8 +1461,6 @@ function App() {
           setRagEnabled={setRagEnabled}
           webEnabled={webEnabled}
           setWebEnabled={setWebEnabled}
-          structuredMode={structuredMode}
-          setStructuredMode={setStructuredMode}
           webSearching={isWebSearching}
           onOpenGeminiSettings={() => { if (!modeEnfant) setShowGeminiSettings(true); }}
           geminiConfig={{ ...geminiConfig } as Record<string, unknown>}
