@@ -1092,37 +1092,70 @@ export function Header(props: HeaderProps) {
               {/* Sélecteur de Provider */}
               {!props.modeEnfant && props.provider && props.onChangeProvider && (
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" />
-                    Provider IA
+                  <h3
+                    className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2"
+                    aria-label="Sélecteur de fournisseur IA"
+                  >
+                    <Sparkles className="w-4 h-4" aria-hidden="true" />
+                    <span>Fournisseur IA</span>
                   </h3>
                   <div className="grid grid-cols-3 gap-2">
                     <ModernButton
-                      variant={props.provider === 'gemini' ? "primary" : "ghost"}
-                      onClick={() => { props.onChangeProvider?.('gemini'); setShowMenu(false); }}
+                      variant={props.provider === 'gemini' ? 'primary' : 'ghost'}
+                      onClick={() => {
+                        if (props.provider !== 'gemini') {
+                          props.onChangeProvider?.('gemini');
+                        }
+                        setShowMenu(false);
+                      }}
                       active={props.provider === 'gemini'}
                       className="h-10 flex-col gap-0.5 text-xs"
+                      aria-pressed={props.provider === 'gemini'}
+                      aria-label="Sélectionner Gemini"
                     >
-                      <div className="w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-500" />
-                      Gemini
+                      <div
+                        className="w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"
+                        aria-hidden="true"
+                      />
+                      <span>Gemini</span>
                     </ModernButton>
                     <ModernButton
-                      variant={props.provider === 'openai' ? "primary" : "ghost"}
-                      onClick={() => { props.onChangeProvider?.('openai'); setShowMenu(false); }}
+                      variant={props.provider === 'openai' ? 'primary' : 'ghost'}
+                      onClick={() => {
+                        if (props.provider !== 'openai') {
+                          props.onChangeProvider?.('openai');
+                        }
+                        setShowMenu(false);
+                      }}
                       active={props.provider === 'openai'}
                       className="h-10 flex-col gap-0.5 text-xs"
+                      aria-pressed={props.provider === 'openai'}
+                      aria-label="Sélectionner OpenAI"
                     >
-                      <div className="w-4 h-4 rounded-full bg-gradient-to-r from-green-500 to-emerald-500" />
-                      OpenAI
+                      <div
+                        className="w-4 h-4 rounded-full bg-gradient-to-r from-green-500 to-emerald-500"
+                        aria-hidden="true"
+                      />
+                      <span>OpenAI</span>
                     </ModernButton>
                     <ModernButton
-                      variant={props.provider === 'mistral' ? "primary" : "ghost"}
-                      onClick={() => { props.onChangeProvider?.('mistral'); setShowMenu(false); }}
+                      variant={props.provider === 'mistral' ? 'primary' : 'ghost'}
+                      onClick={() => {
+                        if (props.provider !== 'mistral') {
+                          props.onChangeProvider?.('mistral');
+                        }
+                        setShowMenu(false);
+                      }}
                       active={props.provider === 'mistral'}
                       className="h-10 flex-col gap-0.5 text-xs"
+                      aria-pressed={props.provider === 'mistral'}
+                      aria-label="Sélectionner Mistral"
                     >
-                      <div className="w-4 h-4 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" />
-                      Mistral
+                      <div
+                        className="w-4 h-4 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
+                        aria-hidden="true"
+                      />
+                      <span>Mistral</span>
                     </ModernButton>
                   </div>
                 </div>
