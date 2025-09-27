@@ -60,7 +60,6 @@ import { WebSourcesDrawer } from '@/components/WebSourcesDrawer';
 import type { WebSource } from '@/components/WebSourcesSidebar';
 import { AgentStatus } from '@/components/AgentStatus';
 import { useWorkspace, useWorkspaceOpeningModal } from '@/hooks/useWorkspace';
-import { BoltPromptModal } from '@/components/BoltPromptModal';
 
 // Timeline retirée
 
@@ -175,7 +174,6 @@ function App() {
   // Ajout du state pour la modale de gestion des documents RAG
   const [showRagDocs, setShowRagDocs] = useState(false);
   // Ajout du state pour la modale du générateur de prompts bolt.new
-  const [showBoltPrompt, setShowBoltPrompt] = useState(false);
   // showMemory supprimé - système de mémoire retiré
   // Ajout du state pour activer/désactiver le RAG
   const [ragEnabled, setRagEnabled] = useState(false);
@@ -1444,7 +1442,6 @@ function App() {
           onOpenHistory={handleOpenHistory}
           onOpenTTSSettings={() => setShowTTSSettings(true)}
           onOpenRagDocs={() => setShowRagDocs(true)}
-          onOpenBoltPrompt={() => setShowBoltPrompt(true)}
           // onOpenMemory supprimé - système de mémoire retiré
           workspaceId={workspaceId}
           workspaces={workspaces}
@@ -1745,10 +1742,6 @@ function App() {
       />
       
       {/* Modale du générateur de prompts bolt.new */}
-      <BoltPromptModal
-        open={showBoltPrompt}
-        onOpenChange={setShowBoltPrompt}
-      />
       
       {/* Le chiffrement est maintenant automatique et permanent */}
     </div>

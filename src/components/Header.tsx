@@ -27,7 +27,6 @@ interface HeaderProps {
   onOpenHistory: () => void;
   onOpenTTSSettings: () => void;
   onOpenRagDocs: () => void;
-  onOpenBoltPrompt?: () => void;
   stop: () => void;
   modeVocalAuto: boolean;
   setModeVocalAuto: (v: boolean) => void;
@@ -1149,14 +1148,6 @@ export function Header(props: HeaderProps) {
                       >
                         <BookOpen className="w-4 h-4 mr-2" />
                         Documents RAG
-                      </ModernButton>
-                      <ModernButton
-                        variant="ghost"
-                        onClick={() => { props.onOpenBoltPrompt?.(); setShowMenu(false); }}
-                        className="w-full justify-start h-10 text-sm"
-                      >
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Prompts bolt.new
                       </ModernButton>
                     </>
                   )}
