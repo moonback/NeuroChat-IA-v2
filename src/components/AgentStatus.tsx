@@ -10,7 +10,7 @@ export interface AgentStepStatus {
 
 export interface AgentStatusProps {
   visible: boolean;
-  steps: Record<StepKey, AgentStepStatus>;
+  steps: Partial<Record<StepKey, AgentStepStatus>>;
   className?: string;
   title?: string;
 }
@@ -40,9 +40,9 @@ export const AgentStatus: React.FC<AgentStatusProps> = ({ visible, steps, classN
     <div className={`pointer-events-none rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl shadow-xl p-3 ${className || ''}`}>
       <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 mb-1">{title || 'Agent'}</div>
       <div className="w-56">
-        <StepRow icon={<Globe className="w-4 h-4" />} status={steps.web} />
-        <StepRow icon={<Database className="w-4 h-4" />} status={steps.rag} />
-        <StepRow icon={<Sparkles className="w-4 h-4" />} status={steps.generate} />
+        {steps.web && <StepRow icon={<Globe className="w-4 h-4" />} status={steps.web} />}
+        {steps.rag && <StepRow icon={<Database className="w-4 h-4" />} status={steps.rag} />}
+        {steps.generate && <StepRow icon={<Sparkles className="w-4 h-4" />} status={steps.generate} />}
       </div>
     </div>
   );

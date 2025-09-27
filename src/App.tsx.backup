@@ -112,7 +112,8 @@ function App() {
         // console.log('🔐 Initialisation du chiffrement obligatoire...');
         
         // Initialisation du chiffrement persistant pour mode normal
-        await initializePersistentEncryption();
+        const persistentInitialized = await initializePersistentEncryption();
+        setPersistentEncryptionEnabled(persistentInitialized);
         
         
         
@@ -133,7 +134,7 @@ function App() {
   }, []);
 
   // --- Espaces de travail via hooks ---
-  const { workspaceId, workspaces, wsKey } = useWorkspace();
+  const { workspaceId, setWorkspaceId, workspaces, createWorkspace, renameWorkspace, deleteWorkspace, wsKey } = useWorkspace();
   const { open: workspaceOpeningOpen, setOpen: setWorkspaceOpeningOpen, name: workspaceOpeningName } = useWorkspaceOpeningModal(workspaceId, workspaces);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -285,7 +286,7 @@ function App() {
   // --- Mode privé/éphémère ---
   const [modePrive, setModePrive] = useState(false);
   // --- Chiffrement persistant pour mode normal ---
-  const [persistentEncryptionEnabled] = useState<boolean>(false);
+  const [persistentEncryptionEnabled, setPersistentEncryptionEnabled] = useState<boolean>(false);
 
   // --- Mode enfant (protégé par PIN) ---
   const [modeEnfant, setModeEnfant] = useState<boolean>(localStorage.getItem('mode_enfant') === 'true');
@@ -848,6 +849,108 @@ function App() {
               }
             });
           },
+              
+              // Déclencher la recherche web automatique
+              setTimeout(async () => {
+                try {
+                  setIsWebSearching(true);
+                  const { searchWeb } = await import('@/services/webSearch');
+                  const webResults = await searchWeb(userMessage, 5, { enrich: false });
+                  
+                  if (webResults.length > 0) {
+                    // Construire le contexte web
+                    let fallbackWebContext = 'RÉSULTATS WEB RÉCENTS :\n';
+                    webResults.slice(0, 5).forEach((r, idx) => {
+                      const snippet = (r.snippet || '').replace(/\s+/g, ' ').slice(0, 360);
+                      fallbackWebContext += `- (${idx + 1}) [${r.title}] ${snippet}\nSource: ${r.url}\n`;
+                    });
+                    fallbackWebContext += '\n';
+                    
+                    // Ajouter les sources web
+                    const fallbackWebSources: WebSource[] = webResults.slice(0, 5).map(r => ({
+                      title: r.title,
+                      url: r.url,
+                      snippet: r.snippet,
+                      timestamp: new Date().toISOString(),
+                      messageId: newMessage.id,
+                    }));
+                    
+                    setUsedWebSources(prev => {
+                      const existingUrls = new Set(prev.map(s => s.url));
+                      const uniqueNewSources = fallbackWebSources.filter(s => !existingUrls.has(s.url));
+                      return [...prev, ...uniqueNewSources];
+                    });
+                    
+                    // Relancer la requête avec les informations web
+                    const fallbackPrompt = `${prompt}\n\n${fallbackWebContext}`;
+                    const fallbackAiMsg = addMessage('', false, undefined, fallbackWebSources.map(r => ({ title: r.title, url: r.url })));
+                    let fallbackAcc = '';
+                    
+                    await streamMessage(
+                      llmCfg,
+                      filteredHistory.map(m => ({ text: m.text, isUser: m.isUser })),
+                      imageFile ? [imageFile] : undefined,
+                      fallbackPrompt,
+                      {
+                        onToken: (token) => {
+                          fallbackAcc += token;
+                          setMessages(prev => prev.map(m => m.id === fallbackAiMsg.id ? { ...m, text: (m.text || '') + token } : m));
+                        },
+                        onDone: () => {
+                          setIsAISpeaking(true);
+                          const ttsText = cleanTextForTTS(fallbackAcc);
+                          speak(ttsText, {
+                            onEnd: () => {
+                              setIsAISpeaking(false);
+                              if (modeVocalAutoRef.current && !muted) {
+                                playBip();
+                                setTimeout(() => {
+                                  if (modeVocalAutoRef.current && !muted && !listeningAuto && !isAISpeakingRef.current) {
+                                    startAuto();
+                                  }
+                                }, 1000);
+                              }
+                            }
+                          });
+                        }
+                      }
+                    );
+                  } else {
+                    addMessage('❌ Aucun résultat trouvé sur internet pour cette question.', false);
+                  }
+                } catch (error) {
+                  console.warn('Erreur recherche web fallback:', error);
+                  addMessage('⚠️ Erreur lors de la recherche web automatique.', false);
+                } finally {
+                  setIsWebSearching(false);
+                }
+              }, 1000); // Délai pour laisser le temps à l'utilisateur de voir le message
+              
+              return; // Sortir de la fonction pour éviter le TTS de la première réponse
+            }
+            
+            // Indiquer que l'IA commence à parler
+            setIsAISpeaking(true);
+            console.log('[Vocal Mode] IA commence à parler - microphone coupé');
+            const ttsText = cleanTextForTTS(acc);
+            speak(ttsText, {
+              onEnd: () => {
+                setIsAISpeaking(false);
+                console.log('[Vocal Mode] IA a fini de parler - préparation redémarrage microphone');
+                if (modeVocalAutoRef.current && !muted) {
+                  playBip();
+                  setTimeout(() => {
+                    if (modeVocalAutoRef.current && !muted && !listeningAuto && !isAISpeakingRef.current) {
+                      console.log('[Vocal Mode] Redémarrage du microphone après pause de sécurité');
+                      startAuto();
+                    } else {
+                      console.log('[Vocal Mode] Redémarrage annulé - mode vocal désactivé manuellement');
+                    }
+                  }, 2000);
+                }
+              }
+            });
+          },
           onError: (err) => {
             console.error('Streaming error:', err);
             // En cas d'erreur, supprimer le message AI vide
@@ -1267,10 +1370,10 @@ function App() {
           // onOpenMemory supprimé - système de mémoire retiré
           workspaceId={workspaceId}
           workspaces={workspaces}
-          onChangeWorkspace={() => {}}
-          onCreateWorkspace={() => {}}
-          onRenameWorkspace={() => {}}
-          onDeleteWorkspace={() => {}}
+          onChangeWorkspace={(id) => setWorkspaceId(id)}
+          onCreateWorkspace={createWorkspace}
+          onRenameWorkspace={renameWorkspace}
+          onDeleteWorkspace={deleteWorkspace}
           
           stop={stop}
           modeVocalAuto={modeVocalAuto}

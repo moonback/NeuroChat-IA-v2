@@ -5,7 +5,7 @@ import {
   History, Settings2, Volume2, VolumeX, Sun, Moon, 
   PlusCircle, Mic, Shield, BookOpen, CheckSquare, Square, 
   Trash2, Menu, X, Baby,
-  Globe, Database, Pencil, HelpCircle,
+  Database, Pencil, HelpCircle,
   Download, Sparkles
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader} from '@/components/ui/sheet';
@@ -33,9 +33,6 @@ interface HeaderProps {
   hasActiveConversation: boolean;
   ragEnabled: boolean;
   setRagEnabled: (v: boolean) => void;
-  webEnabled?: boolean;
-  setWebEnabled?: (v: boolean) => void;
-  webSearching?: boolean;
   onOpenGeminiSettings?: () => void;
   geminiConfig?: Record<string, unknown>;
   provider?: 'gemini' | 'openai' | 'mistral';
@@ -654,8 +651,6 @@ const DesktopActions = ({
   // handleChildModeToggle,
   // ragEnabled,
   // handleRagToggle,
-  // webEnabled,
-  // handleWebToggle,
   setShowMenu,
   ...unusedProps
 }: {
@@ -670,8 +665,6 @@ const DesktopActions = ({
   handleChildModeToggle: () => void;
   ragEnabled: boolean;
   handleRagToggle: () => void;
-  webEnabled?: boolean;
-  handleWebToggle: () => void;
   setShowMenu: (show: boolean) => void;
 }) => {
   // Supprimer les avertissements pour les props non utilisées
@@ -757,15 +750,6 @@ const DesktopActions = ({
             <Database className="w-4 h-4" />
           </ModernButton>
           
-          <ModernButton
-            variant="ghost"
-            onClick={handleWebToggle}
-            active={!!webEnabled}
-            tooltip="Recherche web"
-            className="w-9 h-9 p-0"
-          >
-            <Globe className="w-4 h-4" />
-          </ModernButton>
           
         </>
       )}
@@ -823,8 +807,6 @@ export function Header(props: HeaderProps) {
     setModePrive,
     ragEnabled,
     setRagEnabled,
-    webEnabled,
-    setWebEnabled,
     onToggleModeEnfant
   } = props;
 
@@ -849,11 +831,6 @@ export function Header(props: HeaderProps) {
     setRagEnabled(!ragEnabled);
   }, [ragEnabled, setRagEnabled]);
 
-  const handleWebToggle = useCallback(() => {
-    if (setWebEnabled) {
-      setWebEnabled(!webEnabled);
-    }
-  }, [webEnabled, setWebEnabled]);
 
 
   const handleChildModeToggle = useCallback(() => {
@@ -950,8 +927,6 @@ export function Header(props: HeaderProps) {
               handleChildModeToggle={handleChildModeToggle}
               ragEnabled={props.ragEnabled}
               handleRagToggle={handleRagToggle}
-              webEnabled={props.webEnabled}
-              handleWebToggle={handleWebToggle}
               setShowMenu={setShowMenu}
             />
 
@@ -969,7 +944,7 @@ export function Header(props: HeaderProps) {
         <PrivateModeBanner show={showPrivateIndicator} />
 
          {/* Indicateurs de statut mobile */}
-         {(props.modePrive || props.modeEnfant || props.ragEnabled || props.webEnabled) && (
+         {(props.modePrive || props.modeEnfant || props.ragEnabled) && (
            <div className="md:hidden border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm">
              <div className="w-full px-4 py-2">
               <div className="flex items-center gap-2 text-xs">
@@ -989,12 +964,6 @@ export function Header(props: HeaderProps) {
                   <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
                     <Database className="w-3 h-3" />
                     <span className="font-medium">RAG</span>
-                  </div>
-                )}
-                {props.webEnabled && (
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
-                    <Globe className="w-3 h-3" />
-                    <span className="font-medium">Web</span>
                   </div>
                 )}
               </div>
@@ -1074,15 +1043,6 @@ export function Header(props: HeaderProps) {
                       >
                         <Database className="w-4 h-4" />
                         {props.ragEnabled ? 'RAG ON' : 'RAG OFF'}
-                      </ModernButton>
-                      <ModernButton
-                        variant={props.webEnabled ? "success" : "ghost"}
-                        onClick={() => { handleWebToggle(); setShowMenu(false); }}
-                        active={!!props.webEnabled}
-                        className="h-10 flex-col gap-0.5 text-xs"
-                      >
-                        <Globe className="w-4 h-4" />
-                        {props.webEnabled ? 'Web ON' : 'Web OFF'}
                       </ModernButton>
                     </>
                   )}
