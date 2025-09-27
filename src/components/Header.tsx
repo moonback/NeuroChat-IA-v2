@@ -3,7 +3,7 @@ import { Tooltip as ReactTooltip } from 'react-tooltip';
 import { useTheme } from '@/hooks/useTheme';
 import {
   History, Settings2, Volume2, VolumeX, Sun, Moon, 
-  PlusCircle, Mic, Shield, BookOpen, CheckSquare, Square, 
+  PlusCircle, Mic, Shield, CheckSquare, Square, 
   Trash2, Menu, X, Baby,
   Database, Pencil, HelpCircle,
   Download, Sparkles
@@ -26,13 +26,10 @@ interface HeaderProps {
   onNewDiscussion: () => void;
   onOpenHistory: () => void;
   onOpenTTSSettings: () => void;
-  onOpenRagDocs: () => void;
   stop: () => void;
   modeVocalAuto: boolean;
   setModeVocalAuto: (v: boolean) => void;
   hasActiveConversation: boolean;
-  ragEnabled: boolean;
-  setRagEnabled: (v: boolean) => void;
   onOpenGeminiSettings?: () => void;
   geminiConfig?: Record<string, unknown>;
   provider?: 'gemini' | 'openai' | 'mistral';
@@ -649,8 +646,6 @@ const DesktopActions = ({
   // modePrive,
   // handlePrivateModeToggle,
   // handleChildModeToggle,
-  // ragEnabled,
-  // handleRagToggle,
   setShowMenu,
   ...unusedProps
 }: {
@@ -663,8 +658,6 @@ const DesktopActions = ({
   modePrive: boolean;
   handlePrivateModeToggle: () => void;
   handleChildModeToggle: () => void;
-  ragEnabled: boolean;
-  handleRagToggle: () => void;
   setShowMenu: (show: boolean) => void;
 }) => {
   // Supprimer les avertissements pour les props non utilisées
@@ -740,15 +733,6 @@ const DesktopActions = ({
       
       {!modeEnfant && (
         <>
-          <ModernButton
-            variant="ghost"
-            onClick={handleRagToggle}
-            active={ragEnabled}
-            tooltip="RAG"
-            className="w-9 h-9 p-0"
-          >
-            <Database className="w-4 h-4" />
-          </ModernButton>
           
           
         </>
@@ -805,8 +789,6 @@ export function Header(props: HeaderProps) {
     setModeVocalAuto,
     modePrive,
     setModePrive,
-    ragEnabled,
-    setRagEnabled,
     onToggleModeEnfant
   } = props;
 
@@ -827,9 +809,6 @@ export function Header(props: HeaderProps) {
     setModePrive(!modePrive);
   }, [modePrive, setModePrive]);
 
-  const handleRagToggle = useCallback(() => {
-    setRagEnabled(!ragEnabled);
-  }, [ragEnabled, setRagEnabled]);
 
 
 
@@ -925,8 +904,6 @@ export function Header(props: HeaderProps) {
               modePrive={props.modePrive}
               handlePrivateModeToggle={handlePrivateModeToggle}
               handleChildModeToggle={handleChildModeToggle}
-              ragEnabled={props.ragEnabled}
-              handleRagToggle={handleRagToggle}
               setShowMenu={setShowMenu}
             />
 
@@ -944,7 +921,7 @@ export function Header(props: HeaderProps) {
         <PrivateModeBanner show={showPrivateIndicator} />
 
          {/* Indicateurs de statut mobile */}
-         {(props.modePrive || props.modeEnfant || props.ragEnabled) && (
+         {(props.modePrive || props.modeEnfant) && (
            <div className="md:hidden border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm">
              <div className="w-full px-4 py-2">
               <div className="flex items-center gap-2 text-xs">
@@ -958,12 +935,6 @@ export function Header(props: HeaderProps) {
                   <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300">
                     <Baby className="w-3 h-3" />
                     <span className="font-medium">Enfant</span>
-                  </div>
-                )}
-                {props.ragEnabled && (
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
-                    <Database className="w-3 h-3" />
-                    <span className="font-medium">RAG</span>
                   </div>
                 )}
               </div>
@@ -1035,15 +1006,6 @@ export function Header(props: HeaderProps) {
                   </ModernButton>
                   {!props.modeEnfant && (
                     <>
-                      <ModernButton
-                        variant={props.ragEnabled ? "success" : "ghost"}
-                        onClick={() => { handleRagToggle(); setShowMenu(false); }}
-                        active={props.ragEnabled}
-                        className="h-10 flex-col gap-0.5 text-xs"
-                      >
-                        <Database className="w-4 h-4" />
-                        {props.ragEnabled ? 'RAG ON' : 'RAG OFF'}
-                      </ModernButton>
                     </>
                   )}
                 </div>
@@ -1133,14 +1095,6 @@ export function Header(props: HeaderProps) {
                       >
                         <Volume2 className="w-4 h-4 mr-2" />
                         Synthèse vocale
-                      </ModernButton>
-                      <ModernButton
-                        variant="ghost"
-                        onClick={() => { props.onOpenRagDocs(); setShowMenu(false); }}
-                        className="w-full justify-start h-10 text-sm"
-                      >
-                        <BookOpen className="w-4 h-4 mr-2" />
-                        Documents RAG
                       </ModernButton>
                     </>
                   )}

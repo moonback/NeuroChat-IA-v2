@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import WorkspaceOpeningDialog from '@/components/WorkspaceOpeningDialog';
 import { ChatContainer } from '@/components/ChatContainer';
@@ -34,8 +34,6 @@ const MASTER_PASSWORD_KEY = 'nc_master_password_encrypted';
 const TTSSettingsModalLazy = lazy(() => import('@/components/TTSSettingsModal').then(m => ({ default: m.TTSSettingsModal })));
 import { Header } from '@/components/Header';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
-import { searchDocuments } from '@/services/ragSearch';
-const RagDocsModalLazy = lazy(() => import('@/components/RagDocsModal').then(m => ({ default: m.RagDocsModal })));
 const HistoryModalLazy = lazy(() => import('@/components/HistoryModal').then(m => ({ default: m.HistoryModal })));
 // MemoryModal supprimé - système de mémoire retiré
 
@@ -53,8 +51,6 @@ import { ChildModeBanner } from '@/components/ChildModeBanner';
 import { ChildModePinDialog } from '@/components/ChildModePinDialog';
 import { ChildModeChangePinDialog } from '@/components/ChildModeChangePinDialog';
 import { VocalModeIndicator } from '@/components/VocalModeIndicator';
-import { RagSidebar } from '@/components/RagSidebar';
-import { RagSidebarDrawer } from '@/components/RagSidebarDrawer';
 import { AgentStatus } from '@/components/AgentStatus';
 import { useWorkspace, useWorkspaceOpeningModal } from '@/hooks/useWorkspace';
 
@@ -76,13 +72,6 @@ interface Discussion {
   childMode?: boolean;
 }
 
-// Ajout d'un type spécial pour les messages contextuels RAG
-type RagContextMessage = {
-  id: string;
-  passages: { id: number; titre: string; contenu: string }[];
-  isRagContext: true;
-  timestamp: Date;
-};
 
 // Mémoire utilisateur supprimée
 
@@ -167,17 +156,8 @@ function App() {
   // Personnalités retirées
   // Ajout du state pour le mode vocal automatique
   const [modeVocalAuto, setModeVocalAuto] = useState(false);
-  // Ajout du state pour la modale de gestion des documents RAG
-  const [showRagDocs, setShowRagDocs] = useState(false);
   // Ajout du state pour la modale du générateur de prompts bolt.new
   // showMemory supprimé - système de mémoire retiré
-  // Ajout du state pour activer/désactiver le RAG
-  const [ragEnabled, setRagEnabled] = useState(false);
-  const [isRagSearching, setIsRagSearching] = useState<boolean>(false);
-  // Documents RAG utilisés dans la conversation courante
-  const [usedRagDocs, setUsedRagDocs] = useState<Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }>>([]);
-  // Sidebar RAG mobile
-  const [showRagSidebarMobile, setShowRagSidebarMobile] = useState(false);
   
   // --- Sélection multiple de messages pour suppression groupée ---
   const [selectMode, setSelectMode] = useState(false);
@@ -214,24 +194,6 @@ function App() {
     max_tokens: 4096,
     model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini',
   });
-  // Heuristiques automatiques RAG/Web + mots-clés
-  const [autoRagEnabled, setAutoRagEnabled] = useState<boolean>(() => {
-    try { return localStorage.getItem('auto_rag_enabled') === 'true'; } catch { return true; }
-  });
-  const [ragKeywords, setRagKeywords] = useState<string[]>(() => {
-    try {
-      const raw = localStorage.getItem('auto_rag_keywords');
-      if (raw) return JSON.parse(raw);
-    } catch {
-      // Ignore parsing errors
-    }
-    return ['doc', 'docs', 'pdf', 'mémoire', 'memoire', 'note', 'dossier', 'annexe', 'rapport', 'spécification', 'spec', 'slides', 'présentation'];
-  });
-  useEffect(() => { try { localStorage.setItem('auto_rag_enabled', autoRagEnabled ? 'true' : 'false'); } catch { /* Ignore storage errors */ } }, [autoRagEnabled]);
-  // Mémoriser les arrays pour éviter les re-renders inutiles
-  const memoizedRagKeywords = useMemo(() => ragKeywords, [ragKeywords]);
-  
-  useEffect(() => { try { localStorage.setItem('auto_rag_keywords', JSON.stringify(ragKeywords)); } catch { /* Ignore storage errors */ } }, [ragKeywords]);
   const [showGeminiSettings, setShowGeminiSettings] = useState(false);
   const [showOpenAISettings, setShowOpenAISettings] = useState(false);
   const [showMistralSettings, setShowMistralSettings] = useState(false);
@@ -304,7 +266,6 @@ function App() {
           
           // Effacer les messages actuels pour sécurité
           setMessages([]);
-          setUsedRagDocs([]);
           
           // Toast de confirmation avec détails de sécurité
           // toast.success('🔐 Mode Privé Ultra-Sécurisé Activé', {
@@ -470,12 +431,6 @@ function App() {
     localStorage.setItem(wsKey(workspaceId, 'gemini_presets'), JSON.stringify(presets));
   }, [presets, workspaceId, wsKey]);
 
-  // En mode enfant, forcer RAG OFF et empêcher l'ouverture des réglages
-  useEffect(() => {
-    if (modeEnfant && ragEnabled) {
-      setRagEnabled(false);
-    }
-  }, [modeEnfant, ragEnabled]);
 
   // 🔐 Surveiller les changements d'état du chiffrement persistant
   useEffect(() => {
@@ -546,7 +501,6 @@ function App() {
       saveDiscussionToHistory(messages);
     }
     setMessages([]);
-    setUsedRagDocs([]);
     if (!modePrive) localStorage.setItem(wsKey(workspaceId, LOCALSTORAGE_CURRENT_BASE), JSON.stringify([]));
   };
 
@@ -683,15 +637,6 @@ function App() {
     return base;
   };
 
-  const addRagContextMessage = (passages: { id: number; titre: string; contenu: string }[]) => {
-    const ragMsg: RagContextMessage = {
-      id: 'rag-' + Date.now(),
-      passages,
-      isRagContext: true,
-      timestamp: new Date(),
-    };
-    setMessages(prev => [...prev, ragMsg as unknown as Message]);
-  };
 
 
 
@@ -706,8 +651,6 @@ function App() {
     // Préparer la timeline de raisonnement
     // Timeline retirée
 
-    // Temps RAG (non utilisé visuellement depuis retrait de la timeline)
-    // let ragStart = ragEnabled ? performance.now() : 0;
     // Arrêter immédiatement la reconnaissance vocale pour éviter qu'elle capte le TTS
     if (modeVocalAuto && listeningAuto) {
       stopAuto();
@@ -725,31 +668,7 @@ function App() {
       toast.error('Pas de connexion Internet. Vérifie ta connexion réseau.');
       return;
     }
-    // Heuristiques d'activation automatique RAG selon la requête
-    const lower = userMessage.toLowerCase();
-    const autoUseRag = autoRagEnabled && memoizedRagKeywords.some(kw => new RegExp(`(^|\b)${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\b|$)`, 'i').test(lower));
 
-    // Étape RAG : recherche documentaire (si activé, auto, ou agent provider)
-    let passages: Array<{ id: string; titre: string; contenu: string; extension?: string; origine?: string }> = [];
-    if (ragEnabled || autoUseRag || (provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) {
-      setIsRagSearching(true);
-      try {
-        passages = await searchDocuments(userMessage, 3, workspaceId);
-        // Timeline retirée
-        if (passages.length > 0) {
-          const simplePassages = passages.map((p, idx) => ({ id: idx, titre: p.titre, contenu: p.contenu }));
-          addRagContextMessage(simplePassages);
-          // Mémoriser les documents utilisés (unicité par id)
-          setUsedRagDocs(prev => {
-            const byId = new Map<string, { id: string; titre: string; contenu: string; extension?: string; origine?: string }>();
-            [...prev, ...passages].forEach(d => byId.set(String(d.id), { ...d, id: String(d.id) }));
-            return Array.from(byId.values());
-          });
-        }
-      } finally {
-        setIsRagSearching(false);
-      }
-    }
     
     
     
@@ -774,18 +693,8 @@ function App() {
       const fullHistory = [...messages, newMessage];
       // On ne garde que les messages qui ont un champ text (donc pas les messages RAG)
       const filteredHistory = fullHistory.filter(m => typeof m.text === 'string');
-      // On construit le contexte documentaire pour le prompt
-       // Timeline retirée
-      let ragContext = '';
       // Récupération mémoire utilisateur supprimée - système de mémoire retiré
       const memoryContext = '';
-      if (ragEnabled && passages.length > 0) {
-        ragContext = 'Contexte documentaire :\n';
-        passages.forEach((p) => {
-          ragContext += `- [${p.titre}] ${p.contenu}\n`;
-        });
-        ragContext += '\n';
-      }
       // Injection de la date et heure actuelle
       const now = new Date();
       const dateTimeInfo = `INFORMATIONS TEMPORELLES :\nDate et heure actuelles : ${now.toLocaleDateString('fr-FR', { 
@@ -799,7 +708,7 @@ function App() {
 
       // Important: ne pas inclure à nouveau la question utilisateur dans le prompt système
       // pour éviter qu'elle soit envoyée deux fois au modèle.
-      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memoryContext}${(ragEnabled || autoUseRag) ? ragContext : ""}`;
+      const prompt = `${getSystemPrompt()}\n${dateTimeInfo}${memoryContext}`;
        // Timeline retirée
       // LOG prompt final
       const llmCfg: LlmConfig = {
@@ -1263,7 +1172,6 @@ function App() {
           onNewDiscussion={handleNewDiscussion}
           onOpenHistory={handleOpenHistory}
           onOpenTTSSettings={() => setShowTTSSettings(true)}
-          onOpenRagDocs={() => setShowRagDocs(true)}
           // onOpenMemory supprimé - système de mémoire retiré
           workspaceId={workspaceId}
           workspaces={workspaces}
@@ -1276,8 +1184,6 @@ function App() {
           modeVocalAuto={modeVocalAuto}
           setModeVocalAuto={setModeVocalAuto}
           hasActiveConversation={messages.length > 0}
-          ragEnabled={ragEnabled}
-          setRagEnabled={setRagEnabled}
           onOpenGeminiSettings={() => { if (!modeEnfant) setShowGeminiSettings(true); }}
           geminiConfig={{ ...geminiConfig } as Record<string, unknown>}
           provider={provider}
@@ -1306,9 +1212,9 @@ function App() {
           selectMode={selectMode}
           onToggleSelectMode={handleToggleSelectMode}
           selectedCount={selectedMessageIds.length}
-          totalCount={messages.filter((m: Message) => !(m as unknown as RagContextMessage).isRagContext).length}
+          totalCount={messages.length}
           onSelectAll={() => {
-            const allIds = messages.filter((m: Message) => !(m as unknown as RagContextMessage).isRagContext).map((m: Message) => m.id);
+            const allIds = messages.map((m: Message) => m.id);
             setSelectedMessageIds(allIds);
           }}
           onDeselectAll={() => setSelectedMessageIds([])}
@@ -1345,29 +1251,6 @@ function App() {
               modePrive={modePrive || modeEnfant}
               modeEnfant={modeEnfant}
             />
-            {/* Sidebar RAG à droite (desktop) quand RAG/Web actif, agent actif, recherche en cours, ou résultats présents */}
-            {((ragEnabled || ((provider === 'mistral' && mistralAgentEnabled) || (provider === 'gemini' && geminiAgentEnabled)) || isRagSearching || usedRagDocs.length > 0) && !modeEnfant) && (
-              <>
-                <div className="hidden lg:block">
-                  <RagSidebar onOpenRagDocs={() => setShowRagDocs(true)} usedDocs={usedRagDocs} workspaceId={workspaceId} />
-                </div>
-                {/* Bouton flottant pour mobile */}
-                <button
-                  className="lg:hidden fixed right-3 bottom-28 z-40 rounded-full px-4 py-2 text-white bg-gradient-to-r from-blue-500 to-indigo-600 shadow-xl border border-white/20"
-                  onClick={() => setShowRagSidebarMobile(true)}
-                  aria-label="Ouvrir les documents RAG"
-                >
-                  Docs
-                </button>
-                <RagSidebarDrawer
-                  open={showRagSidebarMobile}
-                  onClose={() => setShowRagSidebarMobile(false)}
-                  usedDocs={usedRagDocs}
-                  onOpenRagDocs={() => setShowRagDocs(true)}
-                  workspaceId={workspaceId}
-                />
-              </>
-            )}
 
           </div>
           {/* Indicateur Agent Mistral */}
@@ -1377,7 +1260,6 @@ function App() {
                 visible
                 title={provider === 'gemini' ? 'Agent Gemini' : 'Agent Mistral'}
                 steps={{
-                  rag: { state: isRagSearching ? 'running' : 'idle', label: 'Recherche documents' },
                   generate: { state: isLoading ? 'running' : 'idle', label: 'Génération de réponse' },
                 }}
               />
@@ -1455,10 +1337,6 @@ function App() {
       />
 
       {/* Suppression de l'overlay de timeline car affichage inline dans VoiceInput */}
-      {/* Modale de gestion des documents RAG */}
-      <Suspense fallback={null}>
-        <RagDocsModalLazy open={modeEnfant ? false : showRagDocs} onClose={() => setShowRagDocs(false)} workspaceId={workspaceId} />
-      </Suspense>
 
       {/* Modale de gestion de la mémoire supprimée - système de mémoire retiré */}
 
@@ -1474,10 +1352,6 @@ function App() {
           DEFAULTS={DEFAULTS}
           agentEnabled={geminiAgentEnabled}
           onToggleAgent={(enabled) => setGeminiAgentEnabled(enabled)}
-          autoRagEnabled={autoRagEnabled}
-          ragKeywords={memoizedRagKeywords}
-          onToggleAutoRag={setAutoRagEnabled}
-          onChangeRagKeywords={setRagKeywords}
         />
       </Suspense>
 
@@ -1491,10 +1365,6 @@ function App() {
           onReset={() => setOpenaiConfig({ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' })}
           onClose={() => setShowOpenAISettings(false)}
           DEFAULTS={{ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini' }}
-          autoRagEnabled={autoRagEnabled}
-          ragKeywords={memoizedRagKeywords}
-          onToggleAutoRag={setAutoRagEnabled}
-          onChangeRagKeywords={setRagKeywords}
         />
       </Suspense>
 
@@ -1510,10 +1380,6 @@ function App() {
           DEFAULTS={{ temperature: 0.7, top_p: 0.95, max_tokens: 4096, model: (import.meta.env.VITE_MISTRAL_MODEL as string) || 'mistral-small-latest' }}
           agentEnabled={mistralAgentEnabled}
           onToggleAgent={(enabled) => setMistralAgentEnabled(enabled)}
-          autoRagEnabled={autoRagEnabled}
-          ragKeywords={memoizedRagKeywords}
-          onToggleAutoRag={setAutoRagEnabled}
-          onChangeRagKeywords={setRagKeywords}
         />
       </Suspense>
 
